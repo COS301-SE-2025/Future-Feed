@@ -1,19 +1,16 @@
 # Future Feed by Syntex Squad for our COS 301 Capstone Project
 
 ## Project Description:
-Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
-
-This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
+ - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
+ - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
 
 ## Deliverables:
-Software Requirements Specification (SRS): View SRS (Placeholder link, to be updated)
-GitHub Project Board: View Project Board (Placeholder link, to be updated)
 
 ## Demo 1 Features:
-User Management: Register, log in, and manage profiles with JWT authentication.
-Post Creation: Create and view posts.
-Feed Preset Creation: Define basic feed rules.
-Base Features: Light/dark theme toggle, form validation.
+ - User Management: Register, log in, and manage profiles with JWT authentication.
+ - Post Creation: Create and view posts.
+ - Feed Preset Creation: Define basic feed rules.
+ - Base Features: Light/dark theme toggle, form validation.
 
 ## Team Members:
 <table>
@@ -122,10 +119,10 @@ cd FutureFeed
 
 ### Branching Strategy
 We use Gitflow as our branching model/strategy
-main: Production-ready code
-develop: Integration branch for features
-feature/*: Feature branches (e.g., feature/login)
-PRs require at least one review before merging.
+ - main: Production-ready code
+ - develop: Integration branch for features
+ - feature/*: Feature branches (e.g., feature/login)
+ - PRs require at least one review before merging.
 
 ## Contact
 Team Email: syntaxsquad@gmail.com
