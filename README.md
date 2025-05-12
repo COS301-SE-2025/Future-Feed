@@ -115,14 +115,16 @@ cd FutureFeed
 
 ### Running Tests
 
-## Project Structure
+## GitHub Repository
+### Structure
+The entire codebase will be stored in one repository. 
 
 ### Branching Strategy
 We use Gitflow as our branching model/strategy
  - main: Production-ready code
  - develop: Integration branch for features
- - feature/*: Feature branches (e.g., feature/login)
- - PRs require at least one review before merging.
+ - feature: Feature branche
+ - PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
 Team Email: syntaxsquad@gmail.com
