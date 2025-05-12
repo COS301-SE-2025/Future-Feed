@@ -123,7 +123,7 @@ The entire codebase will be stored in one repository.
 We use Gitflow as our branching model/strategy
  - main: Production-ready code
  - develop: Integration branch for features
- - feature: Feature branche
+ - feature: Feature branches
  - PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
