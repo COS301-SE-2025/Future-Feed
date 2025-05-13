@@ -1,5 +1,10 @@
 # Future Feed by Syntex Squad for our COS 301 Capstone Project
 
+<div class="display: flex; justify-content: center; align-items: center;">
+<img src="Documentation/Logos/Future Feed Main Logo.png" alt="drawing" width="500"/>
+</div>
+<br>
+
 ## Project Description:
  - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
  - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
