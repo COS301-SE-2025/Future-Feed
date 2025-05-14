@@ -19,7 +19,7 @@
 
 ## Team Members:
 <table>
-    <tr><th>Member</th><th>Roles</th><th>LinkedIn</th></tr>
+    <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th></tr>
     <tr>
     	<td align="center">
 			Lesedi Manoto
@@ -29,6 +29,9 @@
 	  	</td>
 	  	<td align="center">
 			Project Manager
+	  	</td>
+	    	<td align="center">
+			Java, Python, C++, HTML/CSS/JS, SQL
 	  	</td>
 	  	<td>
 			<a href="https://www.linkedin.com/in/lesedimanoto"> 
@@ -45,6 +48,9 @@
 	  	</td>
 	  	<td align="center">
 	  	</td>
+	    	<td align="center">
+			Java, Python, C++, HTML/CSS/JS, NodeJS
+	  	</td>
 	  	<td>
 			<a href="https://za.linkedin.com/in/uminathi-mdluli-14b910340"> 
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
@@ -59,6 +65,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+	  	</td>
+	    	<td align="center">
+			Java, Python, C++, HTML/CSS/JS/React/Tailwind CSS/NodeJS, SQL
 	  	</td>
 	  	<td>
 			<a href="http://www.linkedin.com/in/jongisapho-ndeya-101676253"> 
@@ -75,6 +84,9 @@
 	  	</td>
 	  	<td align="center">
 	  	</td>
+	    	<td align="center">
+			Java, Python, C++, HTML/CSS/JS, NodeJS
+	  	</td>
 	  	<td>
 			<a href="https://www.linkedin.com/in/rethabile-mokoena/"> 
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
@@ -89,6 +101,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+	  	</td>
+	    	<td align="center">
+			Java, C++, C#, ASP.NET, HTML/Javascript/CSS/PHP/Node.js
 	  	</td>
 	  	<td>
 			<a href="www.linkedin.com/in/oarabile-matlala-849627341"> 
