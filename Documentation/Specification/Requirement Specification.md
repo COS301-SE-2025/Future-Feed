@@ -1,5 +1,14 @@
 # Syntex Squad Future Feed Requirement Specification
 
+## Content
+* [Introduction](#Introduction)
+* [User Stories](#User-Stories-/-User-Characteristics)
+* [Functional Requirements](#functional-requirements)
+* [Service Contracts](#Service-Contracts)
+* [Domain Model](#Domain-Model)
+* [Architecural Requirements](#Architectural-Requirements)
+* [Technology Requirements](#Technology-Requirements)
+
 ## Introduction
  - Future Feed is a social networking platform that uses Boolean logic rules to create customisable presets that allow users unheard-of control over their information streams.
  - With Large Language Models (LLMs), users can design, modify, and engage with AI bots to dictate the content they see.
