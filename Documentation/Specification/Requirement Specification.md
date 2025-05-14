@@ -17,7 +17,7 @@
 
 ## Architectural Requirements:
 
-### Quality Requiremnts:
+### Quality Requirements:
 
 ### Architectural Patterns:
 
