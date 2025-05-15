@@ -65,6 +65,8 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Front-End Developer
+			DevOps Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS/React/Tailwind CSS/NodeJS, SQL
