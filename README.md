@@ -65,11 +65,12 @@
 			<br>
 	  	</td>
 	  	<td align="center">
-			Front-End Developer
+			Front-End Developer 
+			<br>
 			DevOps Engineer
 	  	</td>
 	    	<td align="center">
-			Java, Python, C++, HTML/CSS/JS/React/Tailwind CSS/NodeJS, SQL
+			Java, Python, C++, HTML/CSS, JS/ReactJs, TailwindCSS/NodeJS, SQL
 	  	</td>
 	  	<td>
 			<a href="http://www.linkedin.com/in/jongisapho-ndeya-101676253"> 
