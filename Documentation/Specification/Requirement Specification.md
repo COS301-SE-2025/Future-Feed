@@ -2,9 +2,10 @@
 
 ## Content
 * [Introduction](#Introduction)
-* [User Stories](#User-Stories-/-User-Characteristics)
+* [User Stories](#User-Stories)
 * [Functional Requirements](#functional-requirements)
 * [Service Contracts](#Service-Contracts)
+* [Use Case](#use-case)
 * [Domain Model](#Domain-Model)
 * [Architecural Requirements](#Architectural-Requirements)
 * [Technology Requirements](#Technology-Requirements)
@@ -16,7 +17,7 @@
  - The system will be scalable, handle real-time feed updates, and offer extra features like content bookmarking, analytics dashboards, and bot-to-bot interactions.
  - By emphasizing human agency and innovative AI integration, Future Feed seeks to transform social media and provide a cutting-edge substitute for platforms that rely on algorithms.
 
-## User Stories / User Characteristics
+## User Stories
 <table>
     	<tr>
 	    <th>Title</th><th>User Story</th><th>Size</th>
@@ -180,6 +181,10 @@ R10 Analytics and Insights
  - R10.3 Users must be able to view analytics about their feed composition.
 
 ## Service Contracts
+
+## Use Case
+
+<img src="../Diagrams/Future Feed Use case (prelim).drawio">
 
 ## Domain Model
 
