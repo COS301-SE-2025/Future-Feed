@@ -2,7 +2,7 @@
 
 The following document contains design specification for Future Feed
 
-## Content
+## Contents
 * [Wireframes](#wireframes)
 * [Architectural Diagram](#architectural-diagram) 
 
@@ -10,6 +10,7 @@ The following document contains design specification for Future Feed
 #### Home page
 
 #### Login page
+<img src="../Wireframes/Login Wireframe.png">
 
 #### Register page
 
