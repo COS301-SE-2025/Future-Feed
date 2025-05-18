@@ -1,0 +1,974 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 17.5
+-- Dumped by pg_dump version 17.5
+
+-- Started on 2025-05-18 18:40:05
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 236 (class 1259 OID 16559)
+-- Name: bot_posts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.bot_posts (
+    id integer NOT NULL,
+    bot_id integer,
+    post_id integer,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.bot_posts OWNER TO postgres;
+
+--
+-- TOC entry 235 (class 1259 OID 16558)
+-- Name: bot_posts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.bot_posts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.bot_posts_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4982 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: bot_posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.bot_posts_id_seq OWNED BY public.bot_posts.id;
+
+
+--
+-- TOC entry 234 (class 1259 OID 16544)
+-- Name: bots; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.bots (
+    id integer NOT NULL,
+    owner_id integer,
+    name character varying(100),
+    prompt text,
+    schedule character varying(50),
+    context_source text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.bots OWNER TO postgres;
+
+--
+-- TOC entry 233 (class 1259 OID 16543)
+-- Name: bots_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.bots_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.bots_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4983 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: bots_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.bots_id_seq OWNED BY public.bots.id;
+
+
+--
+-- TOC entry 223 (class 1259 OID 16434)
+-- Name: comments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.comments (
+    id integer NOT NULL,
+    post_id integer,
+    user_id integer,
+    content text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.comments OWNER TO postgres;
+
+--
+-- TOC entry 222 (class 1259 OID 16433)
+-- Name: comments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.comments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.comments_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4984 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: comments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
+
+
+--
+-- TOC entry 230 (class 1259 OID 16509)
+-- Name: feed_presets; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.feed_presets (
+    id integer NOT NULL,
+    user_id integer,
+    name character varying(100),
+    default_preset boolean DEFAULT false
+);
+
+
+ALTER TABLE public.feed_presets OWNER TO postgres;
+
+--
+-- TOC entry 229 (class 1259 OID 16508)
+-- Name: feed_presets_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.feed_presets_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.feed_presets_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4985 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: feed_presets_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.feed_presets_id_seq OWNED BY public.feed_presets.id;
+
+
+--
+-- TOC entry 219 (class 1259 OID 16402)
+-- Name: followers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.followers (
+    follower_id integer NOT NULL,
+    followed_id integer NOT NULL
+);
+
+
+ALTER TABLE public.followers OWNER TO postgres;
+
+--
+-- TOC entry 224 (class 1259 OID 16453)
+-- Name: likes; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.likes (
+    user_id integer NOT NULL,
+    post_id integer NOT NULL
+);
+
+
+ALTER TABLE public.likes OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 16493)
+-- Name: post_topics; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.post_topics (
+    post_id integer NOT NULL,
+    topic_id integer NOT NULL
+);
+
+
+ALTER TABLE public.post_topics OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 16418)
+-- Name: posts; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.posts (
+    id integer NOT NULL,
+    user_id integer,
+    content text,
+    image_url text,
+    is_bot boolean DEFAULT false,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.posts OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 16417)
+-- Name: posts_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.posts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.posts_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4986 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: posts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.posts_id_seq OWNED BY public.posts.id;
+
+
+--
+-- TOC entry 232 (class 1259 OID 16522)
+-- Name: preset_rules; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.preset_rules (
+    id integer NOT NULL,
+    preset_id integer,
+    topic_id integer,
+    source_type character varying(20),
+    specific_user_id integer,
+    percentage integer
+);
+
+
+ALTER TABLE public.preset_rules OWNER TO postgres;
+
+--
+-- TOC entry 231 (class 1259 OID 16521)
+-- Name: preset_rules_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.preset_rules_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.preset_rules_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4987 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: preset_rules_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.preset_rules_id_seq OWNED BY public.preset_rules.id;
+
+
+--
+-- TOC entry 225 (class 1259 OID 16468)
+-- Name: reshares; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.reshares (
+    user_id integer NOT NULL,
+    post_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.reshares OWNER TO postgres;
+
+--
+-- TOC entry 227 (class 1259 OID 16485)
+-- Name: topics; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.topics (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.topics OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 16484)
+-- Name: topics_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.topics_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.topics_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4988 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: topics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.topics_id_seq OWNED BY public.topics.id;
+
+
+--
+-- TOC entry 218 (class 1259 OID 16389)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    username character varying(50) NOT NULL,
+    email character varying(100) NOT NULL,
+    password_hash text NOT NULL,
+    bio text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 16388)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 4989 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 4760 (class 2604 OID 16562)
+-- Name: bot_posts id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bot_posts ALTER COLUMN id SET DEFAULT nextval('public.bot_posts_id_seq'::regclass);
+
+
+--
+-- TOC entry 4758 (class 2604 OID 16547)
+-- Name: bots id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bots ALTER COLUMN id SET DEFAULT nextval('public.bots_id_seq'::regclass);
+
+
+--
+-- TOC entry 4751 (class 2604 OID 16437)
+-- Name: comments id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.comments_id_seq'::regclass);
+
+
+--
+-- TOC entry 4755 (class 2604 OID 16512)
+-- Name: feed_presets id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.feed_presets ALTER COLUMN id SET DEFAULT nextval('public.feed_presets_id_seq'::regclass);
+
+
+--
+-- TOC entry 4748 (class 2604 OID 16421)
+-- Name: posts id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.posts ALTER COLUMN id SET DEFAULT nextval('public.posts_id_seq'::regclass);
+
+
+--
+-- TOC entry 4757 (class 2604 OID 16525)
+-- Name: preset_rules id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.preset_rules ALTER COLUMN id SET DEFAULT nextval('public.preset_rules_id_seq'::regclass);
+
+
+--
+-- TOC entry 4754 (class 2604 OID 16488)
+-- Name: topics id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.topics ALTER COLUMN id SET DEFAULT nextval('public.topics_id_seq'::regclass);
+
+
+--
+-- TOC entry 4746 (class 2604 OID 16392)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 4976 (class 0 OID 16559)
+-- Dependencies: 236
+-- Data for Name: bot_posts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.bot_posts (id, bot_id, post_id, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4974 (class 0 OID 16544)
+-- Dependencies: 234
+-- Data for Name: bots; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.bots (id, owner_id, name, prompt, schedule, context_source, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4963 (class 0 OID 16434)
+-- Dependencies: 223
+-- Data for Name: comments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.comments (id, post_id, user_id, content, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4970 (class 0 OID 16509)
+-- Dependencies: 230
+-- Data for Name: feed_presets; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.feed_presets (id, user_id, name, default_preset) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4959 (class 0 OID 16402)
+-- Dependencies: 219
+-- Data for Name: followers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.followers (follower_id, followed_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4964 (class 0 OID 16453)
+-- Dependencies: 224
+-- Data for Name: likes; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.likes (user_id, post_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4968 (class 0 OID 16493)
+-- Dependencies: 228
+-- Data for Name: post_topics; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.post_topics (post_id, topic_id) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4961 (class 0 OID 16418)
+-- Dependencies: 221
+-- Data for Name: posts; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.posts (id, user_id, content, image_url, is_bot, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4972 (class 0 OID 16522)
+-- Dependencies: 232
+-- Data for Name: preset_rules; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.preset_rules (id, preset_id, topic_id, source_type, specific_user_id, percentage) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4965 (class 0 OID 16468)
+-- Dependencies: 225
+-- Data for Name: reshares; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.reshares (user_id, post_id, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4967 (class 0 OID 16485)
+-- Dependencies: 227
+-- Data for Name: topics; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.topics (id, name) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4958 (class 0 OID 16389)
+-- Dependencies: 218
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, username, email, password_hash, bio, created_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 4990 (class 0 OID 0)
+-- Dependencies: 235
+-- Name: bot_posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.bot_posts_id_seq', 1, false);
+
+
+--
+-- TOC entry 4991 (class 0 OID 0)
+-- Dependencies: 233
+-- Name: bots_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.bots_id_seq', 1, false);
+
+
+--
+-- TOC entry 4992 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: comments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.comments_id_seq', 1, false);
+
+
+--
+-- TOC entry 4993 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: feed_presets_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.feed_presets_id_seq', 1, false);
+
+
+--
+-- TOC entry 4994 (class 0 OID 0)
+-- Dependencies: 220
+-- Name: posts_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.posts_id_seq', 1, false);
+
+
+--
+-- TOC entry 4995 (class 0 OID 0)
+-- Dependencies: 231
+-- Name: preset_rules_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.preset_rules_id_seq', 1, false);
+
+
+--
+-- TOC entry 4996 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: topics_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.topics_id_seq', 1, false);
+
+
+--
+-- TOC entry 4997 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 1, false);
+
+
+--
+-- TOC entry 4791 (class 2606 OID 16565)
+-- Name: bot_posts bot_posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bot_posts
+    ADD CONSTRAINT bot_posts_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4793 (class 2606 OID 16567)
+-- Name: bot_posts bot_posts_post_id_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bot_posts
+    ADD CONSTRAINT bot_posts_post_id_key UNIQUE (post_id);
+
+
+--
+-- TOC entry 4789 (class 2606 OID 16552)
+-- Name: bots bots_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bots
+    ADD CONSTRAINT bots_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4773 (class 2606 OID 16442)
+-- Name: comments comments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4785 (class 2606 OID 16515)
+-- Name: feed_presets feed_presets_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.feed_presets
+    ADD CONSTRAINT feed_presets_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4769 (class 2606 OID 16406)
+-- Name: followers followers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_pkey PRIMARY KEY (follower_id, followed_id);
+
+
+--
+-- TOC entry 4775 (class 2606 OID 16457)
+-- Name: likes likes_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.likes
+    ADD CONSTRAINT likes_pkey PRIMARY KEY (user_id, post_id);
+
+
+--
+-- TOC entry 4783 (class 2606 OID 16497)
+-- Name: post_topics post_topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.post_topics
+    ADD CONSTRAINT post_topics_pkey PRIMARY KEY (post_id, topic_id);
+
+
+--
+-- TOC entry 4771 (class 2606 OID 16427)
+-- Name: posts posts_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4787 (class 2606 OID 16527)
+-- Name: preset_rules preset_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.preset_rules
+    ADD CONSTRAINT preset_rules_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4777 (class 2606 OID 16473)
+-- Name: reshares reshares_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reshares
+    ADD CONSTRAINT reshares_pkey PRIMARY KEY (user_id, post_id);
+
+
+--
+-- TOC entry 4779 (class 2606 OID 16492)
+-- Name: topics topics_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.topics
+    ADD CONSTRAINT topics_name_key UNIQUE (name);
+
+
+--
+-- TOC entry 4781 (class 2606 OID 16490)
+-- Name: topics topics_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.topics
+    ADD CONSTRAINT topics_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4763 (class 2606 OID 16401)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- TOC entry 4765 (class 2606 OID 16397)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4767 (class 2606 OID 16399)
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- TOC entry 4810 (class 2606 OID 16568)
+-- Name: bot_posts bot_posts_bot_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bot_posts
+    ADD CONSTRAINT bot_posts_bot_id_fkey FOREIGN KEY (bot_id) REFERENCES public.bots(id);
+
+
+--
+-- TOC entry 4811 (class 2606 OID 16573)
+-- Name: bot_posts bot_posts_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bot_posts
+    ADD CONSTRAINT bot_posts_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- TOC entry 4809 (class 2606 OID 16553)
+-- Name: bots bots_owner_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.bots
+    ADD CONSTRAINT bots_owner_id_fkey FOREIGN KEY (owner_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4797 (class 2606 OID 16443)
+-- Name: comments comments_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- TOC entry 4798 (class 2606 OID 16448)
+-- Name: comments comments_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.comments
+    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4805 (class 2606 OID 16516)
+-- Name: feed_presets feed_presets_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.feed_presets
+    ADD CONSTRAINT feed_presets_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4794 (class 2606 OID 16412)
+-- Name: followers followers_followed_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_followed_id_fkey FOREIGN KEY (followed_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4795 (class 2606 OID 16407)
+-- Name: followers followers_follower_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.followers
+    ADD CONSTRAINT followers_follower_id_fkey FOREIGN KEY (follower_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4799 (class 2606 OID 16463)
+-- Name: likes likes_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.likes
+    ADD CONSTRAINT likes_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- TOC entry 4800 (class 2606 OID 16458)
+-- Name: likes likes_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.likes
+    ADD CONSTRAINT likes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4803 (class 2606 OID 16498)
+-- Name: post_topics post_topics_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.post_topics
+    ADD CONSTRAINT post_topics_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- TOC entry 4804 (class 2606 OID 16503)
+-- Name: post_topics post_topics_topic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.post_topics
+    ADD CONSTRAINT post_topics_topic_id_fkey FOREIGN KEY (topic_id) REFERENCES public.topics(id);
+
+
+--
+-- TOC entry 4796 (class 2606 OID 16428)
+-- Name: posts posts_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.posts
+    ADD CONSTRAINT posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4806 (class 2606 OID 16528)
+-- Name: preset_rules preset_rules_preset_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.preset_rules
+    ADD CONSTRAINT preset_rules_preset_id_fkey FOREIGN KEY (preset_id) REFERENCES public.feed_presets(id);
+
+
+--
+-- TOC entry 4807 (class 2606 OID 16538)
+-- Name: preset_rules preset_rules_specific_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.preset_rules
+    ADD CONSTRAINT preset_rules_specific_user_id_fkey FOREIGN KEY (specific_user_id) REFERENCES public.users(id);
+
+
+--
+-- TOC entry 4808 (class 2606 OID 16533)
+-- Name: preset_rules preset_rules_topic_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.preset_rules
+    ADD CONSTRAINT preset_rules_topic_id_fkey FOREIGN KEY (topic_id) REFERENCES public.topics(id);
+
+
+--
+-- TOC entry 4801 (class 2606 OID 16479)
+-- Name: reshares reshares_post_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reshares
+    ADD CONSTRAINT reshares_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id);
+
+
+--
+-- TOC entry 4802 (class 2606 OID 16474)
+-- Name: reshares reshares_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.reshares
+    ADD CONSTRAINT reshares_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id);
+
+
+-- Completed on 2025-05-18 18:40:05
+
+--
+-- PostgreSQL database dump complete
+--
+
