@@ -10,7 +10,7 @@ The following document contains design specification for Future Feed
 #### Home page
 
 #### Login page
-<img src="../Wireframes/Login Wireframe.png">
+<img src="../Wireframes/Login.png">
 
 #### Register page
 
