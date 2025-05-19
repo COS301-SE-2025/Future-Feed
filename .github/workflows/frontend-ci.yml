@@ -1,0 +1,30 @@
+name: Frontend CI
+on:
+  push:
+    branches: ["features/front-end"]
+  
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+        
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm cache clean --force
+      
+      - name: Run Linteer
+        working-directory: ./frontend
+        run: npm run lint
+      
+      - name: Build production
+        working-directory: ./frontend
+        run: npm run build
