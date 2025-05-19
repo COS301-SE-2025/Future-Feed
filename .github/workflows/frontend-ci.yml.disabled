@@ -28,4 +28,4 @@ jobs:
 
       - name: Build
         working-directory: ./frontend
-        run: npm run build  # Runs "vite build" from your package.json
+        run: npm run build # Runs "vite build" from your package.json
