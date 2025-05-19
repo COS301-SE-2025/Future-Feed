@@ -7,14 +7,16 @@ The following document contains design specification for Future Feed
 * [Architectural Diagram](#architectural-diagram) 
 
 ## Wireframes
-#### Home page
+#### Landing page
+<img src="../Wireframes/Landing page wireframe.png">
 
 #### Login page
-<img src="../Wireframes/Login.png">
+<img src="../Wireframes/New Login(2).png">
 
-#### Register page
+#### Home page
 
 #### Profile page
+<img src="../Wireframes/User profile wireframe.png">
 
 ## Screenshot of implemented pages
 
