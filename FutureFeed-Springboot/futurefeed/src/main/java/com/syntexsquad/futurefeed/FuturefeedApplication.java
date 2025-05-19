@@ -1,13 +1,13 @@
-package com.syntexsquad.FutureFeed;
+package com.syntexsquad.futurefeed;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FutureFeedApplication {
+public class FuturefeedApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(FutureFeedApplication.class, args);
+		SpringApplication.run(FuturefeedApplication.class, args);
 	}
 
 }
