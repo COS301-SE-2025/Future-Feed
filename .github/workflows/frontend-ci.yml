@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Required for proper git operations
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -18,7 +20,13 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend
         run: |
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+            git add package-lock.json
+            git commit -m "Add package-lock.json [skip ci]" || echo "No changes"
+          fi
           npm cache clean --force
       
       - name: Run Linter
