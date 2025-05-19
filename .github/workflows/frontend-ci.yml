@@ -21,7 +21,7 @@ jobs:
           npm ci
           npm cache clean --force
       
-      - name: Run Linteer
+      - name: Run Linter
         working-directory: ./frontend
         run: npm run lint
       
