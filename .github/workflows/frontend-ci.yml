@@ -1,0 +1,40 @@
+name: Frontend CI
+on:
+  push:
+    branches: ["feature/front-end"]  #Runs on pushes to this branch
+  pull_request:
+    branches: ["main"]
+    
+jobs:
+    test-and-build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4   #Checks out code
+        
+        - name: Set up Node.js
+          uses: actions/setup-node@v3
+          with:
+            node-version: 18 #Matches projects Node version
+          
+        - name: Cache node_modules #Reduces latency I think ..
+          uses: actions/cache@v3
+          with:
+            path: ./frontend/node_modules
+            key: ${{runner.os }}-modules-${{hashFiles('frontend/package-lock.json')}}
+          
+        - name: Install dependencies
+          working-directory: ./frontend
+          run: npm ci
+
+        - name: Build
+          working-directory: ./frontend
+          run: npm run build #Runs "vite build" from "package.json"
+      
+        - name: Run ESLint
+          working directory: ./frontend
+          run: npm run lint
+
+          #for testing we are going to work with this :
+          #- name: Run Tests
+          # working-directory: ./frontend
+          #run: npm test
