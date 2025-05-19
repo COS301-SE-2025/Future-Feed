@@ -24,8 +24,13 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci  # Uses package-lock.json for exact versions
-
+        run: |
+          npm install
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add package-lock.json
+          git commit -m "Add package-lock.json" || echo "No changes to commit"
+          
       - name: Build
         working-directory: ./frontend
         run: npm run build # Runs "vite build" from your package.json
