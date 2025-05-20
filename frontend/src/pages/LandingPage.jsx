@@ -2,7 +2,6 @@ import React from "react";
 import futureFeedLogo from "../assets/Future Feed Main Logo.png";
 import googleLogo from "../assets/google logo.webp";
 import ffCropped from "../assets/FF cropped.png";
-import createPage from "./CreatePage.jsx"
 
 const LandingPage = () => {
   return (
