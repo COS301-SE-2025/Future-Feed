@@ -1,5 +1,5 @@
 import React from "react";
-import futureFeedLogo from "../assets/Future Feed Main Logo.png";
+import futureFeedLogo from "../assets/Future feed transparent-photoroom.png";
 import googleLogo from "../assets/google logo.webp";
 import ffCropped from "../assets/FF cropped.png";
 
