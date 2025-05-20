@@ -31,6 +31,18 @@ export default [
     },
   },
   {
-    
-  }
-]
+    files: ['postcss.config.js', 'tailwind.config.js'],
+    languageOptions: {
+      ecmaVersion: 2020,
+      globals: {
+        ...globals.node, // Adds Node.js globals like `module` and `exports`
+      },
+      parserOptions: {
+        sourceType: 'commonjs', // Explicitly set to CommonJS for these files
+      },
+    },
+    rules: {
+      'no-undef': 'off', // Disable no-undef to avoid false positives
+    },
+  },
+];
