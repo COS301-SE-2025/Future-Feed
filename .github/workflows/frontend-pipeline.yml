@@ -1,0 +1,40 @@
+name: Frontend CI
+
+on:
+    push:
+        branches:
+            - feature/front-end
+        paths:
+            - 'frontend/**'
+jobs:
+    build-and-ling:
+        runs-on: ubuntu-latest
+
+        steps:
+            #Step 1 : Checkout the code
+            - name: Checkout code
+              uses: actions/checkout@v4
+            
+            #Step 2 : Set up Node.js
+            - name: Set up Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: '20' # vite 6.3.5 supports node 18+
+            
+            #step 3 : Navigate to frontend directory and install dependencies
+            - name : Install dependencies
+              run: |
+                cd frontend
+                npm install
+            
+            #step 4 : Run linting
+            - name : Run lint
+              run: |
+                cd frontend
+                npm run lint
+            
+            #step 5 : Build the project
+            - name: Build
+              run: |
+                cd frontend
+                npm run build
