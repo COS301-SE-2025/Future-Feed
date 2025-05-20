@@ -1,7 +1,6 @@
 import React from 'react';
 import '../styles/homePage.css';
-import ourLogo from "../assets/react.svg";
-import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell, FaUserAlt } from 'react-icons/fa';
+import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell} from 'react-icons/fa';
 
 const HomePage = () => {
     return (
