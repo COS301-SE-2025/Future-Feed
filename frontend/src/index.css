@@ -1,0 +1,111 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Cambay', Arial, sans-serif;
+  background-color: #d9d9d9;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-weight: bold;
+}
+
+.container {
+  text-align: center;
+}
+
+.logo {
+  width: 336px;
+  height: 336px;
+  margin-bottom: 20px;
+  margin-top: 0px;
+}
+
+#btn-logo{
+    height: 38px;
+    width: 76px;
+    margin-right: 10px;
+    margin-left: -40px;
+}
+
+#ff-logo{
+    height: 38px;
+    width: 45px;
+    margin-right: 20px;
+}
+
+.card {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 2px 2px 20px #000000;
+  max-width: 400px;
+  margin: 0 auto;
+  border: 1px solid;
+  text-align: center;
+  width: 649px;
+}
+
+h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 6px;
+  margin: 10px 0;
+  background-color: white;
+  border: 1px solid;
+  border-radius: 8px;
+  box-shadow: 1px 1px 4px gray;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:hover{
+    background-color: rgb(212, 212, 212);
+    box-shadow: 1px 1px 10px black;
+}
+
+.divider {
+  margin: 15px 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider span {
+  background: #ffffff;
+  padding: 0 10px;
+  position: relative;
+  z-index: 1;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  border-top: 1px solid #555;
+  left: 0;
+  z-index: 0;
+}
+
+.footer-text {
+  font-size: 0.9rem;
+  margin-top: 25px;
+}
+
+.footer-credit {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 5px;
+  font-style: italic;
+}
