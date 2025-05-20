@@ -30,4 +30,7 @@ export default [
       ],
     },
   },
+  {
+    
+  }
 ]
