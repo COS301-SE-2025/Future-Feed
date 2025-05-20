@@ -1,7 +1,8 @@
 import React from "react";
-import futureFeedLogo from "../assets/Future Feed Main Logo.png";
+import futureFeedLogo from "../assets/Future feed transparent-photoroom.png";
 import googleLogo from "../assets/google logo.webp";
 import ffCropped from "../assets/FF cropped.png";
+import { Link } from "react-router-dom";
 
 const LandingPage = () => {
   return (
@@ -29,10 +30,12 @@ const LandingPage = () => {
                 <span>Already have an account?</span>
             </div>
 
-            <button class="btn icon-btn">
-                <img src={ffCropped} alt="Login Icon" id="ff-logo"/>
-                Log into an existing Future Feed Account
-            </button>
+            <Link to="/login">
+                <button class="btn icon-btn">
+                    <img src={ffCropped} alt="Login Icon" id="ff-logo"/>
+                    Log into an existing Future Feed Account
+                </button>
+            </Link>
 
             <p class="footer-text">A world's worth of posts, your way.</p>
             <p class="footer-credit">@ 2025, <em>Syntex Squad</em></p>
