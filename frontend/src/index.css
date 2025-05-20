@@ -1,68 +1,111 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
+  padding: 0;
+  font-family: 'Cambay', Arial, sans-serif;
+  background-color: white;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-weight: bold;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+.container {
+  text-align: center;
 }
 
-button {
+.logo {
+  width: 336px;
+  height: 336px;
+  margin-bottom: 20px;
+  margin-top: 0px;
+}
+
+#btn-logo{
+    height: 38px;
+    width: 76px;
+    margin-right: 10px;
+    margin-left: -40px;
+}
+
+#ff-logo{
+    height: 38px;
+    width: 45px;
+    margin-right: 20px;
+}
+
+.card {
+  background-color: #d9d9d9;
+  padding: 30px;
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 2px 2px 20px #000000;
+  max-width: 400px;
+  margin: 0 auto;
+  border: 1px solid;
+  text-align: center;
+  width: 649px;
+}
+
+h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 6px;
+  margin: 10px 0;
+  background-color: white;
+  border: 1px solid;
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  box-shadow: 1px 1px 4px gray;
+  font-weight: bold;
   cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+button:hover{
+    background-color: rgb(212, 212, 212);
+    box-shadow: 1px 1px 10px black;
+}
+
+.divider {
+  margin: 15px 0;
+  text-align: center;
+  position: relative;
+}
+
+.divider span {
+  background: #d9d9d9;
+  padding: 0 10px;
+  position: relative;
+  z-index: 1;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  border-top: 1px solid #555;
+  left: 0;
+  z-index: 0;
+}
+
+.footer-text {
+  font-size: 0.9rem;
+  margin-top: 25px;
+}
+
+.footer-credit {
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 5px;
+  font-style: italic;
 }
