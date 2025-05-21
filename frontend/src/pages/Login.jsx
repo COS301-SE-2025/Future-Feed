@@ -34,7 +34,7 @@ const Login = () => {
           <div className="log_reg">
             <button type="submit"><span className="login_text">Login</span></button>
             <p className="register">
-              Don’t have an account? <Link to="/construction" className="reg">Register here</Link>
+              Don’t have an account? <Link to="/register" className="reg">Register here</Link>
             </p>
           </div>
         </form>
