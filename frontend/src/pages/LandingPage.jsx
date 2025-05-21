@@ -23,7 +23,7 @@ const LandingPage = () => {
                 <span>Or just</span>
             </div>
 
-            <Link to="/construction">
+            <Link to="/register">
                 <button className="btn icon-btn">
                     <img src={ffCropped} alt="Create Icon" id="ff-logo"/>
                     Create new Future Feed Account
