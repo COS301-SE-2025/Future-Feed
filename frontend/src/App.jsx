@@ -4,6 +4,7 @@ import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
+import Forgot from "./pages/Forgot";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/construction" element={<Construction />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgotpassword" element={<Forgot />} />
       </Routes>
     </Router>
   );
