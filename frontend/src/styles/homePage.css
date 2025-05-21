@@ -1,0 +1,145 @@
+.home-page{
+    display: flex;
+    position:relative;
+}
+
+.navigation-sidebar{
+    height: 427px;
+    width: 87px;
+    position: absolute;
+    background-color: rgb(255, 255, 255);
+    margin-left: -670px;
+    margin-top: -190px;
+    box-shadow: 0px 4px 2px 8px rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    display:flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.navigation-sidebar nav{
+    width: 100%;
+}
+
+.navigation-sidebr ul{
+    display:flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    margin: 0;
+    padding: 20px 0;
+    list-style: none;
+}
+
+.navigation-sidebar li {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: -39px;
+    margin-top: 27px;
+    cursor: pointer;
+    color:rgb(48, 46, 46);
+}
+
+.navigation-sidebar li:hover{
+    color: gray;
+}
+
+.navigation-sidebar .icon{
+    font-size: 37px;
+
+}
+.feed{
+    height: 600px;
+    width:1200px;
+    position:absolute;
+    background-color:rgb(255, 255, 255);
+    margin-left: -500px;
+    margin-top: -300px;
+    border-radius: 50px;
+}
+
+.welcome-message {
+    position: absolute;
+     /* Adjust as needed */
+    left: 50%;
+    
+    text-align: center;
+    color: rgb(48, 46, 46);
+    white-space: nowrap; /* Prevent text wrapping */
+    width: auto; /* Allow natural width */
+    font-size: 24px; /* Adjust font size to prevent wrapping */
+    z-index: 5;
+    margin-top: -340px; /* Ensure visibility above other elements */
+}
+
+ .new-post-button {
+     margin-top: 20px;
+     padding: 12px;
+     background-color: black;
+     color: white;
+     border: none;
+     border-radius: 8px;
+     font-weight: bold;
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 8px;
+ }
+
+ .new-post-button:hover {
+     background-color: #333;
+ }
+
+.create-post {
+     background-color: white;
+     padding: 16px;
+     border-radius: 8px;
+     margin-bottom: 20px;
+     border: 1px solid #e2e2e2;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+ }
+
+ .create-post h3 {
+     margin: 0;
+     color: #666;
+ }
+
+ .post-button {
+     background-color: black;
+     color: white;
+     border: none;
+     padding: 8px 16px;
+     border-radius: 20px;
+     font-weight: bold;
+     cursor: pointer;
+ }
+
+ .post {
+     background-color: white;
+     padding: 16px;
+     border-radius: 50px;
+     border: 1px ;
+ }
+
+ .post-header {
+     display: flex;
+     justify-content: space-between;
+     margin-bottom: 12px;
+     font-size: 14px;
+ }
+
+ .username {
+     font-weight: bold;
+ }
+
+ .post-time {
+     color: #999;
+ }
+
+ .post-content {
+     line-height: 0.7;
+ }
