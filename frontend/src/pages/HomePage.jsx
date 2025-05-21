@@ -1,5 +1,5 @@
 import React from 'react';
-import '../styles/homePage.css';
+import './css/homePage.css';
 import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell} from 'react-icons/fa';
 
 const HomePage = () => {
