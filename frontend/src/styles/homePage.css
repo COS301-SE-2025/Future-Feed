@@ -3,13 +3,37 @@
     position:relative;
 }
 
+.new-post{
+    background-color: #D9D9D9;
+    width:1150px;
+    height: 80px;
+    margin-left: 20px;
+    border-radius: 25px;
+}
+.new-post-text{
+
+}
+
+.new-post .create-post{
+    border-radius: 30px;
+    border: 2.5px solid rgba(0, 0, 0, 0.49);
+}
+.create-post{
+    width:210px;
+    height:19px;
+    margin-left: 860px;
+    margin-top: -35px;
+    
+    
+}
+
 .navigation-sidebar{
-    height: 427px;
-    width: 87px;
+    height: 407px;
+    width: 80px;
     position: absolute;
     background-color: rgb(255, 255, 255);
     margin-left: -670px;
-    margin-top: -190px;
+    margin-top: -160px;
     box-shadow: 0px 4px 2px 8px rgba(0, 0, 0, 0.25);
     border-radius: 10px;
     display:flex;

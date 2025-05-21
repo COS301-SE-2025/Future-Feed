@@ -79,6 +79,12 @@ const HomePage = () => {
             {/*sidebar*/}
             <h1 className='welcome-message'>Welcome, Feature feed</h1>
             <div className ="feed">
+                    <div className="new-post">
+                        <h3 className="new-post-text"> What's on your mind ?</h3>
+                        <div className="create-post">
+                            <h3 className="create-post-text"> New Post</h3>
+                        </div>
+                    </div>
                     <div className="post">
                          <div className="post-header">
                              <span className="username">Display Name</span>
