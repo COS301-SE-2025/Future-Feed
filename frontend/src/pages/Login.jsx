@@ -1,7 +1,7 @@
 import React from "react";
 import "./css/Login.css";
 import logo from "../assets/Future feed transparent-Photoroom.png";
-import googleLogo from "../assets/google logo.webp";
+import googleLogo from "../assets/Google transparent.png";
 
 const Login = () => {
   return (
@@ -9,6 +9,10 @@ const Login = () => {
       <img src={logo} className="logo" alt="Future Feed Logo" />
       <div className="login-box">
         <h2>Login</h2>
+        <div className="google-login">
+           Continue with: 
+           <img src={googleLogo} alt="Google Login" className="Glogo"/>
+        </div>
         <form>
           <label htmlFor="email">Email</label>
           <input type="email" id="email" placeholder="Enter your email" required />
@@ -25,13 +29,6 @@ const Login = () => {
             <p className="register">
               Don’t have an account? <a href="#">Register here</a>
             </p>
-          </div>
-
-          <div className="cont_with">
-            <p className="continue">Continue with:</p>
-            <div className="google-login">
-              <a href="#"><img src={googleLogo} alt="Google Login" /></a>
-            </div>
           </div>
         </form>
       </div>
