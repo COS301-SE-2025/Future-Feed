@@ -1,0 +1,10 @@
+com\syntexsquad\futurefeed\dto\LoginRequest.class
+com\syntexsquad\futurefeed\repository\AppUserRepository.class
+com\syntexsquad\futurefeed\Controller\AuthController.class
+com\syntexsquad\futurefeed\service\MockUserService.class
+com\syntexsquad\futurefeed\config\DataLoader.class
+com\syntexsquad\futurefeed\service\AppUserService.class
+com\syntexsquad\futurefeed\config\SecurityConfig.class
+com\syntexsquad\futurefeed\FuturefeedApplication.class
+com\syntexsquad\futurefeed\model\AppUser.class
+com\syntexsquad\futurefeed\dto\RegisterRequest.class

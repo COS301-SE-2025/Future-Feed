@@ -1,0 +1,10 @@
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\config\DataLoader.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\config\SecurityConfig.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\Controller\AuthController.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\dto\LoginRequest.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\dto\RegisterRequest.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\FuturefeedApplication.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\model\AppUser.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\repository\AppUserRepository.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\service\AppUserService.java
+C:\Users\oster\OneDrive\Documents\GitHub\Future-Feed\FutureFeed-Springboot\futurefeed\src\main\java\com\syntexsquad\futurefeed\service\MockUserService.java
