@@ -3,6 +3,8 @@ package com.syntexsquad.futurefeed.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
+
 @Entity
 @Getter
 @Setter
@@ -14,11 +16,22 @@ public class AppUser {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String username;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Column(nullable = false)
     private String password;
 
-    private String role;
+    private String role = "USER";
+
+    private String displayName;
+
+    private String profilePicture; 
+
+    private LocalDate dateOfBirth;
 
     public AppUser(String username, String password) {
         this.username = username;
@@ -26,3 +39,4 @@ public class AppUser {
         this.role = "USER";
     }
 }
+
