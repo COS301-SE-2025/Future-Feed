@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - FutureFeed</title>
+</head>
+<body>
+    <h1>Register</h1>
+    <form id="registerForm">
+        <label>Username:</label><br>
+        <input type="text" id="username" required><br><br>
+
+        <label>Password:</label><br>
+        <input type="password" id="password" required><br><br>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <p id="responseMessage" style="color: green;"></p>
+
+    <script>
+        document.getElementById("registerForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const data = {
+                username: document.getElementById("username").value,
+                password: document.getElementById("password").value
+            };
+
+            fetch("/api/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Registration failed");
+                return response.text();
+            })
+            .then(text => {
+                document.getElementById("responseMessage").innerText = text;
+            })
+            .catch(error => {
+                document.getElementById("responseMessage").innerText = error.message;
+                document.getElementById("responseMessage").style.color = "red";
+            });
+        });
+    </script>
+</body>
+</html>
