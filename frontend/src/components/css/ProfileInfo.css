@@ -1,0 +1,45 @@
+.profile-info {
+  text-align: center;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+}
+
+.profile-picture {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  border: 3px solid #333;
+}
+
+.username {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.bio {
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 1.5rem;
+}
+
+.stat-number {
+  font-weight: bold;
+  display: block;
+  font-size: 1.2rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #777;
+}
