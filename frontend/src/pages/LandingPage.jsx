@@ -6,39 +6,45 @@ import { Link } from "react-router-dom";
 
 const LandingPage = () => {
   return (
-    <div class="container">
-        <img src={futureFeedLogo} alt="Future Feed Logo" class="logo" />
+    <div className="container">
+        <img src={futureFeedLogo} alt="Future Feed Logo" className="logo" />
         
-        <div class="card">
+        <div className="card">
             <h2>Join the family</h2>
 
-            <button class="btn google-btn">
+            <Link to="/construction">
+            <button className="btn google-btn">
                 <img src={googleLogo} alt="Google" id="btn-logo"/>
                 Continue with Google
             </button>
+            </Link>
 
-            <div class="divider">
+            <div className="divider">
                 <span>Or just</span>
             </div>
-        
-            <button class="btn icon-btn">
-                <img src={ffCropped} alt="Create Icon" id="ff-logo"/>
-                Create new Future Feed Account
-            </button>
 
-            <div class="divider">
+            <Link to="/construction">
+                <button className="btn icon-btn">
+                    <img src={ffCropped} alt="Create Icon" id="ff-logo"/>
+                    Create new Future Feed Account
+                </button>
+            </Link>
+
+            
+            <div className="divider">
                 <span>Already have an account?</span>
             </div>
+            
 
             <Link to="/login">
-                <button class="btn icon-btn">
+                <button className="btn icon-btn">
                     <img src={ffCropped} alt="Login Icon" id="ff-logo"/>
                     Log into an existing Future Feed Account
                 </button>
             </Link>
 
-            <p class="footer-text">A world's worth of posts, your way.</p>
-            <p class="footer-credit">@ 2025, <em>Syntex Squad</em></p>
+            <p className="footer-text">A world's worth of posts, your way.</p>
+            <p className="footer-credit">@ 2025, <em>Syntex Squad</em></p>
         </div>
     </div>
   );
