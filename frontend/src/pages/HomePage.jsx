@@ -1,9 +1,13 @@
 import React from 'react';
+import { useState } from 'react';
 import '../styles/homePage.css';
 import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell} from 'react-icons/fa';
 
 const HomePage = () => {
+    const [postText, setPostText] = useState('');
     return (
+        
+
         // <div className="app-container">
         //     {/* Navigation Sidebar */}
         //     <div className="navigation-sidebar">
@@ -80,9 +84,15 @@ const HomePage = () => {
             <h1 className='welcome-message'>Welcome, Feature feed</h1>
             <div className ="feed">
                     <div className="new-post">
-                        <h3 className="new-post-text"> What's on your mind ?</h3>
+                        <textarea
+                            className="new-post-text"
+                            value={postText}
+                            onChange={(e) => setPostText(e.target.value)}
+                            placeholder="What's on your mind?"
+                            rows="2" // Adjust for desired height
+                            />
                         <div className="create-post">
-                            <h3 className="create-post-text"> New Post</h3>
+                            <button className="create-post-text"> New Post</button>
                         </div>
                     </div>
                     <div className="post">
