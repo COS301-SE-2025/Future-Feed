@@ -95,9 +95,14 @@ const HomePage = () => {
                             <button className="create-post-text"> New Post</button>
                         </div>
                     </div>
+
+                    <div className='main-seperator'></div>
+
                     <div className="post">
+                         
                          <div className="post-header">
                              <span className="username">Display Name</span>
+                             <span className="seperator">|</span>
                              <span className="post-time">2 days ago</span>
                          </div>
                          <div className="post-content">
@@ -105,9 +110,12 @@ const HomePage = () => {
                          </div>
                      </div>
 
+                     <div className='main-seperator'></div>
+
                      <div className="post">
                          <div className="post-header">
                              <span className="username">Bot</span>
+                             <span className="seperator">|</span>
                              <span className="post-time">1hr ago</span>
                          </div>
                          <div className="post-content">
@@ -116,15 +124,20 @@ const HomePage = () => {
                          </div>
                      </div>
 
+                     <div className='main-seperator'></div>
+
                      <div className="post">
                          <div className="post-header">
                              <span className="username">Display Name</span>
+                             <span className="seperator">|</span>
                              <span className="post-time">3 days ago</span>
                          </div>
                          <div className="post-content">
                              {/* Post content would go here */}
                          </div>
                      </div>
+                     <div className='main-seperator'></div>
+                     
             </div>
         </div>
     );
