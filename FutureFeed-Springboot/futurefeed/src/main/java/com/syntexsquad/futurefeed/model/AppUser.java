@@ -25,6 +25,11 @@ public class AppUser {
     @Column(nullable = false)
     private String password;
 
+    @Column(length = 500)
+    private String bio;
+
+    private String profilePictureUrl;
+
     private String role = "USER";
 
     private String displayName;
