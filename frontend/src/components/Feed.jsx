@@ -7,9 +7,9 @@ import "./css/Feed.css";
 const Feed = () => {
      const posts = [
     {
-      username: "Display Name",
+      username: "Syntex Squad",
       time: "2 hours ago",
-      content: "Check out my latest ride — it's a beast!",
+      content: "Final Capstone journey just started! Excited for the next months with my team.",
       image: GRP2,
     },
     {
@@ -19,9 +19,9 @@ const Feed = () => {
       image: GRP1,
     },
     {
-      username: "Display Name",
+      username: "Syntex Squad",
       time: "3 days ago",
-      content: "Life update: Just finished my third year of Computer Science!",
+      content: "Life update: This is going to be harder than i thought.",
       image: null,
     },
   ];

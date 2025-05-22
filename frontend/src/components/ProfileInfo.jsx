@@ -8,7 +8,7 @@ const ProfileInfo = () => {
     return(
          <div className="profile-info">
       <img src={profilePic} alt="Profile" className="profile-picture" />
-      <h2 className="username">Display Name</h2>
+      <h2 className="username">Syntex Squad</h2>
       <p className="bio">Future Feed | Tech Enthusiast | Car Lover</p>
 
       <div className="profile-stats">
