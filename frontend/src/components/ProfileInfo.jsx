@@ -7,9 +7,13 @@ import profilePic from '../assets/GRP1.jpg'; // porfile photo for now
 const ProfileInfo = () => {
     return(
          <div className="profile-info">
+          <div className="edit-profile-btn-container">
+        <button className="edit-profile-btn">Edit Profile</button>
+      </div>
       <img src={profilePic} alt="Profile" className="profile-picture" />
       <h2 className="username">Syntex Squad</h2>
       <p className="bio">Future Feed | Tech Enthusiast | Car Lover</p>
+      
 
       <div className="profile-stats">
         <div>
@@ -26,9 +30,7 @@ const ProfileInfo = () => {
         </div>
       </div>
       {/*edit profile buttong goes here*/ }
-      <div className="edit-profile-btn-container">
-        <button className="edit-profile-btn">Edit Profile</button>
-      </div>
+      
     </div>
     );
 };

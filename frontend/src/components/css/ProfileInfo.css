@@ -67,6 +67,9 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 1.5rem;
+  right: 5px;
+  position: absolute;
+  
 }
 
 .edit-profile-btn {
@@ -78,6 +81,7 @@
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
+  
 }
 
 .edit-profile-btn:hover {
