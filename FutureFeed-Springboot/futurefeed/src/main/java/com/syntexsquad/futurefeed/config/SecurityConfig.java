@@ -26,6 +26,7 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/api/auth/**",
+                    "/api/posts/**",
                     "/actuator/**"
                 ).permitAll()
                 .anyRequest().authenticated()
