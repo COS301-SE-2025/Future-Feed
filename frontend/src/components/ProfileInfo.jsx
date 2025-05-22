@@ -12,7 +12,8 @@ const ProfileInfo = () => {
         <button className="edit-profile-btn">Edit Profile</button>
       </div>
       <img src={profilePic} alt="Profile" className="profile-picture" />
-      <h2 className="username">Syntex Squad</h2>
+      <h1 className="displayname">Syntex Squad</h1>
+      <h2 className="username">@Syntex Squad</h2>
       <p className="bio">Future Feed | Tech Enthusiast | Car Lover</p>
       
 

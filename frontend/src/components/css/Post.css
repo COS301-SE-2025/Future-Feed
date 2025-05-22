@@ -40,3 +40,25 @@
   border-radius: 8px;
   border: 1px solid #ddd;
 }
+.post-actions {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 1.5rem;
+}
+.post-action-button {
+  padding: 0.5rem 1.25rem;
+  background-color: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+
+}
+.post-action-button:hover {
+  background-color: #555;
+}
+.action-icon {
+  font-size: 1.1rem;
+}

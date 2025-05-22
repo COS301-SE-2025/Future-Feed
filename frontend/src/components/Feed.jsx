@@ -7,18 +7,21 @@ import "./css/Feed.css";
 const Feed = () => {
      const posts = [
     {
+      displayname: "Syntex Squad",
       username: "Syntex Squad",
       time: "2 hours ago",
       content: "Final Capstone journey just started! Excited for the next months with my team.",
       image: GRP2,
     },
     {
+      displayname: "Syntex Squad",
       username: "Bot",
       time: "Yesterday",
       content: "Future tech is here. Are you ready?",
       image: GRP1,
     },
     {
+      displayname: "Syntex Squad",
       username: "Syntex Squad",
       time: "3 days ago",
       content: "Life update: This is going to be harder than i thought.",
@@ -31,6 +34,7 @@ const Feed = () => {
       {posts.map((post, index) => (
         <Post
           key={index}
+          displayname={post.displayname}
           username={post.username}
           time={post.time}
           content={post.content}
