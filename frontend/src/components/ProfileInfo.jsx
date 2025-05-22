@@ -25,6 +25,10 @@ const ProfileInfo = () => {
           <span className="stat-label">Following</span>
         </div>
       </div>
+      {/*edit profile buttong goes here*/ }
+      <div className="edit-profile-btn-container">
+        <button className="edit-profile-btn">Edit Profile</button>
+      </div>
     </div>
     );
 };
