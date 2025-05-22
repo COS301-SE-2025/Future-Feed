@@ -1,6 +1,7 @@
 .home-page{
     display: flex;
     position:relative;
+    background-color: #D9D9D9;
 }
 
 .homePage-logo{
