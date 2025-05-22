@@ -43,7 +43,7 @@ const HomePage = () => {
                         </button>
                     </form>
                 </div>
-                <div className="main-seperator"></div>
+                <div className="main-seperator-main"></div>
                 {/* Post 1 */}
                 <div className="post">
                     <div className="post-header">
