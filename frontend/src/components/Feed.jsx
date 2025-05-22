@@ -3,7 +3,7 @@ import Post from "./Post";
 import GRP1 from "../assets/GRP1.jpg";
 import GRP2 from "../assets/GRP2.jpg";
 import "./css/Feed.css";
-
+import { FaRobot } from "react-icons/fa";
 const Feed = () => {
      const posts = [
     {

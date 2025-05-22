@@ -6,7 +6,7 @@ regheart -> faheart
 regcomment -> facomment
 regbookmark -> fabookmark
 */ 
-import { FaRegHeart, FaHeart, FaRegComment, FaComment, FaShare, FaRetweet, FaRegBookmark, FaBookmark} from "react-icons/fa";
+import { FaRegHeart, FaHeart,FaRobot, FaRegComment, FaComment, FaShare, FaRetweet, FaRegBookmark, FaBookmark} from "react-icons/fa";
 //the logic here  ust to display each idnividual post 
 
 const Post = ({displayname,username , time, content , image }) => {
@@ -15,12 +15,17 @@ const Post = ({displayname,username , time, content , image }) => {
   const [isCommented, setisCommented] = useState(false);
   const [isRetweeted, setisRetweeted] = useState(false);
   const [isBookmarked, setisBookmarked] = useState(false);
+  /*we need a way to differentiate betwene bot and user [psts*/
+  const isBot = username.includes("Bot") || username.endsWith("_ai");
+
 
  return(
      <div className="post">
       <div className="post-header">
         <span className="post-displayname">{displayname}</span>
         <span className="post-username">@{username}</span>
+       {/*bot check here*/ }
+          {isBot && <FaRobot className="bot-icon" />}  {/* Add conditional check */} 
         <span className="post-separator">|</span>
         <span className="post-time">{time}</span>
       </div>
