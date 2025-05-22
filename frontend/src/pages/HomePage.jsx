@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
-import '../styles/homePage.css';
+import './css/homePage.css';
 import ffCropped from "../assets/FF cropped.png";
 import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell, FaEllipsisH, FaComment, FaRetweet, FaStar } from 'react-icons/fa';
 
