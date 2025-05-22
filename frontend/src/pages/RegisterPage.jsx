@@ -21,9 +21,6 @@ function RegisterPage() {
           <label htmlFor="username">Username</label>
           <input type="text" id="username" placeholder="Enter your username (without @)" required autoComplete="off"/>
 
-          <label htmlFor="bio">Bio</label>
-          <textarea id="bio" rows="4" placeholder="Tell us about yourself..." />
-
           <label htmlFor="dob">Date of Birth</label>
           <input type="date" id="dob" required/>
 
