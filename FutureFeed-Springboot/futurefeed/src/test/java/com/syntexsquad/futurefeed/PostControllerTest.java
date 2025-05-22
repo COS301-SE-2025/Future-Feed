@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PostController.class)
-@Import(PostControllerTest.TestSecurityConfig.class)  // Import the test config
+@Import(PostControllerTest.TestSecurityConfig.class)
 public class PostControllerTest {
 
     @Autowired
@@ -41,7 +41,7 @@ public class PostControllerTest {
     void testCreatePost_shouldReturnCreatedPost() throws Exception {
         PostRequest postRequest = new PostRequest();
         postRequest.setUserId(1);
-        postRequest.setContent("Unit test post");
+        postRequest.setContent("Valid content");
         postRequest.setImageUrl("https://example.com/image.jpg");
         postRequest.setIsBot(false);
 
@@ -56,8 +56,8 @@ public class PostControllerTest {
         Mockito.when(postService.createPost(any(PostRequest.class))).thenReturn(post);
 
         mockMvc.perform(post("/api/posts")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(postRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(post.getId()))
                 .andExpect(jsonPath("$.userId").value(post.getUserId()))
@@ -66,13 +66,44 @@ public class PostControllerTest {
                 .andExpect(jsonPath("$.isBot").value(post.getIsBot()));
     }
 
-    // Inline security override for test context
+    @Test
+    void testCreatePost_missingContent_shouldReturnBadRequest() throws Exception {
+        PostRequest postRequest = new PostRequest();
+        postRequest.setUserId(1);
+        postRequest.setContent(""); // invalid
+        postRequest.setImageUrl("https://example.com/image.jpg");
+        postRequest.setIsBot(false);
+
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postRequest)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Content must not be null or empty"));
+    }
+
+    @Test
+    void testCreatePost_serviceThrowsException_shouldReturnServerError() throws Exception {
+        PostRequest postRequest = new PostRequest();
+        postRequest.setUserId(1);
+        postRequest.setContent("Error trigger");
+        postRequest.setImageUrl("https://example.com/image.jpg");
+        postRequest.setIsBot(false);
+
+        Mockito.when(postService.createPost(any(PostRequest.class)))
+                .thenThrow(new RuntimeException("Unexpected failure"));
+
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postRequest)))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Server error: Unexpected failure"));
+    }
+
     @TestConfiguration
     static class TestSecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable()
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.csrf().disable().authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }
     }
