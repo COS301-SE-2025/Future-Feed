@@ -7,6 +7,7 @@ import profilePic from '../assets/GRP1.jpg'; // porfile photo for now
 const ProfileInfo = () => {
     return(
          <div className="profile-info">
+          {/*edit profile buttong goes here*/ }
           <div className="edit-profile-btn-container">
         <button className="edit-profile-btn">Edit Profile</button>
       </div>
@@ -29,7 +30,18 @@ const ProfileInfo = () => {
           <span className="stat-label">Following</span>
         </div>
       </div>
-      {/*edit profile buttong goes here*/ }
+      {/*buttons like post , highlitghs etc*/ }
+      <div className="profile-btn-container">
+        <button className="profile-button-btn">Posts</button>
+        <button className="profile-button-btn">Media</button>
+        <button className="profile-button-btn">Reposts</button>
+        <button className="profile-button-btn">Highlights</button>
+        <button className="profile-button-btn">Likes</button>
+        {/*Twitter has this option*/}
+        <button className="profile-button-btn">Replies</button>
+
+      </div>
+      
       
     </div>
     );
