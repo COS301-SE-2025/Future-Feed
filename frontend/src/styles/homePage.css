@@ -3,6 +3,13 @@
     position:relative;
 }
 
+.homePage-logo{
+    margin-left:-670px;
+    margin-top: -280px;
+    height: 80px;
+    width:80px;
+    z-index: 5;
+}
 .new-post{
     background-color: #D9D9D9;
     width:1150px;
@@ -13,8 +20,12 @@
     padding-top: 1px;
     
 }
+
+.new-post:hover{
+     box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.5);
+}
 .new-post-text{
-    margin-left: 36px;
+    
     
     background-color:transparent;
     border: none;
@@ -26,7 +37,7 @@
 }
 
 .new-post .new-post-text{
-    margin-top: 22px;
+    margin-top: 24px;
     color: #666;
     width:700px ;
 }
@@ -56,10 +67,10 @@
 
 .create-post {
      /* background-color: white; */
-     width:200px;
-    height:15px;
-    margin-left: 890px;
-    margin-top: -86px;
+     width:220px;
+     height:50px;
+     margin-left: 840px;
+     margin-top: -83px;
      padding: 16px;
      border-radius: 8px;
      margin-bottom: 20px;
@@ -70,13 +81,13 @@
  }
 
 .navigation-sidebar{
-    height: 407px;
-    width: 80px;
+    height: 387px;
+    width: 70px;
     position: absolute;
     background-color: rgb(255, 255, 255);
     margin-left: -670px;
-    margin-top: -160px;
-    box-shadow: 0px 4px 2px 8px rgba(0, 0, 0, 0.25);
+    margin-top: -140px;
+    box-shadow: 0 0 5px 10px rgba(0, 0, 0, 0.3);
     border-radius: 10px;
     display:flex;
     justify-content: center;
@@ -111,8 +122,12 @@
     color: gray;
 }
 
+.navigation-sidebar:hover{
+     box-shadow: 0 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
 .navigation-sidebar .icon{
-    font-size: 37px;
+    font-size: 32px;
 
 }
 .feed{
@@ -124,7 +139,19 @@
     margin-top: -300px;
     border-radius: 50px;
     padding: 9px;
+    overflow-y: auto;
+    box-sizing: border-box;
+    box-shadow: 0 0 5px 10px rgba(0, 0, 0, 0.3);
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none ;
+    -ms-overflow-style: none ;
 }
+
+.feed::-webkit-scrollbar{
+    display: none ;
+}
+
+
 
 .welcome-message {
     position: absolute;
@@ -178,11 +205,17 @@
 
  .post {
      background-color: white;
-     padding: 16px;
+     padding: 12px;
      border-radius: 50px;
      border: 1px ;
  }
-
+ .profile-image{
+    border: 2px solid #666;
+    border-radius: 20px;
+    height:30px;
+    width: 30px;
+    margin-left: 3px;
+ }
  .post-header {
     display: flex;
     align-items: center;
@@ -190,31 +223,83 @@
     font-size: 14px;
     gap:9px;
 }
-.sperator{
+.seperator{
     color: #999;
     margin: 8px ;
 }
 
 .username {
     font-weight: bold;
-    margin-left: 45px;
+    margin-left: 5px;
 }
-
+.settings{
+    margin-left: 870px;
+}
 .post-time {
     color: #999;
     font-size: 15px;
 }
 
  .post-content {
-     line-height: 1.3;
-     margin-left: 45px;
- }
+    line-height: 1.3;
+    margin-left: 45px;
+    word-wrap: break-word;
+    max-width: 100%;
+}
 
- .main-seperator {
-    margin-top: 30px;
-    width:1115px;
+.post-actions {
+    display: flex;
+    justify-content: space-between; /* Space between left-actions and bookmark */
+    align-items: center;
+    margin-left: 45px;
+    margin-top: 10px;
+    padding-bottom: 10px;
+}
+
+.left-actions {
+    display: flex;
+    gap: 20px; /* Space between Like, Comment, Repost */
+}
+
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.action-button:hover {
+    color: #333; /* Simplified hover effect */
+}
+
+.bookmark-button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    margin-right: 47px; /* Align with settings button (870px + padding adjustments) */
+}
+
+.bookmark-button:hover {
+    color: #333;
+}
+
+.action-icon {
+    font-size: 18px;
+}
+
+.main-seperator {
+    margin-top: 20px;
+    width: 1105px;
     height: 3px;
     background-color: #666;
-    margin-left: 47px;
-
- }
+    margin-left: 60px;
+}
