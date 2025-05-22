@@ -1,51 +1,56 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Register - FutureFeed</title>
+  <title>Register</title>
 </head>
 <body>
-    <h1>Register</h1>
-    <form id="registerForm">
-        <label>Username:</label><br>
-        <input type="text" id="username" required><br><br>
+  <h2>Register</h2>
+  <form id="registerForm">
+    <label>Username: <input type="text" id="username" required></label><br><br>
+    <label>Password: <input type="password" id="password" required></label><br><br>
+    <label>Email: <input type="email" id="email" required></label><br><br>
+    <label>Display Name: <input type="text" id="displayName"></label><br><br>
+    <label>Profile Picture URL: <input type="text" id="profilePicture"></label><br><br>
+    <label>Date of Birth: <input type="date" id="dateOfBirth"></label><br><br>
 
-        <label>Password:</label><br>
-        <input type="password" id="password" required><br><br>
+    <button type="submit">Register</button>
+  </form>
 
-        <button type="submit">Register</button>
-    </form>
+  <p id="message"></p>
 
-    <p id="responseMessage" style="color: green;"></p>
+  <script>
+    document.getElementById('registerForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
 
-    <script>
-        document.getElementById("registerForm").addEventListener("submit", function (event) {
-            event.preventDefault();
+      const userData = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        email: document.getElementById('email').value,
+        displayName: document.getElementById('displayName').value,
+        profilePicture: document.getElementById('profilePicture').value,
+        dateOfBirth: document.getElementById('dateOfBirth').value || null
+      };
 
-            const data = {
-                username: document.getElementById("username").value,
-                password: document.getElementById("password").value
-            };
-
-            fetch("/api/auth/register", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) throw new Error("Registration failed");
-                return response.text();
-            })
-            .then(text => {
-                document.getElementById("responseMessage").innerText = text;
-            })
-            .catch(error => {
-                document.getElementById("responseMessage").innerText = error.message;
-                document.getElementById("responseMessage").style.color = "red";
-            });
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userData)
         });
-    </script>
+
+        const result = await response.text();
+
+        if (response.ok) {
+          document.getElementById('message').innerText = 'Registration successful!';
+        } else {
+          document.getElementById('message').innerText = 'Error: ' + result;
+        }
+      } catch (err) {
+        document.getElementById('message').innerText = 'Error: ' + err.message;
+      }
+    });
+  </script>
 </body>
 </html>

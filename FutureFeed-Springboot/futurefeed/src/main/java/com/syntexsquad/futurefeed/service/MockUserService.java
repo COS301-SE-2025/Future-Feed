@@ -25,7 +25,7 @@ public class MockUserService {
         }
 
         LocalDate dob = request.getDateOfBirth();
-        if (dob != null && dob.isAfter(LocalDate.now())) {
+        if (dob  == null || (dob != null && dob.isAfter(LocalDate.now()))) {
             throw new IllegalArgumentException("Date of birth cannot be in the future.");
         }
 
