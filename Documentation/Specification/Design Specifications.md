@@ -4,6 +4,7 @@ The following document contains design specification for Future Feed
 
 ## Contents
 * [Wireframes](#wireframes)
+* [Screenshots of Implemented Pages](#screenshots-of-implemented-pages) 
 * [Architectural Diagram](#architectural-diagram) 
 
 ## Wireframes
@@ -19,10 +20,21 @@ The following document contains design specification for Future Feed
 #### Profile page
 <img src="../Wireframes/User profile wireframe.png">
 
-## Screenshot of implemented pages
+## Screenshots of implemented pages
 #### Landing page
+<img src="../Screenshots/Landing page.png">
 
 #### Login page
+<img src="../Screenshots/Login Page.png">
+
+#### Register page
+<img src="../Screenshots/Register page.png">
+
+#### Forgot password page
+<img src="../Screenshots/Forgot password.png">
+
+#### Under construction page
+<img src="../Screenshots/Under Construction.png">
 
 #### Home page
 
@@ -30,4 +42,4 @@ The following document contains design specification for Future Feed
 
 
 ## Architectural Diagram
-### --- NOT NEEDED FOR DEMO 1 ---
+### --- Being worked on ---
