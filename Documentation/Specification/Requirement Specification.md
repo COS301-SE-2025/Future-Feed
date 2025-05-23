@@ -184,9 +184,12 @@ R10 Analytics and Insights
 
 ## Use Case
 
-<img src="../Diagrams/Future Feed Use case (prelim).drawio">
+<img src="../Diagrams/Future Feed Use case (prelim).drawio" alt="Use Case Diagram">
 
 ## Domain Model
+<div class="display: flex; justify-content: center; align-items: center;">
+	<img src="../Diagrams/Domain Model.jpg" alt="Domain Model" width="500"/>
+</div>
 
 ## Architectural Requirements:
 

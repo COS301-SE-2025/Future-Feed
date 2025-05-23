@@ -1,7 +1,7 @@
 # Future Feed by Syntex Squad for our COS 301 Capstone Project
 
 <div class="display: flex; justify-content: center; align-items: center;">
-<img src="Documentation/Logos/Future Feed Main Logo.png" alt="drawing" width="500"/>
+<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="500"/>
 </div>
 <br>
 
