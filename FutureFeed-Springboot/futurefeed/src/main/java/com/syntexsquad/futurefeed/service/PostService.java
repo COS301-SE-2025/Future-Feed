@@ -1,9 +1,10 @@
 package com.syntexsquad.futurefeed.service;
 
-import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class PostService {
@@ -14,7 +15,7 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-    public Post createPost(PostRequest postRequest) {
+    public Post createPost(com.syntexsquad.futurefeed.dto.PostRequest postRequest) {
         Post post = new Post();
         post.setUserId(postRequest.getUserId());
         post.setContent(postRequest.getContent());
@@ -23,11 +24,12 @@ public class PostService {
         return postRepository.save(post);
     }
 
-    public boolean deletePost(Integer id) {
-        if (!postRepository.existsById(id)) {
-            return false;
+    // ✅ This method must return void
+    public void deletePost(Integer postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new RuntimeException("Post not found");
         }
-        postRepository.deleteById(id);
-        return true;
+        postRepository.deleteById(postId);
     }
 }
+

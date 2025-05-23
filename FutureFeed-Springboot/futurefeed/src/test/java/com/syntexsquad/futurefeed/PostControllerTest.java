@@ -21,7 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PostController.class)
@@ -70,7 +72,7 @@ public class PostControllerTest {
     void testCreatePost_missingContent_shouldReturnBadRequest() throws Exception {
         PostRequest postRequest = new PostRequest();
         postRequest.setUserId(1);
-        postRequest.setContent(""); // invalid
+        postRequest.setContent("");
         postRequest.setImageUrl("https://example.com/image.jpg");
         postRequest.setIsBot(false);
 
@@ -97,6 +99,16 @@ public class PostControllerTest {
                         .content(objectMapper.writeValueAsString(postRequest)))
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("Server error: Unexpected failure"));
+    }
+
+    @Test
+    void testDeletePost_shouldReturnNoContent() throws Exception {
+        int postId = 1;
+
+        doNothing().when(postService).deletePost(postId);
+
+        mockMvc.perform(delete("/api/posts/{id}", postId))
+                .andExpect(status().isNoContent());
     }
 
     @TestConfiguration

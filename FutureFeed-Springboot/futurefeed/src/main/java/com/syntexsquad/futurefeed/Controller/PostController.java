@@ -36,15 +36,11 @@ public class PostController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Integer id) {
         try {
-            boolean deleted = postService.deletePost(id);
-            if (deleted) {
-                return ResponseEntity.ok("Post deleted successfully");
-            } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found");
-            }
+            postService.deletePost(id);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Server error: " + ex.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Post not found");
         }
     }
+
 }
