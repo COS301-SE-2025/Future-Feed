@@ -1,10 +1,14 @@
 package com.syntexsquad.futurefeed.service;
 
+import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
+//import com.syntexsquad.futurefeed.repository.AppUserRepository;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AppUserService {

@@ -1,4 +1,4 @@
-package com.syntexsquad.futurefeed.controller;
+package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.dto.UserUpdateRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
