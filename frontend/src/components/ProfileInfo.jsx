@@ -30,6 +30,10 @@ const ProfileInfo = () => {
           <span className="stat-number">300</span>
           <span className="stat-label">Following</span>
         </div>
+        <div>
+          <span className="stat-number">1</span>
+          <span className="stat-label">Bots</span>
+        </div>
       </div>
       {/*buttons like post , highlitghs etc*/ }
       <div className="profile-btn-container">

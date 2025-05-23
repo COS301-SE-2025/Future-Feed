@@ -6,6 +6,7 @@ regheart -> faheart
 regcomment -> facomment
 regbookmark -> fabookmark
 */ 
+import GRP1 from "../assets/GRP1.jpg"; // profile photo for now
 import { FaRegHeart, FaHeart,FaRobot, FaRegComment, FaComment, FaShare, FaRetweet, FaRegBookmark, FaBookmark} from "react-icons/fa";
 //the logic here  ust to display each idnividual post 
 
@@ -22,6 +23,7 @@ const Post = ({displayname,username , time, content , image }) => {
  return(
      <div className="post">
       <div className="post-header">
+        <img src= {GRP1} alt="Profile" className="post-profile-picture" />
         <span className="post-displayname">{displayname}</span>
         <span className="post-username">@{username}</span>
        {/*bot check here*/ }
@@ -37,7 +39,7 @@ const Post = ({displayname,username , time, content , image }) => {
         {/*like button*/ }
         <button className="post-action-button" onClick={() => setisLiked(!isLiked)}>
           {isLiked?(
-            <FaHeart color="green" className="post-action-icon" />
+            <FaHeart color="black" className="post-action-icon" />
           ):(
             <FaRegHeart className="post-action-icon" />
           )}
@@ -46,7 +48,7 @@ const Post = ({displayname,username , time, content , image }) => {
           {/*comment */}
           <button className="post-action-button" onClick={() => setisCommented(!isCommented)}>
           {isCommented?(
-            <FaComment color="green" className="action-icon" />
+            <FaComment color="black" className="action-icon" />
           ) : (
             <FaRegComment className="action-icon" />
           )}
@@ -55,7 +57,7 @@ const Post = ({displayname,username , time, content , image }) => {
           {/*reshare */}
           <button className="post-action-button" onClick={() => setisRetweeted(!isRetweeted)}>
           {isRetweeted?(
-           <FaRetweet color="green" className="action-icon" />
+           <FaRetweet color="black" className="action-icon" />
           ) : (
             <FaShare className="action-icon" />
           )}
@@ -64,7 +66,7 @@ const Post = ({displayname,username , time, content , image }) => {
           {/*bookmark */}
           <button className="post-action-button" onClick={() => setisBookmarked(!isBookmarked)}>
           {isBookmarked?(
-            <FaBookmark color="green" className="action-icon" />
+            <FaBookmark color="black" className="action-icon" />
           ) : (
             <FaRegBookmark className="action-icon" />
           )}

@@ -22,6 +22,8 @@
   border-radius: 50%;
   margin-bottom: 1rem;
   border: 3px solid #333;
+  left: 1rem;
+  position: absolute;
 }
 
 .username {
@@ -60,7 +62,7 @@
 
 .stat-label {
   font-size: 0.85rem;
-  color: #777;
+  color: black;
 }
 /*individual buttons under likes and stuff*/
 .profile-btn-container{
@@ -74,13 +76,15 @@
 }
 .profile-button-btn {
   padding: 0.5rem 1.25rem;
-  background-color: #333;
-  color: white;
-  border: none;
+  background-color: grey;
+  color: black;
+  border: 2px solid black;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
+   box-shadow: black 0px 0px 5px;
+  border-color: black;
 
 }
 .profile-button-btn:hover {
@@ -94,17 +98,21 @@
   right: 5px;
   position: absolute;
   
+  
 }
 
 .edit-profile-btn {
   padding: 0.5rem 1.25rem;
-  background-color: #333;
-  color: white;
-  border: none;
+  background-color:grey;
+  color: black;
+  border: 2px solid black;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s ease;
+  box-shadow: black 0px 0px 5px;
+  border-color: black;
+
   
 }
 
