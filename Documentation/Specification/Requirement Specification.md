@@ -183,8 +183,10 @@ R10 Analytics and Insights
 ## Service Contracts
 
 ## Use Case
+<div class="display: flex; justify-content: center; align-items: center;">
+	<img src="../Diagrams/Use case.png" alt="Use Case Diagram" width="500"/>
+</div>
 
-<img src="../Diagrams/Future Feed Use case (prelim).drawio" alt="Use Case Diagram">
 
 ## Domain Model
 <div class="display: flex; justify-content: center; align-items: center;">
@@ -233,7 +235,7 @@ R10 Analytics and Insights
 
 ## Technology Requirements:
  - Frontend: 
-   Primary: React, Tailwind CSS.
+   Primary: React, CSS.
    Alternative: Vue, Angular with Angular Material.
 
  - Backend: 
