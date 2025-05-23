@@ -17,7 +17,7 @@ The following document contains design specification for Future Feed
 <img src="../Wireframes/Home page wireframe.png">
 
 #### Profile page
-<img src="../Screenshots/User profile wireframe.png">
+<img src="../Wireframes/User profile wireframe.png">
 
 ## Screenshot of implemented pages
 #### Landing page
