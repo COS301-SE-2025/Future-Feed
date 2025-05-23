@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<h2>Login</h2>
+<form id="loginForm">
+    <label>Username:</label><br>
+    <input type="text" id="username"><br>
+    <label>Password:</label><br>
+    <input type="password" id="password"><br><br>
+    <button type="submit">Login</button>
+</form>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault(); // prevent default form submit
+
+    const payload = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+    };
+
+    fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("Login successful!");
+        } else {
+            alert("Login failed!");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("Error occurred");
+    });
+});
+</script>
+</body>
+</html>

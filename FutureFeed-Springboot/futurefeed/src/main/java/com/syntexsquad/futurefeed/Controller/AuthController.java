@@ -1,26 +1,39 @@
 package com.syntexsquad.futurefeed.controller;
+
+import com.syntexsquad.futurefeed.dto.LoginRequest;
+import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.service.AppUserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.syntexsquad.futurefeed.service.MockUserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
 
-    @Autowired
-    private AppUserService userService;
+    private final MockUserService userService;
+
+    public AuthController(MockUserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
-    public String register(@RequestBody AppUser user) {
-        AppUser registered = userService.registerUser(user);
-        return "User registered with username: " + registered.getUsername();
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
+        try {
+            userService.registerUser(request);
+            return ResponseEntity.ok("Registration successful for: " + request.getUsername());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "Login endpoint (secured via Spring Security config)";
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        try {
+            AppUser user = userService.authenticateUser(request.getUsername(), request.getPassword());
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(401).body("Invalid credentials");
+        }
     }
-    
 }
-
