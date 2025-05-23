@@ -1,0 +1,7 @@
+.feed-container {
+  width: 100%;
+  max-width: 700px; /* restricts feed width for better readability */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}

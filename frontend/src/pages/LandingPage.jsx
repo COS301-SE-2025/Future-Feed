@@ -1,5 +1,5 @@
 import React from "react";
-import futureFeedLogo from "../assets/Future feed transparent-photoroom.png";
+import futureFeedLogo from "../assets/Future feed transparent-Photoroom.png";
 import googleLogo from "../assets/google logo.webp";
 import ffCropped from "../assets/FF cropped.png";
 import { Link } from "react-router-dom";
