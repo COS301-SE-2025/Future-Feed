@@ -38,7 +38,7 @@ public class AppUser {
 
     private LocalDate dateOfBirth;
 
-    private String bio;
+    //private String bio;
 
 
     public AppUser(String username, String password) {
