@@ -14,11 +14,20 @@ The following document contains design specification for Future Feed
 <img src="../Wireframes/Login.jpg">
 
 #### Home page
+<img src="../Wireframes/Home page wireframe.png">
 
 #### Profile page
-<img src="../Wireframes/User profile wireframe.png">
+<img src="../Screenshots/User profile wireframe.png">
 
 ## Screenshot of implemented pages
+#### Landing page
+
+#### Login page
+
+#### Home page
+
+#### Profile page
 
 
 ## Architectural Diagram
+### --- NOT NEEDED FOR DEMO 1 ---
