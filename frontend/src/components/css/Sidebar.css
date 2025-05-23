@@ -1,9 +1,11 @@
 .sidebar {
-  position: fixed;
+  position: absolute;
+  /*absolute makes it look more like wireframe, ie sidebar cuts off as you scroll*/
+  /*fixed makes it look more like a real app, ie sidebar stays in view as you scroll*/
   top: 0;
   left: 0;
-  height: 100vh;
-  width: 80px;
+  bottom: 10;
+  width: 50px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,10 +14,10 @@
   background-color: #f1f1f1;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  box-shadow: black 0px 0px 5px;
-  border: 2px solid grey;
-  
-  
+  box-shadow: black 0px 0px 30px;
+  border: 2px black solid;
+
+
 }
 
 .icon {
