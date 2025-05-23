@@ -12,6 +12,10 @@
   background-color: #f1f1f1;
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  box-shadow: black 0px 0px 5px;
+  border: 2px solid grey;
+  
+  
 }
 
 .icon {
