@@ -9,3 +9,4 @@ public class PostRequest {
     private String imageUrl;
     private Boolean isBot;
 }
+
