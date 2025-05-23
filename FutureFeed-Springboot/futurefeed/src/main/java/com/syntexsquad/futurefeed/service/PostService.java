@@ -22,4 +22,12 @@ public class PostService {
         post.setIsBot(postRequest.getIsBot() != null ? postRequest.getIsBot() : false);
         return postRepository.save(post);
     }
+
+    public boolean deletePost(Integer id) {
+        if (!postRepository.existsById(id)) {
+            return false;
+        }
+        postRepository.deleteById(id);
+        return true;
+    }
 }
