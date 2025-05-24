@@ -1,6 +1,7 @@
 import React from 'react';
 import './css/homePage.css';
 import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell} from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 
 const HomePage = () => {
     return (
@@ -67,12 +68,16 @@ const HomePage = () => {
             <div className ="navigation-sidebar">
                 <nav>
                      <ul>
+                    
                          <li className="active"><FaHome className="icon" /> </li>
                          <li><FaSearch className="icon" /> </li>
                          <li><FaRobot className="icon" /> </li>
                          <li><FaBell className="icon"/> </li>
                          <li><FaHeart className="icon" /> </li>
+                         <Link to="/user-profile">
                          <li><FaUser className="icon" /> </li>
+                         </Link>
+                         
                      </ul>
                  </nav>
             </div>

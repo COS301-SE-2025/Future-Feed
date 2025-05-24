@@ -11,13 +11,18 @@
   align-items: center;
   gap: 2rem;
   padding: 2rem 1rem;
-  background-color: #f1f1f1;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+   background-color: rgb(255, 255, 255);
+  box-shadow: 0px 4px 2px 8px  rgb(255, 255, 255);
   z-index: 1000;
-  box-shadow: black 0px 0px 30px;
-  border: 2px black solid;
+  border-radius: 10px;
+  position: absolute;
+ 
+ 
 
 
+}
+.sidebar:hover{
+  color: gray;
 }
 
 .icon {
