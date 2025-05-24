@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import UserProfile from "./pages/UserProfile";
 import HomePage from "./pages/HomePage";
+import SearchPage from "./pages/SearchPage";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/construction" element={<Construction />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
         {/* Add more routes as needed */}
       </Routes>
     </Router>
