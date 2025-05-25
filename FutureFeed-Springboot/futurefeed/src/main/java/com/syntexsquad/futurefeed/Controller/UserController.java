@@ -45,4 +45,16 @@ public class UserController {
 
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteUser() {
+        String username = "john_doe"; // temporary hardcoded username
+        boolean deleted = userService.deleteUserByUsername(username);
+
+        if (!deleted) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok("User '" + username + "' deleted successfully.");
+    }
 }
