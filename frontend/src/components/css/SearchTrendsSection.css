@@ -1,34 +1,42 @@
 .trends-section {
-  flex: 2;
+    flex: 2;
 }
+
 .search-input {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: 300px;
-  border: none;
-   background-color:grey;
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: 300px;
+    border: none;
+    background-color: grey;
 
-  color: white;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+    color: white;
+    margin-bottom: 1rem;
+    font-size: 1rem;
 }
-
+.search-input::placeholder {
+    color: white;
+}
+.search-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
 .trends-box {
-  background-color: grey;
-  padding: 1rem;
-  border-radius: 16px;
+    background-color: grey;
+    padding: 1rem;
+    border-radius: 16px;
+
 }
 
 .trend-item {
-  margin-bottom: 1rem;
+    margin-bottom: 1rem;
 }
 
 .trend-topic {
-  font-weight: bold;
-  font-size: 1rem;
+    font-weight: bold;
+    font-size: 1rem;
 }
 
 .trend-posts {
-  color:lightgray;
-  font-size: 0.9rem;
+    color: lightgray;
+    font-size: 0.9rem;
 }

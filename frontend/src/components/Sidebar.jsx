@@ -7,22 +7,25 @@ const Sidebar = () => {
     return (
         <div className="sidebar">
           <Link to="/home">
-           <div className="icon"><FaHome /></div>
+           <div className="icon"title="Home"><FaHome /></div>
           </Link>
 
 
      <Link to="/search">
-      <div className="icon"><FaSearch /></div>
+      <div className="icon"title="Search"><FaSearch /></div>
      </Link>
      
-      <div className="icon"><FaPlusSquare /></div>
-      <div className="icon"><FaBell /></div>
+      <div className="icon"title="Add"><FaPlusSquare /></div>
+      <Link to="/notifications">
+       <div className="icon"title="Notifications"><FaBell /></div>
+      </Link>
+     
       <Link to="/user-profile">
-       <div className="icon"><FaUser /></div>
+       <div className="icon"title="Profile"><FaUser /></div>
       
       </Link>
      
-      <div className="icon"><FaRobot /></div>
+      <div className="icon"title="Bots"><FaRobot /></div>
     </div>
 
     );

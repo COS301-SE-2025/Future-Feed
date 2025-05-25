@@ -6,6 +6,7 @@ import Construction from "./pages/Construction";
 import UserProfile from "./pages/UserProfile";
 import HomePage from "./pages/HomePage";
 import SearchPage from "./pages/SearchPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        
         {/* Add more routes as needed */}
       </Routes>
     </Router>
