@@ -1,5 +1,5 @@
 import React from "react";
-import "./css/Login.css";
+import "./css/Forgot.css";
 import logo from "../assets/Future feed transparent-Photoroom.png";
 import googleLogo from "../assets/Google transparent.png";
 import { Link } from "react-router-dom";
@@ -26,7 +26,7 @@ const Login = () => {
           <input type="password" id="password" placeholder="Enter your password" required />
 
           <div className="forgot">
-            <Link to="/construction" className="Construction-link">
+            <Link to="/forgotpassword" className="Construction-link">
                 Forgot password?
             </Link>
           </div>
@@ -34,7 +34,7 @@ const Login = () => {
           <div className="log_reg">
             <button type="submit"><span className="login_text">Login</span></button>
             <p className="register">
-              Don’t have an account? <Link to="/construction" className="reg">Register here</Link>
+              Don’t have an account? <Link to="/register" className="reg">Register here</Link>
             </p>
           </div>
         </form>
