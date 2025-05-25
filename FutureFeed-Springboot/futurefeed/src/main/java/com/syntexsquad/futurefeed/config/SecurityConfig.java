@@ -29,6 +29,9 @@ public class SecurityConfig {
                     "/api/auth/**",   // your login/register endpoints
                     "/api/posts/**",
                     "/api/user/**",
+                    "/api/likes/**",
+                    "/api/comments/**",
+
                     "/actuator/**"
                 ).permitAll()
                 .anyRequest().authenticated()
