@@ -59,7 +59,7 @@ const Post = ({displayname,username , time, content , image }) => {
           {isRetweeted?(
            <FaRetweet color="black" className="action-icon" />
           ) : (
-            <FaShare className="action-icon" />
+            <FaShare color="lightgrey"className="action-icon" />
           )}
           <span>Reshare</span>
           </button>

@@ -15,7 +15,7 @@ const Sidebar = () => {
       <div className="icon"title="Search"><FaSearch /></div>
      </Link>
      
-      <div className="icon"title="Add"><FaPlusSquare /></div>
+      <div className="icon"title="Post"><FaPlusSquare /></div>
       <Link to="/notifications">
        <div className="icon"title="Notifications"><FaBell /></div>
       </Link>
