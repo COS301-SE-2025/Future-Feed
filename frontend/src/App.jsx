@@ -7,6 +7,10 @@ import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
 import Forgot from "./pages/Forgot";
 import UserProfile from "./pages/UserProfile";
+import HomePage from "./pages/HomePage";
+import SearchPage from "./pages/SearchPage";
+import NotificationsPage from "./pages/NotificationsPage";
+import EditProfilePage from "./pages/EditProfile";
 
 function App() {
   return (
@@ -19,6 +23,11 @@ function App() {
         <Route path="/forgotpassword" element={<Forgot />} />
         <Route path="/user-profile" element={<UserProfile />} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/edit-profile" element={<EditProfilePage />} />
+        
+        {/* Add more routes as needed */}
       </Routes>
     </Router>
   );
