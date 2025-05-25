@@ -13,7 +13,6 @@ public class MockUserService {
     private final Map<String, AppUser> users = new HashMap<>();
 
     public void registerUser(RegisterRequest request) {
-        // Manual validation
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             throw new IllegalArgumentException("Username is required.");
         }
@@ -25,7 +24,7 @@ public class MockUserService {
         }
 
         LocalDate dob = request.getDateOfBirth();
-        if (dob  == null || (dob != null && dob.isAfter(LocalDate.now()))) {
+        if (dob == null || dob.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Date of birth cannot be in the future.");
         }
 
@@ -51,5 +50,9 @@ public class MockUserService {
             throw new IllegalArgumentException("Invalid username or password.");
         }
         return user;
+    }
+
+    public AppUser getUserByUsername(String username) {
+        return users.get(username);
     }
 }

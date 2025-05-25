@@ -29,6 +29,7 @@ public class SecurityConfig {
                     "/api/posts/**",
                     "/api/likes/**",
                     "/api/comments/**",
+                    "/api/user/**",
                     "/actuator/**"
                 ).permitAll()
                 .anyRequest().authenticated()
