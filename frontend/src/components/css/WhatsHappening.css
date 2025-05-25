@@ -27,13 +27,14 @@
 
 }
 .show-more{
-    background-color: grey;
+    background-color: white;
   color: black;
   padding: 0.4rem 1rem;
-  border: none;
+  
   border-radius: 30px;
   font-weight: 600;
   cursor: pointer;
+  border: 1px solid black;
 
 }
 p {

@@ -2,12 +2,12 @@
 import React from "react";
 
 import WhatsHappening from "./WhatsHappening";
-import WhoToFollow2 from "./WhoToFollow2";
+import WhoToFollow from "./WhoToFollow";
 const NotificationsRight = () => {
   return (
      <div className="notifications-right">
       <WhatsHappening />
-      <WhoToFollow2 />
+      <WhoToFollow />
     </div>
   );
 };

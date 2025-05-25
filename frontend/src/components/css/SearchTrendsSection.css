@@ -7,21 +7,21 @@
     padding: 0.75rem;
     border-radius: 300px;
     border: none;
-    background-color: grey;
+    background-color: white;
 
-    color: white;
+    color: grey;
     margin-bottom: 1rem;
     font-size: 1rem;
 }
 .search-input::placeholder {
-    color: white;
+    color: grey;
 }
 .search-input:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
 }
 .trends-box {
-    background-color: grey;
+    background-color: white;
     padding: 1rem;
     border-radius: 16px;
 
@@ -29,14 +29,26 @@
 
 .trend-item {
     margin-bottom: 1rem;
+    color: grey;
+
 }
 
 .trend-topic {
     font-weight: bold;
     font-size: 1rem;
+    color: grey;
+}
+h2 {
+    color: grey;
+    font-weight:600;
+    
+}
+.trends-button {
+    border: black 1px solid;
+    
 }
 
 .trend-posts {
-    color: lightgray;
+    color: grey;
     font-size: 0.9rem;
 }

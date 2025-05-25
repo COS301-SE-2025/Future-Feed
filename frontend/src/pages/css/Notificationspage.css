@@ -34,7 +34,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
-  font-weight: bold;;
+   font-weight: 600;
 }
 
 .notifications-button {
@@ -43,14 +43,20 @@
   border-radius: 20px;
   background-color: transparent;
   color: black;
-  
+  font-weight: 600;
+  border: black 1px solid;
   cursor: pointer;
-  background-color: grey;
+  background-color: white;
 }
 
 .notifications-button.active {
-  background-color: grey;
+  background-color: white;
   color: #000;
+  border: black 1px solid;
+}
+.notifications-button.active:hover {
+  
+ background-color: white;
 }
 
 /* Example notification message */
