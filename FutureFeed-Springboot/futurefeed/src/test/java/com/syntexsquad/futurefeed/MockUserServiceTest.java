@@ -25,7 +25,7 @@ public class MockUserServiceTest {
         request.setUsername("testuser");
         request.setPassword("pass");
         request.setEmail("test@example.com");
-        request.setDateOfBirth(LocalDate.of(2000, 1, 1));
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1)); // ✅ FIX
 
         assertDoesNotThrow(() -> userService.registerUser(request));
     }
@@ -36,6 +36,7 @@ public class MockUserServiceTest {
         request.setUsername("testuser");
         request.setPassword("pass");
         request.setEmail("test@example.com");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1)); // ✅ FIX
 
         userService.registerUser(request);
 
@@ -49,6 +50,7 @@ public class MockUserServiceTest {
         request.setUsername("user2");
         request.setPassword("pass");
         request.setEmail("invalidemail");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1)); // ✅ FIX
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.registerUser(request));
         assertEquals("Valid email is required.", ex.getMessage());
@@ -60,6 +62,7 @@ public class MockUserServiceTest {
         request.setUsername("authuser");
         request.setPassword("pass");
         request.setEmail("auth@example.com");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1)); // ✅ FIX
         userService.registerUser(request);
 
         AppUser user = userService.authenticateUser("authuser", "pass");
@@ -73,9 +76,11 @@ public class MockUserServiceTest {
         request.setUsername("authuser2");
         request.setPassword("pass");
         request.setEmail("auth2@example.com");
+        request.setDateOfBirth(LocalDate.of(2000, 1, 1)); // ✅ FIX
         userService.registerUser(request);
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> userService.authenticateUser("authuser2", "wrongpass"));
         assertEquals("Invalid username or password.", ex.getMessage());
     }
 }
+
