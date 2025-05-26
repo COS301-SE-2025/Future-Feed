@@ -2,6 +2,7 @@ import React from 'react';
 import { useState } from 'react';
 import './css/homePage.css';
 import { FaHome, FaSearch, FaHeart, FaRobot, FaUser, FaBell} from 'react-icons/fa';
+import ffCropped from "../assets/FF cropped.png";
 import { Link } from 'react-router-dom';
 
 const HomePage = () => {
