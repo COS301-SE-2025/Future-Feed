@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.dto.LoginRequest;
 import com.syntexsquad.futurefeed.dto.RegisterRequest;
+import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.service.MockUserService;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +32,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
             AppUser user = userService.authenticateUser(request.getUsername(), request.getPassword());
-            return ResponseEntity.ok(user);
+            return ResponseEntity.ok(UserProfileResponse.fromUser(user));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }

@@ -13,10 +13,12 @@ public class DataLoader {
     @Bean
     CommandLineRunner run(AppUserRepository userRepo, PasswordEncoder encoder) {
         return args -> {
-            AppUser user = new AppUser("username", encoder.encode("password"));
+             AppUser user = new AppUser("username", encoder.encode("password"));
+            user.setEmail("user@example.com");   // Set required email
             userRepo.save(user);
 
             AppUser admin = new AppUser("admin", encoder.encode("admin123"));
+            admin.setEmail("admin@example.com"); // Set required email
             userRepo.save(admin);
         };
     }
