@@ -232,7 +232,10 @@
 .attachment-button:hover .attachment-icon {
     color: #666; /* Match other hover effects */
 }
-
+.attachment-button.image-attached {
+  border: 3px solid rgb(22, 249, 169) ;
+  b
+}
  .create-post h3 {
      margin: 0;
      color: #666;
