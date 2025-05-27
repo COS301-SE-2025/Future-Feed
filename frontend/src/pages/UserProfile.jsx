@@ -6,16 +6,16 @@ import "./css/userprofile.css";
 
 const UserProfile = () => {
     return(
-      <body className="user-profile-body">
+      <div className="user-profile-body">
         <div className="user-profile-page">
-      <Sidebar />
-      <div className="main-section">
-        <ProfileInfo />
-        <Feed />
+        <Sidebar />
+        <div className="main-section">
+          <ProfileInfo />
+          <Feed />
+        </div>
       </div>
-    </div>
 
-      </body>
+      </div>
         
     );
 };

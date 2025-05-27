@@ -46,7 +46,17 @@ const EditProfile = () => {
 
             <div className="form-group">
                 <label htmlFor="bio">Bio</label>
-                <input type="text" id="bio" name="bio" placeholder="Bio..." />
+                <input type="textarea" id="bio" name="bio" placeholder="Bio..." />
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="change password">Change Password</label>
+                <input type="password" id="change password" name="password"/>
+            </div>
+
+            <div className="form-group">
+                <label htmlFor="retype password">Retype Password</label>
+                <input type="password" id="retype password" name="password"/>
             </div>
 
             {/* <div className="form-group">
