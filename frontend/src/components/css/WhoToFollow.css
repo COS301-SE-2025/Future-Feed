@@ -6,11 +6,13 @@
   flex: 1;
   color: grey;
   max-width: 300px;
-  height: fit-content;
+  
   background-color:white;
     box-shadow: 0px 4px 2px 8px  white;
   border-radius: 30px;
-  min-height: 50vh;
+  height: auto;
+  min-height: auto;
+  
 
 }
 

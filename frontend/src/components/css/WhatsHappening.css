@@ -11,7 +11,8 @@
   border-radius: 30px;
   gap: 10rem;
   padding: 1 rem 1.5rem;
-  max-height: 100vh;
+  min-height: auto;
+  height: auto;
   position: relative;
  
 }
