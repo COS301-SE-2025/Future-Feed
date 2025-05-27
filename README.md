@@ -33,7 +33,11 @@
 			<br>
 	  	</td>
 	  	<td align="center">
-			Project Manager
+			Project Manager 
+			<br>
+			Frontend Engineer
+			<br>
+			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, SQL
@@ -57,6 +61,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Frontend Developer 
+			<br>
+			Testing Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -83,6 +90,8 @@
 			Front-End Developer 
 			<br>
 			DevOps Engineer
+			<br>
+			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS, JS/ReactJs, TailwindCSS/NodeJS, SQL
@@ -106,6 +115,7 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Backend Developer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -129,6 +139,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Backend Developer 
+			<br>
+			Testing Engineer
 	  	</td>
 	    	<td align="center">
 			Java, C++, C#, ASP.NET, HTML/Javascript/CSS/PHP/Node.js
@@ -147,17 +160,12 @@
 </table>
 
 ## Getting Started
-### Prerequisites
-
-### Installation
 
 ### Clone the Repository:
 ```
 git clone https://github.com/SyntexSquad/FutureFeed.git
 cd FutureFeed
 ```
-
-### Set Up Database:
 
 ### Running Tests
 
