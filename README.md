@@ -5,6 +5,11 @@
 </div>
 <br>
 
+## Links:
+ - <a href="Documentation/Specification/Requirement Specification.md">Requirement Specification</a>
+ - <a href="Documentation/Specification/Design Specification.md">Design Specification</a>
+ - <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
+
 ## Project Description:
  - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
  - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
@@ -19,7 +24,7 @@
 
 ## Team Members:
 <table>
-    <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th></tr>
+    <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th><th>Github</th></th></tr>
     <tr>
     	<td align="center">
 			Lesedi Manoto
@@ -38,6 +43,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/notthestarsign">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -56,6 +66,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/chuck776">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -77,6 +92,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/jongisapho">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -95,6 +115,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/RethaMokoena">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -113,6 +138,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/u21740012">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
 </table>
 
@@ -126,13 +156,6 @@
 git clone https://github.com/SyntexSquad/FutureFeed.git
 cd FutureFeed
 ```
-
-### Set Up Frontend (/client):
-
-
-
-### Set Up Backend (/server):
-
 
 ### Set Up Database:
 
