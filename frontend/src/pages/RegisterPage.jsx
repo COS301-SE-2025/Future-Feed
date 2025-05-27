@@ -16,6 +16,8 @@ function RegisterPage() {
     confirmPassword: "",
   });
 
+  const [error, setError] = useState("");;
+
   const handleChange = (e) => {
     const { id, value, files } = e.target;
     if (id === "profilePic") {
@@ -47,10 +49,10 @@ function RegisterPage() {
       const response = await registerUser(payload);
       console.log("Registration response:", response);
       alert("Registration successful!");
-      navigate("/login"); // Change this to your actual home route
+      navigate("/login"); 
     } catch (error) {
       console.error("Registration failed:", error.response?.data || error.message);
-      alert("Registration failed. Please check your inputs and try again.");
+      setError("Registration failed .");
     }
   };
 
@@ -118,6 +120,8 @@ function RegisterPage() {
             value={formData.confirmPassword}
             onChange={handleChange}
           />
+
+          {error && <p className="error-message">{error}</p>}
 
           <div className="log-reg">
             <button type="submit"> Register </button>

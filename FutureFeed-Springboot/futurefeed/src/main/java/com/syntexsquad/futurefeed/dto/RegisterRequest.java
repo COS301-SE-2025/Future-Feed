@@ -1,5 +1,7 @@
 package com.syntexsquad.futurefeed.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDate;
 
 public class RegisterRequest {
@@ -9,6 +11,7 @@ public class RegisterRequest {
     private String displayName;
     private String profilePicture;
     private LocalDate dateOfBirth;
+    private String dob;
 
     // Getters and setters
     public String getUsername() {
@@ -21,6 +24,9 @@ public class RegisterRequest {
 
     public String getEmail() {
         return email;
+    }
+    public String getDob() {
+        return dob;
     }
 
     public void setEmail(String email) {
