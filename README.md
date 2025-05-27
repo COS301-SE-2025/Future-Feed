@@ -188,8 +188,9 @@
 [![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
 
 ### Monitoring Badges
-[![Uptime Robot status](https://img.shields.io/uptimerobot/status/m781234567-123456789)](https://stats.uptimerobot.com/m8D3a12345)
-[![Uptime Robot ratio](https://img.shields.io/uptimerobot/ratio/m781234567-123456789)](https://stats.uptimerobot.com/m8D3a12345)
+[![UptimeRobot Status](https://img.shields.io/uptimerobot/status/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
+[![UptimeRobot Ratio](https://img.shields.io/uptimerobot/ratio/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
+
 [![NodePing status](https://img.shields.io/nodeping/status/201205050153W2Q4C-0J2HSIRF)](https://nodeping.com/reports/checks/201205050153W2Q4C-0J2HSIRF)
 
 
