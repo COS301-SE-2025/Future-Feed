@@ -2,9 +2,9 @@ package com.syntexsquad.futurefeed;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.web.servlet.config.annotation.CorsRegistry;
+//import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 public class FuturefeedApplication {
@@ -13,7 +13,7 @@ public class FuturefeedApplication {
 		SpringApplication.run(FuturefeedApplication.class, args);
 	}
 
-	@Bean
+	/*@Bean
 	public WebMvcConfigurer corsConfigurer(){
 		return new WebMvcConfifurer(){
 			@Override
@@ -25,5 +25,5 @@ public class FuturefeedApplication {
 				
 			}
 		};
-	}
+	}*/
 }

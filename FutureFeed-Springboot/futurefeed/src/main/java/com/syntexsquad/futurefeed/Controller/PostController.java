@@ -6,6 +6,7 @@ import com.syntexsquad.futurefeed.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -33,7 +34,7 @@ public class PostController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/del/{id}")
     public ResponseEntity<?> deletePost(@PathVariable Integer id) {
         try {
             boolean deleted = postService.deletePost(id);
@@ -45,6 +46,17 @@ public class PostController {
         } catch (RuntimeException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Server error: " + ex.getMessage());
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchPosts(@RequestParam("keyword") String keyword) {
+        try {
+            List<Post> results = postService.searchPosts(keyword);
+            return ResponseEntity.ok(results);
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Search error: " + ex.getMessage());
         }
     }
 }

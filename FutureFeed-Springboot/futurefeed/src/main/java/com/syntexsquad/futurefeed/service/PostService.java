@@ -5,6 +5,8 @@ import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PostService {
 
@@ -30,4 +32,9 @@ public class PostService {
         postRepository.deleteById(id);
         return true;
     }
+
+    public List<Post> searchPosts(String keyword) {
+        return postRepository.searchByKeyword(keyword);
+    }
 }
+

@@ -3,6 +3,8 @@ package com.syntexsquad.futurefeed.service;
 import com.syntexsquad.futurefeed.model.Like;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 
 @Service
 public class LikeService {
@@ -23,6 +25,7 @@ public class LikeService {
         return true;
     }
 
+    @Transactional 
     public boolean unlikePost(Integer userId, Integer postId) {
         if (!likeRepository.existsByUserIdAndPostId(userId, postId)) {
             return false;
