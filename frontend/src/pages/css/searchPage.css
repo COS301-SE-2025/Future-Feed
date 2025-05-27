@@ -1,0 +1,34 @@
+.search-page {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  min-height: 100vh;
+  background-color: grey;
+  color: #fff;
+}
+
+.main-content {
+  display: flex;
+  justify-content: space-between;
+  flex: 1;
+  padding: 2rem;
+  gap: 2rem;
+}
+.search-page-body {
+      background-color: grey;
+}
+.trends-button{
+    background-color: white;
+  color: black;
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 30px;
+  font-weight: 600;
+  border: grey 1px solid;
+  
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+ 
+
+
+}
