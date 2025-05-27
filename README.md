@@ -15,6 +15,18 @@
  - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
 
 ## Deliverables:
+### Demo 1 use cases:
+ - User management
+	* Upload profile
+	* Display pictures
+
+ - Post Creation
+ 	* Create Post
+ 	* Delete Post
+
+ - User interaction
+	* User comment
+	* User likes
 
 ## Demo 1 Features:
  - User Management: Register, log in, and manage profiles with JWT authentication.
@@ -158,6 +170,34 @@
 		</td>
 	</tr>
 </table>
+
+## Code Quality Badges
+### Code Coverage
+[![Coverage Status](https://coveralls.io/repos/github/COS301-SE-2025/Future-Feed/badge.svg?branch=main)](https://coveralls.io/github/COS301-SE-2025/Future-Feed?branch=main)
+
+### Build
+[![Build status](https://ci.appveyor.com/api/projects/status/yourappveyorid?svg=true)](https://ci.appveyor.com/project/yourorg/yourrepo)
+
+### Requirements
+[![npm version](https://img.shields.io/npm/v/yourpackage)](https://www.npmjs.com/package/yourpackage)
+
+### Issue Tracking
+[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
+[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
+
+### Monitoring Badges
+[![Uptime Robot status](https://img.shields.io/uptimerobot/status/monitorid)](https://stats.uptimerobot.com/)
+[![Uptime Robot ratio](https://img.shields.io/uptimerobot/ratio/monitorid)](https://stats.uptimerobot.com/)
+[![NodePing status](https://img.shields.io/nodeping/status/checkid)](https://nodeping.com/reports/checks/checkid)
+
+### GitHub
+[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
+[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
+[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=COS301-SE-2025_Future-Feed&metric=coverage)](https://sonarcloud.io/dashboard?id=COS301-SE-2025_Future-Feed)
+
 
 ## Getting Started
 
