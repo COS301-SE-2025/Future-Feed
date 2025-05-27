@@ -1,0 +1,44 @@
+/*includes css for whatshappening and whotofollow on the notifications page*/
+.whats-happening{
+   border: none;
+  padding: 1rem;
+  flex: 1;
+  color: grey;
+  max-width: 300px;
+  height: fit-content;
+  background-color:white;
+    box-shadow: 0px 4px 2px 8px  white;
+  border-radius: 30px;
+  gap: 10rem;
+  padding: 1 rem 1.5rem;
+ box-shadow: 0px 4px 2px 8px rgba(0, 0, 0, 0.25);
+ margin-bottom: 20px;
+ margin-top: 50px;
+}
+.trend-item{
+ display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin-bottom: 1.2rem;
+}
+.trend-thumb{
+ width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 12px;  
+
+}
+.show-more{
+    background-color: white;
+  color: black;
+  padding: 0.4rem 1rem;
+  
+  border-radius: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid black;
+
+}
+p {
+    color: grey;
+}
