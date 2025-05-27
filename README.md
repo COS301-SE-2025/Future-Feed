@@ -196,7 +196,6 @@
 [![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
 [![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
 [![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=COS301-SE-2025_Future-Feed&metric=coverage)](https://sonarcloud.io/dashboard?id=COS301-SE-2025_Future-Feed)
 
 
 ## Getting Started
