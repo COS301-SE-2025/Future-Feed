@@ -7,10 +7,11 @@ import "./css/Notificationspage.css";
 
 const NotificationsPage = () => {
   return (
+    <div className="layout-wrapper">
       <div className="layout-container">
       <Sidebar />
 
-      <main className="notifications-main">
+      <div className="notifications-main">
         
         <h1 className="page-title">Notifications</h1>
         <div className="notifications-buttons">
@@ -21,9 +22,10 @@ const NotificationsPage = () => {
         <div className="notification-card">
           Recent Login to your account @Syntex Squad from a new Device on May 27, 2025
         </div>
-      </main>
+      </div>
 
       <NotificationsRight />
+    </div>
     </div>
     
   );
