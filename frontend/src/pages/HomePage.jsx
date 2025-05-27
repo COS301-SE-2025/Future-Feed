@@ -7,8 +7,7 @@ import {
   FaRobot,
   FaUser,
   FaBell,
-  FaImage,
-  FaCheckCircle,
+  FaImage
 } from "react-icons/fa";
 import ffCropped from "../assets/FF cropped.png";
 import HomePagePost from "../components/HomePagePost";
