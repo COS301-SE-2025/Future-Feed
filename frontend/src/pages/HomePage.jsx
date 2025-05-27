@@ -14,7 +14,6 @@ const HomePage = () => {
       console.log('Selected photo:', file.name);
     }
   };
-
   return (
     <div className="home-page">
       {/* Logo */}
