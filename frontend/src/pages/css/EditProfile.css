@@ -13,6 +13,8 @@
 }
 .edit-profile-body{
     background-color: grey;
+    color: grey;
+    padding: 10rem;
 }
 .edit-profile-container {
     display: flex;
