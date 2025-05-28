@@ -1,0 +1,121 @@
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  padding-top: 200%;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.5rem;
+ width: 100%;
+  max-width: 800px;
+  margin-bottom: 2rem; /* Ensure gap before Feed */
+  box-sizing: border-box;
+  position: relative;
+}
+
+.profile-picture {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 50%;
+  margin-bottom: 1rem;
+  border: 3px solid #333;
+  left: 1rem;
+  position: absolute;
+}
+
+.username {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+  color: #222;
+}
+
+.bio {
+  color: #666;
+  margin-top: 0.5rem;
+  font-style: italic;
+  text-align: center;
+  max-width: 90%;
+}
+
+.profile-stats {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0 1rem;
+}
+
+.profile-stats > div {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-number {
+  font-weight: bold;
+  display: block;
+  font-size: 1.2rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: black;
+}
+/*individual buttons under likes and stuff*/
+.profile-btn-container{
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  /*this is to add spacing in between da buttons*/
+  gap: 0.5rem;
+  
+
+}
+.profile-button-btn {
+  padding: 0.5rem 1.25rem;
+  background-color: grey;
+  color: black;
+  border: 2px solid black;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+   box-shadow: black 0px 0px 5px;
+  border-color: black;
+
+}
+.profile-button-btn:hover {
+  background-color: #555;
+}
+/*edit profile button, still gonna decide whether placement at top or bottom*/
+.edit-profile-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  right: 5px;
+  position: absolute;
+  
+  
+}
+
+.edit-profile-btn {
+  padding: 0.5rem 1.25rem;
+  background-color:grey;
+  color: black;
+  border: 2px solid black;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  box-shadow: black 0px 0px 5px;
+  border-color: black;
+
+  
+}
+
+.edit-profile-btn:hover {
+  background-color: #555;
+}

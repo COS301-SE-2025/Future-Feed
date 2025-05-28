@@ -23,8 +23,11 @@ public class MockUserService {
             throw new IllegalArgumentException("Valid email is required.");
         }
 
-        LocalDate dob = request.getDateOfBirth();
-        if (dob == null || dob.isAfter(LocalDate.now())) {
+        LocalDate dob =  LocalDate.parse(request.getDob());
+        if (dob == null ) {
+            throw new IllegalArgumentException("Date of birth cannot be null");
+        }
+        if (dob.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Date of birth cannot be in the future.");
         }
 
