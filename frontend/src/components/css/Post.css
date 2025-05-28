@@ -53,6 +53,9 @@
 }
 .post-actions {
   justify-content: space-evenly;
+  padding-left: 55rem;
+  position: relative;
+  
   margin-top: 1.5rem;
 }
 .post-action-button {
@@ -65,7 +68,9 @@
   transition: background-color 0.2s ease;
   box-shadow: black 0px 0px 5px;
   border-color: black;
-border: 2px solid black;;
+border: 2px solid black;
+align-items: center;
+
 }
 .post-action-button:hover {
   background-color: #555;

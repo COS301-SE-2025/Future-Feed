@@ -27,7 +27,7 @@ const handleSubmit = (e) => {
   e.preventDefault();
   setUserData({
     username,
-    displayName, // Assuming same for now
+    displayName,
     bio,
     profileImage
     //accountType

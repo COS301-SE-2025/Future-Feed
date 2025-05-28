@@ -1,6 +1,4 @@
-.sidebar{
-  
-}
+
 .search-page {
   display: flex;
   flex-direction: row;
@@ -19,7 +17,13 @@
 }
 
 .search-page-body {
-      background-color: rgb(255, 255, 255);
+      background-color: grey;
+      color: gray;
+      padding-left: 40rem;
+      display: flex;
+      padding-right: 50rem;
+      
+      
 }
 .trends-button{
     background-color: white;
