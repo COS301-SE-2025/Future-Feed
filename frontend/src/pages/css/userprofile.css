@@ -1,3 +1,4 @@
+
 .user-profile-page {
   display: flex;
   flex-direction: row;
@@ -5,7 +6,7 @@
   min-height: 100vh;
 }
 .user-profile-body {
-  background-color: grey;
+  background-color: white;
   color: grey;
   padding-left: 40rem;
   padding-right: 40rem;
@@ -14,6 +15,7 @@
 
 /* This wraps around the main content (everything except the sidebar) */
 .main-section {
+  margin-top: 600px;
   margin-left: 80px; /* same as sidebar width */
   flex: 1;
   max-width: 1200px;
