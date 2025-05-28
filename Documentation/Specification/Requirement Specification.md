@@ -181,6 +181,9 @@ R10 Analytics and Insights
  - R10.3 Users must be able to view analytics about their feed composition.
 
 ## Service Contracts
+<a href="Service Contract.md">
+	Service Contracts Link
+</a>
 
 ## Use Case
 <div class="display: flex; justify-content: center; align-items: center;">
