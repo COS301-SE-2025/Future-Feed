@@ -12,7 +12,7 @@ const Sidebar = () => {
           <Link to="/search">
            <div className="icon" title="Search"><FaSearch /></div>
           </Link>
-          <Link to="/post">
+          <Link to="/home">
            <div className="icon" title="Post"><FaPlusSquare /></div>
           </Link>
           <Link to="/notifications">
@@ -21,7 +21,7 @@ const Sidebar = () => {
           <Link to="/user-profile">
            <div className="icon" title="Profile"><FaUser /></div>
           </Link>
-          <Link to="/bots">
+          <Link to="/construction">
            <div className="icon" title="Bots"><FaRobot /></div>
           </Link>
         </div>

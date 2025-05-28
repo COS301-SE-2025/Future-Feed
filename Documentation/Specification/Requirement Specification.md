@@ -181,12 +181,20 @@ R10 Analytics and Insights
  - R10.3 Users must be able to view analytics about their feed composition.
 
 ## Service Contracts
+<a href="Service Contract.md">
+	Service Contracts Link
+</a>
 
 ## Use Case
+<div class="display: flex; justify-content: center; align-items: center;">
+	<img src="../Diagrams/Use case.png" alt="Use Case Diagram" width="500"/>
+</div>
 
-<img src="../Diagrams/Future Feed Use case (prelim).drawio">
 
 ## Domain Model
+<div class="display: flex; justify-content: center; align-items: center;">
+	<img src="../Diagrams/Domain Model.jpg" alt="Domain Model" width="500"/>
+</div>
 
 ## Architectural Requirements:
 
@@ -230,7 +238,7 @@ R10 Analytics and Insights
 
 ## Technology Requirements:
  - Frontend: 
-   Primary: React, Tailwind CSS.
+   Primary: React, CSS.
    Alternative: Vue, Angular with Angular Material.
 
  - Backend: 

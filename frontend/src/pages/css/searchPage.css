@@ -1,9 +1,12 @@
+.sidebar{
+  
+}
 .search-page {
   display: flex;
   flex-direction: row;
   width: 100%;
   min-height: 100vh;
-  background-color: grey;
+  background-color: rgb(255, 255, 255);
   color: #fff;
 }
 
@@ -14,6 +17,7 @@
   padding: 2rem;
   gap: 2rem;
 }
+
 .search-page-body {
       background-color: grey;
       color: gray;
@@ -30,7 +34,7 @@
   border: none;
   border-radius: 30px;
   font-weight: 600;
-  border: grey 1px solid;
+  border: rgb(86, 84, 84) 1px solid;
   
   cursor: pointer;
   transition: background-color 0.2s ease;

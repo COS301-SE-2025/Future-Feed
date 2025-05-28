@@ -1,4 +1,5 @@
 package com.syntexsquad.futurefeed.Controller;
+
 import com.syntexsquad.futurefeed.dto.LoginRequest;
 import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.dto.UserProfileResponse;

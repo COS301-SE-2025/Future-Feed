@@ -1,4 +1,7 @@
 
+.sidebar{
+  margin-left:-1220px ;
+}
 .layout-wrapper {
   display: flex;
   justify-content: center;

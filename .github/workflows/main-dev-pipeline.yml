@@ -1,4 +1,4 @@
-name: main and dev CI
+name: main and dev (CI/CD)
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Branch protection checks
         run: |
-          if [["${GITHUB_EVENT_NAME}" == "push" && "${GIHUB_REF}" == "refs/heads/main"]] ; then 
+          if [ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF}" ] && [ "refs/heads/main" ] ; then 
             echo "Error : Direct pushes to main are not allowed. Please use a pull request ."
             exit 1
           fi
