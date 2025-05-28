@@ -4,8 +4,15 @@
   justify-content: center;
 
   width: 100%;
-  background-color: #f5f5f5;
+  background-color: grey;
   min-height: 100vh;
+   
+  position: relative;
+  padding: 40px 450px 20px;
+  margin-top: 470px;
+  
+  
+  
   
 
 }
@@ -16,13 +23,17 @@
   max-width: 1200px;
   width: 100%;
   
-
-  background-color: grey;
-  align-items: flex-start;
-  background-color: rgb(255, 255, 255);
-  color: grey;
   
-  padding: 20rem;
+
+  
+  align-items: flex-start;
+  
+  color: grey;
+
+  
+ 
+  
+ 
   gap: 2rem;
   
   
@@ -37,10 +48,8 @@
 /* Main Content (center) */
 .notifications-main {
 
-  flex: 1;
-  max-width: 700px;
-  min-width: 700px;
-  padding: 1rem;
+  
+  
   border-left: 1px solid #2f3336;
   border-right: 1px solid #2f3336;
   
@@ -50,6 +59,8 @@
   flex-direction: column ;
   align-items: flex-start;
   padding-top: 4rem;
+  position: relative;
+  padding-bottom: 60rem;
 
 
 }
@@ -116,14 +127,14 @@
 /*for rhs*/
 .notifications-right {
   flex: 0 0 350px;
-  position: relative;
+  position: absolute;
   max-width: 350px;
   top: 0;
   height: 100vh;
   gap: 2rem;
   display: flex;
   flex-direction: column;
-  padding: 2rem;
+ padding-left: 35rem;
   
   
   
