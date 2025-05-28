@@ -45,6 +45,10 @@ const HomePage = () => {
     setPostImage(null);
   };
 
+  const handleDeletePost = (id) => {
+    setPosts(posts.filter(post => post.id !== id));
+  };
+
   return (
     <div className="home-page1">
       <img src={ffCropped} alt="Future Feed Logo" className="homePage-logo1" />
@@ -116,6 +120,8 @@ const HomePage = () => {
               postTime={post.postTime}
               content={post.content}
               image={post.image}
+              id={post.id}
+              onDelete={handleDeletePost}
             />
             <div className="main-seperator1"></div>
           </React.Fragment>

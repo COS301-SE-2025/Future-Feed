@@ -283,22 +283,22 @@
 }
 
 .settings1 {
-    margin-left: 870px;
+    color:gray;
+    width: 10px;
+    height: 10px;
+    margin-top: 20px;
+    margin-left: 880px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 5px;
     transition: background-color 1.9s ease, border-radius 1.9s ease, padding 1.9s ease-out;
 }
-
-.settings1:hover {
-    background-color: #999;
-    border-radius: 7px;
-    padding: 5px 8px;
+.settings1 button{
+    border: none;
 }
-
 .settings1 .icon1 {
     font-size: 16px;
+    color:#716e6e;
 }
 
 .post-time1 {

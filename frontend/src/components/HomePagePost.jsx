@@ -4,15 +4,19 @@ import {
   FaComment,
   FaRetweet,
   FaStar,
-  FaEllipsisH
+  FaTrash
 } from 'react-icons/fa';
 import '../pages/css/homePage.css';
 
-const HomePagePost = ({ profileImage, username, postTime, content, image }) => {
+const HomePagePost = ({ profileImage, username, postTime, content, image, id, onDelete }) => {
   const [liked, setLiked] = useState(false);
 
   const handleLikeClick = () => {
     setLiked(!liked);
+  };
+
+  const handleDeleteClick = () => {
+    onDelete(id);
   };
 
   return (
@@ -23,7 +27,9 @@ const HomePagePost = ({ profileImage, username, postTime, content, image }) => {
         <span className="seperator1">|</span>
         <span className="post-time1">{postTime}</span>
         <span className="settings1">
-          <FaEllipsisH className="icon1" />
+          <button type="button" onClick={handleDeleteClick}>
+            <FaTrash className="icon1" />
+          </button>
         </span>
       </div>
       <div className="post-content1">
