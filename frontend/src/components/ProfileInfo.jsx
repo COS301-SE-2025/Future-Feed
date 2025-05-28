@@ -1,7 +1,6 @@
 import React from 'react';
 import './css/ProfileInfo.css';
 import { FaHeart, FaComment, FaShare } from 'react-icons/fa';
-import profilePic from '../assets/GRP1.jpg'; // porfile photo for now
 import { Link } from 'react-router-dom';
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext.jsx";

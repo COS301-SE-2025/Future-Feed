@@ -209,6 +209,7 @@ cd FutureFeed
 ```
 
 ### Running Tests
+ - Unit Testing
 
 ## GitHub Repository
 ### Structure
