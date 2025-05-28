@@ -141,6 +141,10 @@
 .navigation-sidebar1 .icon1 {
     font-size: 32px;
     margin-left: 40px;
+    color:#00000096;
+}
+.navigation-sidebar1 .icon1:hover {
+    color:#000000;
 }
 
 .feed1 {
@@ -229,7 +233,8 @@
 }
 
 .attachment-button1.image-attached1 {
-    border: 3px solid rgb(22, 249, 169);
+    border: 3px solid rgb(0, 0, 0);
+    width: 10px;
 }
 
 .create-post1 h3 {
@@ -316,7 +321,9 @@
     word-wrap: break-word;
     max-width: 100%;
 }
-
+.post-image1{
+    max-width: 100%;
+}
 .post-actions1 {
     display: flex;
     justify-content: space-between;
