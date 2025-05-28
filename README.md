@@ -122,6 +122,8 @@
 	  	</td>
 	  	<td align="center">
 			Backend Developer
+			<br>
+			Integration Tester
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
