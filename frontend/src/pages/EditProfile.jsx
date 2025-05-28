@@ -13,7 +13,7 @@ const [username, setUsername] = useState(userData.username);
 const [displayName, setDisplayName] = useState(userData.displayName);
 const [bio, setBio] = useState(userData.bio);
 const [profileImage, setProfileImage] = useState(userData.profileImage);
-const [accountType, setAccountType] = useState(userData.accountType);
+//const [accountType, setAccountType] = useState(userData.accountType);
 
 const handleImageChange = (e) => {
   const file = e.target.files[0];
@@ -29,8 +29,8 @@ const handleSubmit = (e) => {
     username,
     displayName, // Assuming same for now
     bio,
-    profileImage,
-    accountType
+    profileImage
+    //accountType
   });
 };
 
@@ -82,8 +82,8 @@ const handleSubmit = (e) => {
                 <input type="url" id="website" name="website" placeholder="https://example.com" />
             </div> */}
 
-            <div className="form-group">
-                <label>Account Type</label>
+            {/* <div className="form-group">
+                 <label>Account Type</label>
                 <div className="radio-group">
                 <label>
                     <input
@@ -104,9 +104,9 @@ const handleSubmit = (e) => {
                     onChange={() => setAccountType("professional")}
                     />
                     Professional
-                </label>
+                </label> 
                 </div>
-            </div>
+            </div> */}
 
             <button type="submit" onClick={handleSubmit} className="save-button">Save Changes</button>
         </form>
