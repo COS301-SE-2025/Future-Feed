@@ -6,7 +6,7 @@ import WhoToFollowSection from "../components/WhoToFollow";
 
 const SearchPage = () => {
     return (
-        <body className="search-page-body">
+        <div className="search-page-body">
     <Sidebar />
             <div className="search-page">
       <div className="main-content">
@@ -16,7 +16,7 @@ const SearchPage = () => {
     </div>
 
 
-        </body>
+        </div>
         
     );
 };

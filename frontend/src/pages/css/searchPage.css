@@ -16,6 +16,12 @@
 }
 .search-page-body {
       background-color: grey;
+      color: gray;
+      padding-left: 40rem;
+      display: flex;
+      padding-right: 50rem;
+      
+      
 }
 .trends-button{
     background-color: white;
