@@ -5,7 +5,7 @@
   min-height: 100vh;
 }
 .user-profile-body {
-  background-color: grey;
+  background-color: rgb(255, 255, 255);
   color: grey;
   padding-left: 40rem;
   padding-right: 40rem;
