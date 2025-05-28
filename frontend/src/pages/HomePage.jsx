@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FaHome,
   FaSearch,
@@ -8,13 +8,14 @@ import {
   FaUser,
   FaBell,
   FaImage
-} from "react-icons/fa";
-import ffCropped from "../assets/FF cropped.png";
-import HomePagePost from "../components/HomePagePost";
-import "./css/homePage.css";
+} from 'react-icons/fa';
+import ffCropped from '../assets/FF cropped.png';
+import userProfile from '../assets/userProfile.png';
+import HomePagePost from '../components/HomePagePost';
+import './css/homePage.css';
 
 const HomePage = () => {
-  const [postText, setPostText] = useState("");
+  const [postText, setPostText] = useState('');
   const [postImage, setPostImage] = useState(null);
   const [posts, setPosts] = useState([]);
 
@@ -23,7 +24,7 @@ const HomePage = () => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPostImage(reader.result); // base64 string
+        setPostImage(reader.result);
       };
       reader.readAsDataURL(file);
     }
@@ -31,100 +32,90 @@ const HomePage = () => {
 
   const handlePostSubmit = (e) => {
     e.preventDefault();
-
     if (!postText && !postImage) return;
-
     const newPost = {
       id: Date.now(),
-      profileImage: ffCropped,
-      username: "Current User",
-      postTime: "Just now",
+      profileImage: userProfile,
+      username: 'Syntax Squad',
+      postTime: 'Just now',
       content: postText,
       image: postImage,
     };
-
     setPosts([newPost, ...posts]);
-    setPostText("");
+    setPostText('');
     setPostImage(null);
   };
 
-  return (
-    <div className="home-page">
-      {/* Logo */}
-      <img src={ffCropped} alt="Future Feed Logo" className="homePage-logo" />
+  const handleDeletePost = (id) => {
+    setPosts(posts.filter(post => post.id !== id));
+  };
 
-      {/* Sidebar */}
-      <div className="navigation-sidebar">
+  return (
+    <div className="home-page1">
+      <img src={ffCropped} alt="Future Feed Logo" className="homePage-logo1" />
+      <div className="navigation-sidebar1">
         <nav>
           <ul>
-            <li className="active">
-              <FaHome className="icon" />
+            <li className="active1">
+              <FaHome className="icon1" />
             </li>
             <li>
-              <FaSearch className="icon" />
+              <Link to="/search">
+                     <FaSearch className="icon1" />  
+              </Link>
             </li>
             <li>
-              <FaRobot className="icon" />
+              <Link to="/construction">
+                     <FaRobot className="icon1" />  
+              </Link>
             </li>
             <li>
-              <FaBell className="icon" />
-            </li>
-            <li>
-              <FaHeart className="icon" />
+               <Link to="/notifications">
+                     <FaBell className="icon1" />  
+              </Link>
             </li>
             <Link to="/user-profile">
               <li>
-                <FaUser className="icon" />
+                <FaUser className="icon1" />
               </li>
             </Link>
           </ul>
         </nav>
       </div>
-
-      {/* Feed */}
-      <div className="feed">
-        <div className="new-post">
+      <div className="feed1">
+        <div className="new-post1">
           <form onSubmit={handlePostSubmit}>
-            <div className="new-post-container">
+            <div className="new-post-container1">
               <textarea
-                className="new-post-text"
+                className="new-post-text1"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
                 placeholder="What's on your mind?"
                 rows="2"
               />
-
-              <div className="new-post-buttons">
+              <div className="new-post-buttons1">
                 <input
                   type="file"
                   accept="image/*"
-                  style={{ display: "none" }}
+                  style={{ display: 'none' }}
                   id="photo-upload"
                   onChange={handlePhotoUpload}
                 />
                 <button
                   type="button"
-                  className={`attachment-button ${
-                    postImage ? "image-attached" : ""
-                  }`}
-                  onClick={() =>
-                    document.getElementById("photo-upload").click()
-                  }
+                  className={`attachment-button1 ${postImage ? 'image-attached1' : ''}`}
+                  onClick={() => document.getElementById('photo-upload').click()}
                 >
-                  <FaImage className="attachment-icon" />
+                  <FaImage className="attachment-icon1" />
                 </button>
-
-                <button type="submit" className="create-post">
-                  <h3 className="create-post-text">New Post</h3>
+                <button type="submit" className="new-post-button1">
+                  <h3 className="create-post-text1">New Post</h3>
                 </button>
               </div>
             </div>
           </form>
         </div>
-
-        <div className="main-seperator-main"></div>
-
-        {/* Posts */}
+        <div className="main-seperator-main1"></div>
         {posts.map((post) => (
           <React.Fragment key={post.id}>
             <HomePagePost
@@ -133,8 +124,10 @@ const HomePage = () => {
               postTime={post.postTime}
               content={post.content}
               image={post.image}
+              id={post.id}
+              onDelete={handleDeletePost}
             />
-            <div className="main-seperator"></div>
+            <div className="main-seperator1"></div>
           </React.Fragment>
         ))}
       </div>

@@ -1,8 +1,6 @@
-import React from 'react';
-import './css/ProfileInfo.css';
-import { FaHeart, FaComment, FaShare } from 'react-icons/fa';
-import profilePic from '../assets/GRP1.jpg'; // porfile photo for now
-import { Link } from 'react-router-dom';
+import React from "react";
+import "./css/ProfileInfo.css";
+import { Link } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../context/UserContext.jsx";
 
@@ -45,20 +43,19 @@ const ProfileInfo = () => {
           <span className="stat-label">Bots</span>
         </div>
       </div>
-      {/*buttons like post , highlitghs etc*/ }
+      {/*buttons like post , highlitghs etc*/}
       <div className="profile-btn-container">
-        <button className="profile-button-btn">Posts</button>
+        <Link to="/home">
+          <button className="profile-button-btn">posts</button>
+        </Link>
         <button className="profile-button-btn">Media</button>
         <button className="profile-button-btn">Reposts</button>
         <button className="profile-button-btn">Highlights</button>
         <button className="profile-button-btn">Likes</button>
         {/*Twitter has this option*/}
         <button className="profile-button-btn">Replies</button>
-
       </div>
-      
-      
     </div>
-    );
+  );
 };
 export default ProfileInfo;

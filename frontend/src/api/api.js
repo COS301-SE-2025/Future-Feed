@@ -1,12 +1,12 @@
 import axios from 'axios';
 
 const API = axios.create({
-    baseURL: 'http://localhost:8080/api/auth', // Include /auth since your controller is mapped to it
+    baseURL: 'http://localhost:8080/api/auth', // "auth for controller"
 });
 
 export const registerUser = async (userData) => {
     try {
-        const response = await API.post('/register', userData); // Now maps to /api/auth/register
+        const response = await API.post('/register', userData); // /api/auth/register
         return response.data;
     } catch (error) {
         console.error('Error registering user:', error.response?.data || error.message);

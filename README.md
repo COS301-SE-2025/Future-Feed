@@ -1,15 +1,32 @@
 # Future Feed by Syntex Squad for our COS 301 Capstone Project
 
 <div class="display: flex; justify-content: center; align-items: center;">
-<img src="Documentation/Logos/Future Feed Main Logo.png" alt="drawing" width="500"/>
+<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="500"/>
 </div>
 <br>
+
+## Links:
+ - <a href="Documentation/Specification/Requirement Specification.md">Requirement Specification</a>
+ - <a href="Documentation/Specification/Design Specification.md">Design Specification</a>
+ - <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
 
 ## Project Description:
  - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
  - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
 
 ## Deliverables:
+### Demo 1 use cases:
+ - User management
+	* Upload profile
+	* Display pictures
+
+ - Post Creation
+ 	* Create Post
+ 	* Delete Post
+
+ - User interaction
+	* User comment
+	* User likes
 
 ## Demo 1 Features:
  - User Management: Register, log in, and manage profiles with JWT authentication.
@@ -19,7 +36,7 @@
 
 ## Team Members:
 <table>
-    <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th></tr>
+    <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th><th>Github</th></th></tr>
     <tr>
     	<td align="center">
 			Lesedi Manoto
@@ -28,7 +45,11 @@
 			<br>
 	  	</td>
 	  	<td align="center">
-			Project Manager
+			Project Manager 
+			<br>
+			Frontend Engineer
+			<br>
+			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, SQL
@@ -38,6 +59,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/notthestarsign">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -47,6 +73,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Frontend Developer 
+			<br>
+			Testing Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -56,6 +85,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/chuck776">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -68,6 +102,8 @@
 			Front-End Developer 
 			<br>
 			DevOps Engineer
+			<br>
+			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS, JS/ReactJs, TailwindCSS/NodeJS, SQL
@@ -77,6 +113,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/jongisapho">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -86,6 +127,7 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Backend Developer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -95,6 +137,11 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/RethaMokoena">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
     <tr>
     	<td align="center">
@@ -104,6 +151,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
+			Backend Developer 
+			<br>
+			Testing Engineer
 	  	</td>
 	    	<td align="center">
 			Java, C++, C#, ASP.NET, HTML/Javascript/CSS/PHP/Node.js
@@ -113,13 +163,44 @@
 				<img src="https://custom-icon-badges.demolab.com/badge/LinkedIn-0A66C2?logo=linkedin-white&logoColor=fff">
 			</a>
 	  	</td>
+	    	<td>
+			<a href="https://github.com/u21740012">
+				<img src="https://img.shields.io/badge/-GitHub-181717?logo=github&logoColor=white">
+			</a>
+		</td>
 	</tr>
 </table>
 
-## Getting Started
-### Prerequisites
+## Code Quality Badges
+### Code Coverage
+[![Coverage Status](https://coveralls.io/repos/github/COS301-SE-2025/Future-Feed/badge.svg?branch=main)](https://coveralls.io/github/COS301-SE-2025/Future-Feed?branch=main)
 
-### Installation
+### Build
+[![Build status](https://ci.appveyor.com/api/projects/status/yourappveyorid?svg=true)](https://ci.appveyor.com/project/yourorg/yourrepo)
+
+### Requirements
+[![npm version](https://img.shields.io/npm/v/yourpackage)](https://www.npmjs.com/package/yourpackage)
+
+### Issue Tracking
+[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
+[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
+
+### Monitoring Badges
+[![UptimeRobot Status](https://img.shields.io/uptimerobot/status/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
+[![UptimeRobot Ratio](https://img.shields.io/uptimerobot/ratio/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
+
+[![NodePing status](https://img.shields.io/nodeping/status/201205050153W2Q4C-0J2HSIRF)](https://nodeping.com/reports/checks/201205050153W2Q4C-0J2HSIRF)
+
+
+### GitHub
+[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
+[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
+[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
+
+
+## Getting Started
 
 ### Clone the Repository:
 ```
@@ -127,16 +208,8 @@ git clone https://github.com/SyntexSquad/FutureFeed.git
 cd FutureFeed
 ```
 
-### Set Up Frontend (/client):
-
-
-
-### Set Up Backend (/server):
-
-
-### Set Up Database:
-
 ### Running Tests
+ - Unit Testing
 
 ## GitHub Repository
 ### Structure

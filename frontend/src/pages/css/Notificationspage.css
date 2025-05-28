@@ -1,20 +1,18 @@
 
+.sidebar{
+  margin-left:-1220px ;
+}
 .layout-wrapper {
   display: flex;
   justify-content: center;
 
   
-  background-color: grey;
+  background-color: white;
   min-height: 100vh;
    
   position: relative;
   padding: 40px 450px 40px;
-  margin-top: 470px;
-  
-  
-  
-  
-
+  margin-top: 490px;
 }
 
 .layout-container {

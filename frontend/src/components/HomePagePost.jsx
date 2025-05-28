@@ -1,34 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   FaHeart,
   FaComment,
   FaRetweet,
   FaStar,
-  FaEllipsisH
+  FaTrash
 } from 'react-icons/fa';
 import '../pages/css/homePage.css';
 
-const HomePagePost = ({ profileImage, username, postTime, content, image }) => {
+const HomePagePost = ({ profileImage, username, postTime, content, image, id, onDelete }) => {
+  const [liked, setLiked] = useState(false);
+
+  const handleLikeClick = () => {
+    setLiked(!liked);
+  };
+
+  const handleDeleteClick = () => {
+    onDelete(id);
+  };
+
   return (
-    <div className="post">
-      <div className="post-header">
-        <img src={profileImage} alt="" className="profile-image" />
-        <span className="username">{username}</span>
-        <span className="seperator">|</span>
-        <span className="post-time">{postTime}</span>
-        <span className="settings"><FaEllipsisH className="icon" /></span>
+    <div className="post1">
+      <div className="post-header1">
+        <img src={profileImage} alt="" className="profile-image1" />
+        <span className="username1">{username}</span>
+        <span className="seperator1">|</span>
+        <span className="post-time1">{postTime}</span>
+        <span className="settings1">
+          <button type="button" onClick={handleDeleteClick}>
+            <FaTrash className="icon1" />
+          </button>
+        </span>
       </div>
-      <div className="post-content">
+      <div className="post-content1">
         {content && <p>{content}</p>}
-        {image && <img src={image} alt="Post" className="post-image" />}
+        {image && <img src={image} alt="Post" className="post-image1" />}
       </div>
-      <div className="post-actions">
-        <div className="left-actions">
-          <button className="action-button"><FaHeart className="action-icon" /></button>
-          <button className="action-button"><FaComment className="action-icon" /></button>
-          <button className="action-button"><FaRetweet className="action-icon" /></button>
+      <div className="post-actions1">
+        <div className="left-actions1">
+          <button
+            className={`action-button1 ${liked ? 'liked1' : ''}`}
+            onClick={handleLikeClick}
+          >
+            <FaHeart className="action-icon1" />
+          </button>
+          <button className="action-button1">
+            <FaComment className="action-icon1" />
+          </button>
+          <button className="action-button1">
+            <FaRetweet className="action-icon1" />
+          </button>
         </div>
-        <button className="bookmark-button"><FaStar className="action-icon" /></button>
+        <button className="bookmark-button1">
+          <FaStar className="action-icon1" />
+        </button>
       </div>
     </div>
   );

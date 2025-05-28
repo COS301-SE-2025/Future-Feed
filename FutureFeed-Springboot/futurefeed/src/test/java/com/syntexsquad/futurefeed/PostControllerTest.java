@@ -19,9 +19,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PostController.class)
@@ -37,6 +39,7 @@ public class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // ---------- POST /api/posts ----------
     @Test
     void testCreatePost_shouldReturnCreatedPost() throws Exception {
         PostRequest postRequest = new PostRequest();
@@ -53,7 +56,7 @@ public class PostControllerTest {
         post.setIsBot(false);
         post.setCreatedAt(LocalDateTime.now());
 
-        Mockito.when(postService.createPost(any(PostRequest.class))).thenReturn(post);
+        when(postService.createPost(any(PostRequest.class))).thenReturn(post);
 
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,7 +92,7 @@ public class PostControllerTest {
         postRequest.setImageUrl("https://example.com/image.jpg");
         postRequest.setIsBot(false);
 
-        Mockito.when(postService.createPost(any(PostRequest.class)))
+        when(postService.createPost(any(PostRequest.class)))
                 .thenThrow(new RuntimeException("Unexpected failure"));
 
         mockMvc.perform(post("/api/posts")
@@ -99,6 +102,71 @@ public class PostControllerTest {
                 .andExpect(content().string("Server error: Unexpected failure"));
     }
 
+    // ---------- GET /api/posts/search ----------
+    @Test
+    void testSearchPosts_shouldReturnMatchingPosts() throws Exception {
+        Post post1 = new Post();
+        post1.setId(1);
+        post1.setUserId(1);
+        post1.setContent("Keyword match one");
+        post1.setImageUrl("https://example.com/1.jpg");
+        post1.setIsBot(false);
+
+        Post post2 = new Post();
+        post2.setId(2);
+        post2.setUserId(2);
+        post2.setContent("Keyword match two");
+        post2.setImageUrl("https://example.com/2.jpg");
+        post2.setIsBot(true);
+
+        List<Post> mockResults = List.of(post1, post2);
+
+        when(postService.searchPosts("keyword")).thenReturn(mockResults);
+
+        mockMvc.perform(get("/api/posts/search")
+                        .param("keyword", "keyword")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(post1.getId()))
+                .andExpect(jsonPath("$[1].id").value(post2.getId()));
+    }
+
+    // ---------- DELETE /api/posts/del/{id} ----------
+    @Test
+    void testDeletePost_shouldReturnSuccessMessage() throws Exception {
+        int postId = 1;
+
+        when(postService.deletePost(postId)).thenReturn(true);
+
+        mockMvc.perform(delete("/api/posts/del/{id}", postId))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Post deleted successfully"));
+    }
+
+    @Test
+    void testDeletePost_notFound_shouldReturn404() throws Exception {
+        int postId = 999;
+
+        when(postService.deletePost(postId)).thenReturn(false);
+
+        mockMvc.perform(delete("/api/posts/del/{id}", postId))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Post not found"));
+    }
+
+    @Test
+    void testDeletePost_serverError_shouldReturn500() throws Exception {
+        int postId = 1;
+
+        when(postService.deletePost(postId)).thenThrow(new RuntimeException("DB failure"));
+
+        mockMvc.perform(delete("/api/posts/del/{id}", postId))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Server error: DB failure"));
+    }
+
+    // ---------- Security Configuration ----------
     @TestConfiguration
     static class TestSecurityConfig {
         @Bean
