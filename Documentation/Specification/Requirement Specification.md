@@ -33,6 +33,20 @@
 	    		So that I have the ability to change my profile wheever I want.
 		</td>
 	     	<td>
+		    	4
+	   	</td>
+	</tr>
+	<tr>
+	     	<td>
+			Update user profile
+			<br>
+		</td>
+	    	<td>
+			As a user <br>
+	    		I want to be able to update my user profile and bio <br>
+	    		So that I have the ability to change my user details anytime i want.
+		</td>
+	     	<td>
 		    	5
 	   	</td>
 	</tr>
