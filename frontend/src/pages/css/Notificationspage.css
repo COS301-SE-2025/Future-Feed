@@ -1,30 +1,66 @@
-.layout-container {
+
+.layout-wrapper {
   display: flex;
   justify-content: center;
+
+  width: 100%;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  
+
+}
+
+.layout-container {
+  display: flex;
+  justify-content: space-between;
+  max-width: 1200px;
+  width: 100%;
+  
+
+  background-color: grey;
   align-items: flex-start;
   background-color: rgb(255, 255, 255);
   color: grey;
-  min-height: 100vh;
-  padding: 0 1rem;
+  
+  padding: 20rem;
   gap: 2rem;
-}
-.page-title{
-  color:grey
-}
-/* Main Content (center) */
-.notifications-main {
-  /* flex: 1; */
-  max-width: 600px;
-  padding: 1rem;
-  /* min-height: 100vh; */
-  background-color: white;
-  border: none;
-  margin-top: 50px;
-  margin-bottom: 50px;
-  border-radius: 20px;
-  box-shadow: 0px 4px 2px 8px rgba(0, 0, 0, 0.25);
+  
+  
+
+
 }
 
+.page-title {
+  color: grey
+}
+
+/* Main Content (center) */
+.notifications-main {
+
+  flex: 1;
+  max-width: 700px;
+  min-width: 700px;
+  padding: 1rem;
+  border-left: 1px solid #2f3336;
+  border-right: 1px solid #2f3336;
+  
+  background-color: white;
+  border: none;
+  display: flex;
+  flex-direction: column ;
+  align-items: flex-start;
+  padding-top: 4rem;
+
+
+}
+
+.notification-card:hover {
+  background-color: #f5f5f5;
+  cursor: pointer;
+}
+.notification-card{
+  width: 100%;
+}
 .page-title {
   font-size: 1.5rem;
   font-weight: bold;
@@ -36,7 +72,7 @@
   display: flex;
   gap: 1rem;
   margin-bottom: 1rem;
-   font-weight: 600;
+  font-weight: 600;
 }
 
 .notifications-button {
@@ -56,26 +92,41 @@
   color: #000;
   border: black 1px solid;
 }
+
 .notifications-button.active:hover {
-  
- background-color: white;
+
+  background-color: white;
 }
 
 /* Example notification message */
 .notification-card {
-  
-  padding: 1rem;
-  border-radius: 12px;
-  margin-bottom: 1rem;
-  border: grey 1px solid;
-  box-shadow: 0px 4px 2px rgba(0, 0, 0, 0.1);
-  border-radius: 10px;
 
+ width: 100%;
+  max-width: 500px;
+  background-color: white;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  font-size: 0.95rem;
+  border-radius: 10px;
+  
 }
+
 /*for rhs*/
 .notifications-right {
   flex: 0 0 350px;
-  position: sticky;
+  position: relative;
+  max-width: 350px;
   top: 0;
   height: 100vh;
+  gap: 2rem;
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  
+  
+  
+
+
 }

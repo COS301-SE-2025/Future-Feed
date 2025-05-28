@@ -15,6 +15,12 @@
   height: 427px;
   width: 87px;
   border-radius: 10px;
+
+  position: absolute;
+  
+}
+.sidebar:hover{
+  color: gray;
 }
 
 .icon {

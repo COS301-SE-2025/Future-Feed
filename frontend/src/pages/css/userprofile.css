@@ -6,6 +6,10 @@
 }
 .user-profile-body {
   background-color: grey;
+  color: grey;
+  padding-left: 40rem;
+  padding-right: 40rem;
+  padding-top: 20rem;
 }
 
 /* This wraps around the main content (everything except the sidebar) */

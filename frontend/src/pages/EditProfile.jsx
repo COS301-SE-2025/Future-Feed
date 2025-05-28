@@ -8,7 +8,7 @@ const EditProfile = () => {
     const [accountType, setAccountType] = useState("personal");
 
     return (
-        <body className="edit-profile-body">
+        <div className="edit-profile-body">
             
 
             <div className="edit-profile-container">
@@ -69,7 +69,7 @@ const EditProfile = () => {
         </div>
 
 
-        </body>
+        </div>
         
     );
 };

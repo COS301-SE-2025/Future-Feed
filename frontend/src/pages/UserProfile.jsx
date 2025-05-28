@@ -6,7 +6,7 @@ import "./css/userprofile.css";
 
 const UserProfile = () => {
     return(
-      <body className="user-profile-body">
+      <div className="user-profile-body">
         <div className="user-profile-page">
       <Sidebar />
       <div className="main-section">
@@ -15,7 +15,7 @@ const UserProfile = () => {
       </div>
     </div>
 
-      </body>
+      </div>
         
     );
 };
