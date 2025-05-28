@@ -39,7 +39,7 @@ const Login = () => {
         </Link>
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="username">username</label>
+          <label htmlFor="username">Username</label>
           <input
             type="username"
             id="username"

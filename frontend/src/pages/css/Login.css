@@ -81,7 +81,9 @@ font-weight: bold;
 color: #000;
 }
 
-
+#password {
+    height: 50px;
+}
 
 .login-box button {
 margin-top: 20px;
