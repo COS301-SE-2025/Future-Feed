@@ -1,6 +1,10 @@
 {
   "dependencies": {
+    "axios": "^1.9.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@babel/code-frame": "^7.27.1"
   }
 }

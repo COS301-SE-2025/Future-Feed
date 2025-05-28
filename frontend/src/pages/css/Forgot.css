@@ -8,7 +8,9 @@ flex-direction: column;
 align-items: center;
 }
 
-
+.error-message{
+    color: red;
+}
 body {
 margin: 0;
 padding: 0;

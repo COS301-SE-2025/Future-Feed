@@ -7,7 +7,6 @@ import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
 import Forgot from "./pages/Forgot";
 import UserProfile from "./pages/UserProfile";
-
 import SearchPage from "./pages/SearchPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import EditProfilePage from "./pages/EditProfile";

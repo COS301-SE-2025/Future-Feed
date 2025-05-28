@@ -4,6 +4,7 @@ import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,11 +13,37 @@ public class MockUserService {
     private final Map<String, AppUser> users = new HashMap<>();
 
     public void registerUser(RegisterRequest request) {
+        if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username is required.");
+        }
+        if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
+            throw new IllegalArgumentException("Password is required.");
+        }
+        if (request.getEmail() == null || !request.getEmail().contains("@")) {
+            throw new IllegalArgumentException("Valid email is required.");
+        }
+
+        LocalDate dob =  LocalDate.parse(request.getDob());
+        if (dob == null ) {
+            throw new IllegalArgumentException("Date of birth cannot be null");
+        }
+        if (dob.isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date of birth cannot be in the future.");
+        }
+
         if (users.containsKey(request.getUsername())) {
             throw new IllegalArgumentException("Username already taken.");
         }
 
-        AppUser user = new AppUser(request.getUsername(), request.getPassword());
+        AppUser user = new AppUser();
+        user.setUsername(request.getUsername());
+        user.setPassword(request.getPassword());
+        user.setRole("USER");
+        user.setEmail(request.getEmail());
+        user.setDisplayName(request.getDisplayName());
+        user.setProfilePicture(request.getProfilePicture());
+        user.setDateOfBirth(dob);
+
         users.put(user.getUsername(), user);
     }
 
@@ -27,5 +54,12 @@ public class MockUserService {
         }
         return user;
     }
+
+    public AppUser getUserByUsername(String username) {
+        return users.get(username);
+    }
+
+    public boolean deleteUserByUsername(String username) {
+    return users.remove(username) != null;
 }
-// This is a mock service for demonstration purposes.   
+}

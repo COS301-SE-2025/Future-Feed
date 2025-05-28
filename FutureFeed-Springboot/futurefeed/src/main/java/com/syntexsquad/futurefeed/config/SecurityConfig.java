@@ -17,6 +17,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+            .cors()
+            .and()
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -26,6 +28,10 @@ public class SecurityConfig {
                     "/js/**",
                     "/images/**",
                     "/api/auth/**",
+                    "/api/posts/**",
+                    "/api/likes/**",
+                    "/api/comments/**",
+                    "/api/user/**",
                     "/actuator/**"
                 ).permitAll()
                 .anyRequest().authenticated()
