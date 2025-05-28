@@ -1,22 +1,22 @@
 import React from "react";
-import Sidebar from "../components/Sidebar";
+import Sidebar from "../components/Sidebar.jsx";
 import "./css/searchPage.css";
 import SearchTrendsSection from "../components/SearchTrendsSection";
 import WhoToFollowSection from "../components/WhoToFollow";
 
 const SearchPage = () => {
     return (
-        <body className="search-page-body">
-    <Sidebar />
+        <div className="search-page-body">
+            <Sidebar />
             <div className="search-page">
-      <div className="main-content">
-        <SearchTrendsSection />
-        <WhoToFollowSection />
-      </div>
-    </div>
+            <div className="main-content">
+              <SearchTrendsSection />
+              <WhoToFollowSection />
+            </div>
+          </div>
 
 
-        </body>
+        </div>
         
     );
 };

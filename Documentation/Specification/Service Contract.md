@@ -53,7 +53,7 @@
       <td><strong>Name:</strong> deleteUser</td>
       <td>
         <strong>Purpose:</strong> Deletes user by username from Future Feed<br/>
-        <strong>Inputs:</strong> { string: username, string: password, string: email, string: displayName, string: profilePicture, LocalDate: dateOfBirth }<br/>
+        <strong>Inputs:</strong> { string: username }<br/>
         <strong>Outputs:</strong> Acknowledgement
       </td>
     </tr>

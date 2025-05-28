@@ -10,6 +10,7 @@ import {
   FaImage
 } from 'react-icons/fa';
 import ffCropped from '../assets/FF cropped.png';
+import userProfile from '../assets/userProfile.png';
 import HomePagePost from '../components/HomePagePost';
 import './css/homePage.css';
 
@@ -34,8 +35,8 @@ const HomePage = () => {
     if (!postText && !postImage) return;
     const newPost = {
       id: Date.now(),
-      profileImage: ffCropped,
-      username: 'Current User',
+      profileImage: userProfile,
+      username: 'Syntax Squad',
       postTime: 'Just now',
       content: postText,
       image: postImage,
@@ -59,16 +60,19 @@ const HomePage = () => {
               <FaHome className="icon1" />
             </li>
             <li>
-              <FaSearch className="icon1" />
+              <Link to="/search">
+                     <FaSearch className="icon1" />  
+              </Link>
             </li>
             <li>
-              <FaRobot className="icon1" />
+              <Link to="/construction">
+                     <FaRobot className="icon1" />  
+              </Link>
             </li>
             <li>
-              <FaBell className="icon1" />
-            </li>
-            <li>
-              <FaHeart className="icon1" />
+               <Link to="/notifications">
+                     <FaBell className="icon1" />  
+              </Link>
             </li>
             <Link to="/user-profile">
               <li>

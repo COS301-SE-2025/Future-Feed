@@ -28,12 +28,6 @@
 	* User comment
 	* User likes
 
-## Demo 1 Features:
- - User Management: Register, log in, and manage profiles with JWT authentication.
- - Post Creation: Create and view posts.
- - Feed Preset Creation: Define basic feed rules.
- - Base Features: Light/dark theme toggle, form validation.
-
 ## Team Members:
 <table>
     <tr><th>Member</th><th>Roles</th><th>Skills</th><th>LinkedIn</th><th>Github</th></th></tr>
