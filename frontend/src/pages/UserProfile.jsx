@@ -8,8 +8,9 @@ const UserProfile = () => {
     return(
       <div className="user-profile-body">
         <div className="user-profile-page">
-        <Sidebar />
+        
         <div className="main-section">
+          <Sidebar />
           <ProfileInfo />
           <Feed />
         </div>

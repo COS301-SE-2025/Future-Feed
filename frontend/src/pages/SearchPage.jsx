@@ -7,11 +7,13 @@ import WhoToFollowSection from "../components/WhoToFollow";
 const SearchPage = () => {
     return (
         <div className="search-page-body">
-            <Sidebar />
             <div className="search-page">
+              <Sidebar />
             <div className="main-content">
+              
               <SearchTrendsSection />
               <WhoToFollowSection />
+
             </div>
           </div>
 
