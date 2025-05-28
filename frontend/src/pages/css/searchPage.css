@@ -6,7 +6,7 @@
   flex-direction: row;
   width: 100%;
   min-height: 100vh;
-  background-color: grey;
+  background-color: rgb(255, 255, 255);
   color: #fff;
 }
 
@@ -17,8 +17,9 @@
   padding: 2rem;
   gap: 2rem;
 }
+
 .search-page-body {
-      background-color: grey;
+      background-color: rgb(255, 255, 255);
 }
 .trends-button{
     background-color: white;
