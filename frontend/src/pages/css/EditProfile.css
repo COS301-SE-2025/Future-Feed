@@ -125,46 +125,7 @@ button,
   gap: 8px;
   font-weight: 600;
 }
-.edit-profile-body{
-    background-color: grey;
-    color: grey;
-    padding: 10rem;
-}
-.edit-profile-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    padding: 6rem;
-    background-color: white;
-    border: grey 0.5px solid;
-    border-radius: 16px;
-    box-shadow: grey 0px 4px 2px 8px;
-    text-align: center ;
-    position: relative;
 
-}
-.save-button {
-    color: black;
-    cursor: pointer ;
-    font-weight:600 ;
-    border: black 1px solid;
-    border-radius: 100px;
-
-    
-}
-.save-button:hover {
-    background-color: grey;
-    color: black;
-}
-.profile-picture {
- 
-  position: relative;
-
- 
-  
-}
-/*back button*/
 .back-icon {
   position: absolute;
   top: 20px;
