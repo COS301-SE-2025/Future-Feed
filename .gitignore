@@ -1,0 +1,45 @@
+# Node.js / React / Tailwind
+node_modules/
+.env
+.env.*
+dist/
+build/
+*.css.txt
+
+# macOS
+.DS_Store
+
+# Python (if applicable)
+__pycache__/
+*.pyc
+
+# VSCode
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Java
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+hs_err_pid*
+replay_pid*
+.mtj.tmp/
+*.ctxt
+
+# Package Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Yarn (optional)
+.yarn/
+.pnp.*
+.yarnrc.yml
+
+# Others
+package-lock.json
