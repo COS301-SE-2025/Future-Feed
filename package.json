@@ -5,6 +5,7 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@babel/code-frame": "^7.27.1"
+    "@babel/code-frame": "^7.27.1",
+    "@tailwindcss/postcss": "^4.1.8"
   }
 }
