@@ -10,6 +10,10 @@
  - <a href="Documentation/Specification/Design Specification.md">Design Specification</a>
  - <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
 
+### Demo links:
+ - <a href="https://drive.google.com/uc?id=1U68PozQtl9v3ZFldNBVAkvNygU09yDlu&export=download"> Demo 1 video </a>
+ - <a href="https://docs.google.com/presentation/d/1WR348H6W3zR0sJQGFtURWZBOQn1MhI0D/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true"> Demo 1 presentation </a>
+
 ## Project Description:
  - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
  - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
