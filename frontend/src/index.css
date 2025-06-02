@@ -17,8 +17,13 @@ body {
 .container {
   text-align: center;
   background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   box-shadow: none;
 }
+
 
 .logo {
   width: 336px;
