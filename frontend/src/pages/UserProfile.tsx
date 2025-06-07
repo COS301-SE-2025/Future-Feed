@@ -6,7 +6,20 @@ import { Separator } from "@/components/ui/separator"
 import { Home, User, Bell, Settings, Search } from "lucide-react"
 import GRP1 from "../assets/GRP1.jpg";
 import PersonalSidebar from "@/components/personalSidebar"
+{/*sheet */ }
 
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const UserProfile = () => {
   return (
@@ -14,7 +27,7 @@ const UserProfile = () => {
     w-[250px] p-6 border-r border-gray-800
     
     
-    */ 
+    */
     <div className="flex min-h-screen bg-gray-800 text-white overflow-y-auto">
       <PersonalSidebar />
       {/* 
@@ -46,7 +59,7 @@ const UserProfile = () => {
       <main className="flex-1 max-w-2xl mx-auto border-x border-sky-100">
         {/* Banner + Avatar + Name */}
         <div className="relative">
-          <div className="h-36 bg-blue-500 w-full" />
+          <div className="h-36 bg-emerald-800 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-24 h-24 border-4 border-sky-100">
               <AvatarImage src={GRP1} alt="@syntexsquad" />
@@ -62,11 +75,55 @@ const UserProfile = () => {
               <h1 className="text-xl font-bold">Syntex Squad</h1>
               <p className="text-gray-400">@syntexsquad</p>
               <p className="mt-2 text-sm">yes</p>
+
+
+
             </div>
-            <Button variant="outline" className="text-black border-gray-700 hover:bg-gray-800">
-              Edit Profile
-            </Button>
+             <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">Edit Profile</Button>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Edit Profile</SheetTitle>
+          <SheetDescription>
+            Make changes to your profile here. Click save when you&apos;re done.
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
+          <div className="grid gap-3">
+            <Label htmlFor="sheet-name">Name</Label>
+            <Input id="sheet-name" placeholder="Syntex Squad" />
           </div>
+          <div className="grid gap-3">
+            <Label htmlFor="sheet-username">Username</Label>
+            <Input id="sheet-username" placeholder="@syntexsquad" />
+          </div>
+          <div className="grid gap-3">
+            <Label htmlFor="sheet-bio">Bio</Label>
+            <Input id="sheet-name" placeholder="Oh Yeaaaaa!" />
+          </div>
+        </div>
+        <SheetFooter>
+          <Button type="submit"variant="outline"className="text-black hover:bg-gray-800">Save changes</Button>
+          <SheetClose asChild>
+            <Button variant="outline" className="text-black bg-emerald-800 hover:bg-gray-800">Close</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+
+            {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/ }
+            {/*<Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">
+              Edit Profile
+            </Button>*/}
+          </div>
+
+
+
+
+
+
           <div className="mt-4 text-sm text-gray-400">
             <span className="font-medium text-white">150</span> Following ·{" "}
             <span className="font-medium text-white">1.2k</span> Followers ·{" "}
@@ -86,66 +143,66 @@ const UserProfile = () => {
             <TabsTrigger className="text-white" value="media">Media</TabsTrigger>
             <TabsTrigger className="text-white" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="text-white" value="highlights">Highlights</TabsTrigger>
-            
+
           </TabsList>
 
           <TabsContent value="posts" className="p-0">
-  {[ 
-    {
-      time: "2h ago",
-      text: "Excited to share my latest project with you all!",
-    },
-    {
-      time: "5h ago",
-      text: "Loving the new Future Feed design 💻",
-    },
-    {
-      time: "1d ago",
-      text: "React + TypeScript + Tailwind = developer heaven ✨",
-    },
-    {
-      time: "2d ago",
-      text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅",
-    },
-    {
-      time: "3d ago",
-      text: "Can't wait to roll out new features soon! Stay tuned.",
-    },
-    {
-      time: "4d ago",
-  text: "Check out this amazing view from my recent trip! 🌄",
-  image: GRP1 
+            {[
+              {
+                time: "2h ago",
+                text: "Excited to share my latest project with you all!",
+              },
+              {
+                time: "5h ago",
+                text: "Loving the new Future Feed design 💻",
+              },
+              {
+                time: "1d ago",
+                text: "React + TypeScript + Tailwind = developer heaven ✨",
+              },
+              {
+                time: "2d ago",
+                text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅",
+              },
+              {
+                time: "3d ago",
+                text: "Can't wait to roll out new features soon! Stay tuned.",
+              },
+              {
+                time: "4d ago",
+                text: "Check out this amazing view from my recent trip! 🌄",
+                image: GRP1
 
-    },
-  ].map((post, index) => (
-    <Card key={index} className="bg-gray-800 border-sky-100 border-b rounded-none">
-      <CardContent className="p-4">
-        <div className="flex gap-4">
-          <Avatar>
-            <AvatarImage src={GRP1} />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="flex justify-between">
-              <h2 className="font-bold text-white">Syntex Squad </h2>
-              <span className="text-sm text-gray-400">{post.time}</span>
-            </div>
-            <p className="text-gray-300">@syntexsquad</p>
-            <p className="mt-2 text-white">{post.text}</p>
-            {post.image && (
-              <img
-                src={post.image}
-                alt="Post"
-                className="mt-4 rounded-lg border border-gray-700"
-              />
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  ))}
-</TabsContent>
-{/*expand this area to add replies media etc*/ }
+              },
+            ].map((post, index) => (
+              <Card key={index} className="bg-gray-800 border-sky-100 border-b rounded-none">
+                <CardContent className="p-4">
+                  <div className="flex gap-4">
+                    <Avatar>
+                      <AvatarImage src={GRP1} />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h2 className="font-bold text-white">Syntex Squad </h2>
+                        <span className="text-sm text-gray-400">{post.time}</span>
+                      </div>
+                      <p className="text-gray-300">@syntexsquad</p>
+                      <p className="mt-2 text-white">{post.text}</p>
+                      {post.image && (
+                        <img
+                          src={post.image}
+                          alt="Post"
+                          className="mt-4 rounded-lg border border-gray-700"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </TabsContent>
+          {/*expand this area to add replies media etc*/}
 
           <TabsContent value="replies">
             <div className="p-4 text-gray-400">No replies yet.</div>

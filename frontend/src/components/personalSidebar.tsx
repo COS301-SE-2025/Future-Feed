@@ -4,9 +4,9 @@ import { Home, User, Bell, Settings, Search } from "lucide-react";
 
 const personalSidebar = () => {
   return (
-    <aside className="h-fit bg-gray-800 border-white text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
+    <aside className="h-fit bg-slate-300 border-white text-gray-800 w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
       <div className="text-2xl font-bold mb-6">Future Feed</div>
-      <nav className="font-bold flex flex-col space-y-4 text-lg text-gray-300">
+      <nav className="font-bold flex flex-col space-y-4 text-lg text-gray-800">
         <a href="#" className="flex items-center gap-3 hover:text-blue-500">
           <Home size={20} /> Home
         </a>
