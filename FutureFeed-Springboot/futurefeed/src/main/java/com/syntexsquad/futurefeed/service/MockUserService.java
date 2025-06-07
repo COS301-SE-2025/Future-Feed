@@ -56,6 +56,10 @@ public class MockUserService {
         return users.get(username);
     }
 
+    public AppUser getUserByEmail(String email) {
+        return users.get(email);
+    }
+
     public boolean deleteUserByUsername(String username) {
     return users.remove(username) != null;
 }
