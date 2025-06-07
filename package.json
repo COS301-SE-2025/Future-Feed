@@ -6,6 +6,8 @@
   },
   "devDependencies": {
     "@babel/code-frame": "^7.27.1",
-    "@tailwindcss/postcss": "^4.1.8"
+    "@tailwindcss/postcss": "^4.1.8",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.4"
   }
 }
