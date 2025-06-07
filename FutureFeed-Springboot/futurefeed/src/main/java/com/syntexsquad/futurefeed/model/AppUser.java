@@ -96,5 +96,12 @@ public void setProfilePicture(String profilePicture) {
         this.bio = bio;
     }
 
+    @Enumerated(EnumType.STRING)
+    private AuthProvider authProvider;
+
+    public enum AuthProvider {
+    LOCAL,
+    GOOGLE
+    }
 }
 
