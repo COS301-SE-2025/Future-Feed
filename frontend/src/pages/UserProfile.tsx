@@ -5,14 +5,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Home, User, Bell, Settings, Search } from "lucide-react"
 import GRP1 from "../assets/GRP1.jpg";
+import PersonalSidebar from "@/components/personalSidebar"
 
 
 const UserProfile = () => {
   return (
-    /*BELOW HERE IS THE WRAPPER / BODY DIV*/ 
-    <div className="flex min-h-screen bg-black text-white overflow-y-auto">
-      {/* Sidebar */}
-      <aside className="w-[250px] p-6 border-r border-gray-800 hidden md:block">
+    /*BELOW HERE IS THE WRAPPER / BODY DIV          
+    w-[250px] p-6 border-r border-gray-800
+    
+    
+    */ 
+    <div className="flex min-h-screen bg-gray-800 text-white overflow-y-auto">
+      <PersonalSidebar />
+      {/* 
+      <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
         <div className="text-2xl font-bold mb-6">Future Feed</div>
         <nav className="flex flex-col space-y-4 text-lg text-gray-300">
           <a href="#" className="flex items-center gap-3 hover:text-blue-500">
@@ -34,14 +40,15 @@ const UserProfile = () => {
 
         </nav>
       </aside>
+      Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto border-x border-gray-800">
+      <main className="flex-1 max-w-2xl mx-auto border-x border-sky-100">
         {/* Banner + Avatar + Name */}
         <div className="relative">
           <div className="h-36 bg-blue-500 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-24 h-24 border-4 border-black">
+            <Avatar className="w-24 h-24 border-4 border-sky-100">
               <AvatarImage src={GRP1} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
             </Avatar>
@@ -56,7 +63,7 @@ const UserProfile = () => {
               <p className="text-gray-400">@syntexsquad</p>
               <p className="mt-2 text-sm">yes</p>
             </div>
-            <Button variant="outline" className="text-white border-gray-700 hover:bg-gray-800">
+            <Button variant="outline" className="text-black border-gray-700 hover:bg-gray-800">
               Edit Profile
             </Button>
           </div>
@@ -68,17 +75,17 @@ const UserProfile = () => {
           </div>
         </div>
 
-        <Separator className="my-4 bg-gray-700" />
+        <Separator className="my-4 bg-sky-100" />
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full  grid-cols-5 bg-transparent border-b border-gray-700">
+          <TabsList className="grid w-full bg-black   grid-cols-5 bg-transparent border-b border-sky-100">
 
             <TabsTrigger className="text-white" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-white" value="replies">Replies</TabsTrigger>
             <TabsTrigger className="text-white" value="media">Media</TabsTrigger>
             <TabsTrigger className="text-white" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="text-white" value="likes">Highlights</TabsTrigger>
+            <TabsTrigger className="text-white" value="highlights">Highlights</TabsTrigger>
             
           </TabsList>
 
@@ -111,7 +118,7 @@ const UserProfile = () => {
 
     },
   ].map((post, index) => (
-    <Card key={index} className="bg-black border-gray-800 border-b rounded-none">
+    <Card key={index} className="bg-gray-800 border-sky-100 border-b rounded-none">
       <CardContent className="p-4">
         <div className="flex gap-4">
           <Avatar>
@@ -138,6 +145,7 @@ const UserProfile = () => {
     </Card>
   ))}
 </TabsContent>
+{/*expand this area to add replies media etc*/ }
 
           <TabsContent value="replies">
             <div className="p-4 text-gray-400">No replies yet.</div>
@@ -149,6 +157,10 @@ const UserProfile = () => {
 
           <TabsContent value="likes">
             <div className="p-4 text-gray-400">No liked posts yet.</div>
+          </TabsContent>
+
+          <TabsContent value="highlights">
+            <div className="p-4 text-gray-400">No highlights available  yet.</div>
           </TabsContent>
         </Tabs>
       </main>
