@@ -58,7 +58,11 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
-
+    <!-- Spring Security OAuth2 Client -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
         <!-- Development -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -82,7 +86,7 @@
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-actuator</artifactId>
 </dependency>
-    </dependencies>
+</dependencies>
 
     <build>
         <plugins>
