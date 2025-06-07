@@ -3,24 +3,46 @@ package com.syntexsquad.futurefeed.Controller;
 import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.dto.UserUpdateRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.service.MockUserService;
+import com.syntexsquad.futurefeed.service.AppUserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
 
-    private final MockUserService userService;
+    private final AppUserService userService;
 
-    public UserController(MockUserService userService) {
+    public UserController(AppUserService userService) {
         this.userService = userService;
     }
 
+    private String getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (authentication != null) ? authentication.getName() : null;
+    }
+
     @GetMapping("/myInfo")
-    public ResponseEntity<?> getCurrentUser() {
-        String username = "john_doe"; // temporary hardcoded username
-        AppUser user = userService.getUserByUsername(username);
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        AppUser user = null;
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String email = oauthToken.getPrincipal().getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.status(400).body("Email not found in OAuth2 token");
+            }
+            user = userService.getUserByEmail(email);
+        } else {
+            String username = authentication.getName();
+            user = userService.getUserByUsername(username);
+        }
 
         if (user == null) {
             return ResponseEntity.notFound().build();
@@ -31,9 +53,12 @@ public class UserController {
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request) {
-        String username = "john_doe"; // temporary hardcoded username
-        AppUser user = userService.getUserByUsername(username);
+        String username = getCurrentUsername();
+        if (username == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
 
+        AppUser user = userService.getUserByUsername(username);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -43,14 +68,19 @@ public class UserController {
         if (request.getDateOfBirth() != null) user.setDateOfBirth(request.getDateOfBirth());
         if (request.getBio() != null) user.setBio(request.getBio());
 
+        userService.saveUser(user);
+
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser() {
-        String username = "john_doe"; // temporary hardcoded username
-        boolean deleted = userService.deleteUserByUsername(username);
+        String username = getCurrentUsername();
+        if (username == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
 
+        boolean deleted = userService.deleteUserByUsername(username);
         if (!deleted) {
             return ResponseEntity.notFound().build();
         }
