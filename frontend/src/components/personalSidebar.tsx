@@ -22,7 +22,7 @@ const personalSidebar = () => {
           <Settings size={20} /> Settings
         </Link>
         <Link to="/explore" className="flex items-center gap-3 hover:text-blue-500 ">
-          <Search size={20} /> explore
+          <Search size={20} /> Explore
         </Link>
       </nav>
     </aside>

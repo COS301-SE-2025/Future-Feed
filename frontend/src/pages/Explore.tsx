@@ -1,6 +1,6 @@
 // src/pages/Explore.tsx
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
+
 import { Settings } from "lucide-react"
 import PersonalSidebar from "@/components/personalSidebar"
 
