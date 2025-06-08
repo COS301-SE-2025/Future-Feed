@@ -79,41 +79,41 @@ const UserProfile = () => {
 
 
             </div>
-             <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">Edit Profile</Button>
-      </SheetTrigger>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Edit Profile</SheetTitle>
-          <SheetDescription>
-            Make changes to your profile here. Click save when you&apos;re done.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="grid flex-1 auto-rows-min gap-6 px-4">
-          <div className="grid gap-3">
-            <Label htmlFor="sheet-name">Name</Label>
-            <Input id="sheet-name" placeholder="Syntex Squad" />
-          </div>
-          <div className="grid gap-3">
-            <Label htmlFor="sheet-username">Username</Label>
-            <Input id="sheet-username" placeholder="@syntexsquad" />
-          </div>
-          <div className="grid gap-3">
-            <Label htmlFor="sheet-bio">Bio</Label>
-            <Input id="sheet-name" placeholder="Oh Yeaaaaa!" />
-          </div>
-        </div>
-        <SheetFooter>
-          <Button type="submit"variant="outline"className="text-black hover:bg-gray-800">Save changes</Button>
-          <SheetClose asChild>
-            <Button variant="outline" className="text-black bg-emerald-800 hover:bg-gray-800">Close</Button>
-          </SheetClose>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">Edit Profile</Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Edit Profile</SheetTitle>
+                  <SheetDescription>
+                    Make changes to your profile here. Click save when you&apos;re done.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="grid flex-1 auto-rows-min gap-6 px-4">
+                  <div className="grid gap-3">
+                    <Label htmlFor="sheet-name">Name</Label>
+                    <Input id="sheet-name" placeholder="Syntex Squad" />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="sheet-username">Username</Label>
+                    <Input id="sheet-username" placeholder="@syntexsquad" />
+                  </div>
+                  <div className="grid gap-3">
+                    <Label htmlFor="sheet-bio">Bio</Label>
+                    <Input id="sheet-name" placeholder="Oh Yeaaaaa!" />
+                  </div>
+                </div>
+                <SheetFooter>
+                  <Button type="submit" variant="outline" className="text-black hover:bg-gray-800">Save changes</Button>
+                  <SheetClose asChild>
+                    <Button variant="outline" className="text-black bg-emerald-800 hover:bg-gray-800">Close</Button>
+                  </SheetClose>
+                </SheetFooter>
+              </SheetContent>
+            </Sheet>
 
-            {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/ }
+            {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/}
             {/*<Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">
               Edit Profile
             </Button>*/}
