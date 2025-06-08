@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-import { Home, User, Bell, Settings, Search } from "lucide-react"
+
 import GRP1 from "../assets/GRP1.jpg";
 import PersonalSidebar from "@/components/personalSidebar"
 {/*sheet */ }
@@ -59,7 +59,7 @@ const UserProfile = () => {
       <main className="flex-1 max-w-2xl mx-auto border-x border-sky-100">
         {/* Banner + Avatar + Name */}
         <div className="relative">
-          <div className="h-36 bg-emerald-800 w-full" />
+          <div className="h-36 bg-blue-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-24 h-24 border-4 border-sky-100">
               <AvatarImage src={GRP1} alt="@syntexsquad" />
@@ -107,7 +107,7 @@ const UserProfile = () => {
                 <SheetFooter>
                   <Button type="submit" variant="outline" className="text-black hover:bg-gray-800">Save changes</Button>
                   <SheetClose asChild>
-                    <Button variant="outline" className="text-black bg-emerald-800 hover:bg-gray-800">Close</Button>
+                    <Button variant="outline" className="text-black bg-blue-500 hover:bg-gray-800">Close</Button>
                   </SheetClose>
                 </SheetFooter>
               </SheetContent>
