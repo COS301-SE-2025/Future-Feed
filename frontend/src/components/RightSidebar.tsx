@@ -2,6 +2,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button"
+import WhatsHappening from "./WhatsHappening";
+import WhoToFollow from "./WhoToFollow";
 
 const RightSidebar = () => {
     return (
@@ -14,8 +16,10 @@ const RightSidebar = () => {
                     className="placeholder:text-slate-100 rounded-2xl px-4 py-2 bg-gray-800 text-slate-100 border focus:ring-0 focus:outline-none"
                 />
             </div>
+            <WhatsHappening />
+            <WhoToFollow />
 
-            {/* What's Happening */}
+            {/* What's Happening 
             <Card className="bg-gray-800 text-slate-100 rounded-2xl">
                 <CardContent className="p-4">
                     <h2 className="font-bold text-lg mb-4">What's happening</h2>
@@ -37,9 +41,9 @@ const RightSidebar = () => {
                         </div>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
 
-            {/* Who to follow */}
+            {/* Who to follow 
             <Card className="bg-gray-800 text-slate-100 rounded-2xl">
                 <CardContent className="p-4">
                     <h2 className="font-bold text-lg mb-4">Who to follow</h2>
@@ -63,7 +67,7 @@ const RightSidebar = () => {
                         </div>
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
         </div>
     );
 };
