@@ -9,7 +9,7 @@ import Forgot from "./pages/Forgot";
 import UserProfile from "./pages/UserProfile";
 // import SearchPage from "./pages/SearchPage";
 // import NotificationsPage from "./pages/NotificationsPage";
-// import EditProfilePage from "./pages/EditProfile";
+import EditProfilePage from "./pages/EditProfile";
 
 function App() {
   return (
@@ -24,7 +24,7 @@ function App() {
       {/* <Route path="/home" element={<HomePage />} /> */}
       {/* <Route path="/search" element={<SearchPage />} /> */}
       {/* <Route path="/notifications" element={<NotificationsPage />} /> */}
-      {/* <Route path="/edit-profile" element={<EditProfilePage />} /> */}
+      <Route path="/edit-profile" element={<EditProfilePage />} />
     </Routes>
   )
 }
