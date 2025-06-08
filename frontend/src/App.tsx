@@ -5,6 +5,8 @@ import Notifications from "./pages/Notifications";
 import Explore from "./pages/Explore";
 import Settings from "./pages/Settings";
 import FAQS from "./pages/FAQS";
+import Help from './pages/Help';
+
 
 function App() {
   return (
@@ -15,6 +17,7 @@ function App() {
       <Route path="/explore" element={<Explore />} />
        <Route path="/settings" element={<Settings />} />
        <Route path="/FAQS" element={<FAQS />} />
+       <Route path="/help" element={<Help />} />
     </Routes>
   )
 }

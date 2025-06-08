@@ -35,6 +35,10 @@ const Settings = () => {
         e.preventDefault()
         navigate("/FAQS")
       }
+      if (e.key === "h" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        navigate("/help")
+      }
     }
 
     document.addEventListener("keydown", down)
@@ -96,6 +100,18 @@ const Settings = () => {
           <CommandShortcut>⌘B</CommandShortcut>
         </kbd>
           </CommandItem>
+           <CommandItem
+          onSelect={() => navigate("/help")}
+          className="cursor-pointer">
+        
+            <SquareArrowOutUpRight />
+            <span>Help center</span>
+           <kbd className="tracking-widest ml-auto">
+          <CommandShortcut>⌘H</CommandShortcut>
+        </kbd>
+          </CommandItem>
+          
+          
           
         </CommandGroup>
       </CommandList>
