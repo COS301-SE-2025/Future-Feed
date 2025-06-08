@@ -33,6 +33,7 @@ public class UserController {
 
         AppUser user = null;
 
+        // Handle OAuth2
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
             String email = oauthToken.getPrincipal().getAttribute("email");
             if (email == null) {
@@ -52,13 +53,25 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request) {
-        String username = getCurrentUsername();
-        if (username == null) {
+    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
 
-        AppUser user = userService.getUserByUsername(username);
+        AppUser user = null;
+
+        // Handle OAuth2
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String email = oauthToken.getPrincipal().getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.status(400).body("Email not found in OAuth2 token");
+            }
+            user = userService.getUserByEmail(email);
+        } else {
+            String username = authentication.getName();
+            user = userService.getUserByUsername(username);
+        }
+
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -72,6 +85,7 @@ public class UserController {
 
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
+
 
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser() {
