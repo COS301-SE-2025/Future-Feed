@@ -4,6 +4,10 @@ import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.dto.UserUpdateRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.service.AppUserService;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -88,7 +92,7 @@ public class UserController {
 
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(Authentication authentication) {
+    public ResponseEntity<?> deleteUser(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
         }
@@ -116,7 +120,11 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found: " + username);
         }
 
-        return ResponseEntity.ok("User '" + username + "' deleted successfully.");
+        // 🔐 Invalidate session and clear SecurityContext
+        request.getSession().invalidate();
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.ok("User '" + username + "' deleted and session invalidated.");
     }
 
 }
