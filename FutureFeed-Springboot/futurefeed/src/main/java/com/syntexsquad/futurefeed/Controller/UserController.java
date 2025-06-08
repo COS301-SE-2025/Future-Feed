@@ -88,17 +88,35 @@ public class UserController {
 
 
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser() {
-        String username = getCurrentUsername();
-        if (username == null) {
+    public ResponseEntity<?> deleteUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        String username;
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String email = oauthToken.getPrincipal().getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.status(400).body("Email not found in OAuth2 token");
+            }
+
+            AppUser user = userService.getUserByEmail(email);
+            if (user == null) {
+                return ResponseEntity.status(404).body("User not found for email: " + email);
+            }
+
+            username = user.getUsername();
+        } else {
+            username = authentication.getName();
         }
 
         boolean deleted = userService.deleteUserByUsername(username);
         if (!deleted) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body("User not found: " + username);
         }
 
         return ResponseEntity.ok("User '" + username + "' deleted successfully.");
     }
+
 }
