@@ -5,6 +5,19 @@ import FF from "../assets/FF cropped.png"
 import { useRef } from "react"
 import { Button } from "@/components/ui/button"
 "use client"
+import { AlignJustify } from "lucide-react"
+
+import { Label } from "@/components/ui/label"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 
 const LandingPage = () => {
     const Landingref = useRef(null);
@@ -12,10 +25,43 @@ const LandingPage = () => {
         target: Landingref,
         offset: ["start end", "end start"],
     });
+    {/*animation for images can go here*/}
     const TranslateY = useTransform(scrollYProgress, [0,1], [150, -150]);
 
   return (
-    <div className="h-screen w-full bg-[#0e1628] text-white overflow-hidden">
+    <div className="min-h-screen w-full bg-gray-800 text-white ">
+        <div className="">
+            <Sheet >
+      <SheetTrigger className="" asChild>
+        <AlignJustify className=""></AlignJustify>
+      </SheetTrigger>
+      <SheetContent side="left">
+        <SheetHeader>
+          <SheetTitle>Future Feed</SheetTitle>
+          <SheetDescription>
+            Join the Future Feed family
+          </SheetDescription>
+        </SheetHeader>
+        <div className="grid flex-1 auto-rows-min gap-6 px-4">
+          <div className="grid gap-3">
+            <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
+           <Button variant="outline" className="text-slate-300 bg-blue-500 hover:bg-gray-800">Create Account</Button>
+          </div>
+          <div className="grid gap-3">
+            <Label className="hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
+                       <Button variant="outline" className="text-slate-300 bg-blue-500 hover:bg-gray-800">Login</Button>
+          </div>
+        </div>
+        <SheetFooter>
+           <Button type="submit" variant="outline" className="text-black hover:bg-gray-800">Save changes</Button>
+                  <SheetClose asChild>
+                    <Button variant="outline" className="text-black bg-blue-500 hover:bg-gray-800">Close</Button>
+          </SheetClose>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+            
+        </div>
       <div className="flex h-full">
         {/* Sticky Image Section */}
         <div className="w-1/2 flex justify-center items-start pt-20 sticky top-0 h-screen">
@@ -27,7 +73,7 @@ const LandingPage = () => {
         </div>
 
         {/* Scrolling Text Section */}
-        <div  ref={Landingref} className=" w-1/2 overflow-y-scroll h-screen px-12 pt-20 space-y-90 scroll-smooth">
+        <div  ref={Landingref} className=" w-1/2 overflow-y-auto overflow-hidden h-screen px-12 pt-20 space-y-90 scroll-smooth">
           {/* Instagram and username */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
