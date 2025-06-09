@@ -6,6 +6,7 @@ import Explore from "./pages/Explore";
 import Settings from "./pages/Settings";
 import FAQS from "./pages/FAQS";
 import Help from './pages/Help';
+import LandingPage from "./pages/LandingPage";
 
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
        <Route path="/settings" element={<Settings />} />
        <Route path="/FAQS" element={<FAQS />} />
        <Route path="/help" element={<Help />} />
+        <Route path="/landing" element={<LandingPage />} />
     </Routes>
   )
 }

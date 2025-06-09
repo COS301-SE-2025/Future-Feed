@@ -28,7 +28,7 @@ const UserProfile = () => {
     
     
     */
-    <div className="flex min-h-screen bg-gray-800 text-white overflow-y-auto">
+    <div className="flex min-h-screen  bg-gray-800 text-white overflow-y-auto">
       <PersonalSidebar />
       {/* 
       <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
@@ -158,7 +158,7 @@ const UserProfile = () => {
               },
               {
                 time: "1d ago",
-                text: "React + TypeScript + Tailwind = developer heaven ✨",
+                text: "Shadcn actually so nice, Thank you Mr Arne",
               },
               {
                 time: "2d ago",
@@ -166,11 +166,11 @@ const UserProfile = () => {
               },
               {
                 time: "3d ago",
-                text: "Can't wait to roll out new features soon! Stay tuned.",
+                text: "Setting up design is hard",
               },
               {
                 time: "4d ago",
-                text: "Check out this amazing view from my recent trip! 🌄",
+                text: "Excited for demo 2 with my team",
                 image: GRP1
 
               },
