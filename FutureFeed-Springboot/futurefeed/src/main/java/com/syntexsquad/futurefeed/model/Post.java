@@ -7,23 +7,19 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "posts")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "post_type", discriminatorType = DiscriminatorType.STRING)
 @Data
-public class Post {
+public abstract class Post {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-
-    @Column(name = "user_id")
-    private Integer userId;
 
     @Column(columnDefinition = "text")
     private String content;
 
     @Column(name = "image_url")
     private String imageUrl;
-
-    @Column(name = "is_bot")
-    private Boolean isBot = false;
 
     @Column(name = "created_at", columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
