@@ -1,8 +1,13 @@
 package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.PostRequest;
-import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.*;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,18 +16,45 @@ import java.util.List;
 public class PostService {
 
     private final PostRepository postRepository;
+    private final AppUserRepository appUserRepository;
 
-    public PostService(PostRepository postRepository) {
+    public PostService(PostRepository postRepository, AppUserRepository appUserRepository) {
         this.postRepository = postRepository;
+        this.appUserRepository = appUserRepository;
     }
 
     public Post createPost(PostRequest postRequest) {
-        Post post = new Post();
-        post.setUserId(postRequest.getUserId());
-        post.setContent(postRequest.getContent());
-        post.setImageUrl(postRequest.getImageUrl());
-        post.setIsBot(postRequest.getIsBot() != null ? postRequest.getIsBot() : false);
-        return postRepository.save(post);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // Extract email from OAuth2 login
+        String email = null;
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            OAuth2User oAuth2User = oauthToken.getPrincipal();
+            Object emailAttr = oAuth2User.getAttributes().get("email");
+            if (emailAttr != null) {
+                email = emailAttr.toString();
+            }
+        }
+
+        if (email == null) {
+            throw new RuntimeException("Email not found in authentication context");
+        }
+
+        AppUser user = appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (Boolean.TRUE.equals(postRequest.getIsBot())) {
+            BotPost botPost = new BotPost();
+            botPost.setContent(postRequest.getContent());
+            botPost.setImageUrl(postRequest.getImageUrl());
+            return postRepository.save(botPost);
+        } else {
+            UserPost userPost = new UserPost();
+            userPost.setContent(postRequest.getContent());
+            userPost.setImageUrl(postRequest.getImageUrl());
+            userPost.setUser(user);
+            return postRepository.save(userPost);
+        }
     }
 
     public boolean deletePost(Integer id) {
@@ -37,4 +69,3 @@ public class PostService {
         return postRepository.searchByKeyword(keyword);
     }
 }
-

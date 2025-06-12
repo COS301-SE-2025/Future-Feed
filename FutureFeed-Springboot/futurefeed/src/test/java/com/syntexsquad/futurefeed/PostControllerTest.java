@@ -3,7 +3,7 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.PostController;
 import com.syntexsquad.futurefeed.dto.PostRequest;
-import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,21 +39,16 @@ public class PostControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    // ---------- POST /api/posts ----------
     @Test
     void testCreatePost_shouldReturnCreatedPost() throws Exception {
         PostRequest postRequest = new PostRequest();
-        postRequest.setUserId(1);
         postRequest.setContent("Valid content");
         postRequest.setImageUrl("https://example.com/image.jpg");
-        postRequest.setIsBot(false);
 
-        Post post = new Post();
+        UserPost post = new UserPost();
         post.setId(1);
-        post.setUserId(postRequest.getUserId());
         post.setContent(postRequest.getContent());
         post.setImageUrl(postRequest.getImageUrl());
-        post.setIsBot(false);
         post.setCreatedAt(LocalDateTime.now());
 
         when(postService.createPost(any(PostRequest.class))).thenReturn(post);
@@ -63,19 +58,15 @@ public class PostControllerTest {
                         .content(objectMapper.writeValueAsString(postRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(post.getId()))
-                .andExpect(jsonPath("$.userId").value(post.getUserId()))
                 .andExpect(jsonPath("$.content").value(post.getContent()))
-                .andExpect(jsonPath("$.imageUrl").value(post.getImageUrl()))
-                .andExpect(jsonPath("$.isBot").value(post.getIsBot()));
+                .andExpect(jsonPath("$.imageUrl").value(post.getImageUrl()));
     }
 
     @Test
     void testCreatePost_missingContent_shouldReturnBadRequest() throws Exception {
         PostRequest postRequest = new PostRequest();
-        postRequest.setUserId(1);
         postRequest.setContent(""); // invalid
         postRequest.setImageUrl("https://example.com/image.jpg");
-        postRequest.setIsBot(false);
 
         mockMvc.perform(post("/api/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -87,10 +78,8 @@ public class PostControllerTest {
     @Test
     void testCreatePost_serviceThrowsException_shouldReturnServerError() throws Exception {
         PostRequest postRequest = new PostRequest();
-        postRequest.setUserId(1);
         postRequest.setContent("Error trigger");
         postRequest.setImageUrl("https://example.com/image.jpg");
-        postRequest.setIsBot(false);
 
         when(postService.createPost(any(PostRequest.class)))
                 .thenThrow(new RuntimeException("Unexpected failure"));
@@ -102,26 +91,21 @@ public class PostControllerTest {
                 .andExpect(content().string("Server error: Unexpected failure"));
     }
 
-    // ---------- GET /api/posts/search ----------
     @Test
     void testSearchPosts_shouldReturnMatchingPosts() throws Exception {
-        Post post1 = new Post();
+        UserPost post1 = new UserPost();
         post1.setId(1);
-        post1.setUserId(1);
         post1.setContent("Keyword match one");
         post1.setImageUrl("https://example.com/1.jpg");
-        post1.setIsBot(false);
 
-        Post post2 = new Post();
+        UserPost post2 = new UserPost();
         post2.setId(2);
-        post2.setUserId(2);
         post2.setContent("Keyword match two");
         post2.setImageUrl("https://example.com/2.jpg");
-        post2.setIsBot(true);
 
-        List<Post> mockResults = List.of(post1, post2);
+        List<UserPost> mockResults = List.of(post1, post2);
 
-        when(postService.searchPosts("keyword")).thenReturn(mockResults);
+        when(postService.searchPosts("keyword"));
 
         mockMvc.perform(get("/api/posts/search")
                         .param("keyword", "keyword")
@@ -132,7 +116,6 @@ public class PostControllerTest {
                 .andExpect(jsonPath("$[1].id").value(post2.getId()));
     }
 
-    // ---------- DELETE /api/posts/del/{id} ----------
     @Test
     void testDeletePost_shouldReturnSuccessMessage() throws Exception {
         int postId = 1;
@@ -166,7 +149,6 @@ public class PostControllerTest {
                 .andExpect(content().string("Server error: DB failure"));
     }
 
-    // ---------- Security Configuration ----------
     @TestConfiguration
     static class TestSecurityConfig {
         @Bean
