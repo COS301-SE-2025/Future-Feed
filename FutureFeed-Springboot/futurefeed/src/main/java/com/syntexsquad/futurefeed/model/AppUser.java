@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -14,32 +16,41 @@ public class AppUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String password;
 
-    @Column(length = 500)
+    @Column(columnDefinition = "text")
     private String bio;
 
-    private String profilePictureUrl;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private String role = "USER";
-
+    @Column(name = "display_name", length = 100)
     private String displayName;
 
-    private String profilePicture; 
+    @Column(name = "profile_picture", columnDefinition = "text")
+    private String profilePicture;
 
+    @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    //private String bio;
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
 
+    @Column(length = 20)
+    private String role = "USER";
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "auth_provider")
+    private AuthProvider authProvider = AuthProvider.LOCAL;
 
     public AppUser(String username, String password) {
         this.username = username;
@@ -47,61 +58,9 @@ public class AppUser {
         this.role = "USER";
     }
 
-   public String  getUsername() {
-        return username;
-    }
-   public  void setUsername(String username) {
-        this.username = username;
-    }
-   public String getEmail() {
-        return email;
-    }
-    public void setEmail(String email) {
-        this.email = email;
-    }
-   public String getPassword() {
-        return password;
-    }
-   public  void setPassword(String password) {
-        this.password = password;
-    }
-   public String getRole() {
-        return role;
-    }
-   public  void setRole(String role) {
-        this.role = role;
-    }
-   public String getDisplayName() {
-        return displayName;
-    }
-   public  void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-   public String getProfilePicture() {
-        return profilePicture;
-    }
-public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-   public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-   public  void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-   public String getBio() {
-        return bio;
-    }
-   public  void setBio(String bio) {
-        this.bio = bio;
-    }
-
-    @Enumerated(EnumType.STRING)
-    private AuthProvider authProvider;
-
     public enum AuthProvider {
-    LOCAL,
-    GOOGLE
+        LOCAL,
+        GOOGLE
     }
 }
 
