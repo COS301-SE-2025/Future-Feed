@@ -23,6 +23,10 @@ public class PostService {
         this.appUserRepository = appUserRepository;
     }
 
+    public boolean existsById(Integer postId) {
+    return postRepository.existsById(postId);
+}
+
     public Post createPost(PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
