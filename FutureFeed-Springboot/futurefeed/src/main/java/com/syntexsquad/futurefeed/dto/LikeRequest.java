@@ -4,6 +4,5 @@ import lombok.Data;
 
 @Data
 public class LikeRequest {
-    private Integer userId;
     private Integer postId;
 }

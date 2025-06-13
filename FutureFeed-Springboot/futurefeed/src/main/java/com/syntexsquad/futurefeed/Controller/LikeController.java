@@ -1,6 +1,5 @@
 package com.syntexsquad.futurefeed.Controller;
 
-import com.syntexsquad.futurefeed.dto.LikeRequest;
 import com.syntexsquad.futurefeed.service.LikeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,16 +14,24 @@ public class LikeController {
         this.likeService = likeService;
     }
 
-    @PostMapping
-    public ResponseEntity<?> likePost(@RequestBody LikeRequest request) {
-        boolean liked = likeService.likePost(request.getUserId(), request.getPostId());
-        return liked ? ResponseEntity.ok("Post liked") : ResponseEntity.badRequest().body("Already liked");
+    @PostMapping("/{postId}")
+    public ResponseEntity<?> likePost(@PathVariable Integer postId) {
+        try {
+            boolean liked = likeService.likePost(postId);
+            return liked ? ResponseEntity.ok("Post liked") : ResponseEntity.badRequest().body("Already liked");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 
-    @DeleteMapping
-    public ResponseEntity<?> unlikePost(@RequestBody LikeRequest request) {
-        boolean unliked = likeService.unlikePost(request.getUserId(), request.getPostId());
-        return unliked ? ResponseEntity.ok("Post unliked") : ResponseEntity.badRequest().body("Not liked yet");
+    @DeleteMapping("/{postId}")
+    public ResponseEntity<?> unlikePost(@PathVariable Integer postId) {
+        try {
+            boolean unliked = likeService.unlikePost(postId);
+            return unliked ? ResponseEntity.ok("Post unliked") : ResponseEntity.badRequest().body("Not liked yet");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
     }
 
     @GetMapping("/count/{postId}")
