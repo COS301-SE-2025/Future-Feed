@@ -8,20 +8,20 @@ import ffCropped from "../assets/FF cropped.png";
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white font-['Cambay',Arial,sans-serif] font-bold">
-      <div className="flex flex-col items-center justify-center text-center">
+    <div className="flex min-h-screen items-center justify-center bg-gray-200 font-['Cambay',Arial,sans-serif] font-bold">
+      <div className="flex flex-col items-center justify-center text-center ">
         <img
           src={futureFeedLogo}
-          alt="Future Feed Logo"
+          alt="Future Feed Logo" 
           className="mb-5 h-[336px] w-[336px]"
         />
-        <Card className="w-[649px] rounded-[20px] border border-gray-200 bg-white p-8 shadow-[2px_2px_20px_#000000]">
+        <Card className="w-[649px] rounded-[20px] border-2 border-lime-500 bg-white p-8 shadow-[2px_2px_20px_#000000]">
           <CardContent>
             <h2 className="mb-5 text-2xl font-bold">Join the family</h2>
             <Link to="/construction">
               <Button
                 variant="outline"
-                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] cursor-pointer"
+                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-2 cursor-pointer"
               >
                 <img
                   src={googleLogo}
@@ -32,16 +32,16 @@ const LandingPage: React.FC = () => {
               </Button>
             </Link>
             <div className="relative my-[15px] flex items-center justify-center text-center">
-              <div className="mr-2.5 h-px w-1/3 bg-[#555]"></div>
+              <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
               <span className="text-[0.9rem] font-bold">
                 Or just
               </span>
-              <div className="ml-2.5 h-px w-1/3 bg-[#555]"></div>
+              <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
             </div>
             <Link to="/register">
               <Button
                 variant="outline"
-                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] cursor-pointer"
+                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-2 cursor-pointer"
               >
                 <img
                   src={ffCropped}
@@ -52,16 +52,16 @@ const LandingPage: React.FC = () => {
               </Button>
             </Link>
             <div className="relative my-[15px] flex items-center justify-center text-center">
-              <div className="mr-2.5 h-px w-1/3 bg-[#555]"></div>
-              <span className="text-[0.9rem] font-bold">
+              <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+              <span className="text-[0.9rem] font-bold ">
                 Already have an account?
               </span>
-              <div className="ml-2.5 h-px w-1/3 bg-[#555]"></div>
+              <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
             </div>
             <Link to="/login">
               <Button
                 variant="outline"
-                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] cursor-pointer"
+                className="mb-3 flex h-auto w-full items-center justify-center rounded-lg border-gray-300 bg-white py-2 text-base font-bold shadow-[1px_1px_4px_gray] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-2 cursor-pointer"
               >
                 <img
                   src={ffCropped}
