@@ -35,20 +35,20 @@ const personalSidebar = () => {
        {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 w-full flex justify-around items-center bg-gray-800 border border border-sky-100 p-2 sm:hidden slate-100 z-50">
         <Link to="/home" className="flex flex-col items-center">
-          <Home className="w-5 h-5" />
+          <Home strokeWidth={3} className="w-5 h-5 " />
 
         </Link>
         <Link to="/notifications" className="flex items-center gap-3 hover:text-blue-500 ">
-          <Bell className="w-5 h-5" /> 
+          <Bell strokeWidth={3} className="w-5 h-5" /> 
         
          
         </Link>
         <Link to="/settings" className="flex items-center gap-3 hover:text-blue-500 ">
-          <Settings className="w-5 h-5" /> 
+          <Settings strokeWidth={3}  className="w-5 h-5" /> 
         </Link>
 
         <Link to="/explore" className="flex flex-col items-center">
-          <Search className="w-5 h-5" />
+          <Search strokeWidth={3}  className="w-5 h-5" />
           
         </Link>
         
