@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Settings } from "lucide-react"
 import GRP2 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import WhoToFollow from "@/components/WhoToFollow"
+import WhatsHappening from "@/components/WhatsHappening"
+import { Input } from "@/components/ui/input"
 
 const Notifications = () => {
   return (
@@ -15,6 +18,14 @@ const Notifications = () => {
 
       {/* Center Notification Feed */}
       <main className="h-fit p-6 bg-gray-800 flex-1 max-w-4xl mx-7 rounded-2xl border border-slate-100 min-h-screen">
+        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 bg-gray-800 border border-gray-800">
+        <Input
+          type="text"
+          placeholder="Search"
+          className="rounded-full bg-gray-800 text-white placeholder:text-slate-100 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+        />
+      </div>
+
         {/* Header */}
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 bg-slate-300 border rounded-2xl border-slate-100 z-10">
           <h1 className="text-xl text-gray-800 font-bold">Notifications</h1>
@@ -70,6 +81,10 @@ const Notifications = () => {
             <p className="p-4 text-gray-400">No mentions found.</p>
           </TabsContent>
         </Tabs>
+         <div className="w-full bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+      <WhatsHappening />
+      <WhoToFollow />
+    </div>
       </main>
 
       {/* Right Sidebar */}
