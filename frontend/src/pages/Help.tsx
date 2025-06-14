@@ -19,9 +19,9 @@ import {
 const Help = () => {
     const navigate = useNavigate();
     return (
-        <div className="p-6  text-slate-300 min-h-screen  bg-gray-800 ">
+        <div className="p-6  dark:text-slate-300 min-h-screen  dark:bg-gray-800 ">
             <h1 className="font-bold text-2xl text-right">Help Centre</h1>
-            <div className="flex border rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0 bg-slate-300 ">
+            <div className="flex border rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-slate-300 ">
                 {/*breedcrumb to go back */}
                 <Breadcrumb>
                     <BreadcrumbList>
@@ -52,7 +52,7 @@ const Help = () => {
             </div>
 
 
-            <div className="bg-slate-300 p-9  h-fit border border-slate-300 flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
+            <div className="dark:bg-slate-300 p-9  h-fit border dark:border-slate-300 flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
                 <Accordion
                     type="single"
                     collapsible
