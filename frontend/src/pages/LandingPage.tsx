@@ -73,7 +73,7 @@ useEffect(() => {
 }, []);
 
     return (
-        <div className="min-h-screen w-auto  bg-gray-800 text-white ">
+        <div className="min-h-screen w-auto dark:bg-gray-800 dark:text-white   bg-green-800 text-white-800 ">
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="  " asChild>
@@ -89,17 +89,17 @@ useEffect(() => {
                         <div className="grid flex-1 auto-rows-min gap-6 px-4">
                             <div className="grid gap-3">
                                 <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
-                                <Button variant="outline" className="text-slate-300 bg-blue-500 hover:bg-gray-800">Create Account</Button>
+                                <Button variant="outline" className="dark:text-slate-300 dark:bg-blue-500 dark:hover:bg-gray-800">Create Account</Button>
                             </div>
                             <div className="grid gap-3">
-                                <Label className="hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
-                                <Button variant="outline" className="text-slate-300 bg-blue-500 hover:bg-gray-800">Login</Button>
+                                <Label className=":hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
+                                <Button variant="outline" className="dark:text-slate-300 dark:bg-blue-500 dark:hover:bg-gray-800">Login</Button>
                             </div>
                         </div>
                         <SheetFooter>
-                            <Button type="submit" variant="outline" className="text-black hover:bg-gray-800">Save changes</Button>
+                            <Button type="submit" variant="outline" className="dark:text-black dark:hover:bg-gray-800">Save changes</Button>
                             <SheetClose asChild>
-                                <Button variant="outline" className="text-black bg-blue-500 hover:bg-gray-800">Close</Button>
+                                <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
                             </SheetClose>
                         </SheetFooter>
                     </SheetContent>
@@ -133,7 +133,7 @@ useEffect(() => {
                         className="flex justify-end items-center gap-3"
                     >
                         <span className="text-lg font-semibold">@syntexsquad</span>
-                        <Avatar className="w-auto h-auto border-4 border-gray-800 bg-slate-300">
+                        <Avatar className="w-auto h-auto border-4 dark:border-gray-800 dark:bg-slate-300">
                             <AvatarImage src={FF} alt="@syntexsquad" />
                             <AvatarFallback>SYNTEXSQUAD</AvatarFallback>
                         </Avatar>
@@ -152,10 +152,10 @@ useEffect(() => {
                         }}
 
                     >
-                        <span className="text-sm tezt-slate-300">FutureFeed</span>
+                        <span className="text-sm dark:text-slate-300">FutureFeed</span>
                         <h1 className="text-5xl font-bold leading-tight">
                             Share ideas and <br /> connect through <br /> conversation with <br />
-                            <span className="text-blue-500">Future Feed</span>
+                            <span className="dark:text-blue-500">Future Feed</span>
                         </h1>
                     </motion.div>
 
@@ -174,7 +174,7 @@ useEffect(() => {
                         <h1 className="text-4xl font-bold leading-tight text-blue-400">
                             What will you say?
                         </h1>
-                        <p className="mt-4 text-lg text-gray-400">
+                        <p className="mt-4 text-lg dark:text-gray-400">
                             Get started on Future Feed by logging in or creating <br /> your Future Feed account. <br />
                             your Future Feed username is reserved just for you
                         </p>
@@ -196,7 +196,7 @@ useEffect(() => {
                             Keep up with your <br /> favourite creators <br />
                             and friends
                         </h1>
-                        <p className="mt-4 text-lg text-gray-400">
+                        <p className="mt-4 text-lg dark:text-gray-400">
                             See feeds from people and creators you follow
                         </p>
                     </motion.div>
@@ -213,10 +213,10 @@ useEffect(() => {
                             translateY: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-blue-300">
+                        <h1 className="text-4xl font-bold leading-tight dark:text-blue-300">
                             Express yourself in <br /> more ways imaginable
                         </h1>
-                        <p className="mt-4 text-lg text-gray-400">
+                        <p className="mt-4 text-lg dark:text-gray-400">
                             Share a feed to friends in chatboxes <br />
                             Share feeds generated from bots <br />
                             Have your very own personal AI bot
@@ -236,7 +236,7 @@ useEffect(() => {
                         }}
                         className="pt-10"
                     >
-                        <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 text-slate-300 bg-blue-500 border-slate-300  hover:bg-gray-800">Join the Future Feed Family</Button>
+                        <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 text-slate-300 dark:bg-blue-500 dark:border-slate-300  dark:hover:bg-gray-800">Join the Future Feed Family</Button>
                     </motion.div>
                 </div>
             </div>

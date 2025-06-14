@@ -8,9 +8,17 @@ import FAQS from "./pages/FAQS";
 import Help from './pages/Help';
 import LandingPage from "./pages/LandingPage";
 
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "./components/mode-toggle";
+
+
 
 function App() {
   return (
+    <>
+    <ThemeProvider >
+     <ModeToggle></ModeToggle>
+    </ThemeProvider>
     <Routes>
       {/* Future routes: <Route path="/" element={<Landing />} /> */}
       <Route path="/profile" element={<UserProfile />} />
@@ -21,6 +29,7 @@ function App() {
        <Route path="/help" element={<Help />} />
         <Route path="/landing" element={<LandingPage />} />
     </Routes>
+    </>
   )
 }
 
