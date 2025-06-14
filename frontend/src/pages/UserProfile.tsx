@@ -81,7 +81,7 @@ const UserProfile = () => {
             </div>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">Edit Profile</Button>
+                <Button variant="outline" className="dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
