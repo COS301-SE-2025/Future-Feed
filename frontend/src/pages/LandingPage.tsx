@@ -1,8 +1,13 @@
-import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import Landingphone from "../assets/landingphone.png"
 import FF from "../assets/FF cropped.png"
-import { useRef } from "react"
+import Exploremobile from "../assets/explore_mobile.png"
+import Notificationsmobile from "../assets/notifications_mobile.png"
+import Help_mobile  from "../assets/help_mobile.png"
+import Settingsmobile from "../assets/settings_mobile.png"
+import Editprofilemobile from "../assets/edit profile_mobile.png"
+
+import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 "use client"
 import { AlignJustify } from "lucide-react"
@@ -20,20 +25,59 @@ import {
 } from "@/components/ui/sheet"
 
 const LandingPage = () => {
-    const Landingref = useRef(null);
-    const { scrollYProgress } = useScroll({
-        target: Landingref,
-        offset: ["start end", "end start"],
-    });
-    {/*animation for images can go here*/ }
-    const TranslateY = useTransform(scrollYProgress, [0, 1], [150, -150]);
+    {/*code for dynamic imagess*/}
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const sectionRefs = useRef<HTMLDivElement[]>([]);
+    const section1Ref = useRef<HTMLDivElement>(null);
+const section2Ref = useRef<HTMLDivElement>(null);
+const section3Ref = useRef<HTMLDivElement>(null);
+const section4Ref = useRef<HTMLDivElement>(null);
+    
+    const [currentImage, setCurrentImage] = useState(Exploremobile);
+
+    const handleScroll = () => {
+        const offsets = sectionRefs.current.map(
+            (ref) => ref?.getBoundingClientRect().top || 0
+        );
+        const closestIndex = offsets.reduce(
+            (closest, curr, i) =>
+                Math.abs(curr) < Math.abs(offsets[closest]) ? i : closest,
+            0
+        );
+
+        const images = [
+            Exploremobile,
+            Notificationsmobile,
+            Editprofilemobile,
+            Settingsmobile,
+            Help_mobile,
+        ];
+
+        setCurrentImage(images[closestIndex] || Exploremobile);
+    };
+
+  useEffect(() => {
+  sectionRefs.current = [
+    section1Ref.current,
+    section2Ref.current,
+    section3Ref.current,
+    section4Ref.current,
+    
+    
+  ].filter((ref): ref is HTMLDivElement => ref !== null);
+}, []);
+useEffect(() => {
+  const container = scrollContainerRef.current;
+  container?.addEventListener("scroll", handleScroll);
+  return () => container?.removeEventListener("scroll", handleScroll);
+}, []);
 
     return (
-        <div className="min-h-screen w-full bg-gray-800 text-white ">
-            <div className="">
+        <div className="min-h-screen w-auto  bg-gray-800 text-white ">
+            <div className="  ">
                 <Sheet >
-                    <SheetTrigger className="" asChild>
-                        <AlignJustify className=""></AlignJustify>
+                    <SheetTrigger className="  " asChild>
+                        <AlignJustify className="w-6 h-6"></AlignJustify>
                     </SheetTrigger>
                     <SheetContent side="left">
                         <SheetHeader>
@@ -65,15 +109,22 @@ const LandingPage = () => {
             <div className="flex h-full">
                 {/* Sticky Image Section */}
                 <div className="w-1/2 flex justify-center items-start pt-20 sticky top-0 h-screen">
-                    <img
-                        src={Landingphone}
-                        alt="Phone"
-                        className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-fit"
-                    />
+                    <AnimatePresence mode="wait">
+  <motion.img
+    key={currentImage}
+    src={currentImage}
+    alt="Phone"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -20 }}
+    transition={{ duration: 0.2, ease:"easeInOut"  }}
+    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-fit absolute"
+  />
+</AnimatePresence>
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={Landingref} className=" w-1/2 overflow-y-auto overflow-hidden h-screen px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto overflow-hidden h-screen px-12 pt-20 space-y-90 scroll-smooth">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
@@ -93,6 +144,7 @@ const LandingPage = () => {
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: 100 }}
+                        ref={section1Ref}
 
                         transition={{ duration: 0.8 }}
                         animate={{
@@ -109,6 +161,7 @@ const LandingPage = () => {
 
                     {/* Section 2 - Post your feed */}
                     <motion.div
+                    ref={section2Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: 100 }}
@@ -129,6 +182,7 @@ const LandingPage = () => {
 
                     {/* Section 3 - Get updates */}
                     <motion.div
+                ref={section3Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: 100 }}
@@ -149,6 +203,7 @@ const LandingPage = () => {
 
                     {/* Section 4 - Get updates */}
                     <motion.div
+                    ref={section4Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: 100 }}
