@@ -13,8 +13,8 @@ import {
 const FAQS= () => {
     const navigate = useNavigate();
     return(
-        <div className="min-h-screen text-slate-300 p-9 bg-gray-800">
-            <div className="flex justify-between items-center px-4 py-3 sticky top-0 bg-slate-300 border rounded-2xl border-slate-100 z-10">
+        <div className="min-h-screen dark:text-slate-300 p-9 dark:bg-gray-800">
+            <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
                 <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>

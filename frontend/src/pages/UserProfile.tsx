@@ -28,7 +28,7 @@ const UserProfile = () => {
     
     
     */
-    <div className="flex min-h-screen  bg-gray-800 text-white overflow-y-auto">
+    <div className="flex min-h-screen  dark:bg-gray-800 dark:text-white overflow-y-auto">
       <PersonalSidebar />
       {/* 
       <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
@@ -56,12 +56,12 @@ const UserProfile = () => {
       Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto border-x border-sky-100">
+      <main className="flex-1 max-w-2xl mx-auto border-x dark:border-sky-100">
         {/* Banner + Avatar + Name */}
         <div className="relative">
-          <div className="h-36 bg-blue-500 w-full" />
+          <div className="h-36 bg-emerald-500 dark:bg-blue-500 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-24 h-24 border-4 border-sky-100">
+            <Avatar className="w-24 h-24 border-4 dark:border-sky-100">
               <AvatarImage src={GRP1} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
             </Avatar>
@@ -73,7 +73,7 @@ const UserProfile = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-xl font-bold">Syntex Squad</h1>
-              <p className="text-gray-400">@syntexsquad</p>
+              <p className="dark:text-gray-400">@syntexsquad</p>
               <p className="mt-2 text-sm">yes</p>
 
 
@@ -81,7 +81,7 @@ const UserProfile = () => {
             </div>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
+                <Button variant="outline" className="text-emerald-800 dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
@@ -105,9 +105,9 @@ const UserProfile = () => {
                   </div>
                 </div>
                 <SheetFooter>
-                  <Button type="submit" variant="outline" className="text-black hover:bg-gray-800">Save changes</Button>
+                  <Button type="submit" variant="outline" className="dark:text-black dark:hover:bg-gray-800">Save changes</Button>
                   <SheetClose asChild>
-                    <Button variant="outline" className="text-black bg-blue-500 hover:bg-gray-800">Close</Button>
+                    <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
                   </SheetClose>
                 </SheetFooter>
               </SheetContent>
@@ -124,25 +124,25 @@ const UserProfile = () => {
 
 
 
-          <div className="mt-4 text-sm text-gray-400">
-            <span className="font-medium text-white">150</span> Following ·{" "}
-            <span className="font-medium text-white">1.2k</span> Followers ·{" "}
-            <span className="font-medium text-white">1</span> Bots ·{" "}
-            <span className="font-medium text-white">6</span> Posts
+          <div className="mt-4 text-sm dark:text-gray-400">
+            <span className="font-medium dark:text-white">150</span> Following ·{" "}
+            <span className="font-medium dark:text-white">1.2k</span> Followers ·{" "}
+            <span className="font-medium dark:text-white">1</span> Bots ·{" "}
+            <span className="font-medium dark:text-white">6</span> Posts
           </div>
         </div>
 
-        <Separator className="my-4 bg-sky-100" />
+        <Separator className="my-4 dark:bg-sky-100" />
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full bg-black   grid-cols-5 bg-transparent border-b border-sky-100">
+          <TabsList className="grid w-full dark:bg-gray-800   grid-cols-5 dark:bg-transparent border-b dark:border-sky-100">
 
-            <TabsTrigger className="text-white" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="text-white" value="replies">Replies</TabsTrigger>
-            <TabsTrigger className="text-white" value="media">Media</TabsTrigger>
-            <TabsTrigger className="text-white" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="text-white" value="highlights">Highlights</TabsTrigger>
+            <TabsTrigger className="dark:text-white" value="posts">Posts</TabsTrigger>
+            <TabsTrigger className="dark:text-white" value="replies">Replies</TabsTrigger>
+            <TabsTrigger className="dark:text-white" value="media">Media</TabsTrigger>
+            <TabsTrigger className="dark:text-white" value="likes">Likes</TabsTrigger>
+            <TabsTrigger className="dark:text-white" value="highlights">Highlights</TabsTrigger>
 
           </TabsList>
 
@@ -175,7 +175,7 @@ const UserProfile = () => {
 
               },
             ].map((post, index) => (
-              <Card key={index} className="bg-gray-800 border-sky-100 border-b rounded-none">
+              <Card key={index} className="dark:bg-gray-800 dark:border-sky-100 border-b rounded-none">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar>
@@ -184,16 +184,16 @@ const UserProfile = () => {
                     </Avatar>
                     <div className="flex-1">
                       <div className="flex justify-between">
-                        <h2 className="font-bold text-white">Syntex Squad </h2>
-                        <span className="text-sm text-gray-400">{post.time}</span>
+                        <h2 className="font-bold dark:text-white">Syntex Squad </h2>
+                        <span className="text-sm dark:text-gray-400">{post.time}</span>
                       </div>
-                      <p className="text-gray-300">@syntexsquad</p>
-                      <p className="mt-2 text-white">{post.text}</p>
+                      <p className="dark:text-gray-300">@syntexsquad</p>
+                      <p className="mt-2 dark:text-white">{post.text}</p>
                       {post.image && (
                         <img
                           src={post.image}
                           alt="Post"
-                          className="mt-4 rounded-lg border border-gray-700"
+                          className="mt-4 rounded-lg border dark:border-gray-700"
                         />
                       )}
                     </div>
@@ -205,19 +205,19 @@ const UserProfile = () => {
           {/*expand this area to add replies media etc*/}
 
           <TabsContent value="replies">
-            <div className="p-4 text-gray-400">No replies yet.</div>
+            <div className="p-4 dark:text-gray-400">No replies yet.</div>
           </TabsContent>
 
           <TabsContent value="media">
-            <div className="p-4 text-gray-400">No media yet.</div>
+            <div className="p-4 dark:text-gray-400">No media yet.</div>
           </TabsContent>
 
           <TabsContent value="likes">
-            <div className="p-4 text-gray-400">No liked posts yet.</div>
+            <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
           </TabsContent>
 
           <TabsContent value="highlights">
-            <div className="p-4 text-gray-400">No highlights available  yet.</div>
+            <div className="p-4 dark:text-gray-400">No highlights available  yet.</div>
           </TabsContent>
         </Tabs>
       </main>
