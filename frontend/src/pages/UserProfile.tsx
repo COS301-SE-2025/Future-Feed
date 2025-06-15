@@ -57,7 +57,7 @@ const UserProfile = () => {
       Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto border-x dark:border-sky-100">
+      <main className="flex-1 max-w-2xl mx-auto  dark:border-sky-100">
         {/* Banner + Avatar + Name */}
         <div className="relative">
           <div className="h-36 bg-emerald-500 dark:bg-blue-500 w-full" />
@@ -149,7 +149,7 @@ const UserProfile = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full dark:bg-gray-800   grid-cols-5 dark:bg-transparent border-b dark:border-sky-100">
+          <TabsList className="grid w-full dark:bg-gray-800   grid-cols-5 dark:bg-transparent  dark:border-sky-100">
 
             <TabsTrigger className="dark:text-white" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="dark:text-white" value="replies">Replies</TabsTrigger>
@@ -188,7 +188,7 @@ const UserProfile = () => {
 
               },
             ].map((post, index) => (
-              <Card key={index} className="dark:bg-gray-800 dark:border-sky-100 border-b rounded-none">
+              <Card key={index} className="dark:bg-gray-800 dark:border-gray-800 border-b rounded-none">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar>

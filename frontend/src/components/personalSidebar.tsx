@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 const personalSidebar = () => {
   return (
     <>
-    <aside className=" hidden sm:flex h-fit dark:bg-gray-800 dark:border-white dark:text-slate-100 w-[200px] p-6 mt-6 ml-4 rounded-2xl border  shadow-md hidden md:block">
+    <aside className=" hidden sm:flex h-fit dark:bg-gray-800 dark:border-gray-800 dark:text-slate-100 w-[200px] p-6 mt-6 ml-4 rounded-2xl border  shadow-md hidden md:block">
       <div className="text-2xl font-bold mb-6">Future Feed</div>
       <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-slate-100 ">
          <Link to="/" className="flex items-center gap-3 dark:hover:text-blue-500 ">
