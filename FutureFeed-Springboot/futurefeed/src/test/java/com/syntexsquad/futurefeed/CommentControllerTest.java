@@ -1,12 +1,10 @@
 package com.syntexsquad.futurefeed;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.CommentController;
-import com.syntexsquad.futurefeed.dto.CommentRequest;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.service.AppUserService;
 import com.syntexsquad.futurefeed.service.CommentService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -15,15 +13,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -37,98 +35,78 @@ public class CommentControllerTest {
     @MockBean
     private CommentService commentService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @MockBean
+    private AppUserService appUserService;
+
+    private final String mockEmail = "user@example.com";
+    private final Integer postId = 123;
+
+    private SecurityMockMvcRequestPostProcessors.OAuth2LoginRequestPostProcessor oauthUser() {
+        return SecurityMockMvcRequestPostProcessors.oauth2Login()
+                .attributes(attrs -> attrs.put("email", mockEmail));
+    }
 
     @Test
     void testAddComment_shouldReturnSavedComment() throws Exception {
-        CommentRequest request = new CommentRequest();
-        request.setPostId(1);
-        request.setUserId(2);
-        request.setContent("Nice post!");
+        Comment savedComment = new Comment();
+        savedComment.setId(1);
+        savedComment.setContent("Test comment");
 
+        when(commentService.addComment(postId, "Test comment")).thenReturn(savedComment);
+
+        mockMvc.perform(post("/api/comments/{postId}", postId)
+                        .content("Test comment")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .with(oauthUser()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.content").value("Test comment"));
+    }
+
+    @Test
+    void testAddComment_shouldReturnBadRequest_whenContentEmpty() throws Exception {
+        mockMvc.perform(post("/api/comments/{postId}", postId)
+                        .content("")
+                        .contentType(MediaType.TEXT_PLAIN)
+                        .with(oauthUser()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Content cannot be empty"));
+    }
+
+    @Test
+    void testGetCommentsByPost_shouldReturnList() throws Exception {
         Comment comment = new Comment();
         comment.setId(1);
-        comment.setPostId(1);
-        comment.setUserId(2);
-        comment.setContent("Nice post!");
-        comment.setCreatedAt(LocalDateTime.now());
+        comment.setContent("comment1");
 
-        Mockito.when(commentService.addComment(any(CommentRequest.class))).thenReturn(comment);
+        when(commentService.getCommentsForPost(postId)).thenReturn(List.of(comment));
 
-        mockMvc.perform(post("/api/comments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(get("/api/comments/post/{postId}", postId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(comment.getId()))
-                .andExpect(jsonPath("$.postId").value(comment.getPostId()))
-                .andExpect(jsonPath("$.userId").value(comment.getUserId()))
-                .andExpect(jsonPath("$.content").value(comment.getContent()));
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].content").value("comment1"));
     }
 
     @Test
-    void testAddComment_shouldReturnBadRequest_whenContentMissing() throws Exception {
-        CommentRequest request = new CommentRequest();
-        request.setPostId(1);
-        request.setUserId(2);
-        request.setContent(""); // Empty content
+    void testGetCommentsByPost_shouldReturnEmptyList() throws Exception {
+        when(commentService.getCommentsForPost(postId)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(post("/api/comments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void testAddComment_shouldReturnBadRequest_onMalformedJson() throws Exception {
-        String malformedJson = "{ \"userId\": 1, \"postId\": 2, \"content\": "; // Incomplete JSON
-
-        mockMvc.perform(post("/api/comments")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(malformedJson))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void testGetCommentsForPost_shouldReturnCommentList() throws Exception {
-        Comment comment1 = new Comment();
-        comment1.setId(1);
-        comment1.setPostId(1);
-        comment1.setUserId(2);
-        comment1.setContent("Comment 1");
-        comment1.setCreatedAt(LocalDateTime.now());
-
-        Comment comment2 = new Comment();
-        comment2.setId(2);
-        comment2.setPostId(1);
-        comment2.setUserId(3);
-        comment2.setContent("Comment 2");
-        comment2.setCreatedAt(LocalDateTime.now());
-
-        List<Comment> comments = Arrays.asList(comment1, comment2);
-
-        Mockito.when(commentService.getCommentsForPost(1)).thenReturn(comments);
-
-        mockMvc.perform(get("/api/comments/post/1"))
+        mockMvc.perform(get("/api/comments/post/{postId}", postId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(content().string("[]"));
     }
 
-    @Test
-    void testGetCommentsForPost_shouldReturnEmptyList() throws Exception {
-        Mockito.when(commentService.getCommentsForPost(999)).thenReturn(Collections.emptyList());
-
-        mockMvc.perform(get("/api/comments/post/999"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+@TestConfiguration
+static class TestSecurityConfig {
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+            .csrf().disable()
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+            .oauth2Login().disable()
+            .formLogin().disable()
+            .httpBasic().disable();
+        return http.build();
     }
-
-    @TestConfiguration
-    static class TestSecurityConfig {
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable().authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            return http.build();
-        }
-    }
+}
 }

@@ -1,16 +1,22 @@
 package com.syntexsquad.futurefeed;
 
-import com.syntexsquad.futurefeed.dto.CommentRequest;
+import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.CommentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -18,37 +24,59 @@ import static org.mockito.Mockito.*;
 public class CommentServiceTest {
 
     private CommentRepository commentRepository;
+    private AppUserRepository appUserRepository;
+    private PostRepository postRepository;
     private CommentService commentService;
 
     @BeforeEach
     void setUp() {
         commentRepository = mock(CommentRepository.class);
-        commentService = new CommentService(commentRepository);
+        appUserRepository = mock(AppUserRepository.class);
+        postRepository = mock(PostRepository.class);
+        commentService = new CommentService(commentRepository, appUserRepository, postRepository);
     }
 
     @Test
     void testAddComment_shouldReturnSavedComment() {
-        CommentRequest request = new CommentRequest();
-        request.setPostId(1);
-        request.setUserId(2);
-        request.setContent("This is a test comment");
+        // Arrange
+        int postId = 1;
+        String content = "This is a test comment";
+
+        AppUser mockUser = new AppUser();
+        mockUser.setId(42);
+        mockUser.setEmail("user@example.com");
 
         Comment saved = new Comment();
-        saved.setId(1);
-        saved.setPostId(request.getPostId());
-        saved.setUserId(request.getUserId());
-        saved.setContent(request.getContent());
+        saved.setId(100);
+        saved.setPostId(postId);
+        saved.setUserId(mockUser.getId());
+        saved.setContent(content);
         saved.setCreatedAt(LocalDateTime.now());
 
+        when(postRepository.existsById(postId)).thenReturn(true);
+        when(appUserRepository.findByEmail("user@example.com")).thenReturn(Optional.of(mockUser));
         when(commentRepository.save(any(Comment.class))).thenReturn(saved);
 
-        Comment result = commentService.addComment(request);
+        // Mock OAuth2 security context
+        try (MockedStatic<SecurityContextHolder> mockedStatic = mockStatic(SecurityContextHolder.class)) {
+            SecurityContext securityContext = mock(SecurityContext.class);
+            OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
+            OAuth2User oAuth2User = mock(OAuth2User.class);
 
-        assertNotNull(result);
-        assertEquals(saved.getPostId(), result.getPostId());
-        assertEquals(saved.getUserId(), result.getUserId());
-        assertEquals(saved.getContent(), result.getContent());
-        verify(commentRepository, times(1)).save(any(Comment.class));
+            when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+            when(securityContext.getAuthentication()).thenReturn(authToken);
+            when(authToken.getPrincipal()).thenReturn(oAuth2User);
+            when(oAuth2User.getAttributes()).thenReturn(Map.of("email", "user@example.com"));
+
+            // Act
+            Comment result = commentService.addComment(postId, content);
+
+            // Assert
+            assertNotNull(result);
+            assertEquals(postId, result.getPostId());
+            assertEquals(mockUser.getId(), result.getUserId());
+            assertEquals(content, result.getContent());
+        }
     }
 
     @Test
