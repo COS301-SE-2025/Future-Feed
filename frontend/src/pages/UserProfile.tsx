@@ -106,7 +106,7 @@ const UserProfile = () => {
                   </div>
                 </div>
                 <SheetFooter>
-                  <Button type="submit" variant="outline" className="dark:text-black dark:hover:bg-gray-800">Save changes</Button>
+                  <Button type="submit" variant="outline" className="dark:hover:text-black dark:text-slate-300 dark:hover:bg-blue-500">Save changes</Button>
                   <SheetClose asChild>
                     <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
                   </SheetClose>

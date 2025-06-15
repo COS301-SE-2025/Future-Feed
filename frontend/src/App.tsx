@@ -28,7 +28,7 @@ function App() {
        <Route path="/settings" element={<Settings />} />
        <Route path="/FAQS" element={<FAQS />} />
        <Route path="/help" element={<Help />} />
-        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/" element={<LandingPage />} />
          <Route path="/followers" element={<FollowerFollowing />} />
     </Routes>
     </>
