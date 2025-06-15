@@ -3,7 +3,7 @@ import PersonalSidebar from "@/components/personalSidebar"
 import RightSidebar from "@/components/RightSidebar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Settings } from "lucide-react"
+
 import GRP2 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
@@ -27,10 +27,14 @@ const FollowerFollowing = () => {
       </div>
 
         {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
-          <h1 className="text-xl dark:text-gray-800 font-bold">Syntex Squad</h1>
-          <span className="dark:text-gray-800 font-bold">@syntexsquad</span>
-          <Settings size={20} className="dark:text-gray-800" />
+        <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-gray-800 border rounded-2xl dark:border-slate-100 z-10">
+            <Avatar className=" w-24 h-24 border-4 dark:border-sky-100">
+              <AvatarImage  src={GRP2} alt="@syntexsquad" />
+              <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
+            </Avatar>
+          <h1 className="text-xl dark:text-slate-300 font-bold">Syntex Squad</h1>
+          <span className="dark:text-slate-300 font-bold">@syntexsquad</span>
+         
         </div>
 
         {/* Tabs */}

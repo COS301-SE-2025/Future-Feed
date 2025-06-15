@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import { Link } from "react-router-dom";
 
 import GRP1 from "../assets/GRP1.jpg";
 import PersonalSidebar from "@/components/personalSidebar"
@@ -124,11 +125,23 @@ const UserProfile = () => {
 
 
 
-          <div className="mt-4 text-sm dark:text-gray-400">
-            <span className="font-medium dark:text-white">150</span> Following ·{" "}
-            <span className="font-medium dark:text-white">1.2k</span> Followers ·{" "}
-            <span className="font-medium dark:text-white">1</span> Bots ·{" "}
+          <div className="mt-4 flex content-between gap-2  text-sm dark:text-gray-400">
+            <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
+          <span className="font-medium dark:text-white">150</span> Following · {" "}
+          
+        </Link>
+        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
+          <span className="font-medium dark:text-white">1.2k</span> Followers · {" "}
+          
+        </Link>
+        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
+           <span className="font-medium dark:text-white">1</span> Bots ·{" "}
+          
+        </Link>
             <span className="font-medium dark:text-white">6</span> Posts
+            
+            
+            
           </div>
         </div>
 
