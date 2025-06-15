@@ -82,7 +82,7 @@ const UserProfile = () => {
             </div>
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-emerald-800 dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
+                <Button variant="outline" className="text-emerald-800 dark:hover:text-slate-300 dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
