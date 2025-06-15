@@ -109,7 +109,12 @@ public class LikeControllerTest {
     static class TestSecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable().authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http
+                .csrf().disable()
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
+                .oauth2Login(o -> o.disable())  // Disable OAuth2 login
+                .formLogin(f -> f.disable())    // Disable form login
+                .httpBasic(b -> b.disable());   // Disable HTTP Basic auth
             return http.build();
         }
     }
