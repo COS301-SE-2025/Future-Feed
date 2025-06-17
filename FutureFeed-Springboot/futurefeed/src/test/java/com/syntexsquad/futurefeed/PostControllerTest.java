@@ -3,6 +3,7 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.PostController;
 import com.syntexsquad.futurefeed.dto.PostRequest;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.junit.jupiter.api.Test;
@@ -103,9 +104,8 @@ public class PostControllerTest {
         post2.setContent("Keyword match two");
         post2.setImageUrl("https://example.com/2.jpg");
 
-        List<UserPost> mockResults = List.of(post1, post2);
-
-        when(postService.searchPosts("keyword"));
+        List<Post> mockResults = List.of(post1, post2); // <- use List<Post>
+        when(postService.searchPosts("keyword")).thenReturn(mockResults);
 
         mockMvc.perform(get("/api/posts/search")
                         .param("keyword", "keyword")
@@ -113,7 +113,9 @@ public class PostControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(post1.getId()))
-                .andExpect(jsonPath("$[1].id").value(post2.getId()));
+                .andExpect(jsonPath("$[0].content").value(post1.getContent()))
+                .andExpect(jsonPath("$[1].id").value(post2.getId()))
+                .andExpect(jsonPath("$[1].content").value(post2.getContent()));
     }
 
     @Test

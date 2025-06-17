@@ -1,50 +1,74 @@
 package com.syntexsquad.futurefeed;
 
+import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Like;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.service.LikeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.springframework.security.core.Authentication;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(org.mockito.junit.jupiter.MockitoExtension.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT) // avoid unnecessary stubbing errors
 public class LikeServiceTest {
 
     @Mock
     private LikeRepository likeRepository;
 
+    @Mock
+    private AppUserRepository appUserRepository;
+
+    @Mock
+    private com.syntexsquad.futurefeed.service.PostService postService;
+
     @InjectMocks
     private LikeService likeService;
 
-    // Mock userId to be returned by SecurityContext
     private final Integer mockUserId = 1;
 
     @BeforeEach
     void setupSecurityContext() {
-        // Mock SecurityContext to simulate logged-in user with ID = 1
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getName()).thenReturn("user@example.com"); // or user id as string
+        // Mock OAuth2User with "email" attribute
+        Map<String, Object> attributes = Map.of("email", "user@example.com");
+        OAuth2User mockPrincipal = mock(OAuth2User.class);
+        when(mockPrincipal.getAttributes()).thenReturn(attributes);
 
-        // Your LikeService probably extracts userId from the SecurityContext or principal.
-        // You may need to mock principal or other methods depending on your implementation.
-        // For this example, assume your LikeService extracts userId from authentication name or principal.
+        // Mock OAuth2AuthenticationToken to return the mockPrincipal
+        OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
+        when(authToken.getPrincipal()).thenReturn(mockPrincipal);
 
+        // Mock SecurityContext to return the mocked OAuth2AuthenticationToken
         SecurityContext securityContext = mock(SecurityContext.class);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(securityContext.getAuthentication()).thenReturn(authToken);
         SecurityContextHolder.setContext(securityContext);
+
+        // Mock AppUserRepository to return a user with ID = 1 for the given email
+        AppUser mockUser = new AppUser();
+        mockUser.setId(mockUserId);
+        mockUser.setEmail("user@example.com");
+        when(appUserRepository.findByEmail("user@example.com")).thenReturn(Optional.of(mockUser));
     }
 
     @Test
     void testLikePost_whenNotAlreadyLiked_shouldReturnTrue() {
         Integer postId = 100;
 
+        when(postService.existsById(postId)).thenReturn(true);
         when(likeRepository.existsByUserIdAndPostId(mockUserId, postId)).thenReturn(false);
 
         boolean result = likeService.likePost(postId);
@@ -57,6 +81,7 @@ public class LikeServiceTest {
     void testLikePost_whenAlreadyLiked_shouldReturnFalse() {
         Integer postId = 100;
 
+        when(postService.existsById(postId)).thenReturn(true);
         when(likeRepository.existsByUserIdAndPostId(mockUserId, postId)).thenReturn(true);
 
         boolean result = likeService.likePost(postId);
