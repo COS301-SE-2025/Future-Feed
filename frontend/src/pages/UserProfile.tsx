@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+
 import { Link } from "react-router-dom";
 
 import GRP1 from "../assets/GRP1.jpg";
@@ -35,6 +36,7 @@ const UserProfile = () => {
       <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
         <div className="text-2xl font-bold mb-6">Future Feed</div>
         <nav className="flex flex-col space-y-4 text-lg text-gray-300">
+
           <a href="#" className="flex items-center gap-3 hover:text-blue-500">
             <Home size={20} /> Home
           </a>
@@ -54,6 +56,7 @@ const UserProfile = () => {
 
         </nav>
       </aside>
+
       Sidebar */}
 
       {/* Profile Main Section */}
@@ -63,6 +66,7 @@ const UserProfile = () => {
           <div className="h-36 bg-emerald-500 dark:bg-blue-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-24 h-24 border-4 dark:border-sky-100">
+
               <AvatarImage src={GRP1} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
             </Avatar>
@@ -74,6 +78,7 @@ const UserProfile = () => {
           <div className="flex justify-between items-start">
             <div>
               <h1 className="text-xl font-bold">Syntex Squad</h1>
+
               <p className="dark:text-gray-400">@syntexsquad</p>
               <p className="mt-2 text-sm">yes</p>
 
@@ -231,6 +236,7 @@ const UserProfile = () => {
 
           <TabsContent value="highlights">
             <div className="p-4 dark:text-gray-400">No highlights available  yet.</div>
+
           </TabsContent>
         </Tabs>
       </main>

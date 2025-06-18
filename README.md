@@ -97,11 +97,11 @@
 			<br>
 	  	</td>
 	  	<td align="center">
-			Front-End Developer 
+			Front-End 
+			<br>
+			Developer 
 			<br>
 			DevOps Engineer
-			<br>
-			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS, JS/ReactJs, TailwindCSS/NodeJS, SQL

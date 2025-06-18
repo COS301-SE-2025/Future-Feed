@@ -1,4 +1,5 @@
 
+import React from "react";
 import { Routes, Route } from "react-router-dom"
 import UserProfile from "./pages/UserProfile"
 import Notifications from "./pages/Notifications";
@@ -11,7 +12,11 @@ import FollowerFollowing from "./pages/FollowerFollowing";
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "./components/mode-toggle";
-
+import Login from "./pages/Login";
+import Construction from "./pages/Construction";
+import RegisterPage from "./pages/RegisterPage";
+import Forgot from "./pages/Forgot";
+import EditProfilePage from "./pages/EditProfile";
 
 
 function App() {
@@ -30,8 +35,14 @@ function App() {
        <Route path="/help" element={<Help />} />
         <Route path="/" element={<LandingPage />} />
          <Route path="/followers" element={<FollowerFollowing />} />
+        <Route path="/login" element={<Login />} />
+      <Route path="/construction" element={<Construction />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgotpassword" element={<Forgot />} />
+      
     </Routes>
     </>
+
   )
 }
 
