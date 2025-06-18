@@ -22,7 +22,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-white font-['Cambay',Arial,sans-serif]">
+    <div className="flex min-h-screen flex-col items-center bg-gray-200 font-['Cambay',Arial,sans-serif]">
       <div className="mt-10 flex justify-center">
         <img src={logo} alt="Future Feed Logo" className="h-[311px] w-[311px]" />
       </div>
