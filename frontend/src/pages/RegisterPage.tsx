@@ -39,7 +39,7 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200">
-      <div className="mt-10 flex justify-center">
+      <div className="mt-2 flex justify-center">
         <img src={logo} alt="Future Feed Logo" className="max-w-[311px]" />
       </div>
       <Card className="my-8 w-full max-w-[900px] rounded-[20px] border-2 border-lime-500 bg-white px-10 py-8 shadow-[0_0_30px_#999] sm:px-12">
@@ -55,7 +55,7 @@ const RegisterPage: React.FC = () => {
                 <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="profilePic" className="mb-2 block text-left text-[24px] font-bold">
-                  Username
+                  Profile Picture
                 </Label>
                 </span>
                 <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
