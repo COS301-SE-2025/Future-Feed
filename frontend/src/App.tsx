@@ -9,6 +9,7 @@ import FAQS from "./pages/FAQS";
 import Help from './pages/Help';
 import LandingPage from "./pages/LandingPage";
 import FollowerFollowing from "./pages/FollowerFollowing";
+import HomePage from './pages/HomePage';
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "./components/mode-toggle";
@@ -36,6 +37,7 @@ function App() {
         <Route path="/" element={<LandingPage />} />
          <Route path="/followers" element={<FollowerFollowing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/home" element={<HomePage />} />
       <Route path="/construction" element={<Construction />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
