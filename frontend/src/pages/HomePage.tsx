@@ -1,52 +1,48 @@
-// src/pages/Explore.tsx
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import Post from "@/components/ui/post"
-import PersonalSidebar from "@/components/personalSidebar"
-import { Input } from "@/components/ui/input"
-import WhoToFollow from "@/components/WhoToFollow"
-import WhatsHappening from "@/components/WhatsHappening"
-import RightSidebar from "@/components/RightSidebar"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import Post from "@/components/ui/post";
+import PersonalSidebar from "@/components/personalSidebar";
+import { Input } from "@/components/ui/input";
+import WhoToFollow from "@/components/WhoToFollow";
+import WhatsHappening from "@/components/WhatsHappening";
+import RightSidebar from "@/components/RightSidebar";
 
 const HomePage = () => {
   return (
-    <div className="flex min-h-screen  bg-yellow dark:bg-gray-800 dark:text-white">
+    <div className="flex min-h-screen bg-yellow dark:bg-gray-800 dark:text-white">
       {/* PersonalSidebar Left */}
-      <aside className="w-[275px]  ">
+      <aside className="w-[275px] sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      
 
       {/* Main Explore Content */}
-      <main className="flex-1 p-6 min-h-screen">
-
-       {/* Header */}
+      <main className="flex-1 p-6 min-h-screen overflow-y-auto">
+        {/* Header */}
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
-          <h1 className="text-xl dark:text-gray-800 font-bold">What's on your mind ?</h1>
+          <h1 className="text-xl dark:text-gray-800 font-bold">What's on your mind?</h1>
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="forYou" className="w-full p-2">
-          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-slate-300  dark:bg-gray-800">
-            {["forYou","Following"].map(tab => (
+        <Tabs defaultValue="for You" className="w-full p-2">
+          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-slate-300 dark:bg-gray-800 sticky top-[68px] z-10">
+            {["for You", "Following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
                 className="flex-1 rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-gray-800 dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-gray-800"
               >
-                {tab.replace(/^\w/, c => c.toUpperCase())}
+                {tab.replace(/^\w/, (c) => c.toUpperCase())}
               </TabsTrigger>
             ))}
           </TabsList>
 
           {/* Tab Content */}
-          <TabsContent value="forYou" className="p-0">
+          <TabsContent value="for You" className="p-0 ">
             {[
               {
                 username: "Syntex Squad",
                 handle: "@syntexsquad",
                 time: "2h ago",
                 text: "Excited to share my latest project with you all!",
-                image: "https://via.placeholder.com/300",
               },
               {
                 username: "Code Master",
@@ -80,28 +76,24 @@ const HomePage = () => {
 
           {/* Placeholder for other tabs */}
           <TabsContent value="Following">
-            <p className="p-4 dark:text-gray-400">A list of people you are following is expected here </p>
+            <p className="p-4 dark:text-gray-400">A list of people you are following is expected here</p>
           </TabsContent>
         </Tabs>
-           {/* Mobile RHS below main content */}
-    <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
-      <WhatsHappening />
-      <WhoToFollow />
-    </div>
-      </main>
-    
 
-      {/* Right PersonalSidebar */}
-      <aside className="mt-6 px-5">
+        {/* Mobile RHS below main content */}
+        <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
+      </main>
+
+      {/* Right Sidebar */}
+      <aside className="w-[350px] mt-6 sticky top-0 h-screen overflow-y-auto hidden lg:block ">
         <WhatsHappening />
         <WhoToFollow />
       </aside>
-      
-       {/* Mobile RHS below main content */}
-   
-
     </div>
-  )
-}
+  );
+};
 
-export default HomePage
+export default HomePage;
