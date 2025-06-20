@@ -4,25 +4,24 @@ import PersonalSidebar from "@/components/personalSidebar";
 import { Input } from "@/components/ui/input";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import RightSidebar from "@/components/RightSidebar";
 
 const HomePage = () => {
   return (
-    <div className="flex min-h-screen bg-yellow dark:bg-gray-800 dark:text-white">
+    <div className="flex min-h-screen bg-yellow dark:bg-gray-800 dark:text-white max-w-screen-2xl mx-auto">
       {/* PersonalSidebar Left */}
-      <aside className="w-[275px] sticky top-0 h-screen overflow-y-auto">
+      <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      {/* Main Explore Content */}
-      <main className="flex-1 p-6 min-h-screen overflow-y-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
-          <h1 className="text-xl dark:text-gray-800 font-bold">What's on your mind?</h1>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="for You" className="w-full p-2">
+      {/* Wrapper for Main and Right Sidebar */}
+      <div className="flex flex-1 max-w-[calc(100%-295px)]">
+        {/* Main Explore Content */}
+        <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+          {/* Header and other content remain the same */}
+          <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
+            <h1 className="text-xl dark:text-gray-800 font-bold">What's on your mind?</h1>
+          </div>
+          <Tabs defaultValue="for You" className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-slate-300 dark:bg-gray-800 sticky top-[68px] z-10">
             {["for You", "Following"].map((tab) => (
               <TabsTrigger
@@ -79,23 +78,22 @@ const HomePage = () => {
             <p className="p-4 dark:text-gray-400">A list of people you are following is expected here</p>
           </TabsContent>
         </Tabs>
+          <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+            <WhatsHappening />
+            <WhoToFollow />
+          </div>
+        </main>
 
-        {/* Mobile RHS below main content */}
-        <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
-          <WhatsHappening />
-          <WhoToFollow />
-        </div>
-      </main>
-
-      {/* Right Sidebar : Change border*/}
-      <aside className="w-[350px] mt-6 sticky top-0 h-screen overflow-y-auto hidden lg:block ">
-        <div className="w-[320px] mt-6 ">
-          <WhatsHappening /> 
-        </div>
-        <div className="w-[320px] mt-6">
-          <WhoToFollow />
-        </div>
-      </aside>
+        {/* Right Sidebar */}
+        <aside className="w-[350px] mt-6 sticky top-0 h-screen overflow-y-auto hidden lg:block">
+          <div className="w-[320px] mt-6 ml-3">
+            <WhatsHappening />
+          </div>
+          <div className="w-[320px] mt-5 ml-3 ">
+            <WhoToFollow />
+          </div>
+        </aside>
+      </div>
     </div>
   );
 };

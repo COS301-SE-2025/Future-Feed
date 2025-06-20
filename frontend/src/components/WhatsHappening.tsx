@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const WhatsHappening = () => {
     return(
-        <Card className="dark:bg-gray-800 dark:text-slate-100 border dark:border-slate-300 rounded-2xl">
+        <Card className="dark:bg-gray-800 dark:text-slate-100 border dark:border-slate-300 rounded-3xl border-2 border-lime-500">
                 <CardContent className="p-4">
                     <h2 className="font-bold text-lg mb-4">What's happening</h2>
                     <div className="space-y-3 text-sm">
