@@ -87,10 +87,14 @@ const HomePage = () => {
         </div>
       </main>
 
-      {/* Right Sidebar */}
+      {/* Right Sidebar : Change border*/}
       <aside className="w-[350px] mt-6 sticky top-0 h-screen overflow-y-auto hidden lg:block ">
-        <WhatsHappening />
-        <WhoToFollow />
+        <div className="w-[320px] mt-6 ">
+          <WhatsHappening /> 
+        </div>
+        <div className="w-[320px] mt-6">
+          <WhoToFollow />
+        </div>
       </aside>
     </div>
   );
