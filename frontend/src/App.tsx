@@ -9,7 +9,6 @@ import FAQS from "./pages/FAQS";
 import Help from './pages/Help';
 import LandingPage from "./pages/LandingPage";
 import FollowerFollowing from "./pages/FollowerFollowing";
-
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "./components/mode-toggle";
 import Login from "./pages/Login";
@@ -39,7 +38,7 @@ function App() {
       <Route path="/construction" element={<Construction />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
-      
+      <Route path="/edit-profile" element={<EditProfilePage />} />
     </Routes>
     </>
 
