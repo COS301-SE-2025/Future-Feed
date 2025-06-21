@@ -201,13 +201,13 @@ R10 Analytics and Insights
 
 ## Use Case
 <div class="display: flex; justify-content: center; align-items: center;">
-	<img src="../Diagrams/Use case.png" alt="Use Case Diagram" width="500"/>
+	<img src="../../../Diagrams/Use case.png" alt="Use Case Diagram" width="500"/>
 </div>
 
 
 ## Domain Model
 <div class="display: flex; justify-content: center; align-items: center;">
-	<img src="../Diagrams/Domain Model.jpg" alt="Domain Model" width="500"/>
+	<img src="../../../Diagrams/Domain Model.jpg" alt="Domain Model" width="500"/>
 </div>
 
 ## Architectural Requirements:
