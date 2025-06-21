@@ -1,36 +1,118 @@
-# Future Feed by Syntex Squad for our COS 301 Capstone Project
+<div align="center">
 
-<div class="display: flex; justify-content: center; align-items: center;">
-<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="500"/>
+# Future Feed by Syntex Squad
+
+<div>
+<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="300"/>
 </div>
 <br>
 
+## Project Description:
+  <b> Future Feed (FF) </b> is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots. 
+  <br><br>
+  This project is developed by <b> Syntex Squad </b> for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
+
+## Code Quality Badges
+### Issue Tracking
+[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
+[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
+
+### GitHub
+[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
+[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
+[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
+![Last Commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Future-Feed)
+
 ## Links:
- - <a href="Documentation/Specification/Requirement Specification.md">Requirement Specification</a>
- - <a href="Documentation/Specification/Design Specification.md">Design Specification</a>
- - <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
+  <a href="Documentation/Specification/Requirement Specification.md">Requirement Specifications</a> | 
+  <a href="Documentation/Specification/Design Specification.md">Design Specifications</a> | 
+  <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
 
 ### Demo links:
- - <a href="https://drive.google.com/uc?id=1U68PozQtl9v3ZFldNBVAkvNygU09yDlu&export=download"> Demo 1 video </a>
- - <a href="https://docs.google.com/presentation/d/1WR348H6W3zR0sJQGFtURWZBOQn1MhI0D/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true"> Demo 1 presentation </a>
-
-## Project Description:
- - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
- - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
+<table>
+  <thead>
+    <tr>
+      <th>Demo</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Demo 1 Video</strong></td>
+      <td>
+        <a href="https://drive.google.com/uc?id=1U68PozQtl9v3ZFldNBVAkvNygU09yDlu&export=download" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 1 Presentation</strong></td>
+      <td>
+        <a href="https://docs.google.com/presentation/d/1WR348H6W3zR0sJQGFtURWZBOQn1MhI0D/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 2 Video</strong></td>
+      <td>
+        <a href="###" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 2 Presentation</strong></td>
+      <td>
+        <a href="###" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## Deliverables:
-### Demo 1 use cases:
- - User management
-	* Upload profile
-	* Display pictures
+### Demo 2 use cases:
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>User Management</strong></td>
+      <td>
+        <ul>
+          <li>Upload profile (Demo 1)</li>
+          <li>Display pictures (Demo 1)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Post Creation</strong></td>
+      <td>
+        <ul>
+          <li>Create Post (Demo 1)</li>
+          <li>Delete Post (Demo 1)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>User Interaction</strong></td>
+      <td>
+        <ul>
+          <li>User likes (Demo 1)</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
- - Post Creation
- 	* Create Post
- 	* Delete Post
-
- - User interaction
-	* User comment
-	* User likes
 
 ## Team Members:
 <table>
@@ -171,56 +253,37 @@
 	</tr>
 </table>
 
-## Code Quality Badges
-### Code Coverage
-[![Coverage Status](https://coveralls.io/repos/github/COS301-SE-2025/Future-Feed/badge.svg?branch=main)](https://coveralls.io/github/COS301-SE-2025/Future-Feed?branch=main)
-
-### Build
-[![Build status](https://ci.appveyor.com/api/projects/status/yourappveyorid?svg=true)](https://ci.appveyor.com/project/yourorg/yourrepo)
-
-### Requirements
-[![npm version](https://img.shields.io/npm/v/yourpackage)](https://www.npmjs.com/package/yourpackage)
-
-### Issue Tracking
-[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
-[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
-[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
-[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
-
-### Monitoring Badges
-[![UptimeRobot Status](https://img.shields.io/uptimerobot/status/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
-[![UptimeRobot Ratio](https://img.shields.io/uptimerobot/ratio/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
-
-[![NodePing status](https://img.shields.io/nodeping/status/201205050153W2Q4C-0J2HSIRF)](https://nodeping.com/reports/checks/201205050153W2Q4C-0J2HSIRF)
-
-
-### GitHub
-[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
-[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
-[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
-
-
 ## Getting Started
-
 ### Clone the Repository:
 ```
 git clone https://github.com/SyntexSquad/FutureFeed.git
 cd FutureFeed
 ```
 
+### Install Dependencies:
+```
+cd frontend
+npm install
+```
+
+### Get Started:
+```
+npm run dev
+```
+
 ### Running Tests
- - Unit Testing
+Unit Testing <br>
 
 ## GitHub Repository
 ### Structure
-The entire codebase will be stored in one repository. 
+The entire codebase is stored in one repository. 
 
 ### Branching Strategy
 We use Gitflow as our branching model/strategy
- - main: Production-ready code
- - develop: Integration branch for features
- - feature: Feature branches
- - PRs require at least one review (one more person should review the PR) before merging.
+main: Production-ready code <br>
+develop: Integration branch for features <br>
+feature: Feature branches <br>
+PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
 Team Email: syntaxsquad@gmail.com
@@ -230,3 +293,5 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 
 ## Course: 
 COS 301, University of Pretoria, 2025
+
+</div>
