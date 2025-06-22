@@ -3,6 +3,8 @@
 import { Home, User, Bell, Settings, Search } from "lucide-react";
 
 import { Link } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "./mode-toggle";
 
 const personalSidebar = () => {
   return (
@@ -25,6 +27,12 @@ const personalSidebar = () => {
         <Link to="/explore" className="flex items-center gap-3 dark:hover:text-blue-500 ">
           <Search size={20} /> Explore
         </Link>
+        <ThemeProvider>
+  <div className="pe-9 flex items-center gap-2">
+    <ModeToggle />
+    <span className=" dark:hover:text-blue-500 dark:text-white">Theme</span>
+  </div>
+</ThemeProvider>
       </nav>
 
          

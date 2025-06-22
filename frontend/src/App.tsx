@@ -9,8 +9,7 @@ import FAQS from "./pages/FAQS";
 import Help from './pages/Help';
 import LandingPage from "./pages/LandingPage";
 import FollowerFollowing from "./pages/FollowerFollowing";
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "./components/mode-toggle";
+
 import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
@@ -21,9 +20,7 @@ import EditProfilePage from "./pages/EditProfile";
 function App() {
   return (
     <>
-    <ThemeProvider >
-     <ModeToggle></ModeToggle>
-    </ThemeProvider>
+    
     <Routes>
       {/* Future routes: <Route path="/" element={<Landing />} /> */}
       <Route path="/profile" element={<UserProfile />} />
