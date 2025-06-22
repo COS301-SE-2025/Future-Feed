@@ -7,6 +7,8 @@ import Notificationsmobile from "../assets/notifications_mobile.png"
 import Help_mobile  from "../assets/help_mobile.png"
 import Settingsmobile from "../assets/settings_mobile.png"
 import Editprofilemobile from "../assets/edit profile_mobile.png"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -74,7 +76,14 @@ useEffect(() => {
 }, []);
 
     return (
-        <div className="min-h-screen w-auto dark:bg-gray-800 dark:text-white   bg-green-800 text-white-800 ">
+        <div className="overscroll-none min-h-screen w-auto dark:bg-gray-800 dark:text-white   bg-green-800 text-white-800 overflow-hidden ">
+             
+            <ThemeProvider>
+              <div className="pe-9 flex items-center gap-2">
+                <ModeToggle />
+
+              </div>
+            </ThemeProvider>
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="  " asChild>
@@ -107,9 +116,9 @@ useEffect(() => {
                 </Sheet>
 
             </div>
-            <div className="flex h-full">
+            <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="w-1/2 flex justify-center items-start pt-20 sticky top-0 h-screen">
+                <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
   <motion.img
     key={currentImage}
@@ -119,13 +128,13 @@ useEffect(() => {
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
     transition={{ duration: 0.2, ease:"easeInOut"  }}
-    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-fit absolute"
+    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
   />
 </AnimatePresence>
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto overflow-hidden h-screen px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
@@ -143,13 +152,13 @@ useEffect(() => {
                     {/* Section 1 */}
                     <motion.div
                         id="scroll-indicator"
-                        initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        initial={{ opacity: 0, y: 0 }}
+                        whileInView={{ opacity: 1, y: -300 }}
                         ref={section1Ref}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
 
                     >
@@ -165,11 +174,11 @@ useEffect(() => {
                     ref={section2Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
                         <h1 className="text-4xl font-bold leading-tight text-blue-400">
@@ -186,11 +195,11 @@ useEffect(() => {
                 ref={section3Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
                         <h1 className="text-4xl font-bold leading-tight text-blue-300">
@@ -207,11 +216,11 @@ useEffect(() => {
                     ref={section4Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
                         <h1 className="text-4xl font-bold leading-tight dark:text-blue-300">
@@ -233,7 +242,7 @@ useEffect(() => {
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                         className="pt-10"
                     >
