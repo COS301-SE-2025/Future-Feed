@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "../assets/Future feed transparent-Photoroom.png";
+import lightLogo from "../assets/Future feed transparent-Photoroom.png";
+import darkLogo from "../assets/Future Feed Main Dark v2.png";
 
 interface FormData {
   profilePic: File | null;
@@ -37,11 +38,22 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200">
-      <div className="mt-2 flex justify-center">
-        <img src={logo} alt="Future Feed Logo" className="max-w-[311px]" />
-      </div>
-      <Card className="my-8 w-full max-w-[900px] rounded-[20px] border-2 border-lime-500 bg-white px-10 py-8 shadow-[0_0_30px_#999] sm:px-12">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-gray-800">
+      <div className="mt-10 flex justify-center">
+      {/* Light mode logo */}
+      <img
+        src={lightLogo}
+        alt="Future Feed Logo - Light"
+        className="h-[311px] w-[311px] dark:hidden"
+      />
+      {/* Dark mode logo */}
+      <img
+        src={darkLogo}
+        alt="Future Feed Logo - Dark"
+        className="hidden h-[311px] w-[311px] dark:block"
+      />
+    </div>
+      <Card className="my-8 w-full max-w-[900px] rounded-[20px] border-2 border-lime-500 bg-white px-10 py-8 shadow-[0_0_30px_#999] sm:px-12 dark:bg-gray-800 dark:shadow-none dark:border-slate-200">
         <CardHeader>
           <CardTitle className="text-center text-4xl sm:text-[40px]">
             Register
@@ -51,31 +63,31 @@ const RegisterPage: React.FC = () => {
           <form className="max-h-[60vh] overflow-y-auto px-5 sm:px-12">
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="profilePic" className="mb-2 block text-left text-[24px] font-bold">
                   Profile Picture
                 </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="file"
                 id="profilePic"
                 accept="image/*"
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="displayName" className="mb-2 block text-left text-[23px] font-bold">
                     Display Name
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="text"
@@ -84,18 +96,18 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.displayName}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="username" className="mb-2 block text-left text-[23px] font-bold">
                     Username
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="text"
@@ -104,18 +116,18 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.username}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="dob" className="mb-2 block text-left text-[23px] font-bold">
                     Date of Birth
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="date"
@@ -123,18 +135,18 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.dob}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="email" className="mb-2 block text-left text-[23px] font-bold">
                     Email
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="email"
@@ -143,19 +155,19 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
 
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="password" className="mb-2 block text-left text-[23px] font-bold">
                     Password
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="password"
@@ -164,19 +176,19 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
             
             <div className="mb-6">
               <div className="relative my-[15px] flex items-center justify-center text-center">
-                <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
                 <span className="text-[0.9rem] font-bold">
                   <Label htmlFor="confirmPassword" className="mb-2 block text-left text-[23px] font-bold">
                     Confirm Password
                   </Label>
                 </span>
-                <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
               </div>
               <Input
                 type="password"
@@ -185,7 +197,7 @@ const RegisterPage: React.FC = () => {
                 required
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5"
+                className="h-auto rounded-[25px] border border-black bg-[#e0e0e0] p-5 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
 

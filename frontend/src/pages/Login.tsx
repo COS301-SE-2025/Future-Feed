@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
 import darkLogo from "../assets/Future Feed Main Dark v2.png";
-
 import googleLogo from "../assets/Google transparent.png";
 
 interface FormData {
