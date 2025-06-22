@@ -118,7 +118,7 @@ useEffect(() => {
             </div>
             <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="w-1/2  flex justify-center items-start pt-5 sticky top-0 h-screen">
+                <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
   <motion.img
     key={currentImage}
