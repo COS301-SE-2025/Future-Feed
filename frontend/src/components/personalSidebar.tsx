@@ -7,9 +7,9 @@ import { Link } from "react-router-dom";
 const personalSidebar = () => {
   return (
     <>
-    <aside className=" hidden sm:flex h-fit dark:bg-gray-800 dark:border-gray-800 dark:text-slate-100 w-[200px] p-6 mt-15 ml-4 rounded-2xl  border-3 border-lime-500 shadow-md hidden md:block">
-      <div className="text-2xl font-bold mb-6">Future Feed</div>
-      <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-slate-100 ">
+    <aside className=" hidden sm:flex h-fit dark:bg-black dark:border-lime-500 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-3 border-lime-500 shadow-md hidden md:block bg-lime-600">
+      <div className="text-2xl font-bold mb-6 text-white dark:text-lime-500">Future Feed</div>
+      <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-lime-500 text-white ">
          <Link to="/" className="flex items-center gap-3 dark:hover:text-blue-500 ">
           <Home size={20} /> Home
         </Link>
