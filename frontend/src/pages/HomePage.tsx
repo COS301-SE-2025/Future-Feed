@@ -141,13 +141,13 @@ const HomePage = () => {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
           <div className="bg-white dark:bg-black rounded-2xl p-6 w-[800px] min-h-[300px] border-2 border-lime-500 flex flex-col">
-            <h2 className="text-xl font-bold mb-4 dark:text-white">Share your thoughts</h2>
+            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Share your thoughts</h2>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
                 rows={8}
               />
               {postImage && (
@@ -170,17 +170,17 @@ const HomePage = () => {
                 <Button
                   variant="outline"
                   onClick={handleCloseModal}
-                  className="dark:text-white dark:border-lime-500"
+                  className="dark:text-white text-red-700 border-red-700 dark:border-lime-500"
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="outline"
-                  className="dark:text-white dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
+                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span>Image</span>
+                  <span> Attach Image</span>
                 </Button>
                 <input
                   type="file"
