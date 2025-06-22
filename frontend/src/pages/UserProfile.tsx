@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
 import { Link } from "react-router-dom";
+import EditProfile from "./EditProfile"
 
 import GRP1 from "../assets/GRP1.jpg";
 import PersonalSidebar from "@/components/personalSidebar"
@@ -30,7 +31,7 @@ const UserProfile = () => {
     
     
     */
-    <div className="flex min-h-screen  dark:bg-gray-800 dark:text-white overflow-y-auto">
+    <div className="flex min-h-screen  dark:bg-black dark:text-white overflow-y-auto">
       <PersonalSidebar />
       {/* 
       <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
@@ -60,10 +61,10 @@ const UserProfile = () => {
       Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto  dark:border-sky-100">
+      <main className="flex-1 max-w-2xl mx-auto  dark:lime-500">
         {/* Banner + Avatar + Name */}
         <div className="relative">
-          <div className="h-36 bg-emerald-500 dark:bg-blue-500 w-full" />
+          <div className="h-36 bg-emerald-500 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-24 h-24 border-4 dark:border-sky-100">
 
@@ -85,9 +86,14 @@ const UserProfile = () => {
 
 
             </div>
-            <Sheet>
+            <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+          <Button variant="outline" className="text-emerald-800 dark:hover:text-black dark:text-lime-500 dark:bg-black dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
+        </Link>
+            
+
+            {/*<Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" className="text-emerald-800 dark:hover:text-slate-300 dark:text-black dark:bg-slate-300 dark:border-gray-700 dark:hover:bg-gray-800">Edit Profile</Button>
+                <Button variant="outline" className="text-emerald-800 dark:hover:text-black dark:text-lime-500 dark:bg-black dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
@@ -117,7 +123,7 @@ const UserProfile = () => {
                   </SheetClose>
                 </SheetFooter>
               </SheetContent>
-            </Sheet>
+            </Sheet>*/}
 
             {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/}
             {/*<Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">
@@ -150,17 +156,17 @@ const UserProfile = () => {
           </div>
         </div>
 
-        <Separator className="my-4 dark:bg-sky-100" />
+        <Separator className="my-4 dark:bg-lime-500" />
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full dark:bg-gray-800   grid-cols-5 dark:bg-transparent  dark:border-sky-100">
+          <TabsList className="grid w-full dark:bg-black  grid-cols-5 dark:bg-transparent  dark:border-lime-500">
 
-            <TabsTrigger className="dark:text-white" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="dark:text-white" value="replies">Replies</TabsTrigger>
-            <TabsTrigger className="dark:text-white" value="media">Media</TabsTrigger>
-            <TabsTrigger className="dark:text-white" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="dark:text-white" value="highlights">Highlights</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="media">Media</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
 
           </TabsList>
 
@@ -193,7 +199,7 @@ const UserProfile = () => {
 
               },
             ].map((post, index) => (
-              <Card key={index} className="dark:bg-gray-800 dark:border-gray-800 border-b rounded-none">
+              <Card key={index} className="dark:bg-black dark:border-lime-500 border  rounded-2xl">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar>
