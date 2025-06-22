@@ -88,17 +88,28 @@
       <td><strong>User Management</strong></td>
       <td>
         <ul>
-          <li>Upload profile (Demo 1)</li>
-          <li>Display pictures (Demo 1)</li>
+	  <li>Login and Logout</li>
+          <li>Edit profile (Demo 1)</li>
         </ul>
       </td>
     </tr>
     <tr>
-      <td><strong>Post Creation</strong></td>
+      <td><strong>Feed Management</strong></td>
+      <td>
+        <ul>
+          <li>View Feed (Demo 2)</li>
+          <li>Filter Feed (Demo 2)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Post Management</strong></td>
       <td>
         <ul>
           <li>Create Post (Demo 1)</li>
           <li>Delete Post (Demo 1)</li>
+	  <li>Like Post (Demo 1)</li>
+          <li>Reshare Post (Demo 2)</li>
         </ul>
       </td>
     </tr>
@@ -106,12 +117,58 @@
       <td><strong>User Interaction</strong></td>
       <td>
         <ul>
-          <li>User likes (Demo 1)</li>
+	  <li>Follow users (Demo 2)</li>
+	  <li>Unfollow users (Demo 2)</li>
         </ul>
       </td>
     </tr>
   </tbody>
 </table>
+
+<h2> Technologies Used</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Logo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4"><strong>Frontend</strong></td>
+      <td>React (TSX)</td>
+      <td><img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>Tailwind CSS</td>
+      <td><img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwind-css&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>JavaScript</td>
+      <td><img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>ShadCN/UI</td>
+      <td><img src="https://img.shields.io/badge/ShadCN_UI-%23000000?logo=shadcn&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><strong>Backend</strong></td>
+      <td>OAuth 2.0</td>
+      <td><img src="https://img.shields.io/badge/OAuth2-000000?logo=oauth&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>Spring Boot</td>
+      <td><img src="https://img.shields.io/badge/Spring_Boot-6DB33F?logo=spring-boot&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>PostgreSQL</td>
+      <td><img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=flat" /></td>
+    </tr>
+  </tbody>
+</table>
+
 
 
 ## Team Members:
@@ -280,9 +337,12 @@ The entire codebase is stored in one repository.
 
 ### Branching Strategy
 We use Gitflow as our branching model/strategy
+```
 main: Production-ready code <br>
 develop: Integration branch for features <br>
 feature: Feature branches <br>
+Some branches are created from issues so they will have the issue number there
+```
 PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
