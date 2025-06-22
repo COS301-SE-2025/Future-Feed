@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { FaArrowLeft } from "react-icons/fa";
+import { ArrowLeft } from "lucide-react";
 import { Camera } from "lucide-react";
 import GRP1 from "../assets/GRP1.jpg";
 
@@ -17,6 +17,7 @@ interface FormData {
 }
 
 const EditProfile: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
     username: "",
     displayName: "",
@@ -35,25 +36,31 @@ const EditProfile: React.FC = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     console.log("Form submitted:", formData);
+    navigate("/user-profile");
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white font-['Arial',sans-serif]">
-      <Card className="relative w-full max-w-[900px] rounded-[16px] border border-black bg-white p-16 shadow-[0_0_30px_#999]">
-        <Link to="/user-profile" className="absolute left-5 top-5 text-[#333] hover:text-[#007bff]">
-          <FaArrowLeft className="text-2xl" />
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-gray-800 dark:text-white">
+      <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-gray-800 dark:border-slate-200 dark:shadow-none">
+        <Link to="/user-profile">
+          <Button
+            className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer shadow-[2px_2px_4px_#888] hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-slate-200 dark:shadow-white dark:hover:bg-gray-800 dark:hover:shadow-none"
+            variant="ghost"
+          >
+            <ArrowLeft className="h-5 w-5 text-black" />
+          </Button>
         </Link>
         <CardHeader>
           <CardTitle className="text-center text-4xl">Edit Profile</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="flex flex-col items-center">
-            <div className="mb-8 flex w-full justify-center">
+            <div className="mb-3 flex w-full justify-center">
               <label htmlFor="profile-pic-upload" className="relative cursor-pointer">
                 <img
                   src={formData.profileImage}
                   alt="Profile"
-                  className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
+                  className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-slate-300"
                 />
                 <Camera
                   className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
@@ -67,47 +74,69 @@ const EditProfile: React.FC = () => {
                 />
               </label>
             </div>
-            <div className="mb-5 w-full max-w-[500px]">
-              <Label htmlFor="display-name" className="mb-2 block text-left font-semibold">
-                Display Name
-              </Label>
+
+            <div className="mb-3 w-full max-w-[500px]">
+              <div className="relative my-[15px] flex items-center justify-center text-center">
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+                <span className="text-[0.9rem] font-bold">
+                  <Label htmlFor="display-name" className="mb-2 block font-bold text-[18px]">
+                    Display Name
+                  </Label>
+                </span>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+              </div>
               <Input
                 type="text"
                 id="display-name"
                 placeholder="Enter your display name"
                 value={formData.displayName}
                 onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
+                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
-            <div className="mb-5 w-full max-w-[500px]">
-              <Label htmlFor="username" className="mb-2 block text-left font-semibold">
-                Username
-              </Label>
+
+            <div className="mb-3 w-full max-w-[500px]">
+              <div className="relative my-[15px] flex items-center justify-center text-center">
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+                <span className="text-[0.9rem] font-bold">
+                  <Label htmlFor="username" className="mb-2 block font-bold text-[18px]">
+                    Username
+                  </Label>
+                </span>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+              </div>
               <Input
                 type="text"
                 id="username"
                 placeholder="Enter your username"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
+                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
-            <div className="mb-5 w-full max-w-[500px]">
-              <Label htmlFor="bio" className="mb-2 block text-left font-semibold">
-                Bio
-              </Label>
+
+            <div className="mb-3 w-full max-w-[500px]">
+              <div className="relative my-[15px] flex items-center justify-center text-center">
+                <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+                <span className="text-[0.9rem] font-bold">
+                  <Label htmlFor="bio" className="mb-2 block font-bold text-[18px]">
+                    Bio
+                  </Label>
+                </span>
+                <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-slate-200"></div>
+              </div>
               <Textarea
                 id="bio"
                 placeholder="Bio..."
                 value={formData.bio}
                 onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap"
+                className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 dark:border-slate-200"
               />
             </div>
+
             <Button
               type="submit"
-              className="mt-2 h-[50px] w-[150px] rounded-[100px] border border-black bg-white text-base font-semibold text-black shadow-none hover:bg-gray-500 hover:text-white"
+              className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black shadow-[2px_2px_4px_#888] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-2 mt-1 cursor-pointer"
             >
               Save Changes
             </Button>

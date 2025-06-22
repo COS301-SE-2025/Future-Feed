@@ -11,8 +11,6 @@ import LandingPage from "./pages/LandingPage";
 import FollowerFollowing from "./pages/FollowerFollowing";
 import HomePage from './pages/HomePage';
 
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "./components/mode-toggle";
 import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
@@ -23,9 +21,7 @@ import EditProfilePage from "./pages/EditProfile";
 function App() {
   return (
     <>
-    <ThemeProvider >
-     <ModeToggle></ModeToggle>
-    </ThemeProvider>
+    
     <Routes>
       {/* Future routes: <Route path="/" element={<Landing />} /> */}
       <Route path="/profile" element={<UserProfile />} />
@@ -41,7 +37,7 @@ function App() {
       <Route path="/construction" element={<Construction />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
-      
+      <Route path="/edit-profile" element={<EditProfilePage />} />
     </Routes>
     </>
 

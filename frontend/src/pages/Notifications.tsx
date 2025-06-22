@@ -17,7 +17,7 @@ const Notifications = () => {
       <PersonalSidebar />
 
       {/* Center Notification Feed */}
-      <main className="h-fit p-6 dark:bg-gray-800 flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-slate-100 min-h-screen">
+      <main className="h-fit p-6 dark:bg-gray-800 flex-1 max-w-4xl mx-7 rounded-2xl dark:shadow-lg dark:shadow-gray-800 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-gray-800 border dark:border-gray-800">
         <Input
           type="text"
@@ -57,7 +57,7 @@ const Notifications = () => {
 
           {/* Example Notification */}
           <TabsContent value="all">
-            <Card className="dark:bg-gray-800 dark:text-white border dark:border-slate-100 rounded-2xl">
+            <Card className="dark:bg-gray-800 border-none dark:text-white dark:shadow-lg dark:shadow-gray-800 rounded-2xl">
               <CardContent className="flex gap-3 items-start p-4">
                  <Avatar className="w-14 h-14 border-4 border-slate-300">
               <AvatarImage src={GRP2} alt="@syntexsquad" />

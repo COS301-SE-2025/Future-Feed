@@ -18,7 +18,7 @@ const Explore = () => {
       
 
       {/* Main Explore Content */}
-      <main className="flex-1 max-w-2xl border bg-yellow dark:border-slate-300 rounded-2xl p-6 min-h-screen">
+      <main className="flex-1 max-w-2xl border bg-yellow dark:border-gray-800 dark:shadow-lg dark:shadow-gray-800 rounded-2xl p-6 min-h-screen">
 
          {/* Mobile Search Input */}
       <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-gray-800 border dark:border-gray-800">
@@ -30,14 +30,14 @@ const Explore = () => {
       </div>
 
        {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 rounded-2xl dark:shadow-lg dark:shadow-gray-800 z-10">
           <h1 className="text-xl dark:text-gray-800 font-bold">Explore</h1>
           <Settings size={20} className="dark:text-gray-800" />
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="forYou" className="w-full p-2">
-          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-slate-300  dark:bg-gray-800">
+          <TabsList className="w-full flex justify-around rounded-2xl dark:shadow-lg dark:shadow-gray-800 dark:bg-gray-800">
             {["forYou", "trending", "news", "sports", "entertainment"].map(tab => (
               <TabsTrigger
                 key={tab}
@@ -51,7 +51,7 @@ const Explore = () => {
 
           {/* Tab Content */}
           <TabsContent value="forYou">
-            <section className="p-4 border dark:border-slate-300">
+            <section className="p-4 dark:shadow-lg dark:shadow-gray-800">
               <h2 className="font-bold text-lg mb-2">Today’s News</h2>
               <div className="mb-4">
                 <p className="text-sm dark:text-neutral-400 mb-1">16 hours ago • News • 1M posts</p>
@@ -74,7 +74,7 @@ const Explore = () => {
             </section>
 
             {/* Trends List */}
-            <section className="p-4 space-y-4 border dark:border-slate-300 p-0">
+            <section className="p-4 space-y-4 dark:shadow-lg dark:shadow-gray-800 p-0">
               {[
                 { title: "Connie", posts: "10.1K", region: "Trending in South Africa" },
                 { title: "Sharapova", posts: "3,165", region: "Sports · Trending" },
