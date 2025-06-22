@@ -7,6 +7,8 @@ import Notificationsmobile from "../assets/notifications_mobile.png"
 import Help_mobile  from "../assets/help_mobile.png"
 import Settingsmobile from "../assets/settings_mobile.png"
 import Editprofilemobile from "../assets/edit profile_mobile.png"
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -74,7 +76,14 @@ useEffect(() => {
 }, []);
 
     return (
-        <div className="min-h-screen w-auto dark:bg-gray-800 dark:text-white   bg-green-800 text-white-800 ">
+        <div className="overscroll-none min-h-screen w-auto dark:bg-black dark:text-white   bg-gray-200 text-white-800 overflow-hidden ">
+             
+            <ThemeProvider>
+              <div className="pe-9 flex items-center gap-2">
+                <ModeToggle />
+
+              </div>
+            </ThemeProvider>
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="  " asChild>
@@ -90,26 +99,26 @@ useEffect(() => {
                         <div className="grid flex-1 auto-rows-min gap-6 px-4">
                             <div className="grid gap-3">
                                 <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
-                                <Button variant="outline" className="dark:text-slate-300 dark:bg-blue-500 dark:hover:bg-gray-800">Create Account</Button>
+                                <Button variant="outline" className="dark:border-lime-500 dark:text-white dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Create Account</Button>
                             </div>
                             <div className="grid gap-3">
                                 <Label className=":hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
-                                <Button variant="outline" className="dark:text-slate-300 dark:bg-blue-500 dark:hover:bg-gray-800">Login</Button>
+                                <Button variant="outline" className="dark:border-lime-500 dark:text-slate-300 dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Login</Button>
                             </div>
                         </div>
                         <SheetFooter>
-                            <Button type="submit" variant="outline" className="dark:hover:text-black dark:text-slate-300 dark:hover:bg-blue-500">Save changes</Button>
+                            <Button type="submit" variant="outline" className="dark:text-white dark:border-lime-500 dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Save changes</Button>
                             <SheetClose asChild>
-                                <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
+                                <Button variant="outline" className="dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black">Close</Button>
                             </SheetClose>
                         </SheetFooter>
                     </SheetContent>
                 </Sheet>
 
             </div>
-            <div className="flex h-full">
+            <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="w-1/2 flex justify-center items-start pt-20 sticky top-0 h-screen">
+                <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
   <motion.img
     key={currentImage}
@@ -119,13 +128,13 @@ useEffect(() => {
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -20 }}
     transition={{ duration: 0.2, ease:"easeInOut"  }}
-    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-fit absolute"
+    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
   />
 </AnimatePresence>
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto overflow-hidden h-screen px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
@@ -143,20 +152,20 @@ useEffect(() => {
                     {/* Section 1 */}
                     <motion.div
                         id="scroll-indicator"
-                        initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        initial={{ opacity: 0, y: 0 }}
+                        whileInView={{ opacity: 1, y: -300 }}
                         ref={section1Ref}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
 
                     >
-                        <span className="text-sm dark:text-slate-300">FutureFeed</span>
+                        <span className="text-sm dark:text-lime-500 text-lime-500   ">FutureFeed</span>
                         <h1 className="text-5xl font-bold leading-tight">
                             Share ideas and <br /> connect through <br /> conversation with <br />
-                            <span className="dark:text-blue-500">Future Feed</span>
+                            <span className="text-lime-500 dark:text-lime-500">Future Feed</span>
                         </h1>
                     </motion.div>
 
@@ -165,14 +174,14 @@ useEffect(() => {
                     ref={section2Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-blue-400">
+                        <h1 className="text-4xl font-bold leading-tight text-lime-500">
                             What will you say?
                         </h1>
                         <p className="mt-4 text-lg dark:text-gray-400">
@@ -186,14 +195,14 @@ useEffect(() => {
                 ref={section3Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-blue-300">
+                        <h1 className="text-4xl font-bold leading-tight text-lime-500">
                             Keep up with your <br /> favourite creators <br />
                             and friends
                         </h1>
@@ -207,14 +216,14 @@ useEffect(() => {
                     ref={section4Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
-                        whileInView={{ opacity: 1, y: 100 }}
+                        whileInView={{ opacity: 1, y: -300 }}
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight dark:text-blue-300">
+                        <h1 className="text-4xl font-bold leading-tight text-lime-500 dark:text-lime-500">
                             Express yourself in <br /> more ways imaginable
                         </h1>
                         <p className="mt-4 text-lg dark:text-gray-400">
@@ -233,11 +242,11 @@ useEffect(() => {
 
                         transition={{ duration: 0.8 }}
                         animate={{
-                            translateY: "-100%",
+                            y: "-100%",
                         }}
                         className="pt-10"
                     >
-                        <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 text-slate-300 dark:bg-blue-500 dark:border-slate-300  dark:hover:bg-gray-800">Join the Future Feed Family</Button>
+                        <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black ">Join the Future Feed Family</Button>
                     </motion.div>
                 </div>
             </div>
