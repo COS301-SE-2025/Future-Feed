@@ -21,5 +21,18 @@ public class FeedPresetController {
     public ResponseEntity<List<FeedPreset>> getUserPresets(@PathVariable Long userId) {
         return ResponseEntity.ok(presetService.getPresetsForUser(userId));
     }
-    
+    @PostMapping("/{userId}/{presetId}/activate")
+    public ResponseEntity<String> activateFeedPreset(@PathVariable Long userId, @PathVariable Long presetId) {
+        if (presetService.activatePreset(presetId, userId)) {
+            return ResponseEntity.ok("Preset activated.");
+        }
+        return ResponseEntity.notFound().build();
+    }
+    @PostMapping("/{userId}/{presetId}/deactivate")
+    public ResponseEntity<String> deactivateFeedPreset(@PathVariable Long userId, @PathVariable Long presetId) {
+        if (presetService.deactivatePreset(presetId, userId)) {
+            return ResponseEntity.ok("Preset deactivated.");
+        }
+        return ResponseEntity.notFound().build();
+    }
 }
