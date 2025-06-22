@@ -84,14 +84,14 @@ const HomePage = () => {
   };
 
   return (
-    <div className="flex min-h-screen dark:bg-black text-white max-w-screen-2xl mx-auto bg-white">
+    <div className="flex min-h-screen dark:bg-[#1a1a1a] text-white max-w-screen-2xl mx-auto bg-white">
       <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <div className={`flex flex-1 max-w-[calc(100%-295px)] ${isModalOpen ? "backdrop-blur-sm" : ""}`}>
         <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
           <div
-            className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-black border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer"
+            className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer"
             onClick={handleOpenModal}
           >
             <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
