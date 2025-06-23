@@ -61,12 +61,12 @@ const UserProfile = () => {
       Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto  dark:lime-500">
+      <main className="w-[1100px] mx-auto dark:lime-500">
         {/* Banner + Avatar + Name */}
         <div className="relative">
-          <div className="h-36 bg-emerald-500 dark:bg-lime-500 w-full" />
+          <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-24 h-24 border-4 dark:border-sky-100">
+            <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-sky-100">
 
               <AvatarImage src={GRP1} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
@@ -75,19 +75,19 @@ const UserProfile = () => {
         </div>
 
         {/* Name, handle, edit button */}
-        <div className="pt-16 px-4">
+        <div className="pt-16 px-4 ">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="ml-30 mt-[-120px]">
               <h1 className="text-xl font-bold">Syntex Squad</h1>
 
               <p className="dark:text-gray-400">@syntexsquad</p>
-              <p className="mt-2 text-sm">yes</p>
+              <p className="mt-2 text-sm">This is my bio</p>
 
 
 
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-          <Button variant="outline" className="text-emerald-800 dark:hover:text-black dark:text-lime-500 dark:bg-black dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
+          <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
         </Link>
             
 
@@ -156,7 +156,7 @@ const UserProfile = () => {
           </div>
         </div>
 
-        <Separator className="my-4 dark:bg-lime-500" />
+        <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
 
         {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
@@ -199,14 +199,14 @@ const UserProfile = () => {
 
               },
             ].map((post, index) => (
-              <Card key={index} className="dark:bg-black dark:border-lime-500 border  rounded-2xl">
+              <Card key={index} className="mt-3 dark:bg-[#1a1a1a] dark:border-lime-500 border border-2 border-lime-500  rounded-2xl">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar>
                       <AvatarImage src={GRP1} />
                       <AvatarFallback>JD</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1">
+                    <div className="flex-1 ">
                       <div className="flex justify-between">
                         <h2 className="font-bold dark:text-white">Syntex Squad </h2>
                         <span className="text-sm dark:text-gray-400">{post.time}</span>
