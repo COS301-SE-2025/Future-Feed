@@ -61,7 +61,7 @@ const UserProfile = () => {
       Sidebar */}
 
       {/* Profile Main Section */}
-      <main className="flex-1 max-w-2xl mx-auto  dark:lime-500">
+      <main className="flex-1 border-lime-500 max-w-2xl mx-auto  dark:lime-500">
         {/* Banner + Avatar + Name */}
         <div className="relative">
           <div className="h-36 bg-emerald-500 dark:bg-lime-500 w-full" />
