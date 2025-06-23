@@ -6,7 +6,7 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { FaImage } from "react-icons/fa";
+import { FaImage, FaTimes } from "react-icons/fa";
 
 interface PostData {
   id: number;
@@ -15,6 +15,9 @@ interface PostData {
   time: string;
   text: string;
   image?: string;
+  isLiked: boolean;
+  isBookmarked: boolean;
+  commentCount: number;
 }
 
 const HomePage = () => {
@@ -29,6 +32,9 @@ const HomePage = () => {
       handle: "@syntexsquad",
       time: "2h ago",
       text: "Excited to share my latest project with you all!",
+      isLiked: false,
+      isBookmarked: false,
+      commentCount: 0,
     },
     {
       id: 2,
@@ -36,6 +42,9 @@ const HomePage = () => {
       handle: "@codemaster",
       time: "5h ago",
       text: "Loving the new Future Feed design 💻",
+      isLiked: false,
+      isBookmarked: false,
+      commentCount: 0,
     },
     {
       id: 3,
@@ -43,6 +52,9 @@ const HomePage = () => {
       handle: "@techlover",
       time: "1d ago",
       text: "Shadcn actually so nice, Thank you Mr Arne",
+      isLiked: false,
+      isBookmarked: false,
+      commentCount: 0,
     },
     {
       id: 4,
@@ -50,6 +62,9 @@ const HomePage = () => {
       handle: "@debugdetective",
       time: "2d ago",
       text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅",
+      isLiked: false,
+      isBookmarked: false,
+      commentCount: 0,
     },
   ]);
 
@@ -76,11 +91,39 @@ const HomePage = () => {
         time: "Just now",
         text: postText,
         image: postImage ? URL.createObjectURL(postImage) : undefined,
+        isLiked: false,
+        isBookmarked: false,
+        commentCount: 0,
       };
       setPosts([newPost, ...posts]);
       setNextPostId(nextPostId + 1);
       handleCloseModal();
     }
+  };
+
+  // Handlers for post interactions
+  const toggleLike = (postId: number) => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId ? { ...post, isLiked: !post.isLiked } : post
+      )
+    );
+  };
+
+  const toggleBookmark = (postId: number) => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      )
+    );
+  };
+
+  const addComment = (postId: number) => {
+    setPosts(
+      posts.map((post) =>
+        post.id === postId ? { ...post, commentCount: post.commentCount + 1 } : post
+      )
+    );
   };
 
   return (
@@ -117,6 +160,12 @@ const HomePage = () => {
                   time={post.time}
                   text={post.text}
                   image={post.image}
+                  isLiked={post.isLiked}
+                  isBookmarked={post.isBookmarked}
+                  commentCount={post.commentCount}
+                  onToggleLike={() => toggleLike(post.id)}
+                  onToggleBookmark={() => toggleBookmark(post.id)}
+                  onAddComment={() => addComment(post.id)}
                 />
               ))}
             </TabsContent>
@@ -138,9 +187,17 @@ const HomePage = () => {
           </div>
         </aside>
       </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-[800px] min-h-[300px] border-2 border-lime-500 flex flex-col">
+          <div className="bg-white dark:bg-black rounded-2xl p-6 w-[800px] min-h-[300px] border-2 border-lime-500 flex flex-col relative">
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
             <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Share your thoughts</h2>
             <div className="flex flex-col flex-1">
               <Textarea
@@ -169,18 +226,11 @@ const HomePage = () => {
               <div className="flex justify-end space-x-2">
                 <Button
                   variant="outline"
-                  onClick={handleCloseModal}
-                  className="dark:text-white text-red-700 border-red-700 dark:border-lime-500"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="outline"
                   className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span> Attach Image</span>
+                  <span>Attach Image</span>
                 </Button>
                 <input
                   type="file"
