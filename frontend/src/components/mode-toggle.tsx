@@ -13,7 +13,7 @@ export function ModeToggle() {
   const { setTheme } = useTheme()
 
   return (
-    <div className="dark:bg-black bg-gray-200">
+    <div className="dark:bg-gray-800 bg-gray-200">
         <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button className="bg-gray-200" variant="outline" size="icon">

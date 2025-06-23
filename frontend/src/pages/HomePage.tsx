@@ -100,7 +100,6 @@ const HomePage = () => {
       handleCloseModal();
     }
   };
-
   // Handlers for post interactions
   const toggleLike = (postId: number) => {
     setPosts(
