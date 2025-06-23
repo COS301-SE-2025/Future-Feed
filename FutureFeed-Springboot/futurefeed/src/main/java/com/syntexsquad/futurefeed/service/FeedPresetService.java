@@ -56,4 +56,42 @@ private final AppUserRepository appUserRepo;
         }
         return false;
     }
+    public boolean deleteFeedPreset(long userId, long presetId)
+    {
+        AppUser user = appUserRepo.findById(userId).orElseThrow();
+        FeedPreset preset = feedPresetRepo.findById(presetId).orElseThrow();
+        if (preset.getOwner().equals(user))
+        {
+            List<FeedPreset> allPresets = feedPresetRepo.findByOwner(user);
+            for (FeedPreset preset1 : allPresets) {
+                if (preset1.getId().equals(preset.getId())) {
+                    allPresets.remove(preset1);
+                    feedPresetRepo.saveAll(allPresets);
+                    return true;
+                }
+            }
+            return false;
+        }
+        return false;
+    }
+    public boolean updateFeedPreset(long userId, long presetId, FeedPreset Newpreset)
+    {
+        AppUser user = appUserRepo.findById(userId).orElseThrow();
+        FeedPreset preset = feedPresetRepo.findById(presetId).orElseThrow();
+        if(preset.getOwner().equals(user))
+        {
+            List<FeedPreset> allPresets = feedPresetRepo.findByOwner(user);
+            for (FeedPreset preset1 : allPresets) {
+                if (preset1.getId().equals(preset.getId())) {
+                    preset1.setDefault(Newpreset.isDefault());
+                    preset1.setRules(Newpreset.getRules());
+                    preset1.setOwner(Newpreset.getOwner());
+                    feedPresetRepo.saveAll(allPresets);
+                    return  true;
+                }
+            }
+        }
+        return false;
+    }
+
 }
