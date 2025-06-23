@@ -3,6 +3,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -45,6 +46,34 @@ public class FeedPreset {
     public void setDefault(boolean isDefault) {
         this.isDefault = isDefault;
     }
+
+    public void setRules(List<FeedRule> rules) {
+        // Clear old rules if needed
+        if (this.rules != null) {
+            this.rules.clear();
+        } else {
+            this.rules = new ArrayList<>();
+        }
+
+        // Set the parent preset for each rule
+        for (FeedRule rule : rules) {
+            rule.setFeedPreset(this); // VERY important for bidirectional mapping
+            this.rules.add(rule);
+        }
+    }
+    public void addRule(FeedRule rule) {
+        this.rules.add(rule);
+        rule.setFeedPreset(this);
+    }
+    public void removeRule(FeedRule rule) {
+        this.rules.remove(rule);
+        rule.setFeedPreset(null);
+    }
+    public List<FeedRule> getRules()
+    {
+        return new ArrayList<>(this.rules);
+    }
+
 
     // Getters and setters (or use Lombok if preferred)
 }
