@@ -72,4 +72,12 @@ public class PostService {
     public List<Post> searchPosts(String keyword) {
         return postRepository.searchByKeyword(keyword);
     }
+
+    public List<Post> getAllPosts() {
+    return postRepository.findAll();
+    }
+
+    public List<Post> getPostsByUserId(Integer userId) {
+        return postRepository.findAllByUserId(userId);
+    }
 }
