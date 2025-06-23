@@ -86,27 +86,27 @@
                 <td data-label="Size">4</td>
             </tr>
             <tr>
-                <td data-label="Title">Follow Other Users</td>
-                <td data-label="User Story">As a user<br>I want to be able to follow other users on Future Feed<br>So that I can see their posts in my customized feed whenever I want.</td>
+                <td data-label="Title">User Following</td>
+                <td data-label="User Story">As a user<br>I want to be able to follow other users on the Future Feed app<br>So that I can see their posts and interact with them.</td>
+                <td data-label="Size">5</td>
+            </tr>
+            <tr>
+                <td data-label="Title">User Unfollowing</td>
+                <td data-label="User Story">As a user<br>I want to be able to unfollow users that i am currently following <br>So that I have control over who follows me on the app and control over the content i see from users i follow. </td>
+                <td data-label="Size">4</td>
+            </tr>
+            <tr>
+                <td data-label="Title">User Feed Engagement</td>
+                <td data-label="User Story">As a user<br>I want to be able to view the latest trends and posts on the app <br>So that I can be up to date and view posts from different users.</td>
+                <td data-label="Size">5</td>
+            </tr>
+            <tr>
+                <td data-label="Title">User Reshare</td>
+                <td data-label="User Story">As a user<br>I want to be able to reshare posts from other users<br>So that I can easily reshare a post I like on my own profile.</td>
                 <td data-label="Size">3</td>
             </tr>
             <tr>
-                <td data-label="Title">Unfollow Users</td>
-                <td data-label="User Story">As a user<br>I want to be able to unfollow users I’ve followed<br>So that their posts don’t show up in my feed if I don’t want them anymore.</td>
-                <td data-label="Size">3</td>
-            </tr>
-            <tr>
-                <td data-label="Title">View Feed</td>
-                <td data-label="User Story">As a user<br>I want to be able to view my customized feed on Future Feed<br>So that I can see posts tailored to my preset rules whenever I want.</td>
-                <td data-label="Size">3</td>
-            </tr>
-            <tr>
-                <td data-label="Title">Reshare Post</td>
-                <td data-label="User Story">As a user<br>I want to be able to reshare posts from other users<br>So that I can share awesome content with my followers.</td>
-                <td data-label="Size">3</td>
-            </tr>
-            <tr>
-                <td data-label="Title">Toggle Theme</td>
+                <td data-label="Title">User Theme Decisiontd>
                 <td data-label="User Story">As a user<br>I want to be able to switch between light and dark themes<br>So that I can use Future Feed comfortably day or night.</td>
                 <td data-label="Size">2</td>
             </tr>
@@ -118,6 +118,11 @@
             <tr>
                 <td data-label="Title">User Comment</td>
                 <td data-label="User Story">As a user<br>I want to be able to comment on my posts as well as other users’ posts<br>So that I can interact with their content as well.</td>
+                <td data-label="Size">3</td>
+            </tr>
+		 <tr>
+                <td data-label="Title">User Feed Filtering</td>
+                <td data-label="User Story">As a user<br>I want to be able to filter the feed I seebr>So that I can see posts from people I’m following and posts according to my liking.</td>
                 <td data-label="Size">3</td>
             </tr>
         </tbody>
