@@ -15,6 +15,9 @@ public abstract class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Topic topic;
+
     @Column(columnDefinition = "text")
     private String content;
 

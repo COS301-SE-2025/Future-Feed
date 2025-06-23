@@ -1,25 +1,27 @@
 package com.syntexsquad.futurefeed.model;
-
 import jakarta.persistence.*;
 import lombok.Setter;
 import lombok.Getter;
 
+@Setter
+@Getter
 @Entity
 public class FeedRule {
-
-    @Getter
-    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String topic;
-    private String sourceType;
+    @ManyToOne
+    @JoinColumn(name = "Topic_id" ,nullable = false) // Optional: sets DB column name
+    private Topic topic;
+    private String name;
     private int percentage;
+    @Getter
+    @Setter
     @ManyToOne
     private FeedPreset feedPreset;
-    public FeedRule() {}
-
-    public void setFeedPreset(FeedPreset feedPreset) {
-        this.feedPreset = feedPreset;
+    public void removeFeedPreset()
+    {
+        feedPreset = null;
     }
+
 }

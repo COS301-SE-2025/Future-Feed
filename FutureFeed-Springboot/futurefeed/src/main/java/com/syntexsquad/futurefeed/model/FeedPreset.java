@@ -2,7 +2,6 @@ package com.syntexsquad.futurefeed.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,22 +51,22 @@ public class FeedPreset {
         if (this.rules != null) {
             this.rules.clear();
         } else {
-            this.rules = new ArrayList<>();
+            this.rules = new ArrayList<>(); // Since it's already declared as List<FeedRule>
+
         }
 
         // Set the parent preset for each rule
         for (FeedRule rule : rules) {
-            rule.setFeedPreset(this); // VERY important for bidirectional mapping
+           rule.setFeedPreset(this); // VERY important for bidirectional mapping
             this.rules.add(rule);
         }
     }
     public void addRule(FeedRule rule) {
-        this.rules.add(rule);
-        rule.setFeedPreset(this);
+       this.rules.add(rule);
+       rule.setFeedPreset(this);
     }
     public void removeRule(FeedRule rule) {
-        this.rules.remove(rule);
-        rule.setFeedPreset(null);
+        rule.removeFeedPreset();
     }
     public List<FeedRule> getRules()
     {

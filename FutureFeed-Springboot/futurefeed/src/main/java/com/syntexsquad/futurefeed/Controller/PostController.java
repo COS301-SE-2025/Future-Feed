@@ -59,4 +59,10 @@ public class PostController {
                     .body("Search error: " + ex.getMessage());
         }
     }
+    @GetMapping("/feed/{userId}")
+    public ResponseEntity<List<Post>> getFeed(@PathVariable Long userId) {
+        List<Post> feed = postService.generateFeedForUser(userId);
+        return ResponseEntity.ok(feed);
+    }
+
 }
