@@ -21,11 +21,11 @@ const Explore = () => {
       <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-black dark:border-lime-500 rounded-2xl p-6 min-h-screen">
 
          {/* Mobile Search Input */}
-      <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-black border dark:border-lime-500">
+      <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-black ">
         <Input
           type="text"
           placeholder="Search"
-          className="rounded-full dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          className="rounded-full dark:bg-black dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
         />
       </div>
 
@@ -105,7 +105,7 @@ const Explore = () => {
           </TabsContent>
         </Tabs>
            {/* Mobile RHS below main content */}
-    <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+    <div className="w-full dark:bg-black px-4 mt-7 py-2 space-y-6 block lg:hidden">
       <WhatsHappening />
       <WhoToFollow />
     </div>

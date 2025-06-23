@@ -20,7 +20,7 @@ const Help = () => {
     const navigate = useNavigate();
     return (
         <div className="p-6  dark:text-slate-300 min-h-screen  dark:bg-black ">
-            <h1 className="font-bold text-2xl text-right">Help Centre</h1>
+            <h1 className="font-bold text-2xl text-lime-500 text-right">Help Centre</h1>
             <div className="flex border rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-black border-lime-500 ">
                 {/*breedcrumb to go back */}
                 <Breadcrumb>

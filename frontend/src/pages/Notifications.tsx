@@ -18,11 +18,12 @@ const Notifications = () => {
 
       {/* Center Notification Feed */}
       <main className="h-fit p-6 dark:bg-black flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-lime-500 min-h-screen">
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-gray-200 dark:bg-black border dark:border-lime-500">
+        {/*search for mbiles*/ }
+        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black  dark:border-lime-500">
         <Input
           type="text"
           placeholder="Search"
-          className="rounded-full bg-black dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          className="rounded-full bg-black dark:bg-black dark:text-white dark:placeholder:text-lime-500 border-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
         />
       </div>
 
@@ -84,7 +85,7 @@ const Notifications = () => {
         
         {/**for mobile devices */}
         </Tabs>
-         <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+         <div className="w-full dark:bg-black px-4 mt-7 py-2 space-y-6 block lg:hidden">
       <WhatsHappening />
       <WhoToFollow />
     </div>
