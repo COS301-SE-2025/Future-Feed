@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const WhatsHappening = () => {
     return(
-        <Card className="dark:bg-black dark:text-lime-500 border dark:border-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
+        <Card className="dark:bg-[#1a1a1a] dark:text-lime-500 border dark:border-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
                 <CardContent className="p-4">
-                    <h2 className="font-bold text-lg mb-4">Browse latest Feeds</h2>
+                    <h2 className="font-bold text-lg mb-4">What's happening</h2>
                     <div className="space-y-3 text-sm">
                         <div>
                             <p className="font-semibold">Kings World Cup Clubs</p>

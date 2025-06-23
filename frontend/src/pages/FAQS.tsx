@@ -1,181 +1,95 @@
+
+import {  useNavigate } from "react-router-dom"
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion"
-import { Trash2, MessageCircle } from "lucide-react"
-{/* https://FAQS.x.com/en/using-x/how-to-post*/ }
-import { useNavigate } from "react-router-dom"
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 
-const FAQS = () => {
+
+const FAQS= () => {
     const navigate = useNavigate();
-    return (
-        <div className="p-6  dark:text-slate-300 min-h-screen  dark:bg-gray-800 ">
-            <h1 className="font-bold text-2xl text-right">FAQS Centre</h1>
-            <div className="flex border rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-slate-300 ">
-                {/*breedcrumb to go back */}
+    return(
+        <div className="min-h-screen dark:text-slate-300 p-9 dark:bg-gray-800">
+            <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-slate-300 border rounded-2xl dark:border-slate-100 z-10">
                 <Breadcrumb>
-                    <BreadcrumbList>
-                        <BreadcrumbItem>
-                            <BreadcrumbLink asChild
-                                onClick={() => navigate("/profile")}
-                                className="cursor-pointer">
-                                <span>Profile</span>
-                            </BreadcrumbLink>
-                        </BreadcrumbItem>
+      <BreadcrumbList>
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild
+          onClick={() => navigate("/profile")}
+          className="cursor-pointer">
+            <span>Profile</span>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        
+        
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbLink asChild
+          onClick={() => navigate("/settings")}
+          className="cursor-pointer">
+            <span>Settings</span>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <BreadcrumbPage>FAQ'S</BreadcrumbPage>
+        </BreadcrumbItem>
+      </BreadcrumbList>
+    </Breadcrumb>
 
 
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbLink asChild
-                                onClick={() => navigate("/settings")}
-                                className="cursor-pointer">
-                                <span>Settings</span>
-                            </BreadcrumbLink>
-                        </BreadcrumbItem>
-                        <BreadcrumbSeparator />
-                        <BreadcrumbItem>
-                            <BreadcrumbPage>FAQS </BreadcrumbPage>
-                        </BreadcrumbItem>
-                    </BreadcrumbList>
-                </Breadcrumb>
-
-            </div>
-
-
-            <div className="dark:bg-slate-300 p-9  h-fit border dark:border-slate-300 flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
-                <Accordion
-                    type="single"
-                    collapsible
-                    className="w-full "
-
-                >
-                    <AccordionItem value="item-1">
-                        <AccordionTrigger>How to post?</AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                Step 1
-                            </p>
-                            <p>
-                                Type your post(up to 280 characters) into the composite box at the top of your Home timeline, or select the Post button in the navigation bar.
-                            </p>
-                            <p className="font-bold">Step 2</p>
-                            <p>You can select 1 picture at a time(for now) </p>
-                            <p className="font-bold">Step 3</p>
-                            <p> Select the Post button to post the Feed to your profile,done.</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-2">
-                        <AccordionTrigger>How to delete a post?</AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                Step 1
-                            </p>
-                            <p>
-                                Visit your Profile page
-                            </p>
-                            <p className="font-bold">Step 2</p>
-                            <p> Navigate to the post you wish to delete</p>
-                            <p className="font-bold">Step 3</p>
-                            <p><Trash2 /> Click the  icon </p>
-                            <p className="font-bold">Step 4</p>
-                            <p>Click the Delete post</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-3">
-                        <AccordionTrigger>Keyboard Shortcuts </AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                When on the settings page, here is a short list of keyboard shortcuts to use
-                            </p>
-                            <p>
-                                ctrl + p = navigates to the official EPI-USE Website
-                            </p>
-                            <p>
-                                ctrl + b = navigates to the FAQ's page
-
-                            </p>
-                            <p>ctrl + h = navigates to the FAQS page</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-4">
-                        <AccordionTrigger>How to protect your personal information </AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                Consider what you post
-                            </p>
-                            <p>
-                                You are in control of how much information you share on X or any other website. Don’t post information you consider to be private, and be thoughtful about when you want to publicly share your location.
-                            </p>
-                            <p>
-                                Be wary of any communication that asks for your private contact information, personal information, or passwords. If you are ever unsure before you post, we recommend you ask yourself the following questions:
-
-                            </p>
-                            <p>Who am I sharing this information with?</p>
-                            <p>How much and what type of information am I sharing?</p>
-                            <p>How many people can see the information I am sharing?</p>
-                            <p>Can I trust all the people that see this information?</p>
-                            <p className="font-bold">Not everyone has the same definition of what is considered private and what should be shared. If a friend or connection has posted information you prefer to be kept private, contact them and ask them to take down the content. Likewise, be considerate of others. If someone requests you remove information that you posted about them, please honor their request.</p>
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-5">
-                        <AccordionTrigger>How to post a reply </AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                Step 1
-                            </p>
-                            <p>
-                                1. Find the post you want to reply to.
-                            </p>
-                            <p className="font-bold">Step 2</p>
-                            <p className="font-bold">
-                                2. <MessageCircle /> Click or tap the reply icon
-
-                            </p>
-                            <p className="font-bold">Step 3</p>
-                            <p>Type in your message and click or tap Reply to post it.</p>
-
-                        </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="item-6">
-                        <AccordionTrigger>How to Edit your profile </AccordionTrigger>
-                        <AccordionContent className="flex flex-col gap-4 text-balance">
-                            <p className="font-bold">
-                                Step 1
-                            </p>
-                            <p>
-                                1. Navigate to the profile page
-                            </p>
-                            <p className="font-bold"> Step 2</p>
-                            <p className="font-bold">
-                                2. Click the "Edit Profile" button
-
-                            </p>
-                            <p className="font-bold">Step 3</p>
-                            <p>A box will appear from the right where you can update the relevant details</p>
-                            <p className="font-bold">Step 4</p>
-                            <p>Click 'Save changes' to save your changes</p>
-
-                        </AccordionContent>
-                    </AccordionItem>
-                </Accordion>
 
             </div>
+            <div className="border h-fit flex-1 p-80 m-2 w-auto mx-7 rounded-2xl ">
+                <h1 className="font-bold text-5xl">
+                     Common FAQ for Future Feed
 
+                </h1>
+                <h2 className="font-bold text-lg">
+                    How do I create a Future Feed profile?
+
+                </h2>
+                <p>
+                   
+
+You can create a Future Feed profile by going to Future Feed and clicking on the "Sign up" button.
+</p>
+<h2 className="font-bold text-lg">
+Can I change my Future Feed handle?
+</h2 >
+
+
+Yes, you can change your Future Feed handle by going to your profile settings and clicking on the "Edit profile" button.
+<h2 className="font-bold text-lg" >
+Can I delete my tweets?
+</h2>
+<p>
+Yes, you can delete your tweets by going to the tweet and clicking on the down arrow button, then selecting "Delete Tweet".
+</p>
+<h2 className="font-bold text-lg" >How to delete multiple posts</h2>
+<p>We do not provide a way to bulk-delete posts. You can only delete posts manually, one by one.</p>
+<h2 className="font-bold text-lg">What happens to posts I delete?</h2>
+<p>When you delete a post, it is removed from your account, the timeline of any accounts that follow you, and from Future Feed search results on Future Feed, Future Feed for iOS, and Future Feed for Android.
+Reposts of the deleted post will also be removed on Future Feed, Future Feed for iOS, and Future Feed for Android.
+Once a post has been deleted, the post contents, associated metadata, and all analytical information about that post is no longer publicly available on Future Feed.
+If other people have copied and pasted part or all of your teFuture Feedt into their own post, their posts will not be removed.
+If other people have reposted your post with a comment of their own, their posts will not be removed. </p>
+
+
+
+
+
+                
+
+            </div>
+             
         </div>
-
-
+        
 
     )
-
 }
 export default FAQS
