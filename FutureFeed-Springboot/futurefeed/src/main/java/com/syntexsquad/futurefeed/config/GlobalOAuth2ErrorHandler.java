@@ -2,9 +2,12 @@ package com.syntexsquad.futurefeed.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @ControllerAdvice
 public class GlobalOAuth2ErrorHandler {
@@ -12,14 +15,21 @@ public class GlobalOAuth2ErrorHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalOAuth2ErrorHandler.class);
 
     @ExceptionHandler(OAuth2AuthenticationException.class)
-    public String handleOAuth2Exception(OAuth2AuthenticationException ex) {
+    @ResponseBody
+    public ResponseEntity<String> handleOAuth2Exception(OAuth2AuthenticationException ex) {
         log.error("OAuth2 Authentication Failed: {}", ex.getError().getDescription(), ex);
-        return "redirect:/login?error=oauth2";
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("OAuth2 Error: " + ex.getError().getDescription());
     }
 
     @ExceptionHandler(Exception.class)
-    public String handleGeneral(Exception ex) {
+    @ResponseBody
+    public ResponseEntity<String> handleGeneral(Exception ex) {
         log.error("General error during login: {}", ex.getMessage(), ex);
-        return "redirect:/login?error=general";
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Server Error: " + ex.getMessage());
     }
 }
+
