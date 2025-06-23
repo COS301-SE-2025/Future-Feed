@@ -58,7 +58,7 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
   };
 
   return (
-    <Card className={cn("dark:bg-black border-2 border-lime-500 rounded-2xl mt-3 mb-4", className)}>
+    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl mt-3 mb-4", className)}>
       <CardContent className="p-5">
         <div className="flex gap-4">
           <Avatar>
