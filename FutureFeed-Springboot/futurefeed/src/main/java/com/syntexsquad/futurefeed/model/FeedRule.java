@@ -7,6 +7,7 @@ import lombok.Getter;
 @Entity
 public class FeedRule {
 
+    @Getter
     @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,7 +18,8 @@ public class FeedRule {
     @ManyToOne
     private FeedPreset feedPreset;
     public FeedRule() {}
-    public Long getId() {
-        return id;
+
+    public void setFeedPreset(FeedPreset feedPreset) {
+        this.feedPreset = feedPreset;
     }
 }
