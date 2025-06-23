@@ -35,4 +35,34 @@ public class FeedPresetController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @DeleteMapping("/delete/{userId}/{presetId}")
+    public ResponseEntity<String> deleteFeedPreset(@PathVariable Long userId, @PathVariable Long presetId) {
+        if (presetService.deleteFeedPreset(userId,presetId))
+        {
+            return ResponseEntity.ok("Preset deleted.");
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+//    @PutMapping("/{userId}/{presetId}/update")
+//    public ResponseEntity<FeedPreset> updatePreset(@PathVariable Long userId, @PathVariable Long presetId, @RequestBody FeedPreset updatedPreset) {
+//        FeedPreset existingPreset = presetService.getPresetsForUser(userId).stream()
+//                .filter(p -> p.getId().equals(presetId))
+//                .findFirst()
+//                .orElse(null);
+//
+//        if (existingPreset == null) {
+//            return ResponseEntity.notFound().build();
+//        }
+//
+//        existingPreset.setName(updatedPreset.getName());
+//        existingPreset.setDescription(updatedPreset.getDescription());
+//        // Update other fields as necessary
+//
+//        return ResponseEntity.ok(presetService.createPreset(userId, existingPreset));
+//    }
+
+
+
 }
