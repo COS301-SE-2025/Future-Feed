@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FF from "../assets/FF cropped.png"
 import Exploremobile from "../assets/explorenew.png"
 import Notificationsmobile from "../assets/notificationsnewpng.png"
-import Help_mobile  from "../assets/helpmobilenew.png"
+import Help_mobile from "../assets/helpmobilenew.png"
 import Settingsmobile from "../assets/settingsnew.png"
 import Editprofilemobile from "../assets/profilenew.png"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -28,14 +28,14 @@ import {
 } from "@/components/ui/sheet"
 
 const LandingPage = () => {
-    {/*code for dynamic imagess*/}
+    {/*code for dynamic imagess*/ }
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<HTMLDivElement[]>([]);
     const section1Ref = useRef<HTMLDivElement>(null);
-const section2Ref = useRef<HTMLDivElement>(null);
-const section3Ref = useRef<HTMLDivElement>(null);
-const section4Ref = useRef<HTMLDivElement>(null);
-    
+    const section2Ref = useRef<HTMLDivElement>(null);
+    const section3Ref = useRef<HTMLDivElement>(null);
+    const section4Ref = useRef<HTMLDivElement>(null);
+
     const [currentImage, setCurrentImage] = useState(Exploremobile);
 
     const handleScroll = () => {
@@ -59,30 +59,30 @@ const section4Ref = useRef<HTMLDivElement>(null);
         setCurrentImage(images[closestIndex] || Exploremobile);
     };
 
-  useEffect(() => {
-  sectionRefs.current = [
-    section1Ref.current,
-    section2Ref.current,
-    section3Ref.current,
-    section4Ref.current,
-    
-    
-  ].filter((ref): ref is HTMLDivElement => ref !== null);
-}, []);
-useEffect(() => {
-  const container = scrollContainerRef.current;
-  container?.addEventListener("scroll", handleScroll);
-  return () => container?.removeEventListener("scroll", handleScroll);
-}, []);
+    useEffect(() => {
+        sectionRefs.current = [
+            section1Ref.current,
+            section2Ref.current,
+            section3Ref.current,
+            section4Ref.current,
+
+
+        ].filter((ref): ref is HTMLDivElement => ref !== null);
+    }, []);
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        container?.addEventListener("scroll", handleScroll);
+        return () => container?.removeEventListener("scroll", handleScroll);
+    }, []);
 
     return (
         <div className="overscroll-none min-h-screen w-auto dark:bg-black dark:text-white   bg-gray-200 text-white-800 overflow-hidden ">
-             
-            <ThemeProvider>
-              <div className="pe-9 flex items-center gap-2">
-                <ModeToggle />
 
-              </div>
+            <ThemeProvider>
+                <div className="pe-9 flex items-center gap-2">
+                    <ModeToggle />
+
+                </div>
             </ThemeProvider>
             <div className="  ">
                 <Sheet >
@@ -120,17 +120,17 @@ useEffect(() => {
                 {/* Sticky Image Section */}
                 <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
-  <motion.img
-    key={currentImage}
-    src={currentImage}
-    alt="Phone"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.2, ease:"easeInOut"  }}
-    className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
-  />
-</AnimatePresence>
+                        <motion.img
+                            key={currentImage}
+                            src={currentImage}
+                            alt="Phone"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                            className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
+                        />
+                    </AnimatePresence>
                 </div>
 
                 {/* Scrolling Text Section */}
@@ -143,7 +143,7 @@ useEffect(() => {
                         className="flex justify-end items-center gap-3"
                     >
                         <span className="text-lg font-semibold">@syntexsquad</span>
-                        <Avatar className="w-auto h-auto border-4 dark:border-gray-800 dark:bg-slate-300">
+                        <Avatar className="w-auto h-auto border-4 dark:border-lime-500 dark:bg-black">
                             <AvatarImage src={FF} alt="@syntexsquad" />
                             <AvatarFallback>SYNTEXSQUAD</AvatarFallback>
                         </Avatar>
@@ -171,7 +171,7 @@ useEffect(() => {
 
                     {/* Section 2 - Post your feed */}
                     <motion.div
-                    ref={section2Ref}
+                        ref={section2Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: -300 }}
@@ -192,7 +192,7 @@ useEffect(() => {
 
                     {/* Section 3 - Get updates */}
                     <motion.div
-                ref={section3Ref}
+                        ref={section3Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: -300 }}
@@ -213,7 +213,7 @@ useEffect(() => {
 
                     {/* Section 4 - Get updates */}
                     <motion.div
-                    ref={section4Ref}
+                        ref={section4Ref}
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 100 }}
                         whileInView={{ opacity: 1, y: -300 }}
