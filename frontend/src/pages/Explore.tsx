@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
 import RightSidebar from "@/components/RightSidebar"
+import { Link } from "react-router-dom"
 
 const Explore = () => {
   return (
@@ -21,18 +22,20 @@ const Explore = () => {
       <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-black dark:border-lime-500 rounded-2xl p-6 min-h-screen">
 
          {/* Mobile Search Input */}
-      <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-black ">
+      <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-black bg-lime-600">
         <Input
           type="text"
           placeholder="Search"
-          className="rounded-full dark:bg-black dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          className="bg-lime-600 rounded-full dark:bg-black dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
         />
       </div>
 
        {/* Header */}
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
+          <Link to="/settings">
           <Settings size={20} className="dark:text-lime-500" />
+          </Link>
         </div>
 
         {/* Tabs */}
