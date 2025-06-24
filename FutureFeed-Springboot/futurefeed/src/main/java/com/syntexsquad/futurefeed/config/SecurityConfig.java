@@ -42,7 +42,7 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 //.loginPage("/login")
-                .defaultSuccessUrl("/api/user/myInfo", true)
+                .defaultSuccessUrl("http://localhost:5173/home", true)
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
