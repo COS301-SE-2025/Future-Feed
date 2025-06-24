@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
 import darkLogo from "../assets/Future Feed Main Dark v1.png";
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface FormData {
   profilePic: File | null;
@@ -39,6 +41,12 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black">
+      <ThemeProvider>
+                <div className="pe-9 flex items-center gap-2">
+                    <ModeToggle />
+      
+                </div>
+            </ThemeProvider>
       <div className="mt-10 flex justify-center">
       {/* Light mode logo */}
       <img

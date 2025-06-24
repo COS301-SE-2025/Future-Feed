@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import { Camera } from "lucide-react";
 import GRP1 from "../assets/GRP1.jpg";
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface FormData {
   username: string;
@@ -41,8 +43,14 @@ const EditProfile: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
+      <ThemeProvider>
+          <div className="pe-9 flex items-center gap-2">
+              <ModeToggle />
+
+          </div>
+      </ThemeProvider>
       <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
-        <Link to="/user-profile">
+        <Link to="/profile">
           <Button
             className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-lime-500 dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
             variant="ghost"

@@ -66,7 +66,7 @@ const UserProfile = () => {
         <div className="relative">
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-sky-100">
+            <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
 
               <AvatarImage src={GRP1} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>

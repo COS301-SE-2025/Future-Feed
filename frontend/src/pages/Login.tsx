@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
 import darkLogo from "../assets/Future Feed Main Dark v1.png";
 import googleLogo from "../assets/Google transparent.png";
+import { ThemeProvider } from "@/components/theme-provider"
+import { ModeToggle } from "@/components/mode-toggle"
 
 interface FormData {
   username: string;
@@ -26,6 +28,12 @@ const Login: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-gray-200 font-['Cambay',Arial,sans-serif] dark:bg-black dark:text-white">
+      <ThemeProvider>
+          <div className="pe-9 flex items-center gap-2">
+              <ModeToggle />
+
+          </div>
+      </ThemeProvider>
       <div className="mt-10 flex justify-center">
       {/* Light mode logo */}
       <img
