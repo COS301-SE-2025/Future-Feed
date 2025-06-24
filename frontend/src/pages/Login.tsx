@@ -56,15 +56,18 @@ const Login: React.FC = () => {
         <CardContent>
           
           <form className="px-5 sm:px-12">
-            <Link to="/construction" className="text-black no-underline hover:underline">
             <Button
+              type="button"
+              onClick={() => {
+                window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+              }}
               variant="outline"
-              className="mb-6 flex h-[50px] w-full items-center justify-center rounded-[25px] border border-black bg-white p-5 text-[20px] font-bold shadow-[2px_2px_4px_#888]  cursor-pointer dark:text-white dark:shadow-none dark:hover:border-lime-500"
+              className="mb-6 flex h-[50px] w-full items-center justify-center rounded-[25px] border border-black bg-white p-5 text-[20px] font-bold shadow-[2px_2px_4px_#888] cursor-pointer dark:text-white dark:shadow-none dark:hover:border-lime-500"
             >
               Continue with:
               <img src={googleLogo} alt="Google Login" className="ml-8 h-[37px] w-[80px]" />
             </Button>
-          </Link>
+
             <div className="mb-6">
                 <div className="relative my-[15px] flex items-center justify-center text-center">
               <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
