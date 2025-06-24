@@ -28,11 +28,11 @@ const personalSidebar = () => {
           <Search size={20} /> Explore
         </Link>
          <ThemeProvider >
-  <div className="pe-9 flex items-center gap-2">
-    <ModeToggle />
-    <span className=" dark:hover:text-white dark:lime-500">Theme</span>
-  </div>
-</ThemeProvider>
+          <div className="pe-9 flex items-center gap-2">
+            <ModeToggle />
+            <span className=" dark:hover:text-white dark:lime-500 hover:cursor-pointer">Theme</span>
+          </div>
+        </ThemeProvider>
       </nav>
 
          
