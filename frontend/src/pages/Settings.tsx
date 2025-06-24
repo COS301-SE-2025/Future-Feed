@@ -71,6 +71,16 @@ const Settings = () => {
               <BreadcrumbItem>
                 <BreadcrumbLink
                   asChild
+                  onClick={() => navigate("/explore")}
+                  className="cursor-pointer"
+                >
+                  <span>Explore</span>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  asChild
                   onClick={() => navigate("/profile")}
                   className="cursor-pointer"
                 >
