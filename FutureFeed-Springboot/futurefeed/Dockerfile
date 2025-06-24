@@ -5,7 +5,7 @@ FROM eclipse-temurin:22-jdk-alpine
 WORKDIR /app
 
 # Copy the built jar file into the container
-COPY target/futurefeed-0.0.1-SNAPSHOT.jar futurefeed.jar
+COPY release/futurefeed-0.0.1-SNAPSHOT.jar futurefeed.jar
 
 # Expose the port your Spring Boot app runs on (default 8080)
 EXPOSE 8080
