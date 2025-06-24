@@ -9,7 +9,7 @@ import Settingsmobile from "../assets/settingsnew.png"
 import Editprofilemobile from "../assets/profilenew.png"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ModeToggle } from "@/components/mode-toggle"
-
+import { Link } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 "use client"
@@ -99,15 +99,14 @@ const LandingPage = () => {
                         <div className="grid flex-1 auto-rows-min gap-6 px-4">
                             <div className="grid gap-3">
                                 <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
-                                <Button variant="outline" className="dark:border-lime-500 dark:text-white dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Create Account</Button>
+                                <Link to="/register"><Button variant="outline" className="hover:cursor-pointer w-full dark:border-lime-500 dark:text-white dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Create Account</Button></Link>
                             </div>
                             <div className="grid gap-3">
                                 <Label className=":hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
-                                <Button variant="outline" className="dark:border-lime-500 dark:text-slate-300 dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Login</Button>
+                                <Link to="/login"><Button variant="outline" className="hover:cursor-pointer w-full dark:border-lime-500 dark:text-slate-300 dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Login</Button></Link>
                             </div>
                         </div>
                         <SheetFooter>
-                            <Button type="submit" variant="outline" className="dark:text-white dark:border-lime-500 dark:bg-black dark:hover:bg-lime-500 dark:hover:text-black">Save changes</Button>
                             <SheetClose asChild>
                                 <Button variant="outline" className="dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black">Close</Button>
                             </SheetClose>
@@ -246,7 +245,9 @@ const LandingPage = () => {
                         }}
                         className="pt-10"
                     >
-                        <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black ">Join the Future Feed Family</Button>
+                        <Link to="/login">
+                            <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black hover:cursor-pointer">Join the Future Feed Family</Button>
+                        </Link>
                     </motion.div>
                 </div>
             </div>
