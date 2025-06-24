@@ -87,7 +87,7 @@ const UserProfile = () => {
 
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-          <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
+          <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">Edit Profile</Button>
         </Link>
             
 

@@ -12,23 +12,23 @@ import { Input } from "@/components/ui/input"
 
 const FollowerFollowing = () => {
   return (
-    <div className="flex min-h-screen dark:bg-gray-800 dark:text-white">
+    <div className="flex min-h-screen dark:bg-black dark:text-white">
       {/* Left Sidebar */}
       <PersonalSidebar />
 
       {/* Center Notification Feed */}
-      <main className="h-fit p-6 dark:bg-gray-800 flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-slate-100 min-h-screen">
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-gray-800 border dark:border-gray-800">
+      <main className="h-fit p-6 dark:bg-black flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-lime-600 min-h-screen">
+        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black border dark:border-black">
         <Input
           type="text"
           placeholder="Search"
-          className="rounded-full bg-black dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-100 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          className="rounded-full bg-black dark:bg-black dark:text-white dark:placeholder:text-lime-600 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
         />
       </div>
 
         {/* Header */}
-        <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-gray-800 border rounded-2xl dark:border-slate-100 z-10">
-            <Avatar className=" w-24 h-24 border-4 dark:border-sky-100">
+        <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-600 z-10">
+            <Avatar className=" w-24 h-24 border-4 dark:border-lime-600">
               <AvatarImage  src={GRP2} alt="@syntexsquad" />
               <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
             </Avatar>
@@ -39,22 +39,22 @@ const FollowerFollowing = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="followers" className="w-full p-3 ">
-          <TabsList className="w-full  flex justify-around dark:bg-gray-800 border dark:border-slate-100 rounded-2xl">
+          <TabsList className="w-full  flex justify-around dark:bg-black border dark:border-lime-600 rounded-2xl">
             <TabsTrigger
               value="followers"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-slate-100 dark:data-[state=active]:text-gray-800"
+              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
             >
               Followers
             </TabsTrigger>
             <TabsTrigger
               value="following"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-slate-100 dark:data-[state=active]:text-gray-800"
+              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
             >
               Following
             </TabsTrigger>
             <TabsTrigger
               value="bots"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-slate-100 dark:data-[state=active]:text-gray-800"
+              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
             >
               Bots
             </TabsTrigger>
@@ -62,7 +62,7 @@ const FollowerFollowing = () => {
 
           {/* Example Notification */}
           <TabsContent value="followers">
-            <Card className="dark:bg-gray-800 dark:text-white border dark:border-slate-100 rounded-2xl">
+            <Card className="dark:bg-black dark:text-white border dark:border-lime-600 rounded-2xl">
               <CardContent className="flex gap-3 items-start p-4">
                  <Avatar className="w-14 h-14 border-4 border-slate-300">
               <AvatarImage src={GRP2} alt="@syntexsquad" />
@@ -89,7 +89,7 @@ const FollowerFollowing = () => {
         
         {/**for mobile devices */}
         </Tabs>
-         <div className="w-full dark:bg-gray-800 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+         <div className="w-full dark:bg-black px-4 mt-7 py-2 space-y-6 block lg:hidden">
       <WhatsHappening />
       <WhoToFollow />
     </div>
