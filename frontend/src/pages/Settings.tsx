@@ -53,8 +53,8 @@ const Settings = () => {
   return (
     <div className="min-h-screen dark:bg-black bg-gray-200 dark:text-white p-4 sm:p-8">
       {/* Breadcrumb wrapper */}
-      <div className="w-full mb-6">
-        <div className="dark:bg-black dark:border-lime-500 border p-4 rounded-xl w-full">
+      <div className="w-full mb-6 ">
+        <div className="dark:bg-black bg-white border-lime-500 border p-4 rounded-xl w-full">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -97,7 +97,7 @@ const Settings = () => {
       </div>
 
       {/* Command Box */}
-      <Command className="dark:text-white rounded-2xl border dark:border-lime-500 dark:bg-black shadow-md w-full">
+      <Command className="dark:text-white rounded-2xl border border-lime-500 dark:bg-black shadow-md w-full">
         <CommandInput placeholder=" Search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
