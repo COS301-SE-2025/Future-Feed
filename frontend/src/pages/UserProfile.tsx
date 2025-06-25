@@ -1,224 +1,123 @@
+import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
-
-import { Link } from "react-router-dom";
-import EditProfile from "./EditProfile"
-
-import GRP1 from "../assets/GRP1.jpg";
+import { Link } from "react-router-dom"
 import PersonalSidebar from "@/components/personalSidebar"
-{/*sheet */ }
+import GRP1 from "../assets/GRP1.jpg"
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+interface UserProfile {
+  username: string
+  displayName: string
+  profilePicture?: string
+  bio?: string
+  dateOfBirth?: string
+  email: string
+}
 
 const UserProfile = () => {
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/user/myInfo`, {
+      credentials: "include",
+    })
+      .then(res => res.ok ? res.json() : Promise.reject())
+      .then(data => {
+        setUser(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        setUser(null)
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) return <div className="p-4 text-white">Loading profile...</div>
+  if (!user) return <div className="p-4 text-white">Not logged in.</div>
+
   return (
-    /*BELOW HERE IS THE WRAPPER / BODY DIV          
-    w-[250px] p-6 border-r border-gray-800
-    
-    
-    */
-    <div className="flex min-h-screen  dark:bg-black dark:text-white overflow-y-auto">
+    <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
       <PersonalSidebar />
-      {/* 
-      <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
-        <div className="text-2xl font-bold mb-6">Future Feed</div>
-        <nav className="flex flex-col space-y-4 text-lg text-gray-300">
 
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Home size={20} /> Home
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <User size={20} /> Profile
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Bell size={20} /> Notifications
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Settings size={20} /> Settings
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Search size={20} /> Search
-          </a>
-          
-
-        </nav>
-      </aside>
-
-      Sidebar */}
-
-      {/* Profile Main Section */}
-      <main className="w-[1100px] mx-auto dark:lime-500">
-        {/* Banner + Avatar + Name */}
+      <main className="w-[1100px] mx-auto">
         <div className="relative">
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-
-              <AvatarImage src={GRP1} alt="@syntexsquad" />
-              <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
+              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
         </div>
 
-        {/* Name, handle, edit button */}
-        <div className="pt-16 px-4 ">
+        <div className="pt-16 px-4">
           <div className="flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl font-bold">Syntex Squad</h1>
-
-              <p className="dark:text-gray-400">@syntexsquad</p>
-              <p className="mt-2 text-sm">This is my bio</p>
-
-
-
+              <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
+              <p className="dark:text-gray-400">@{user.username}</p>
+              <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-          <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">Edit Profile</Button>
-        </Link>
-            
-
-            {/*<Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="text-emerald-800 dark:hover:text-black dark:text-lime-500 dark:bg-black dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Edit Profile</SheetTitle>
-                  <SheetDescription>
-                    Make changes to your profile here. Click save when you&apos;re done.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4">
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-name">Name</Label>
-                    <Input id="sheet-name" placeholder="Syntex Squad" />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-username">Username</Label>
-                    <Input id="sheet-username" placeholder="@syntexsquad" />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-bio">Bio</Label>
-                    <Input id="sheet-name" placeholder="Oh Yeaaaaa!" />
-                  </div>
-                </div>
-                <SheetFooter>
-                  <Button type="submit" variant="outline" className="dark:hover:text-black dark:text-slate-300 dark:hover:bg-blue-500">Save changes</Button>
-                  <SheetClose asChild>
-                    <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
-                  </SheetClose>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>*/}
-
-            {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/}
-            {/*<Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">
-              Edit Profile
-            </Button>*/}
+              <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">
+                Edit Profile
+              </Button>
+            </Link>
           </div>
 
-
-
-
-
-
-          <div className="mt-4 flex content-between gap-2  text-sm dark:text-gray-400">
-            <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-          <span className="font-medium dark:text-white">150</span> Following · {" "}
-          
-        </Link>
-        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-          <span className="font-medium dark:text-white">1.2k</span> Followers · {" "}
-          
-        </Link>
-        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-           <span className="font-medium dark:text-white">1</span> Bots ·{" "}
-          
-        </Link>
+          <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">150</span> Following ·
+            </Link>
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">1.2k</span> Followers ·
+            </Link>
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">1</span> Bots ·
+            </Link>
             <span className="font-medium dark:text-white">6</span> Posts
-            
-            
-            
           </div>
         </div>
 
         <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
 
-        {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full dark:bg-black  grid-cols-5 dark:bg-transparent  dark:border-lime-500">
-
+          <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="media">Media</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
-
           </TabsList>
 
           <TabsContent value="posts" className="p-0">
             {[
-              {
-                time: "2h ago",
-                text: "Excited to share my latest project with you all!",
-              },
-              {
-                time: "5h ago",
-                text: "Loving the new Future Feed design 💻",
-              },
-              {
-                time: "1d ago",
-                text: "Shadcn actually so nice, Thank you Mr Arne",
-              },
-              {
-                time: "2d ago",
-                text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅",
-              },
-              {
-                time: "3d ago",
-                text: "Setting up design is hard",
-              },
-              {
-                time: "4d ago",
-                text: "Excited for demo 2 with my team",
-                image: GRP1
-
-              },
+              { time: "2h ago", text: "Excited to share my latest project with you all!" },
+              { time: "5h ago", text: "Loving the new Future Feed design 💻" },
+              { time: "1d ago", text: "Shadcn actually so nice, Thank you Mr Arne" },
+              { time: "2d ago", text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅" },
+              { time: "3d ago", text: "Setting up design is hard" },
+              { time: "4d ago", text: "Excited for demo 2 with my team", image: GRP1 },
             ].map((post, index) => (
-              <Card key={index} className="mt-3 dark:bg-[#1a1a1a] dark:border-lime-500 border border-2 border-lime-500  rounded-2xl">
+              <Card key={index} className="mt-3 dark:bg-[#1a1a1a] dark:border-lime-500 border-2 border-lime-500 rounded-2xl">
                 <CardContent className="p-4">
                   <div className="flex gap-4">
                     <Avatar>
-                      <AvatarImage src={GRP1} />
-                      <AvatarFallback>JD</AvatarFallback>
+                      <AvatarImage src={user.profilePicture || GRP1} />
+                      <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 ">
+                    <div className="flex-1">
                       <div className="flex justify-between">
-                        <h2 className="font-bold dark:text-white">Syntex Squad </h2>
+                        <h2 className="font-bold dark:text-white">{user.displayName || user.username}</h2>
                         <span className="text-sm dark:text-gray-400">{post.time}</span>
                       </div>
-                      <p className="dark:text-gray-300">@syntexsquad</p>
+                      <p className="dark:text-gray-300">@{user.username}</p>
                       <p className="mt-2 dark:text-white">{post.text}</p>
                       {post.image && (
-                        <img
-                          src={post.image}
-                          alt="Post"
-                          className="mt-4 rounded-lg border dark:border-gray-700"
-                        />
+                        <img src={post.image} alt="Post" className="mt-4 rounded-lg border dark:border-gray-700" />
                       )}
                     </div>
                   </div>
@@ -226,23 +125,18 @@ const UserProfile = () => {
               </Card>
             ))}
           </TabsContent>
-          {/*expand this area to add replies media etc*/}
 
           <TabsContent value="replies">
             <div className="p-4 dark:text-gray-400">No replies yet.</div>
           </TabsContent>
-
           <TabsContent value="media">
             <div className="p-4 dark:text-gray-400">No media yet.</div>
           </TabsContent>
-
           <TabsContent value="likes">
             <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
           </TabsContent>
-
           <TabsContent value="highlights">
-            <div className="p-4 dark:text-gray-400">No highlights available  yet.</div>
-
+            <div className="p-4 dark:text-gray-400">No highlights available yet.</div>
           </TabsContent>
         </Tabs>
       </main>
@@ -250,4 +144,4 @@ const UserProfile = () => {
   )
 }
 
-export default UserProfile;
+export default UserProfile
