@@ -72,4 +72,15 @@ public class LikeService {
     public long countLikes(Integer postId) {
         return likeRepository.countByPostId(postId);
     }
+
+    public boolean hasUserLikedPost(Integer postId) {
+    AppUser user = getAuthenticatedUser();
+
+    if (!postService.existsById(postId)) {
+        throw new IllegalArgumentException("Post not found");
+    }
+
+    return likeRepository.existsByUserIdAndPostId(user.getId(), postId);
+    }
+
 }
