@@ -1,18 +1,10 @@
 import * as React from "react";
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Repeat, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
-
-interface Comment {
-  id: number;
-  username: string;
-  text: string;
-  time: string;
-}
 
 interface PostProps {
   username: string;
@@ -20,39 +12,50 @@ interface PostProps {
   time: string;
   text: string;
   image?: string;
+  isLiked: boolean;
+  likeCount: number;
+  isBookmarked: boolean;
+  commentCount: number;
+  onLike: () => void;
+  onBookmark: () => void;
+  onAddComment: (commentText: string) => void;
   className?: string;
+  onToggleComments: () => void;
+  showComments: boolean;
+  comments: {
+    id: number;
+    postId: number;
+    authorId: number;
+    content: string;
+    createdAt: string;
+    username?: string;
+    handle?: string;
+  }[];
 }
 
-const Post: React.FC<PostProps> = ({ username, handle, time, text, image, className }) => {
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isCommentOpen, setIsCommentOpen] = useState(false);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [newComment, setNewComment] = useState("");
+const Post: React.FC<PostProps> = ({
+  username,
+  handle,
+  time,
+  text,
+  image,
+  isLiked,
+  likeCount,
+  isBookmarked,
+  commentCount,
+  onLike,
+  onBookmark,
+  onAddComment,
+  className,
+  onToggleComments,
+  showComments,
+  comments,
+}) => {
+  const [newComment, setNewComment] = React.useState("");
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
-  };
-
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-  };
-
-  const handleToggleComments = () => {
-    setIsCommentOpen(!isCommentOpen);
-  };
-
-  const handleAddComment = () => {
+  const handleSubmitComment = () => {
     if (newComment.trim()) {
-      const newCommentObj: Comment = {
-        id: comments.length + 1,
-        username: "CurrentUser",
-        text: newComment,
-        time: "Just now",
-      };
-      setComments([...comments, newCommentObj]);
+      onAddComment(newComment);
       setNewComment("");
     }
   };
@@ -62,7 +65,7 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
       <CardContent className="p-5">
         <div className="flex gap-4">
           <Avatar>
-            <AvatarImage src={image || "https://via.placeholder.com/40"} />
+            <AvatarImage src={image || "/default-avatar.png"} />
             <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -83,7 +86,7 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleLike}
+                onClick={onLike}
                 className={cn(
                   "flex items-center gap-2",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
@@ -97,16 +100,16 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleToggleComments}
+                onClick={onToggleComments}
                 className={cn(
                   "flex items-center gap-2",
-                  isCommentOpen ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
+                  showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
                   "hover:text-blue-500 dark:hover:text-blue-400"
                 )}
-                aria-label={isCommentOpen ? "Hide comments" : "Show comments"}
+                aria-label={showComments ? "Hide comments" : "Show comments"}
               >
                 <MessageCircle className="h-5 w-5" />
-                <span className="text-sm">Comment ({comments.length})</span>
+                <span className="text-sm">Comment ({commentCount})</span>
               </Button>
               <Button
                 variant="ghost"
@@ -117,13 +120,12 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
                 )}
                 aria-label="Retweet post"
               >
-              
                 <span className="text-sm">Re-Feed</span>
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleBookmark}
+                onClick={onBookmark}
                 className={cn(
                   "flex items-center gap-2",
                   isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
@@ -135,9 +137,35 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
                 <span className="text-sm">Bookmark</span>
               </Button>
             </div>
-            {isCommentOpen && (
+            {showComments && (
               <div className="mt-4">
-                <div className="flex gap-2 mb-4">
+                {comments.length > 0 ? (
+                  <div className="mb-4">
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="flex gap-2 mb-2">
+                        <Avatar>
+                          <AvatarFallback>
+                            {comment.username?.slice(0, 2).toUpperCase() || "AN"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-bold dark:text-white">
+                            {comment.username || "Anonymous"}
+                          </p>
+                          <p className="text-sm dark:text-white">{comment.content}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    No comments yet.
+                  </p>
+                )}
+                <div className="flex gap-2">
                   <Textarea
                     placeholder="Write a comment..."
                     value={newComment}
@@ -146,32 +174,13 @@ const Post: React.FC<PostProps> = ({ username, handle, time, text, image, classN
                     rows={2}
                   />
                   <Button
-                    onClick={handleAddComment}
+                    onClick={handleSubmitComment}
                     className="bg-lime-500 text-white hover:bg-lime-600"
                     disabled={!newComment.trim()}
                   >
                     Comment
                   </Button>
                 </div>
-                {comments.length > 0 ? (
-                  comments.map((comment) => (
-                    <div key={comment.id} className="flex gap-2 mb-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src="https://via.placeholder.com/32" />
-                        <AvatarFallback>{comment.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex gap-2 items-center">
-                          <span className="font-bold dark:text-white text-sm">{comment.username}</span>
-                          <span className="text-xs dark:text-white">{comment.time}</span>
-                        </div>
-                        <p className="dark:text-white text-sm">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sm dark:text-white">No comments yet.</p>
-                )}
               </div>
             )}
           </div>
