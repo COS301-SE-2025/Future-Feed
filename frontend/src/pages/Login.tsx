@@ -59,6 +59,7 @@ const Login: React.FC = () => {
             <Button
               type="button"
               onClick={() => {
+                console.log(import.meta.env.VITE_API_URL);
                 window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
               }}
               variant="outline"
