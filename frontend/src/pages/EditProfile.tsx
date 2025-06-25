@@ -1,54 +1,90 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft } from "lucide-react";
-import { Camera } from "lucide-react";
+import { ArrowLeft, Camera } from "lucide-react";
 import GRP1 from "../assets/GRP1.jpg";
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface FormData {
-  username: string;
   displayName: string;
   bio: string;
   profileImage: string;
+  dob: string;
 }
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<FormData>({
-    username: "",
     displayName: "",
     bio: "",
     profileImage: GRP1,
+    dob: "",
   });
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URL}/api/user/myInfo`, {
+      credentials: "include",
+    })
+      .then((res) => res.json())
+      .then((data) =>
+        setFormData({
+          displayName: data.displayName || "",
+          bio: data.bio || "",
+          profileImage: data.profilePicture?.startsWith("blob:") ? GRP1 : data.profilePicture || GRP1,
+          dob: data.dateOfBirth || "",
+        })
+      )
+      .catch(console.error);
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const imageURL = URL.createObjectURL(file);
       setFormData({ ...formData, profileImage: imageURL });
+      // For production: you'd want to upload this to a CDN/server and save the resulting URL
     }
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    navigate("/user-profile");
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/update`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          displayName: formData.displayName,
+          bio: formData.bio,
+          dateOfBirth: formData.dob,
+          profilePicture: formData.profileImage,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update profile");
+      navigate("/profile");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
       <ThemeProvider>
-          <div className="pe-9 flex items-center gap-2">
-              <ModeToggle />
-
-          </div>
+        <div className="pe-9 flex items-center gap-2">
+          <ModeToggle />
+        </div>
       </ThemeProvider>
+
       <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
         <Link to="/profile">
           <Button
@@ -70,16 +106,8 @@ const EditProfile: React.FC = () => {
                   alt="Profile"
                   className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500"
                 />
-                <Camera
-                  className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.2)]"
-                />
-                <Input
-                  type="file"
-                  id="profile-pic-upload"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+                <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.2)]" />
+                <Input type="file" id="profile-pic-upload" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
             </div>
 
@@ -94,7 +122,6 @@ const EditProfile: React.FC = () => {
                 <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
               </div>
               <Input
-                type="text"
                 id="display-name"
                 placeholder="Enter your display name"
                 value={formData.displayName}
@@ -107,18 +134,17 @@ const EditProfile: React.FC = () => {
               <div className="relative my-[15px] flex items-center justify-center text-center">
                 <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
                 <span className="text-[0.9rem] font-bold">
-                  <Label htmlFor="username" className="mb-2 block font-bold text-[18px]">
-                    Username
+                  <Label htmlFor="dob" className="mb-2 block font-bold text-[18px]">
+                    Date of Birth
                   </Label>
                 </span>
                 <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
               </div>
               <Input
-                type="text"
-                id="username"
-                placeholder="Enter your username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                id="dob"
+                type="date"
+                value={formData.dob}
+                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                 className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
               />
             </div>
