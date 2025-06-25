@@ -16,9 +16,12 @@ interface PostProps {
   likeCount: number;
   isBookmarked: boolean;
   commentCount: number;
+  isReshared: boolean;
+  reshareCount: number;
   onLike: () => void;
   onBookmark: () => void;
   onAddComment: (commentText: string) => void;
+  onReshare: () => void;
   className?: string;
   onToggleComments: () => void;
   showComments: boolean;
@@ -28,8 +31,8 @@ interface PostProps {
     authorId: number;
     content: string;
     createdAt: string;
-    username?: string;
-    handle?: string;
+    username: string;
+    handle: string;
   }[];
 }
 
@@ -43,9 +46,12 @@ const Post: React.FC<PostProps> = ({
   likeCount,
   isBookmarked,
   commentCount,
+  isReshared,
+  reshareCount,
   onLike,
   onBookmark,
   onAddComment,
+  onReshare,
   className,
   onToggleComments,
   showComments,
@@ -114,13 +120,15 @@ const Post: React.FC<PostProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={onReshare}
                 className={cn(
                   "flex items-center gap-2",
-                  "text-gray-500 dark:text-white hover:text-green-500 dark:hover:text-green-400"
+                  isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
+                  "hover:text-green-500 dark:hover:text-green-400"
                 )}
-                aria-label="Retweet post"
+                aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
-                <span className="text-sm">Re-Feed</span>
+                <span className="text-sm">Re-Feed ({reshareCount})</span>
               </Button>
               <Button
                 variant="ghost"
@@ -144,14 +152,11 @@ const Post: React.FC<PostProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-2 mb-2">
                         <Avatar>
-                          <AvatarFallback>
-                            {comment.username?.slice(0, 2).toUpperCase() || "AN"}
-                          </AvatarFallback>
+                          <AvatarFallback>{comment.username.slice(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-bold dark:text-white">
-                            {comment.username || "Anonymous"}
-                          </p>
+                          <p className="font-bold dark:text-white">{comment.username}</p>
+                          <p className="text-sm dark:text-white">{comment.handle}</p>
                           <p className="text-sm dark:text-white">{comment.content}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {new Date(comment.createdAt).toLocaleString()}

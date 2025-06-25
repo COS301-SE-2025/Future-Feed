@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FaImage, FaTimes } from "react-icons/fa";
 
-interface CommentData{
+interface CommentData {
   id: number;
-  postId: number ;
-  authorId: number ;
-  createdAt: string ;
-  username?: string ;
-  handle?: string ;
+  postId: number;
+  authorId: number;
+  content: string;
+  createdAt: string;
+  username: string;
+  handle: string;
 }
 
 interface PostData {
@@ -30,8 +31,9 @@ interface PostData {
   commentCount: number;
   authorId: number;
   likeCount: number;
-  comments?:CommentData[];
   reshareCount: number;
+  comments: CommentData[];
+  showComments: boolean;
 }
 
 const HomePage = () => {
@@ -42,8 +44,29 @@ const HomePage = () => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const userCache = new Map<number, { username: string; displayName: string }>();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+  // Fetch user details with caching
+  const fetchUser = async (userId: number) => {
+    if (userCache.has(userId)) {
+      return userCache.get(userId)!;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/users/${userId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch user");
+      const user = await res.json();
+      userCache.set(userId, user);
+      return user;
+    } catch {
+      const fallback = { username: `user${userId}`, displayName: `User ${userId}` };
+      userCache.set(userId, fallback);
+      return fallback;
+    }
+  };
 
   // Fetch current user info
   const fetchCurrentUser = async () => {
@@ -54,6 +77,7 @@ const HomePage = () => {
       if (!res.ok) throw new Error("Failed to fetch user info");
       const data = await res.json();
       setCurrentUser(data);
+      userCache.set(data.id, data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -68,7 +92,7 @@ const HomePage = () => {
       const [postsRes, likesRes, resharesRes] = await Promise.all([
         fetch(`${API_URL}/api/posts`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/my-likes`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" })
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
       ]);
 
       if (!postsRes.ok) throw new Error("Failed to fetch posts");
@@ -79,45 +103,48 @@ const HomePage = () => {
       const formattedPosts = await Promise.all(
         apiPosts.map(async (post: any) => {
           const [authorRes, commentsRes, likesCountRes, reshareCountRes] = await Promise.all([
-            fetch(`${API_URL}/api/user/${post.authorId}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/users/${post.authorId}`, { credentials: "include" }),
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" })
+            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" }),
           ]);
 
-          const author = authorRes.ok ? await authorRes.json() : { 
-            username: "unknown", 
-            displayName: "Unknown" 
-          };
-
+          const author = authorRes.ok
+            ? await authorRes.json()
+            : { username: "unknown", displayName: "Unknown" };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
 
-          // In fetchAllPosts and fetchFollowingPosts, modify the return object to include comments:
-return {
-  id: post.id,
-  username: author.displayName || "Unknown",
-  handle: `@${author.username || "unknown"}`,
-  time: new Date(post.createdAt).toLocaleString(),
-  text: post.content,
-  image: undefined,
-  isLiked: likedPosts.some((liked: any) => liked.postId === post.id),
-  isBookmarked: false,
-  isReshared: resharedPosts.some((reshared: any) => reshared.postId === post.id),
-  commentCount: comments.length,
-  authorId: post.authorId,
-  likeCount,
-  reshareCount,
-  comments: comments.map((comment: any) => ({
-    id: comment.id,
-    postId: comment.postId,
-    authorId: comment.authorId,
-    content: comment.content,
-    createdAt: comment.createdAt
-  })),
-  showComments: false
-};
+          // Fetch user details for each comment
+          const commentsWithUsers = await Promise.all(
+            comments.map(async (comment: any) => {
+              const user = await fetchUser(comment.authorId);
+              return {
+                ...comment,
+                username: user.displayName,
+                handle: `@${user.username}`,
+              };
+            })
+          );
+
+          return {
+            id: post.id,
+            username: author.displayName || "Unknown",
+            handle: `@${author.username || "unknown"}`,
+            time: new Date(post.createdAt).toLocaleString(),
+            text: post.content,
+            image: undefined,
+            isLiked: likedPosts.some((liked: any) => liked.postId === post.id),
+            isBookmarked: false,
+            isReshared: resharedPosts.some((reshared: any) => reshared.postId === post.id),
+            commentCount: comments.length,
+            authorId: post.authorId,
+            likeCount,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
+          };
         })
       );
       setPosts(formattedPosts);
@@ -128,32 +155,16 @@ return {
       setLoading(false);
     }
   };
-  const toggleComments = (postId: number) => {
-  setPosts(prevPosts =>
-    prevPosts.map(post =>
-      post.id === postId 
-        ? { ...post, showComments: !post.showComments } 
-        : post
-    )
-  );
-  setFollowingPosts(prevPosts =>
-    prevPosts.map(post =>
-      post.id === postId 
-        ? { ...post, showComments: !post.showComments } 
-        : post
-    )
-  );
-};
 
   // Fetch posts for "Following" tab
   const fetchFollowingPosts = async () => {
     if (!currentUser?.id) return;
-    
+
     try {
       const [followRes, likesRes, resharesRes] = await Promise.all([
         fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/my-likes`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" })
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
       ]);
 
       if (!followRes.ok) throw new Error("Failed to fetch followed users");
@@ -175,20 +186,30 @@ return {
       const formattedPosts = await Promise.all(
         flattenedPosts.map(async (post: any) => {
           const [authorRes, commentsRes, likesCountRes, reshareCountRes] = await Promise.all([
-            fetch(`${API_URL}/api/user/${post.authorId}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/users/${post.authorId}`, { credentials: "include" }),
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" })
+            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" }),
           ]);
 
-          const author = authorRes.ok ? await authorRes.json() : { 
-            username: "unknown", 
-            displayName: "Unknown" 
-          };
-
+          const author = authorRes.ok
+            ? await authorRes.json()
+            : { username: "unknown", displayName: "Unknown" };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+
+          // Fetch user details for each comment
+          const commentsWithUsers = await Promise.all(
+            comments.map(async (comment: any) => {
+              const user = await fetchUser(comment.authorId);
+              return {
+                ...comment,
+                username: user.displayName,
+                handle: `@${user.username}`,
+              };
+            })
+          );
 
           return {
             id: post.id,
@@ -203,7 +224,9 @@ return {
             commentCount: comments.length,
             authorId: post.authorId,
             likeCount,
-            reshareCount
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
           };
         })
       );
@@ -220,13 +243,7 @@ return {
       await fetchCurrentUser();
       await fetchAllPosts();
     };
-    loadData();
-  }, []);
-
-  // Fetch following posts when currentUser changes
-  useEffect(() => {
-    if (currentUser?.id) fetchFollowingPosts();
-  }, [currentUser]);
+    loadData});
 
   // Handle post creation
   const handlePost = async () => {
@@ -244,11 +261,12 @@ return {
 
       if (!res.ok) throw new Error("Failed to create post");
       const newPost = await res.json();
+      const user = await fetchUser(newPost.authorId);
 
       const formattedPost: PostData = {
         id: newPost.id,
-        username: currentUser.displayName || currentUser.username,
-        handle: `@${currentUser.username}`,
+        username: user.displayName || currentUser?.displayName || "Unknown",
+        handle: `@${user.username || currentUser?.username || "unknown"}`,
         time: new Date(newPost.createdAt).toLocaleString(),
         text: newPost.content,
         image: undefined,
@@ -258,7 +276,9 @@ return {
         commentCount: 0,
         authorId: newPost.authorId,
         likeCount: 0,
-        reshareCount: 0
+        reshareCount: 0,
+        comments: [],
+        showComments: false,
       };
 
       setPosts([formattedPost, ...posts]);
@@ -273,7 +293,7 @@ return {
   // Handle like/unlike
   const handleLike = async (postId: number) => {
     try {
-      const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
       if (!post) return;
 
       const method = post.isLiked ? "DELETE" : "POST";
@@ -285,25 +305,25 @@ return {
       if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "like" : "unlike"} post`);
 
       // Update both posts and followingPosts states
-      setPosts(prevPosts =>
-        prevPosts.map(p =>
-          p.id === postId 
-            ? { 
-                ...p, 
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
                 isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1
-              } 
+                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+              }
             : p
         )
       );
-      setFollowingPosts(prevPosts =>
-        prevPosts.map(p =>
-          p.id === postId 
-            ? { 
-                ...p, 
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
                 isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1
-              } 
+                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+              }
             : p
         )
       );
@@ -316,11 +336,11 @@ return {
   // Handle reshare/unreshare
   const handleReshare = async (postId: number) => {
     try {
-      const post = posts.find(p => p.id === postId) || followingPosts.find(p => p.id === postId);
+      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
       if (!post) return;
 
       const method = post.isReshared ? "DELETE" : "POST";
-      const url = post.isReshared 
+      const url = post.isReshared
         ? `${API_URL}/api/reshares/${postId}`
         : `${API_URL}/api/reshares`;
 
@@ -328,31 +348,31 @@ return {
         method,
         headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
         credentials: "include",
-        body: method === "POST" ? JSON.stringify({ postId }) : undefined
+        body: method === "POST" ? JSON.stringify({ postId }) : undefined,
       });
 
       if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "reshare" : "unreshare"} post`);
 
       // Update both posts and followingPosts states
-      setPosts(prevPosts =>
-        prevPosts.map(p =>
-          p.id === postId 
-            ? { 
-                ...p, 
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
                 isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1
-              } 
+                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+              }
             : p
         )
       );
-      setFollowingPosts(prevPosts =>
-        prevPosts.map(p =>
-          p.id === postId 
-            ? { 
-                ...p, 
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
                 isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1
-              } 
+                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+              }
             : p
         )
       );
@@ -375,19 +395,35 @@ return {
       });
 
       if (!res.ok) throw new Error("Failed to add comment");
+      const newComment = await res.json();
+      const user = await fetchUser(newComment.authorId);
+
+      const formattedComment: CommentData = {
+        ...newComment,
+        username: user.displayName || currentUser?.displayName || "Unknown",
+        handle: `@${user.username || currentUser?.username || "unknown"}`,
+      };
 
       // Update both posts and followingPosts states
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.id === postId 
-            ? { ...post, commentCount: post.commentCount + 1 } 
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
             : post
         )
       );
-      setFollowingPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.id === postId 
-            ? { ...post, commentCount: post.commentCount + 1 } 
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
             : post
         )
       );
@@ -399,49 +435,72 @@ return {
 
   // Handle bookmark (client-side only)
   const handleBookmark = (postId: number) => {
-    setPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.id === postId 
-          ? { ...post, isBookmarked: !post.isBookmarked } 
-          : post
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
       )
     );
-    setFollowingPosts(prevPosts =>
-      prevPosts.map(post =>
-        post.id === postId 
-          ? { ...post, isBookmarked: !post.isBookmarked } 
-          : post
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      )
+    );
+  };
+
+  // Toggle comments visibility
+  const toggleComments = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    );
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
   };
 
   // Render posts
   const renderPosts = (posts: PostData[]) => {
-  return posts.map((post) => (
-    <div key={post.id} className="mb-4">
-      <Post
-        username={post.username}
-        handle={post.handle}
-        time={post.time}
-        text={post.text}
-        image={post.image}
-        isLiked={post.isLiked}
-        likeCount={post.likeCount}
-        isBookmarked={post.isBookmarked}
-        isReshared={post.isReshared}
-        reshareCount={post.reshareCount}
-        commentCount={post.commentCount}
-        onLike={() => handleLike(post.id)}
-        onReshare={() => handleReshare(post.id)}
-        onBookmark={() => handleBookmark(post.id)}
-        onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-        onToggleComments={() => toggleComments(post.id)}
-        showComments={post.showComments || false}
-        comments={post.comments || []}
-      />
-    </div>
-  ));
-};
+    return posts.map((post) => (
+      <div key={post.id} className="mb-4">
+        <Post
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onToggleComments={() => toggleComments(post.id)}
+          showComments={post.showComments || false}
+          comments={post.comments || []}
+        />
+      </div>
+    ));
+  };
+
+  // Fetch data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      await fetchCurrentUser();
+      await fetchAllPosts();
+    };
+    loadData();
+  }, []);
+
+  // Fetch following posts when currentUser changes
+  useEffect(() => {
+    if (currentUser?.id) fetchFollowingPosts();
+  }, [currentUser]);
 
   return (
     <div className="flex min-h-screen dark:bg-[#1a1a1a] text-white max-w-screen-2xl mx-auto bg-white">
@@ -482,12 +541,12 @@ return {
                     </TabsTrigger>
                   ))}
                 </TabsList>
-                
+
                 <TabsContent value="for You" className="p-0">
                   {posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
-                      <Button 
+                      <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
                         onClick={() => setIsModalOpen(true)}
                       >
@@ -498,12 +557,12 @@ return {
                     renderPosts(posts)
                   )}
                 </TabsContent>
-                
+
                 <TabsContent value="Following">
                   {followingPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
-                      <Button 
+                      <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
                         onClick={() => fetchFollowingPosts()}
                       >
@@ -523,7 +582,7 @@ return {
             <WhatsHappening />
           </div>
           <div className="w-[320px] mt-5 ml-3">
-            <WhoToFollow currentUserId={currentUser?.id} />
+            <WhoToFollow />
           </div>
         </aside>
       </div>
