@@ -60,49 +60,69 @@ const HomePage = () => {
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const fetchUser = async (userId: number, postUser?: any) => {
-    if (userCache.has(userId)) {
-      return userCache.get(userId)!;
-    }
-    if (postUser && postUser.id === userId) {
-      const validUser = {
-        username: postUser.username && typeof postUser.username === "string" ? postUser.username : `user${userId}`,
-        displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `User ${userId}`,
-      };
-      userCache.set(userId, validUser);
-      return validUser;
-    }
-    if (currentUser && userId === currentUser.id) {
-      const user = { username: currentUser.username, displayName: currentUser.displayName };
-      userCache.set(userId, user);
-      return user;
-    }
+interface PostUser {
+  id: number;
+  username?: string;
+  displayName?: string;
+}
+
+const fetchUser = async (userId: number, postUser?: PostUser) => {
+  // Check cache first
+  if (userCache.has(userId)) {
+    const cachedUser = userCache.get(userId)!;
+    console.debug(`Cache hit for user ${userId}:`, cachedUser);
+    return cachedUser;
+  }
+
+  // Check localStorage
+  const storedUser = localStorage.getItem(`user_${userId}`);
+  if (storedUser) {
     try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        console.warn(`Failed to fetch user ${userId}: HTTP ${res.status}`);
-        throw new Error("Failed to fetch user");
+      const user = JSON.parse(storedUser);
+      if (user.username && user.displayName) {
+        console.debug(`localStorage hit for user ${userId}:`, user);
+        userCache.set(userId, user);
+        return user;
       }
-      const user = await res.json();
-      if (user.id !== userId) {
-        console.warn(`User ID mismatch: requested ${userId}, got ${user.id}`);
-        throw new Error("User ID mismatch");
-      }
-      const validUser = {
-        username: user.username && typeof user.username === "string" ? user.username : `user${userId}`,
-        displayName: user.displayName && typeof user.displayName === "string" ? user.displayName : `User ${userId}`,
-      };
-      userCache.set(userId, validUser);
-      return validUser;
     } catch (err) {
-      console.error(`Error fetching user ${userId}:`, err);
-      const fallback = { username: `user${userId}`, displayName: `User ${userId}` };
-      userCache.set(userId, fallback);
-      return fallback;
+      console.warn(`Failed to parse localStorage for user ${userId}:`, err);
     }
-  };
+  }
+
+  // Use postUser if provided
+  if (postUser && postUser.id === userId) {
+    if (!postUser.username || !postUser.displayName) {
+      console.warn(`Invalid postUser data for user ${userId}:`, postUser);
+    }
+    const validUser = {
+      username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
+      displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
+    };
+    console.debug(`Using postUser for user ${userId}:`, validUser);
+    userCache.set(userId, validUser);
+    localStorage.setItem(`user_${userId}`, JSON.stringify(validUser));
+    return validUser;
+  }
+
+  // Use currentUser if applicable
+  if (currentUser && userId === currentUser.id) {
+    const user = {
+      username: currentUser.username && typeof currentUser.username === "string" ? currentUser.username : `unknown${userId}`,
+      displayName: currentUser.displayName && typeof currentUser.displayName === "string" ? currentUser.displayName : `Unknown User ${userId}`,
+    };
+    console.debug(`Using currentUser for user ${userId}:`, user);
+    userCache.set(userId, user);
+    localStorage.setItem(`user_${userId}`, JSON.stringify(user));
+    return user;
+  }
+
+  // Fallback
+  console.warn(`No user data available for user ${userId}. No postUser provided and not current user.`);
+  const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}` };
+  userCache.set(userId, fallback);
+  localStorage.setItem(`user_${userId}`, JSON.stringify(fallback));
+  return fallback;
+};
 
   const fetchCurrentUser = async () => {
     try {
@@ -129,169 +149,235 @@ const HomePage = () => {
   };
 
   const fetchAllPosts = async () => {
-    try {
-      const [postsRes, myResharesRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      ]);
-      if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
-      const apiPosts = await postsRes.json();
-      const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
+  try {
+    const [postsRes, myResharesRes] = await Promise.all([
+      fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+    ]);
+    if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
+    const apiPosts = await postsRes.json();
+    const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
 
-      const validPosts = apiPosts.filter((post: any) => {
+    const validPosts = apiPosts
+      .filter((post: any) => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post);
           return false;
         }
+        if (!post.user?.username || !post.user?.displayName) {
+          console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
+        }
         return true;
-      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+      })
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
 
-      const formattedPosts = await Promise.all(
-        validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
-          ]);
+    const formattedPosts = await Promise.all(
+      validPosts.map(async (post: any) => {
+        const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+          fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+        ]);
 
-          const comments = commentsRes.ok ? await commentsRes.json() : [];
-          const validComments = comments.filter((comment: any) => {
-            if (!comment.authorId) {
-              console.warn("Skipping comment with undefined authorId:", comment);
-              return false;
-            }
-            return true;
-          });
+        const comments = commentsRes.ok ? await commentsRes.json() : [];
+        const validComments = comments.filter((comment: any) => {
+          if (!comment.userId) {
+            console.warn("Skipping comment with undefined userId:", comment);
+            return false;
+          }
+          if (!comment.user?.username || !comment.user?.displayName) {
+            console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
+          }
+          return true;
+        });
 
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
-              return {
-                ...comment,
-                authorId: comment.authorId,
-                username: user.displayName,
-                handle: `@${user.username}`,
-              };
-            })
-          );
+        const commentsWithUsers = await Promise.all(
+          validComments.map(async (comment: any) => {
+            const user = await fetchUser(comment.userId, comment.user);
+            return {
+              ...comment,
+              authorId: comment.userId,
+              username: user.displayName,
+              handle: `@${user.username}`,
+            };
+          })
+        );
 
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
-          const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
+        const postUser = await fetchUser(post.user.id, post.user);
+        const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
+        const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
 
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            time: formatRelativeTime(post.createdAt),
-            text: post.content,
-            image: post.imageUrl,
-            isLiked: myLikesRes.ok && myLikesRes.status === 200,
-            isBookmarked: false,
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: false,
-          };
-        })
-      );
-      setPosts(formattedPosts);
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-      setError("Failed to load posts.");
-    }
-  };
+        let isLiked = false;
+        if (hasLikedRes.ok) {
+          try {
+            const likeData = await hasLikedRes.json();
+            isLiked = likeData === true;
+          } catch (err) {
+            console.warn(`Failed to parse like status for post ${post.id}:`, err);
+          }
+        } else if (hasLikedRes.status === 401) {
+          console.warn(`Unauthorized to check like status for post ${post.id}`);
+        }
 
-  const fetchFollowingPosts = async () => {
-    if (!currentUser?.id) return;
+        return {
+          id: post.id,
+          username: postUser.displayName,
+          handle: `@${postUser.username}`,
+          time: formatRelativeTime(post.createdAt),
+          text: post.content,
+          image: post.imageUrl,
+          isLiked,
+          isBookmarked: false,
+          isReshared,
+          commentCount: validComments.length,
+          authorId: post.user.id,
+          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+          reshareCount,
+          comments: commentsWithUsers,
+          showComments: posts.find((p) => p.id === post.id)?.showComments || false,
+        };
+      })
+    );
 
-    try {
-      const [followRes, myResharesRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      ]);
-      if (!followRes.ok) throw new Error("Failed to fetch followed users");
-      const followedUsers = await followRes.json();
-      const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
-      const followedIds = followedUsers.map((follow: any) => follow.followedId);
+    setPosts((prevPosts) =>
+      formattedPosts.map((newPost) => {
+        const existingPost = prevPosts.find((p) => p.id === newPost.id);
+        return {
+          ...newPost,
+          comments: existingPost
+            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+            : newPost.comments,
+          showComments: existingPost?.showComments || newPost.showComments,
+        };
+      })
+    );
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    setError("Failed to load posts.");
+  }
+};
 
-      const allFollowingPosts = await Promise.all(
-        followedIds.map(async (userId: number) => {
-          const res = await fetch(`${API_URL}/api/posts/user/${userId}`, { credentials: "include" });
-          return res.ok ? await res.json() : [];
-        })
-      );
+const fetchFollowingPosts = async () => {
+  if (!currentUser?.id) return;
 
-      const flattenedPosts = allFollowingPosts.flat();
-      const validPosts = flattenedPosts.filter((post: any) => {
+  try {
+    const [followRes, myResharesRes] = await Promise.all([
+      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
+      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+    ]);
+    if (!followRes.ok) throw new Error("Failed to fetch followed users");
+    const followedUsers = await followRes.json();
+    const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
+    const followedIds = followedUsers.map((follow: any) => follow.followedId);
+
+    const allFollowingPosts = await Promise.all(
+      followedIds.map(async (userId: number) => {
+        const res = await fetch(`${API_URL}/api/posts/user/${userId}`, { credentials: "include" });
+        return res.ok ? await res.json() : [];
+      })
+    );
+
+    const flattenedPosts = allFollowingPosts.flat();
+    const validPosts = flattenedPosts
+      .filter((post: any) => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post);
           return false;
         }
+        if (!post.user?.username || !post.user?.displayName) {
+          console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
+        }
         return true;
-      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+      })
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
 
-      const formattedPosts = await Promise.all(
-        validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
-          ]);
+    const formattedPosts = await Promise.all(
+      validPosts.map(async (post: any) => {
+        const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+          fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+        ]);
 
-          const comments = commentsRes.ok ? await commentsRes.json() : [];
-          const validComments = comments.filter((comment: any) => {
-            if (!comment.authorId) {
-              console.warn("Skipping comment with undefined authorId:", comment);
-              return false;
-            }
-            return true;
-          });
+        const comments = commentsRes.ok ? await commentsRes.json() : [];
+        const validComments = comments.filter((comment: any) => {
+          if (!comment.userId) {
+            console.warn("Skipping comment with undefined userId:", comment);
+            return false;
+          }
+          if (!comment.user?.username || !comment.user?.displayName) {
+            console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
+          }
+          return true;
+        });
 
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
-              return {
-                ...comment,
-                authorId: comment.authorId,
-                username: user.displayName,
-                handle: `@${user.username}`,
-              };
-            })
-          );
+        const commentsWithUsers = await Promise.all(
+          validComments.map(async (comment: any) => {
+            const user = await fetchUser(comment.userId, comment.user);
+            return {
+              ...comment,
+              authorId: comment.userId,
+              username: user.displayName,
+              handle: `@${user.username}`,
+            };
+          })
+        );
 
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
-          const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
+        const postUser = await fetchUser(post.user.id, post.user);
+        const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
+        const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
 
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            time: formatRelativeTime(post.createdAt),
-            text: post.content,
-            image: post.imageUrl,
-            isLiked: myLikesRes.ok && myLikesRes.status === 200,
-            isBookmarked: false,
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: false,
-          };
-        })
-      );
-      setFollowingPosts(formattedPosts);
-    } catch (err) {
-      console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
-    }
-  };
+        let isLiked = false;
+        if (hasLikedRes.ok) {
+          try {
+            const likeData = await hasLikedRes.json();
+            isLiked = likeData === true;
+          } catch (err) {
+            console.warn(`Failed to parse like status for post ${post.id}:`, err);
+          }
+        } else if (hasLikedRes.status === 401) {
+          console.warn(`Unauthorized to check like status for post ${post.id}`);
+        }
+
+        return {
+          id: post.id,
+          username: postUser.displayName,
+          handle: `@${postUser.username}`,
+          time: formatRelativeTime(post.createdAt),
+          text: post.content,
+          image: post.imageUrl,
+          isLiked,
+          isBookmarked: false,
+          isReshared,
+          commentCount: validComments.length,
+          authorId: post.user.id,
+          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+          reshareCount,
+          comments: commentsWithUsers,
+          showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+        };
+      })
+    );
+
+    setFollowingPosts((prevPosts) =>
+      formattedPosts.map((newPost) => {
+        const existingPost = prevPosts.find((p) => p.id === newPost.id);
+        return {
+          ...newPost,
+          comments: existingPost
+            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+            : newPost.comments,
+          showComments: existingPost?.showComments || newPost.showComments,
+        };
+      })
+    );
+  } catch (err) {
+    console.error("Error fetching following posts:", err);
+    setError("Failed to load posts from followed users.");
+  }
+};
 
   useEffect(() => {
     const loadData = async () => {
@@ -386,25 +472,59 @@ const HomePage = () => {
     }
   };
 
-  const handleLike = async (postId: number) => {
-    try {
-      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) return;
+const handleLike = async (postId: number) => {
+  try {
+    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    if (!post) {
+      setError("Post not found.");
+      return;
+    }
+    if (!currentUser) {
+      setError("Please log in to like/unlike posts.");
+      return;
+    }
 
-      const method = post.isLiked ? "DELETE" : "POST";
-      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
-        method,
-        credentials: "include",
-      });
+    // Optimistic update
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
+          : p
+      )
+    );
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
+          : p
+      )
+    );
 
-      if (!res.ok) throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post`);
+    const method = post.isLiked ? "DELETE" : "POST";
+    const res = await fetch(`${API_URL}/api/likes/${postId}`, {
+      method,
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Failed to ${post.isLiked ? "unlike" : "like"} post ${postId}: ${res.status} ${errorText}`);
+      // Revert optimistic update
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
             ? {
                 ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+                isLiked: post.isLiked,
+                likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
               }
             : p
         )
@@ -414,17 +534,45 @@ const HomePage = () => {
           p.id === postId
             ? {
                 ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+                isLiked: post.isLiked,
+                likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
               }
             : p
         )
       );
-    } catch (err) {
-      console.error("Error toggling like:", err);
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
+      if (res.status === 401) {
+        setError("Session expired. Please log in again.");
+      } else {
+        throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post: ${errorText}`);
+      }
     }
-  };
+
+    // Verify like status
+    const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, {
+      credentials: "include",
+    });
+    if (hasLikedRes.ok) {
+      const likeData = await hasLikedRes.json();
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? { ...p, isLiked: likeData === true }
+            : p
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? { ...p, isLiked: likeData === true }
+            : p
+        )
+      );
+    }
+  } catch (err) {
+    console.error("Error toggling like:", err);
+    setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
+  }
+};
 
   const handleReshare = async (postId: number) => {
     try {
@@ -472,67 +620,72 @@ const HomePage = () => {
     }
   };
 
-  const handleAddComment = async (postId: number, commentText: string) => {
-    if (!currentUser) {
-      setError("Please log in to comment.");
-      return;
-    }
-    if (!commentText.trim()) {
-      setError("Comment cannot be empty.");
-      return;
-    }
+const handleAddComment = async (postId: number, commentText: string) => {
+  if (!currentUser) {
+    setError("Please log in to comment.");
+    return;
+  }
+  if (!commentText.trim()) {
+    setError("Comment cannot be empty.");
+    return;
+  }
 
-    try {
-      const res = await fetch(`${API_URL}/api/comments/${postId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain",
-        },
-        credentials: "include",
-        body: commentText,
-      });
+  try {
+    const res = await fetch(`${API_URL}/api/comments/${postId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain",
+      },
+      credentials: "include",
+      body: commentText,
+    });
 
-      if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
-      const newComment = await res.json();
+    if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
+    const newComment = await res.json();
 
-      const user = await fetchUser(currentUser.id);
-      const formattedComment: CommentData = {
-        id: newComment.id,
-        postId: newComment.postId,
-        authorId: newComment.authorId || currentUser.id,
-        content: newComment.content,
-        createdAt: newComment.createdAt,
-        username: user.displayName,
-        handle: `@${user.username}`,
-      };
+    const user = {
+      username: currentUser.username,
+      displayName: currentUser.displayName,
+    };
+    userCache.set(currentUser.id, user);
+    localStorage.setItem(`user_${currentUser.id}`, JSON.stringify(user));
+    const formattedComment: CommentData = {
+      id: newComment.id,
+      postId: newComment.postId,
+      authorId: currentUser.id,
+      content: newComment.content,
+      createdAt: newComment.createdAt,
+      username: user.displayName,
+      handle: `@${user.username}`,
+    };
 
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
-            : post
-        )
-      );
-    } catch (err) {
-      console.error("Error adding comment:", err);
-      setError("Failed to add comment.");
-    }
-  };
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              comments: [...post.comments, formattedComment],
+              commentCount: post.commentCount + 1,
+            }
+          : post
+      )
+    );
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+              ...post,
+              comments: [...post.comments, formattedComment],
+              commentCount: post.commentCount + 1,
+            }
+          : post
+      )
+    );
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    setError("Failed to add comment.");
+  }
+};
 
   const handleBookmark = (postId: number) => {
     setPosts((prevPosts) =>
