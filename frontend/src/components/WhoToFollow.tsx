@@ -14,7 +14,7 @@ const WhoToFollow = () => {
                                 <p className="font-semibold">City of Tshwane</p>
                                 <p className="dark:text-lime-500">@CityTshwane</p>
                             </div>
-                            <Button variant="outline" className="dark:text-lime-500 rounded-2xl dark:bg-black dark:border-lime-500 dark:hover:text-black dark:hover:bg-lime-500  text-lime-600 cursor-pointer">follow</Button>
+                            <Button variant="outline" className="dark:text-lime-500 rounded-2xl dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:text-black dark:hover:bg-lime-500  text-lime-600 cursor-pointer">follow</Button>
 
                         </div>
                         <div className="flex items-center justify-between">
@@ -23,11 +23,11 @@ const WhoToFollow = () => {
                                 <p className="dark:text-lime-500">@brunofernandes8</p>
                             </div>
 
-                            <Button variant="outline" className="dark:text-lime-500 rounded-2xl dark:bg-black dark:border-lime-500 dark:hover:text-black dark:hover:bg-lime-500 text-lime-600 cursor-pointer">follow</Button>
+                            <Button variant="outline" className="dark:text-lime-500 rounded-2xl dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:text-black dark:hover:bg-lime-500 text-lime-600 cursor-pointer">follow</Button>
 
                         </div>
                         <div>
-                            <p className="dark:text-blue-400 hover:underline cursor-pointer">Show more</p>
+                            <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
                         </div>
                     </div>
                 </CardContent>
