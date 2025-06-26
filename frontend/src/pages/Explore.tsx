@@ -53,13 +53,20 @@ const Explore = () => {
     return await res.json();
   };
 
-  const fetchFollowing = async (userId: number): Promise<number[]> => {
-    const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
-      method: "GET",
-      credentials: "include",
-    });
-    const data: FollowRelation[] = await res.json();
-    return data.map((relation) => relation.followedId);
+  const fetchFollowing = async (userId: number, allUsers: User[]) => {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data: FollowRelation[] = await res.json();
+      const followedUserIds = data.map((relation) => relation.followedId);
+      const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+      setFollowingUsers(followedUsers);
+    } catch (err) {
+      console.error("Failed to fetch following users", err);
+    }
   };
 
   const checkFollowStatus = async (userId: number) => {
@@ -86,6 +93,10 @@ const Explore = () => {
         body: JSON.stringify({ followedId: id }),
       });
       setFollowStatus((prev) => ({ ...prev, [id]: true }));
+
+      if (currentUserId !== null) {
+        await fetchFollowing(currentUserId, users);
+      }
     } catch (err) {
       console.error("Follow failed", err);
     }
@@ -99,6 +110,10 @@ const Explore = () => {
         credentials: "include",
       });
       setFollowStatus((prev) => ({ ...prev, [id]: false }));
+
+      if (currentUserId !== null) {
+        await fetchFollowing(currentUserId, users);
+      }
     } catch (err) {
       console.error("Unfollow failed", err);
     }
@@ -112,9 +127,7 @@ const Explore = () => {
       const allUsers = await fetchUsers();
       setUsers(allUsers);
 
-      const followingIds = await fetchFollowing(userId);
-      const following = allUsers.filter((user: User) => followingIds.includes(user.id));
-      setFollowingUsers(following);
+      await fetchFollowing(userId, allUsers);
 
       const statusEntries = await Promise.all(
         allUsers.map(async (user: User) => {
