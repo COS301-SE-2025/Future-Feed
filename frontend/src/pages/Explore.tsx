@@ -135,9 +135,9 @@ const Explore = () => {
           </Link>
         </div>
 
-        <Tabs defaultValue="forYou" className="w-full p-2">
+        <Tabs defaultValue="accounts" className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-[#1a1a1a]">
-            {["forYou", "accounts"].map(tab => (
+            {["forYou", "accounts","accounts following"].map(tab => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -190,6 +190,13 @@ const Explore = () => {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="accounts following">
+            <section className="p-4 border dark:border-lime-500">
+              <h2 className="font-bold  text-lg mb-2">Today’s News</h2>
+              {/* example news */}
+            </section>
           </TabsContent>
         </Tabs>
 
