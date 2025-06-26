@@ -59,10 +59,7 @@ const HomePage = () => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   // Fetch user details with caching
-  const Jay = 1;
-  const Likei = await fetch(`${API_URL}/api/likes/has-liked/${Jay}`) // test this url 
   const fetchUser = async (userId: number) => {
-    console.log(``)
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
     }
