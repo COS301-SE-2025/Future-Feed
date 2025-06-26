@@ -7,6 +7,17 @@ import WhatsHappening from "@/components/WhatsHappening";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FaImage, FaTimes } from "react-icons/fa";
+import { formatRelativeTime } from "@/lib/timeUtils";
+
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+}
 
 interface CommentData {
   id: number;
@@ -41,14 +52,13 @@ const HomePage = () => {
   const [postText, setPostText] = useState("");
   const [posts, setPosts] = useState<PostData[]>([]);
   const [followingPosts, setFollowingPosts] = useState<PostData[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userCache = new Map<number, { username: string; displayName: string }>();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  // Fetch user details with caching
   const fetchUser = async (userId: number) => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
@@ -59,8 +69,12 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error("Failed to fetch user");
       const user = await res.json();
-      userCache.set(userId, user);
-      return user;
+      const validUser = {
+        username: user.username || `user${userId}`,
+        displayName: user.displayName || `User ${userId}`,
+      };
+      userCache.set(userId, validUser);
+      return validUser;
     } catch {
       const fallback = { username: `user${userId}`, displayName: `User ${userId}` };
       userCache.set(userId, fallback);
@@ -68,60 +82,65 @@ const HomePage = () => {
     }
   };
 
-  // Fetch current user info
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch user info");
-      const data = await res.json();
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
       setCurrentUser(data);
-      userCache.set(data.id, data);
+      userCache.set(data.id, { username: data.username, displayName: data.displayName });
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
+      setCurrentUser(null);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Fetch all posts for "For You" tab
   const fetchAllPosts = async () => {
     try {
-      const [postsRes, likesRes, resharesRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
-        fetch(`${API_URL}/api/likes/my-likes`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      ]);
-
-      if (!postsRes.ok) throw new Error("Failed to fetch posts");
+      const postsRes = await fetch(`${API_URL}/api/posts`, { credentials: "include" });
+      if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
       const apiPosts = await postsRes.json();
-      const likedPosts = likesRes.ok ? await likesRes.json() : [];
-      const resharedPosts = resharesRes.ok ? await resharesRes.json() : [];
+
+      const validPosts = apiPosts.filter((post: any) => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
 
       const formattedPosts = await Promise.all(
-        apiPosts.map(async (post: any) => {
-          const [authorRes, commentsRes, likesCountRes, reshareCountRes] = await Promise.all([
-            fetch(`${API_URL}/api/users/${post.authorId}`, { credentials: "include" }),
+        validPosts.map(async (post: any) => {
+          const [commentsRes, likesCountRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" }),
           ]);
 
-          const author = authorRes.ok
-            ? await authorRes.json()
-            : { username: "unknown", displayName: "Unknown" };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
-          const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
-          const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+          const validComments = comments.filter((comment: any) => {
+            if (!comment.userId) {
+              console.warn("Skipping comment with undefined userId:", comment);
+              return false;
+            }
+            return true;
+          });
 
-          // Fetch user details for each comment
           const commentsWithUsers = await Promise.all(
-            comments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
+            validComments.map(async (comment: any) => {
+              const user = await fetchUser(comment.userId);
               return {
                 ...comment,
+                authorId: comment.userId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
@@ -130,48 +149,40 @@ const HomePage = () => {
 
           return {
             id: post.id,
-            username: author.displayName || "Unknown",
-            handle: `@${author.username || "unknown"}`,
-            time: new Date(post.createdAt).toLocaleString(),
+            username: post.user.displayName || `User ${post.user.id}`,
+            handle: `@${post.user.username || `user${post.user.id}`}`,
+            time: formatRelativeTime(post.createdAt),
             text: post.content,
-            image: undefined,
-            isLiked: likedPosts.some((liked: any) => liked.postId === post.id),
+            image: post.imageUrl,
+            isLiked: false, // Default to false since my-likes endpoint is unavailable
             isBookmarked: false,
-            isReshared: resharedPosts.some((reshared: any) => reshared.postId === post.id),
-            commentCount: comments.length,
-            authorId: post.authorId,
-            likeCount,
-            reshareCount,
+            isReshared: false, // Default to false since reshares endpoint is unavailable
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount: 0, // Default to 0 since reshares endpoint is unavailable
             comments: commentsWithUsers,
             showComments: false,
           };
         })
       );
       setPosts(formattedPosts);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
-      setLoading(false);
     }
   };
 
-  // Fetch posts for "Following" tab
   const fetchFollowingPosts = async () => {
     if (!currentUser?.id) return;
 
     try {
-      const [followRes, likesRes, resharesRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/likes/my-likes`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      ]);
-
+      const followRes = await fetch(`${API_URL}/api/follow/following/${currentUser.id}`, {
+        credentials: "include",
+      });
       if (!followRes.ok) throw new Error("Failed to fetch followed users");
       const followedUsers = await followRes.json();
       const followedIds = followedUsers.map((follow: any) => follow.followedId);
-      const likedPosts = likesRes.ok ? await likesRes.json() : [];
-      const resharedPosts = resharesRes.ok ? await resharesRes.json() : [];
 
       const allFollowingPosts = await Promise.all(
         followedIds.map(async (userId: number) => {
@@ -183,28 +194,36 @@ const HomePage = () => {
       );
 
       const flattenedPosts = allFollowingPosts.flat();
+      const validPosts = flattenedPosts.filter((post: any) => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
+
       const formattedPosts = await Promise.all(
-        flattenedPosts.map(async (post: any) => {
-          const [authorRes, commentsRes, likesCountRes, reshareCountRes] = await Promise.all([
-            fetch(`${API_URL}/api/users/${post.authorId}`, { credentials: "include" }),
+        validPosts.map(async (post: any) => {
+          const [commentsRes, likesCountRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/count/${post.id}`, { credentials: "include" }),
           ]);
 
-          const author = authorRes.ok
-            ? await authorRes.json()
-            : { username: "unknown", displayName: "Unknown" };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
-          const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
-          const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+          const validComments = comments.filter((comment: any) => {
+            if (!comment.userId) {
+              console.warn("Skipping comment with undefined userId:", comment);
+              return false;
+            }
+            return true;
+          });
 
-          // Fetch user details for each comment
           const commentsWithUsers = await Promise.all(
-            comments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
+            validComments.map(async (comment: any) => {
+              const user = await fetchUser(comment.userId);
               return {
                 ...comment,
+                authorId: comment.userId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
@@ -213,18 +232,18 @@ const HomePage = () => {
 
           return {
             id: post.id,
-            username: author.displayName || "Unknown",
-            handle: `@${author.username || "unknown"}`,
-            time: new Date(post.createdAt).toLocaleString(),
+            username: post.user.displayName || `User ${post.user.id}`,
+            handle: `@${post.user.username || `user${post.user.id}`}`,
+            time: formatRelativeTime(post.createdAt),
             text: post.content,
-            image: undefined,
-            isLiked: likedPosts.some((liked: any) => liked.postId === post.id),
+            image: post.imageUrl,
+            isLiked: false, // Default to false since my-likes endpoint is unavailable
             isBookmarked: false,
-            isReshared: resharedPosts.some((reshared: any) => reshared.postId === post.id),
-            commentCount: comments.length,
-            authorId: post.authorId,
-            likeCount,
-            reshareCount,
+            isReshared: false, // Default to false since reshares endpoint is unavailable
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount: 0, // Default to 0 since reshares endpoint is unavailable
             comments: commentsWithUsers,
             showComments: false,
           };
@@ -237,17 +256,25 @@ const HomePage = () => {
     }
   };
 
-  // Fetch data on mount
   useEffect(() => {
     const loadData = async () => {
-      await fetchCurrentUser();
-      await fetchAllPosts();
+      const user = await fetchCurrentUser();
+      if (user) {
+        await fetchAllPosts();
+      }
     };
-    loadData});
+    loadData();
+  }, []);
 
-  // Handle post creation
+  useEffect(() => {
+    if (currentUser?.id) fetchFollowingPosts();
+  }, [currentUser]);
+
   const handlePost = async () => {
-    if (!postText.trim()) return;
+    if (!postText.trim() || !currentUser) {
+      setError("Please log in to post.");
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/posts`, {
@@ -261,20 +288,19 @@ const HomePage = () => {
 
       if (!res.ok) throw new Error("Failed to create post");
       const newPost = await res.json();
-      const user = await fetchUser(newPost.authorId);
 
       const formattedPost: PostData = {
         id: newPost.id,
-        username: user.displayName || currentUser?.displayName || "Unknown",
-        handle: `@${user.username || currentUser?.username || "unknown"}`,
-        time: new Date(newPost.createdAt).toLocaleString(),
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
+        time: formatRelativeTime(newPost.createdAt),
         text: newPost.content,
-        image: undefined,
+        image: newPost.imageUrl,
         isLiked: false,
         isBookmarked: false,
         isReshared: false,
         commentCount: 0,
-        authorId: newPost.authorId,
+        authorId: currentUser.id, // Use currentUser.id since newPost.user.id may not be returned
         likeCount: 0,
         reshareCount: 0,
         comments: [],
@@ -290,7 +316,32 @@ const HomePage = () => {
     }
   };
 
-  // Handle like/unlike
+  const handleDeletePost = async (postId: number) => {
+    if (!currentUser) {
+      setError("Please log in to delete posts.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete post");
+      const responseText = await res.text();
+      if (responseText !== "Post deleted successfully") {
+        throw new Error("Unexpected delete response");
+      }
+
+      setPosts(posts.filter((post) => post.id !== postId));
+      setFollowingPosts(followingPosts.filter((post) => post.id !== postId));
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      setError("Failed to delete post.");
+    }
+  };
+
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
@@ -302,9 +353,7 @@ const HomePage = () => {
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "like" : "unlike"} post`);
-
-      // Update both posts and followingPosts states
+      if (!res.ok) throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post`);
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
@@ -329,61 +378,24 @@ const HomePage = () => {
       );
     } catch (err) {
       console.error("Error toggling like:", err);
-      // setError("Failed to update like status.");
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
     }
   };
 
-  // Handle reshare/unreshare
-  const handleReshare = async (postId: number) => {
-    try {
-      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) return;
-
-      const method = post.isReshared ? "DELETE" : "POST";
-      const url = post.isReshared
-        ? `${API_URL}/api/reshares/${postId}`
-        : `${API_URL}/api/reshares`;
-
-      const res = await fetch(url, {
-        method,
-        headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
-        credentials: "include",
-        body: method === "POST" ? JSON.stringify({ postId }) : undefined,
-      });
-
-      if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "reshare" : "unreshare"} post`);
-
-      // Update both posts and followingPosts states
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
-            : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
-            : p
-        )
-      );
-    } catch (err) {
-      console.error("Error toggling reshare:", err);
-      setError("Failed to update reshare status.");
-    }
+  const handleReshare = () => {
+    setError("Reshare functionality is currently unavailable.");
   };
 
-  // Handle adding a comment
   const handleAddComment = async (postId: number, commentText: string) => {
+    if (!currentUser) {
+      setError("Please log in to comment.");
+      return;
+    }
+    if (!commentText.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
@@ -394,17 +406,19 @@ const HomePage = () => {
         body: commentText,
       });
 
-      if (!res.ok) throw new Error("Failed to add comment");
+      if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
       const newComment = await res.json();
-      const user = await fetchUser(newComment.authorId);
 
       const formattedComment: CommentData = {
-        ...newComment,
-        username: user.displayName || currentUser?.displayName || "Unknown",
-        handle: `@${user.username || currentUser?.username || "unknown"}`,
+        id: newComment.id,
+        postId: newComment.postId,
+        authorId: newComment.userId || currentUser.id, // Fallback to currentUser.id if userId is missing
+        content: newComment.content,
+        createdAt: newComment.createdAt,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
 
-      // Update both posts and followingPosts states
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
@@ -433,7 +447,6 @@ const HomePage = () => {
     }
   };
 
-  // Handle bookmark (client-side only)
   const handleBookmark = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -447,7 +460,6 @@ const HomePage = () => {
     );
   };
 
-  // Toggle comments visibility
   const toggleComments = (postId: number) => {
     setPosts((prevPosts) =>
       prevPosts.map((post) =>
@@ -461,7 +473,6 @@ const HomePage = () => {
     );
   };
 
-  // Render posts
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -480,27 +491,18 @@ const HomePage = () => {
           onLike={() => handleLike(post.id)}
           onBookmark={() => handleBookmark(post.id)}
           onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={handleReshare}
+          onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           showComments={post.showComments || false}
           comments={post.comments || []}
+          isUserLoaded={!!currentUser}
+          currentUser={currentUser}
+          authorId={post.authorId}
         />
       </div>
     ));
   };
-
-  // Fetch data on mount
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchCurrentUser();
-      await fetchAllPosts();
-    };
-    loadData();
-  }, []);
-
-  // Fetch following posts when currentUser changes
-  useEffect(() => {
-    if (currentUser?.id) fetchFollowingPosts();
-  }, [currentUser]);
 
   return (
     <div className="flex min-h-screen dark:bg-black text-white mx-auto bg-white">
@@ -518,17 +520,18 @@ const HomePage = () => {
             <div className="flex justify-center items-center h-64">
               <p className="text-lg dark:text-white">Loading posts...</p>
             </div>
+          ) : !currentUser ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-lg dark:text-white">Please log in to view posts.</p>
+            </div>
           ) : (
             <>
-              {/* Post creation button */}
               <div
                 className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 onClick={() => setIsModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-
-              {/* Tabs */}
               <Tabs defaultValue="for You" className="w-full p-2">
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10">
                   {["for You", "Following"].map((tab) => (
@@ -541,7 +544,6 @@ const HomePage = () => {
                     </TabsTrigger>
                   ))}
                 </TabsList>
-
                 <TabsContent value="for You" className="p-0">
                   {posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
@@ -557,7 +559,6 @@ const HomePage = () => {
                     renderPosts(posts)
                   )}
                 </TabsContent>
-
                 <TabsContent value="Following">
                   {followingPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
@@ -582,12 +583,10 @@ const HomePage = () => {
             <WhatsHappening />
           </div>
           <div className="w-[320px] mt-5 ml-3">
-            <WhoToFollow />
+            <WhoToFollow currentUserId={currentUser?.id} />
           </div>
         </aside>
       </div>
-
-      {/* Post creation modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
           <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
@@ -629,7 +628,7 @@ const HomePage = () => {
                 <Button
                   onClick={handlePost}
                   className="bg-lime-500 text-white hover:bg-lime-600"
-                  disabled={!postText.trim()}
+                  disabled={!postText.trim() || !currentUser}
                 >
                   Post
                 </Button>
