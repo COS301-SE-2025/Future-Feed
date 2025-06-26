@@ -2,9 +2,10 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
+import { formatRelativeTime } from "@/lib/timeUtils";
 
 interface UserProfile {
   id: number;
@@ -32,6 +33,7 @@ interface PostProps {
   onBookmark: () => void;
   onAddComment: (commentText: string) => void;
   onReshare: () => void;
+  onDelete: () => void;
   className?: string;
   onToggleComments: () => void;
   showComments: boolean;
@@ -46,6 +48,7 @@ interface PostProps {
   }[];
   isUserLoaded: boolean;
   currentUser: UserProfile | null;
+  authorId: number;
 }
 
 const Post: React.FC<PostProps> = ({
@@ -64,12 +67,14 @@ const Post: React.FC<PostProps> = ({
   onBookmark,
   onAddComment,
   onReshare,
+  onDelete,
   className,
   onToggleComments,
   showComments,
   comments,
   isUserLoaded,
   currentUser,
+  authorId,
 }) => {
   const [newComment, setNewComment] = React.useState("");
 
@@ -80,20 +85,40 @@ const Post: React.FC<PostProps> = ({
     }
   };
 
+  // Safely get initials for AvatarFallback
+  const getInitials = (name: string | null | undefined) => {
+    return name && typeof name === "string" && name.length > 0
+      ? name.slice(0, 2).toUpperCase()
+      : "NN";
+  };
+
   return (
     <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl mt-3 mb-4", className)}>
       <CardContent className="p-4">
         <div className="flex gap-4">
           <Avatar>
-            <AvatarImage src={currentUser?.profilePicture || GRP1} alt={`@${username}`} />
-            <AvatarFallback>{username.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={currentUser?.profilePicture} alt={handle} />
+            <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <div className="flex justify-between">
-              <h2 className="font-bold dark:text-white">{username}</h2>
-              <span className="text-sm dark:text-gray-400">{time}</span>
+            <div className="flex justify-between items-center">
+              <h2 className="font-bold dark:text-white">{username || "Unknown User"}</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-sm dark:text-gray-400">{time}</span>
+                {currentUser?.id === authorId && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onDelete}
+                    className="text-red-500 hover:text-red-600 dark:hover:text-red-400"
+                    aria-label="Delete post"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </Button>
+                )}
+              </div>
             </div>
-            <p className="dark:text-gray-300">{handle}</p>
+            <p className="dark:text-gray-300">{handle || "@unknown"}</p>
             <p className="mt-2 dark:text-white">{text}</p>
             {image && (
               <img
@@ -166,15 +191,15 @@ const Post: React.FC<PostProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-2 mb-2">
                         <Avatar>
-                          <AvatarImage src={currentUser?.profilePicture || GRP1} alt={`@${comment.handle}`} />
-                          <AvatarFallback>{comment.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                          <AvatarImage src={currentUser?.profilePicture} alt={comment.handle} />
+                          <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h2 className="font-bold dark:text-white">{comment.username}</h2>
-                          <p className="text-sm dark:text-gray-300">{comment.handle}</p>
+                          <h2 className="font-bold dark:text-white">{comment.username || "Unknown User"}</h2>
+                          <p className="text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
                           <p className="text-sm dark:text-white">{comment.content}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {new Date(comment.createdAt).toLocaleString()}
+                            {formatRelativeTime(comment.createdAt)}
                           </p>
                         </div>
                       </div>
