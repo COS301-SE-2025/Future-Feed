@@ -8,6 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FaImage, FaTimes } from "react-icons/fa";
 
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+}
+
 interface CommentData {
   id: number;
   postId: number;
@@ -41,7 +51,7 @@ const HomePage = () => {
   const [postText, setPostText] = useState("");
   const [posts, setPosts] = useState<PostData[]>([]);
   const [followingPosts, setFollowingPosts] = useState<PostData[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const userCache = new Map<number, { username: string; displayName: string }>();
@@ -49,7 +59,10 @@ const HomePage = () => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   // Fetch user details with caching
+  const Jay = 1;
+  const Likei = await fetch(`${API_URL}/api/likes/has-liked/${Jay}`) // test this url 
   const fetchUser = async (userId: number) => {
+    console.log(``)
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
     }
@@ -74,15 +87,22 @@ const HomePage = () => {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error("Failed to fetch user info");
-      const data = await res.json();
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      console.log("Fetched currentUser:", data); // Debug log
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
       setCurrentUser(data);
       userCache.set(data.id, data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
+      setCurrentUser(null);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -111,12 +131,11 @@ const HomePage = () => {
 
           const author = authorRes.ok
             ? await authorRes.json()
-            : { username: "unknown", displayName: "Unknown" };
+            : { username: `user${post.authorId}`, displayName: `User ${post.authorId}` };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
 
-          // Fetch user details for each comment
           const commentsWithUsers = await Promise.all(
             comments.map(async (comment: any) => {
               const user = await fetchUser(comment.authorId);
@@ -130,8 +149,8 @@ const HomePage = () => {
 
           return {
             id: post.id,
-            username: author.displayName || "Unknown",
-            handle: `@${author.username || "unknown"}`,
+            username: author.displayName,
+            handle: `@${author.username}`,
             time: new Date(post.createdAt).toLocaleString(),
             text: post.content,
             image: undefined,
@@ -148,11 +167,9 @@ const HomePage = () => {
         })
       );
       setPosts(formattedPosts);
-      setLoading(false);
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
-      setLoading(false);
     }
   };
 
@@ -194,12 +211,11 @@ const HomePage = () => {
 
           const author = authorRes.ok
             ? await authorRes.json()
-            : { username: "unknown", displayName: "Unknown" };
+            : { username: `user${post.authorId}`, displayName: `User ${post.authorId}` };
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
 
-          // Fetch user details for each comment
           const commentsWithUsers = await Promise.all(
             comments.map(async (comment: any) => {
               const user = await fetchUser(comment.authorId);
@@ -213,8 +229,8 @@ const HomePage = () => {
 
           return {
             id: post.id,
-            username: author.displayName || "Unknown",
-            handle: `@${author.username || "unknown"}`,
+            username: author.displayName,
+            handle: `@${author.username}`,
             time: new Date(post.createdAt).toLocaleString(),
             text: post.content,
             image: undefined,
@@ -240,14 +256,25 @@ const HomePage = () => {
   // Fetch data on mount
   useEffect(() => {
     const loadData = async () => {
-      await fetchCurrentUser();
-      await fetchAllPosts();
+      const user = await fetchCurrentUser();
+      if (user) {
+        await fetchAllPosts();
+      }
     };
-    loadData});
+    loadData();
+  }, []);
+
+  // Fetch following posts when currentUser changes
+  useEffect(() => {
+    if (currentUser?.id) fetchFollowingPosts();
+  }, [currentUser]);
 
   // Handle post creation
   const handlePost = async () => {
-    if (!postText.trim()) return;
+    if (!postText.trim() || !currentUser) {
+      setError("Please log in to post.");
+      return;
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/posts`, {
@@ -261,12 +288,11 @@ const HomePage = () => {
 
       if (!res.ok) throw new Error("Failed to create post");
       const newPost = await res.json();
-      const user = await fetchUser(newPost.authorId);
 
       const formattedPost: PostData = {
         id: newPost.id,
-        username: user.displayName || currentUser?.displayName || "Unknown",
-        handle: `@${user.username || currentUser?.username || "unknown"}`,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
         time: new Date(newPost.createdAt).toLocaleString(),
         text: newPost.content,
         image: undefined,
@@ -294,15 +320,27 @@ const HomePage = () => {
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) return;
+      if (!post) {
+        console.error("Post not found:", postId);
+        return;
+      }
 
-      const method = post.isLiked ? "DELETE" : "POST";
+      const isUnlike = post.isLiked;
+      const method = isUnlike ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
         method,
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "like" : "unlike"} post`);
+      if (!res.ok) throw new Error(`Failed to ${isUnlike ? "unlike" : "like"} post: ${res.status}`);
+      const responseText = await res.text();
+      console.log(`Like action response: ${responseText}`); // Debug log, expect "Post unliked" or "Post liked"
+
+      if (isUnlike && responseText !== "Post unliked") {
+        console.warn("Unexpected unlike response:", responseText);
+      } else if (!isUnlike && responseText !== "Post liked") {
+        console.warn("Unexpected like response:", responseText);
+      }
 
       // Update both posts and followingPosts states
       setPosts((prevPosts) =>
@@ -329,7 +367,7 @@ const HomePage = () => {
       );
     } catch (err) {
       console.error("Error toggling like:", err);
-      // setError("Failed to update like status.");
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
     }
   };
 
@@ -353,7 +391,6 @@ const HomePage = () => {
 
       if (!res.ok) throw new Error(`Failed to ${method === "POST" ? "reshare" : "unreshare"} post`);
 
-      // Update both posts and followingPosts states
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
@@ -384,6 +421,16 @@ const HomePage = () => {
 
   // Handle adding a comment
   const handleAddComment = async (postId: number, commentText: string) => {
+    if (!currentUser) {
+      console.error("Attempted to add comment without currentUser:", { postId, commentText });
+      setError("Please log in to comment.");
+      return;
+    }
+    if (!commentText.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
@@ -394,17 +441,27 @@ const HomePage = () => {
         body: commentText,
       });
 
-      if (!res.ok) throw new Error("Failed to add comment");
+      if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
       const newComment = await res.json();
-      const user = await fetchUser(newComment.authorId);
+      console.log("New comment response:", newComment); // Debug log
+
+      if (newComment.authorId !== currentUser.id) {
+        console.warn("Comment authorId does not match currentUser.id:", {
+          commentAuthorId: newComment.authorId,
+          currentUserId: currentUser.id,
+        });
+      }
 
       const formattedComment: CommentData = {
-        ...newComment,
-        username: user.displayName || currentUser?.displayName || "Unknown",
-        handle: `@${user.username || currentUser?.username || "unknown"}`,
+        id: newComment.id,
+        postId: newComment.postId,
+        authorId: newComment.authorId,
+        content: newComment.content,
+        createdAt: newComment.createdAt,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
 
-      // Update both posts and followingPosts states
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
@@ -480,27 +537,16 @@ const HomePage = () => {
           onLike={() => handleLike(post.id)}
           onBookmark={() => handleBookmark(post.id)}
           onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={() => handleReshare(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           showComments={post.showComments || false}
           comments={post.comments || []}
+          isUserLoaded={!!currentUser}
+          currentUser={currentUser}
         />
       </div>
     ));
   };
-
-  // Fetch data on mount
-  useEffect(() => {
-    const loadData = async () => {
-      await fetchCurrentUser();
-      await fetchAllPosts();
-    };
-    loadData();
-  }, []);
-
-  // Fetch following posts when currentUser changes
-  useEffect(() => {
-    if (currentUser?.id) fetchFollowingPosts();
-  }, [currentUser]);
 
   return (
     <div className="flex min-h-screen dark:bg-[#1a1a1a] text-white max-w-screen-2xl mx-auto bg-white">
@@ -517,6 +563,10 @@ const HomePage = () => {
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <p className="text-lg dark:text-white">Loading posts...</p>
+            </div>
+          ) : !currentUser ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-lg dark:text-white">Please log in to view posts.</p>
             </div>
           ) : (
             <>
@@ -582,7 +632,7 @@ const HomePage = () => {
             <WhatsHappening />
           </div>
           <div className="w-[320px] mt-5 ml-3">
-            <WhoToFollow />
+            <WhoToFollow currentUserId={currentUser?.id} />
           </div>
         </aside>
       </div>
@@ -629,7 +679,7 @@ const HomePage = () => {
                 <Button
                   onClick={handlePost}
                   className="bg-lime-500 text-white hover:bg-lime-600"
-                  disabled={!postText.trim()}
+                  disabled={!postText.trim() || !currentUser}
                 >
                   Post
                 </Button>
