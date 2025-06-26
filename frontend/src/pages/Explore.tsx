@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 interface User {
   id: number;
   username: string;
@@ -20,43 +22,81 @@ interface User {
   bio: string;
 }
 
+interface FollowRelation {
+  id: number;
+  followerId: number;
+  followedId: number;
+  followedAt: string;
+}
+
 const Explore = () => {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<User[]>([]);
+  const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
 
-  const fetchUsers = async () => {
-    
-       fetch(
-        `${import.meta.env.VITE_API_URL}/api/user/all`,
-        { method: "GET",
-          headers: {"Content-Type": "application/json"},
-          credentials: "include" }
-      )
-      .then((res) => res.json())
-      .then((data) => {
-        setUsers(data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch users", err);
-      })
-      
-      ;
-      
+  const fetchCurrentUserId = async () => {
+    const res = await fetch(`${API_URL}/api/user/myInfo`, {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await res.json();
+    return data.id;
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const fetchUsers = async () => {
+    const res = await fetch(`${API_URL}/api/user/all`, {
+      method: "GET",
+      credentials: "include",
+    });
+    return await res.json();
+  };
+
+  const fetchFollowing = async (userId: number, allUsers: User[]) => {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      const data: FollowRelation[] = await res.json();
+      const followedUserIds = data.map((relation) => relation.followedId);
+      const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+      setFollowingUsers(followedUsers);
+    } catch (err) {
+      console.error("Failed to fetch following users", err);
+    }
+  };
+
+  const checkFollowStatus = async (userId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/status/${userId}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const data = await res.json();
+      return data.following;
+    } catch (err) {
+      console.error("Failed to check follow status for user", userId, err);
+      return false;
+    }
+  };
 
   const handleFollow = async (id: number) => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/follow`, {
+      await fetch(`${API_URL}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ followedId: id })
+        body: JSON.stringify({ followedId: id }),
       });
-      fetchUsers();
+      setFollowStatus((prev) => ({ ...prev, [id]: true }));
+
+      if (currentUserId !== null) {
+        await fetchFollowing(currentUserId, users);
+      }
     } catch (err) {
       console.error("Follow failed", err);
     }
@@ -64,26 +104,82 @@ const Explore = () => {
 
   const handleUnfollow = async (id: number) => {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL}/api/follow/${id}`, {
+      await fetch(`${API_URL}/api/follow/${id}`, {
         method: "DELETE",
-        credentials: "include"
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
-      fetchUsers();
+      setFollowStatus((prev) => ({ ...prev, [id]: false }));
+
+      if (currentUserId !== null) {
+        await fetchFollowing(currentUserId, users);
+      }
     } catch (err) {
       console.error("Unfollow failed", err);
     }
   };
 
-  return (
+  useEffect(() => {
+    const loadData = async () => {
+      const userId = await fetchCurrentUserId();
+      setCurrentUserId(userId);
 
+      const allUsers = await fetchUsers();
+      setUsers(allUsers);
+
+      await fetchFollowing(userId, allUsers);
+
+      const statusEntries = await Promise.all(
+        allUsers.map(async (user: User) => {
+          const isFollowing = await checkFollowStatus(user.id);
+          return [user.id, isFollowing] as const;
+        })
+      );
+
+      setFollowStatus(Object.fromEntries(statusEntries));
+    };
+
+    loadData();
+  }, []);
+
+  const renderUserCard = (user: User) => (
+    <Card key={user.id} className="dark:bg-black dark:text-white border dark:border-lime-500 rounded-2xl">
+      <CardContent className="flex gap-3 items-start p-4">
+        <Avatar className="w-14 h-14 border-4 border-slate-300">
+          <AvatarImage src={user.profilePicture} alt={user.username} />
+          <AvatarFallback>{user.username[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <p className="font-semibold">{user.displayName}</p>
+          <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
+          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
+        </div>
+        {followStatus[user.id] ? (
+          <button
+            onClick={() => handleUnfollow(user.id)}
+            className="px-4 py-1 rounded-full border border-gray-400 text-white hover:bg-lime-500"
+          >
+            Unfollow
+          </button>
+        ) : (
+          <button
+            onClick={() => handleFollow(user.id)}
+            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
+          >
+            Follow
+          </button>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-[#1a1a1a] dark:text-white">
       <aside className="w-[275px]">
-
         <PersonalSidebar />
       </aside>
 
-
-      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl p-6 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
           <Input
             type="text"
@@ -94,7 +190,6 @@ const Explore = () => {
           />
         </div>
 
-
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
           <Link to="/settings">
@@ -102,49 +197,35 @@ const Explore = () => {
           </Link>
         </div>
 
-        <Tabs defaultValue="forYou" className="w-full p-2">
+        <Tabs defaultValue="accounts" className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-[#1a1a1a]">
-            {["forYou", "accounts"].map(tab => (
+            {["forYou", "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
                 className="flex-1 rounded-2xl dark:lime-500 text-green capitalize dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500"
               >
-                {tab.replace(/^\w/, c => c.toUpperCase())}
+                {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value="forYou">
             <section className="p-4 border dark:border-lime-500">
-              <h2 className="font-bold  text-lg mb-2">Today’s News</h2>
-              {/* example news */}
+              <h2 className="font-bold text-lg mb-2">Today’s News</h2>
+              {/* Placeholder */}
             </section>
           </TabsContent>
 
           <TabsContent value="accounts">
             <div className="space-y-4">
-              {users.map((user) => (
-                <Card key={user.id} className="dark:bg-black dark:text-white border dark:border-lime-500 rounded-2xl">
-                  <CardContent className="flex gap-3 items-start p-4">
-                    <Avatar className="w-14 h-14 border-4 border-slate-300">
-                      <AvatarImage src={user.profilePicture} alt={user.username} />
-                      <AvatarFallback>{user.username[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold">{user.displayName}</p>
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
-                      <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
-                    </div>
-                    <button
-                      onClick={() => handleFollow(user.id)}
-                      className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
-                    >
-                      Follow
-                    </button>
-                  </CardContent>
-                </Card>
-              ))}
+              {users.map((user) => renderUserCard(user))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="accounts following">
+            <div className="space-y-4">
+              {followingUsers.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
         </Tabs>
