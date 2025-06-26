@@ -1,7 +1,7 @@
 // src/pages/Explore.tsx
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Settings, Users } from "lucide-react";
+import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/personalSidebar";
 import { Input } from "@/components/ui/input";
 import WhoToFollow from "@/components/WhoToFollow";
@@ -10,6 +10,7 @@ import RightSidebar from "@/components/RightSidebar";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 interface User {
@@ -21,61 +22,46 @@ interface User {
   bio: string;
 }
 
+interface FollowRelation {
+  id: number;
+  followerId: number;
+  followedId: number;
+  followedAt: string;
+}
+
 const Explore = () => {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<User[]>([]);
-  //for following
   const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+
+  const fetchCurrentUserId = async () => {
+    const res = await fetch(`${API_URL}/api/user/myInfo`, {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await res.json();
+    return data.id;
+  };
 
   const fetchUsers = async () => {
-
-    try {
-      const res = await fetch(`${API_URL}/api/user/all`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-      const data = await res.json();
-      setUsers(data);
-
-      const statusEntries = await Promise.all(
-        data
-          .filter((user: User) => user.id !== undefined) // prevent undefined ID calls
-          .map(async (user: User) => {
-            console.log("Checking follow status for:", user.id, user.username);
-            const isFollowing = await checkFollowStatus(user.id);
-            return [user.id, isFollowing] as const;
-          })
-      );
-
-      setFollowStatus(Object.fromEntries(statusEntries));
-    } catch (err) {
-      console.error("Failed to fetch users", err);
-    }
+    const res = await fetch(`${API_URL}/api/user/all`, {
+      method: "GET",
+      credentials: "include",
+    });
+    return await res.json();
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const handleFollow = async (id: number) => {
-    try {
-      console.log("Trying to follow user with ID:", id);
-      await fetch(`${API_URL}/api/follow`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ followedId: id }),
-      });
-
-      setFollowStatus(prev => ({
-        ...prev,
-        [id]: true //  Only this ID
-      }));
-    } catch (err) {
-      console.error("Follow failed", err);
-    }
+  const fetchFollowing = async (userId: number): Promise<number[]> => {
+    const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+    const data: FollowRelation[] = await res.json();
+    return data.map((relation) => relation.followedId);
   };
+
   const checkFollowStatus = async (userId: number) => {
     try {
       const res = await fetch(`${API_URL}/api/follow/status/${userId}`, {
@@ -84,12 +70,27 @@ const Explore = () => {
         credentials: "include",
       });
       const data = await res.json();
-      return data.following; // true or false
+      return data.following;
     } catch (err) {
       console.error("Failed to check follow status for user", userId, err);
       return false;
     }
   };
+
+  const handleFollow = async (id: number) => {
+    try {
+      await fetch(`${API_URL}/api/follow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ followedId: id }),
+      });
+      setFollowStatus((prev) => ({ ...prev, [id]: true }));
+    } catch (err) {
+      console.error("Follow failed", err);
+    }
+  };
+
   const handleUnfollow = async (id: number) => {
     try {
       await fetch(`${API_URL}/api/follow/${id}`, {
@@ -97,24 +98,73 @@ const Explore = () => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-
-      setFollowStatus(prev => ({
-        ...prev,
-        [id]: false // ✅ Only this ID
-      }));
+      setFollowStatus((prev) => ({ ...prev, [id]: false }));
     } catch (err) {
       console.error("Unfollow failed", err);
     }
   };
 
-  return (
+  useEffect(() => {
+    const loadData = async () => {
+      const userId = await fetchCurrentUserId();
+      setCurrentUserId(userId);
 
+      const allUsers = await fetchUsers();
+      setUsers(allUsers);
+
+      const followingIds = await fetchFollowing(userId);
+      const following = allUsers.filter((user: User) => followingIds.includes(user.id));
+      setFollowingUsers(following);
+
+      const statusEntries = await Promise.all(
+        allUsers.map(async (user: User) => {
+          const isFollowing = await checkFollowStatus(user.id);
+          return [user.id, isFollowing] as const;
+        })
+      );
+
+      setFollowStatus(Object.fromEntries(statusEntries));
+    };
+
+    loadData();
+  }, []);
+
+  const renderUserCard = (user: User) => (
+    <Card key={user.id} className="dark:bg-black dark:text-white border dark:border-lime-500 rounded-2xl">
+      <CardContent className="flex gap-3 items-start p-4">
+        <Avatar className="w-14 h-14 border-4 border-slate-300">
+          <AvatarImage src={user.profilePicture} alt={user.username} />
+          <AvatarFallback>{user.username[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1">
+          <p className="font-semibold">{user.displayName}</p>
+          <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
+          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
+        </div>
+        {followStatus[user.id] ? (
+          <button
+            onClick={() => handleUnfollow(user.id)}
+            className="px-4 py-1 rounded-full border border-gray-400 text-white hover:bg-lime-500"
+          >
+            Unfollow
+          </button>
+        ) : (
+          <button
+            onClick={() => handleFollow(user.id)}
+            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
+          >
+            Follow
+          </button>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-[#1a1a1a] dark:text-white">
       <aside className="w-[275px]">
-
         <PersonalSidebar />
       </aside>
-
 
       <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl p-6 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
@@ -127,7 +177,6 @@ const Explore = () => {
           />
         </div>
 
-
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
           <Link to="/settings">
@@ -137,66 +186,34 @@ const Explore = () => {
 
         <Tabs defaultValue="accounts" className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-[#1a1a1a]">
-            {["forYou", "accounts","accounts following"].map(tab => (
+            {["forYou", "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
                 className="flex-1 rounded-2xl dark:lime-500 text-green capitalize dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500"
               >
-                {tab.replace(/^\w/, c => c.toUpperCase())}
+                {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
             ))}
           </TabsList>
 
           <TabsContent value="forYou">
             <section className="p-4 border dark:border-lime-500">
-              <h2 className="font-bold  text-lg mb-2">Today’s News</h2>
-              {/* example news */}
+              <h2 className="font-bold text-lg mb-2">Today’s News</h2>
+              {/* Placeholder */}
             </section>
           </TabsContent>
 
           <TabsContent value="accounts">
             <div className="space-y-4">
-              {users.map((user) => (
-                console.log("Rendering user:", user.id, user.username),
-                <Card key={user.id} className="dark:bg-black dark:text-white border dark:border-lime-500 rounded-2xl">
-                  <CardContent key={user.id} className="flex gap-3 items-start p-4">
-                    <Avatar key={user.id} className="w-14 h-14 border-4 border-slate-300">
-                      <AvatarImage key={user.id} src={user.profilePicture} alt={user.username} />
-                      <AvatarFallback key={user.id}>{user.username[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-semibold">{user.displayName}</p>
-                      <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
-                      <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
-                    </div>
-                    {followStatus[user.id] ? (
-                      <button
-                        onClick={() => handleUnfollow(user.id)}
-                        className="px-4 py-1 rounded-full border border-gray-400 text-white hover:bg-lime-500"
-                      >
-                        Unfollow
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => handleFollow(user.id)}
-                        className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
-                      >
-                        Follow
-                      </button>
-                    )}
-
-                  </CardContent>
-                </Card>
-              ))}
+              {users.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <section className="p-4 border dark:border-lime-500">
-              <h2 className="font-bold  text-lg mb-2">Today’s News</h2>
-              {/* example news */}
-            </section>
+            <div className="space-y-4">
+              {followingUsers.map((user) => renderUserCard(user))}
+            </div>
           </TabsContent>
         </Tabs>
 
