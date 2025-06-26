@@ -75,10 +75,13 @@ const Explore = () => {
   };
 
   return (
+
     <div className="flex min-h-screen bg-gray-200 dark:bg-[#1a1a1a] dark:text-white">
       <aside className="w-[275px]">
+
         <PersonalSidebar />
       </aside>
+
 
       <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl p-6 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
@@ -90,6 +93,7 @@ const Explore = () => {
             className="bg-lime-600 rounded-full dark:bg-[#1a1a1a] dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
           />
         </div>
+
 
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
