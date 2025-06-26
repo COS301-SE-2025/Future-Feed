@@ -55,27 +55,49 @@ const HomePage = () => {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("for You");
   const userCache = new Map<number, { username: string; displayName: string }>();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const fetchUser = async (userId: number) => {
+  const fetchUser = async (userId: number, postUser?: any) => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
     }
-    try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to fetch user");
-      const user = await res.json();
+    if (postUser && postUser.id === userId) {
       const validUser = {
-        username: user.username || `user${userId}`,
-        displayName: user.displayName || `User ${userId}`,
+        username: postUser.username && typeof postUser.username === "string" ? postUser.username : `user${userId}`,
+        displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `User ${userId}`,
       };
       userCache.set(userId, validUser);
       return validUser;
-    } catch {
+    }
+    if (currentUser && userId === currentUser.id) {
+      const user = { username: currentUser.username, displayName: currentUser.displayName };
+      userCache.set(userId, user);
+      return user;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        console.warn(`Failed to fetch user ${userId}: HTTP ${res.status}`);
+        throw new Error("Failed to fetch user");
+      }
+      const user = await res.json();
+      if (user.id !== userId) {
+        console.warn(`User ID mismatch: requested ${userId}, got ${user.id}`);
+        throw new Error("User ID mismatch");
+      }
+      const validUser = {
+        username: user.username && typeof user.username === "string" ? user.username : `user${userId}`,
+        displayName: user.displayName && typeof user.displayName === "string" ? user.displayName : `User ${userId}`,
+      };
+      userCache.set(userId, validUser);
+      return validUser;
+    } catch (err) {
+      console.error(`Error fetching user ${userId}:`, err);
       const fallback = { username: `user${userId}`, displayName: `User ${userId}` };
       userCache.set(userId, fallback);
       return fallback;
@@ -90,6 +112,7 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
       const data: UserProfile = await res.json();
       if (!data.username || !data.displayName) {
+        console.warn("Invalid current user data:", data);
         throw new Error("User info missing username or displayName");
       }
       setCurrentUser(data);
@@ -107,9 +130,13 @@ const HomePage = () => {
 
   const fetchAllPosts = async () => {
     try {
-      const postsRes = await fetch(`${API_URL}/api/posts`, { credentials: "include" });
+      const [postsRes, myResharesRes] = await Promise.all([
+        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+      ]);
       if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
       const apiPosts = await postsRes.json();
+      const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
 
       const validPosts = apiPosts.filter((post: any) => {
         if (!post.user?.id) {
@@ -117,19 +144,20 @@ const HomePage = () => {
           return false;
         }
         return true;
-      });
+      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes] = await Promise.all([
+          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
           ]);
 
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = comments.filter((comment: any) => {
-            if (!comment.userId) {
-              console.warn("Skipping comment with undefined userId:", comment);
+            if (!comment.authorId) {
+              console.warn("Skipping comment with undefined authorId:", comment);
               return false;
             }
             return true;
@@ -137,30 +165,34 @@ const HomePage = () => {
 
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.userId);
+              const user = await fetchUser(comment.authorId);
               return {
                 ...comment,
-                authorId: comment.userId,
+                authorId: comment.authorId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
             })
           );
 
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
+
           return {
             id: post.id,
-            username: post.user.displayName || `User ${post.user.id}`,
-            handle: `@${post.user.username || `user${post.user.id}`}`,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
-            isLiked: false, // Default to false since my-likes endpoint is unavailable
+            isLiked: myLikesRes.ok && myLikesRes.status === 200,
             isBookmarked: false,
-            isReshared: false, // Default to false since reshares endpoint is unavailable
+            isReshared,
             commentCount: validComments.length,
             authorId: post.user.id,
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount: 0, // Default to 0 since reshares endpoint is unavailable
+            reshareCount,
             comments: commentsWithUsers,
             showComments: false,
           };
@@ -177,18 +209,18 @@ const HomePage = () => {
     if (!currentUser?.id) return;
 
     try {
-      const followRes = await fetch(`${API_URL}/api/follow/following/${currentUser.id}`, {
-        credentials: "include",
-      });
+      const [followRes, myResharesRes] = await Promise.all([
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+      ]);
       if (!followRes.ok) throw new Error("Failed to fetch followed users");
       const followedUsers = await followRes.json();
+      const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
       const followedIds = followedUsers.map((follow: any) => follow.followedId);
 
       const allFollowingPosts = await Promise.all(
         followedIds.map(async (userId: number) => {
-          const res = await fetch(`${API_URL}/api/posts/user/${userId}`, {
-            credentials: "include",
-          });
+          const res = await fetch(`${API_URL}/api/posts/user/${userId}`, { credentials: "include" });
           return res.ok ? await res.json() : [];
         })
       );
@@ -200,19 +232,20 @@ const HomePage = () => {
           return false;
         }
         return true;
-      });
+      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes] = await Promise.all([
+          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
           ]);
 
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = comments.filter((comment: any) => {
-            if (!comment.userId) {
-              console.warn("Skipping comment with undefined userId:", comment);
+            if (!comment.authorId) {
+              console.warn("Skipping comment with undefined authorId:", comment);
               return false;
             }
             return true;
@@ -220,30 +253,34 @@ const HomePage = () => {
 
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.userId);
+              const user = await fetchUser(comment.authorId);
               return {
                 ...comment,
-                authorId: comment.userId,
+                authorId: comment.authorId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
             })
           );
 
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
+
           return {
             id: post.id,
-            username: post.user.displayName || `User ${post.user.id}`,
-            handle: `@${post.user.username || `user${post.user.id}`}`,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
-            isLiked: false, // Default to false since my-likes endpoint is unavailable
+            isLiked: myLikesRes.ok && myLikesRes.status === 200,
             isBookmarked: false,
-            isReshared: false, // Default to false since reshares endpoint is unavailable
+            isReshared,
             commentCount: validComments.length,
             authorId: post.user.id,
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount: 0, // Default to 0 since reshares endpoint is unavailable
+            reshareCount,
             comments: commentsWithUsers,
             showComments: false,
           };
@@ -267,8 +304,14 @@ const HomePage = () => {
   }, []);
 
   useEffect(() => {
-    if (currentUser?.id) fetchFollowingPosts();
-  }, [currentUser]);
+    if (currentUser?.id) {
+      if (activeTab === "Following") {
+        fetchFollowingPosts();
+      } else {
+        fetchAllPosts();
+      }
+    }
+  }, [currentUser, activeTab]);
 
   const handlePost = async () => {
     if (!postText.trim() || !currentUser) {
@@ -300,14 +343,15 @@ const HomePage = () => {
         isBookmarked: false,
         isReshared: false,
         commentCount: 0,
-        authorId: currentUser.id, // Use currentUser.id since newPost.user.id may not be returned
+        authorId: currentUser.id,
         likeCount: 0,
         reshareCount: 0,
         comments: [],
         showComments: false,
       };
 
-      setPosts([formattedPost, ...posts]);
+      setPosts([formattedPost, ...posts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
+      setFollowingPosts([formattedPost, ...followingPosts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
       setIsModalOpen(false);
       setPostText("");
     } catch (err) {
@@ -382,8 +426,50 @@ const HomePage = () => {
     }
   };
 
-  const handleReshare = () => {
-    setError("Reshare functionality is currently unavailable.");
+  const handleReshare = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+      if (!post) return;
+
+      const method = post.isReshared ? "DELETE" : "POST";
+      const url = post.isReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
+      const body = post.isReshared ? null : JSON.stringify({ postId });
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body,
+      });
+
+      if (!res.ok) throw new Error(`Failed to ${post.isReshared ? "unreshare" : "reshare"} post`);
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                isReshared: !p.isReshared,
+                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+              }
+            : p
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                isReshared: !p.isReshared,
+                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Error toggling reshare:", err);
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`);
+    }
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
@@ -409,14 +495,15 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
       const newComment = await res.json();
 
+      const user = await fetchUser(currentUser.id);
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
-        authorId: newComment.userId || currentUser.id, // Fallback to currentUser.id if userId is missing
+        authorId: newComment.authorId || currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        username: currentUser.displayName,
-        handle: `@${currentUser.username}`,
+        username: user.displayName,
+        handle: `@${user.username}`,
       };
 
       setPosts((prevPosts) =>
@@ -491,7 +578,7 @@ const HomePage = () => {
           onLike={() => handleLike(post.id)}
           onBookmark={() => handleBookmark(post.id)}
           onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={handleReshare}
+          onReshare={() => handleReshare(post.id)}
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           showComments={post.showComments || false}
@@ -532,7 +619,7 @@ const HomePage = () => {
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="for You" className="w-full p-2">
+              <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10">
                   {["for You", "Following"].map((tab) => (
                     <TabsTrigger
