@@ -311,7 +311,7 @@ const UserProfile = () => {
   }, [])
 
   if (loading) return <div className="p-4 text-white">Loading profile...</div>
-  if (!user) return <div className="p-4 text-white">Not logged in.</div>
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>
 
   return (
     <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">

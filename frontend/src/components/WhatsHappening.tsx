@@ -20,7 +20,7 @@ const WhatsHappening = () => {
                             <p className="font-semibold">The River</p>
                         </div>
                         <div>
-                            <p className="dark:text-blue-400 hover:underline cursor-pointer">Show more</p>
+                            <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
                         </div>
                     </div>
                 </CardContent>
