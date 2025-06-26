@@ -6,6 +6,7 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 
@@ -47,6 +48,24 @@ interface PostData {
   showComments: boolean;
 }
 
+interface Preset {
+  id: number;
+  userId: number;
+  name: string;
+}
+
+interface Topic {
+  id: number;
+  name: string;
+}
+
+interface PresetRule {
+  id: number;
+  presetId: number;
+  type: "TOPIC" | "KEYWORD";
+  value: string;
+}
+
 const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
@@ -56,52 +75,72 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("for You");
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
+  const [newPresetName, setNewPresetName] = useState("");
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [newRule, setNewRule] = useState<{ type: "TOPIC" | "KEYWORD"; value: string }>({ type: "KEYWORD", value: "" });
   const userCache = new Map<number, { username: string; displayName: string }>();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const fetchUser = async (userId: number, postUser?: any) => {
+  interface PostUser {
+    id: number;
+    username?: string;
+    displayName?: string;
+  }
+
+  const fetchUser = async (userId: number, postUser?: PostUser) => {
     if (userCache.has(userId)) {
-      return userCache.get(userId)!;
+      const cachedUser = userCache.get(userId)!;
+      console.debug(`Cache hit for user ${userId}:`, cachedUser);
+      return cachedUser;
     }
+
+    const storedUser = localStorage.getItem(`user_${userId}`);
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        if (user.username && user.displayName) {
+          console.debug(`localStorage hit for user ${userId}:`, user);
+          userCache.set(userId, user);
+          return user;
+        }
+      } catch (err) {
+        console.warn(`Failed to parse localStorage for user ${userId}:`, err);
+      }
+    }
+
     if (postUser && postUser.id === userId) {
+      if (!postUser.username || !postUser.displayName) {
+        console.warn(`Invalid postUser data for user ${userId}:`, postUser);
+      }
       const validUser = {
-        username: postUser.username && typeof postUser.username === "string" ? postUser.username : `user${userId}`,
-        displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `User ${userId}`,
+        username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
+        displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
       };
+      console.debug(`Using postUser for user ${userId}:`, validUser);
       userCache.set(userId, validUser);
+      localStorage.setItem(`user_${userId}`, JSON.stringify(validUser));
       return validUser;
     }
+
     if (currentUser && userId === currentUser.id) {
-      const user = { username: currentUser.username, displayName: currentUser.displayName };
+      const user = {
+        username: currentUser.username && typeof currentUser.username === "string" ? currentUser.username : `unknown${userId}`,
+        displayName: currentUser.displayName && typeof currentUser.displayName === "string" ? currentUser.displayName : `Unknown User ${userId}`,
+      };
+      console.debug(`Using currentUser for user ${userId}:`, user);
       userCache.set(userId, user);
+      localStorage.setItem(`user_${userId}`, JSON.stringify(user));
       return user;
     }
-    try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-      });
-      if (!res.ok) {
-        console.warn(`Failed to fetch user ${userId}: HTTP ${res.status}`);
-        throw new Error("Failed to fetch user");
-      }
-      const user = await res.json();
-      if (user.id !== userId) {
-        console.warn(`User ID mismatch: requested ${userId}, got ${user.id}`);
-        throw new Error("User ID mismatch");
-      }
-      const validUser = {
-        username: user.username && typeof user.username === "string" ? user.username : `user${userId}`,
-        displayName: user.displayName && typeof user.displayName === "string" ? user.displayName : `User ${userId}`,
-      };
-      userCache.set(userId, validUser);
-      return validUser;
-    } catch (err) {
-      console.error(`Error fetching user ${userId}:`, err);
-      const fallback = { username: `user${userId}`, displayName: `User ${userId}` };
-      userCache.set(userId, fallback);
-      return fallback;
-    }
+
+    console.warn(`No user data available for user ${userId}. No postUser provided and not current user.`);
+    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}` };
+    userCache.set(userId, fallback);
+    localStorage.setItem(`user_${userId}`, JSON.stringify(fallback));
+    return fallback;
   };
 
   const fetchCurrentUser = async () => {
@@ -138,37 +177,46 @@ const HomePage = () => {
       const apiPosts = await postsRes.json();
       const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
 
-      const validPosts = apiPosts.filter((post: any) => {
-        if (!post.user?.id) {
-          console.warn("Skipping post with undefined user.id:", post);
-          return false;
-        }
-        return true;
-      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+      const validPosts = apiPosts
+        .filter((post: any) => {
+          if (!post.user?.id) {
+            console.warn("Skipping post with undefined user.id:", post);
+            return false;
+          }
+          if (!post.user?.username || !post.user?.displayName) {
+            console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
+          }
+          return true;
+        })
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
           ]);
 
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = comments.filter((comment: any) => {
-            if (!comment.authorId) {
-              console.warn("Skipping comment with undefined authorId:", comment);
+            if (!comment.userId) {
+              console.warn("Skipping comment with undefined userId:", comment);
               return false;
+            }
+            if (!comment.user?.username || !comment.user?.displayName) {
+              console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
             }
             return true;
           });
 
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
+              const user = await fetchUser(comment.userId, comment.user);
               return {
                 ...comment,
-                authorId: comment.authorId,
+                authorId: comment.userId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
@@ -179,6 +227,18 @@ const HomePage = () => {
           const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
 
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              const likeData = await hasLikedRes.json();
+              isLiked = likeData === true;
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          } else if (hasLikedRes.status === 401) {
+            console.warn(`Unauthorized to check like status for post ${post.id}`);
+          }
+
           return {
             id: post.id,
             username: postUser.displayName,
@@ -186,7 +246,7 @@ const HomePage = () => {
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
-            isLiked: myLikesRes.ok && myLikesRes.status === 200,
+            isLiked,
             isBookmarked: false,
             isReshared,
             commentCount: validComments.length,
@@ -194,11 +254,23 @@ const HomePage = () => {
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount,
             comments: commentsWithUsers,
-            showComments: false,
+            showComments: posts.find((p) => p.id === post.id)?.showComments || false,
           };
         })
       );
-      setPosts(formattedPosts);
+
+      setPosts((prevPosts) =>
+        formattedPosts.map((newPost) => {
+          const existingPost = prevPosts.find((p) => p.id === newPost.id);
+          return {
+            ...newPost,
+            comments: existingPost
+              ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+              : newPost.comments,
+            showComments: existingPost?.showComments || newPost.showComments,
+          };
+        })
+      );
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
@@ -226,37 +298,46 @@ const HomePage = () => {
       );
 
       const flattenedPosts = allFollowingPosts.flat();
-      const validPosts = flattenedPosts.filter((post: any) => {
-        if (!post.user?.id) {
-          console.warn("Skipping post with undefined user.id:", post);
-          return false;
-        }
-        return true;
-      }).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 10);
+      const validPosts = flattenedPosts
+        .filter((post: any) => {
+          if (!post.user?.id) {
+            console.warn("Skipping post with undefined user.id:", post);
+            return false;
+          }
+          if (!post.user?.username || !post.user?.displayName) {
+            console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
+          }
+          return true;
+        })
+        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: any) => {
-          const [commentsRes, likesCountRes, myLikesRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
           ]);
 
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = comments.filter((comment: any) => {
-            if (!comment.authorId) {
-              console.warn("Skipping comment with undefined authorId:", comment);
+            if (!commentcom/userId) {
+              console.warn("Skipping comment with undefined userId:", comment);
               return false;
+            }
+            if (!comment.user?.username || !comment.user?.displayName) {
+              console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
             }
             return true;
           });
 
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.authorId);
+              const user = await fetchUser(comment.userId, comment.user);
               return {
                 ...comment,
-                authorId: comment.authorId,
+                authorId: comment.userId,
                 username: user.displayName,
                 handle: `@${user.username}`,
               };
@@ -267,6 +348,18 @@ const HomePage = () => {
           const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
 
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              const likeData = await hasLikedRes.json();
+              isLiked = likeData === true;
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          } else if (hasLikedRes.status === 401) {
+            console.warn(`Unauthorized to check like status for post ${post.id}`);
+          }
+
           return {
             id: post.id,
             username: postUser.displayName,
@@ -274,7 +367,7 @@ const HomePage = () => {
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
-            isLiked: myLikesRes.ok && myLikesRes.status === 200,
+            isLiked,
             isBookmarked: false,
             isReshared,
             commentCount: validComments.length,
@@ -282,14 +375,193 @@ const HomePage = () => {
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount,
             comments: commentsWithUsers,
-            showComments: false,
+            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
           };
         })
       );
-      setFollowingPosts(formattedPosts);
+
+      setFollowingPosts((prevPosts) =>
+        formattedPosts.map((newPost) => {
+          const existingPost = prevPosts.find((p) => p.id === newPost.id);
+          return {
+            ...newPost,
+            comments: existingPost
+              ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+              : newPost.comments,
+            showComments: existingPost?.showComments || newPost.showComments,
+          };
+        })
+      );
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
+    }
+  };
+
+  const fetchPresets = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/presets`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch presets: ${res.status}`);
+      const data: Preset[] = await res.json();
+      setPresets(data);
+    } catch (err) {
+      console.error("Error fetching presets:", err);
+      setError("Failed to load presets.");
+    }
+  };
+
+  const fetchTopics = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
+      const data: Topic[] = await res.json();
+      setTopics(data);
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+      setError("Failed to load topics.");
+    }
+  };
+
+  const createPreset = async () => {
+    if (!newPresetName.trim()) {
+      setError("Preset name cannot be empty.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/presets`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: newPresetName }),
+      });
+      if (!res.ok) throw new Error("Failed to create preset");
+      const newPreset: Preset = await res.json();
+      setPresets([...presets, newPreset]);
+      setNewPresetName("");
+    } catch (err) {
+      console.error("Error creating preset:", err);
+      setError("Failed to create preset.");
+    }
+  };
+
+  const addPresetRule = async () => {
+    if (!selectedPresetId || !newRule.value.trim()) {
+      setError("Please select a preset and enter a valid rule value.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/presets/rules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          presetId: selectedPresetId,
+          type: newRule.type,
+          value: newRule.value,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add preset rule");
+      const newRuleData: PresetRule = await res.json();
+      setNewRule({ type: "KEYWORD", value: "" });
+    } catch (err) {
+      console.error("Error adding preset rule:", err);
+      setError("Failed to add preset rule.");
+    }
+  };
+
+  const fetchFilteredFeed = async (presetId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/presets/feed/${presetId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch filtered feed: ${res.status}`);
+      const apiPosts = await res.json();
+
+      const formattedPosts = await Promise.all(
+        apiPosts.map(async (post: any) => {
+          const [commentsRes, likesCountRes, hasLikedRes, myResharesRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+          ]);
+
+          const comments = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((comment: any) => {
+            if (!comment.userId) {
+              console.warn("Skipping comment with undefined userId:", comment);
+              return false;
+            }
+            if (!comment.user?.username || !comment.user?.displayName) {
+              console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
+            }
+            return true;
+          });
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: any) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                ...comment,
+                authorId: comment.userId,
+                username: user.displayName,
+                handle: `@${user.username}`,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const myReshares = myResharesRes.ok ? await myResharesRes.json() : [];
+          const isReshared = myReshares.some((reshare: any) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: any) => reshare.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              const likeData = await hasLikedRes.json();
+              isLiked = likeData === true;
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: false,
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: posts.find((p) => p.id === post.id)?.showComments || false,
+          };
+        })
+      );
+
+      setPosts(formattedPosts);
+    } catch (err) {
+      console.error("Error fetching filtered feed:", err);
+      setError("Failed to load filtered feed.");
     }
   };
 
@@ -297,7 +569,7 @@ const HomePage = () => {
     const loadData = async () => {
       const user = await fetchCurrentUser();
       if (user) {
-        await fetchAllPosts();
+        await Promise.all([fetchAllPosts(), fetchPresets(), fetchTopics()]);
       }
     };
     loadData();
@@ -307,11 +579,13 @@ const HomePage = () => {
     if (currentUser?.id) {
       if (activeTab === "Following") {
         fetchFollowingPosts();
+      } else if (activeTab === "Presets" && selectedPresetId) {
+        fetchFilteredFeed(selectedPresetId);
       } else {
         fetchAllPosts();
       }
     }
-  }, [currentUser, activeTab]);
+  }, [currentUser, activeTab, selectedPresetId]);
 
   const handlePost = async () => {
     if (!postText.trim() || !currentUser) {
@@ -389,15 +663,15 @@ const HomePage = () => {
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) return;
+      if (!post) {
+        setError("Post not found.");
+        return;
+      }
+      if (!currentUser) {
+        setError("Please log in to like/unlike posts.");
+        return;
+      }
 
-      const method = post.isLiked ? "DELETE" : "POST";
-      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
-        method,
-        credentials: "include",
-      });
-
-      if (!res.ok) throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post`);
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
@@ -420,6 +694,65 @@ const HomePage = () => {
             : p
         )
       );
+
+      const method = post.isLiked ? "DELETE" : "POST";
+      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
+        method,
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Failed to ${post.isLiked ? "unlike" : "like"} post ${postId}: ${res.status} ${errorText}`);
+        setPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isLiked: post.isLiked,
+                  likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
+                }
+              : p
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isLiked: post.isLiked,
+                  likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
+                }
+              : p
+          )
+        );
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post: ${errorText}`);
+        }
+      }
+
+      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, {
+        credentials: "include",
+      });
+      if (hasLikedRes.ok) {
+        const likeData = await hasLikedRes.json();
+        setPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isLiked: likeData === true }
+              : p
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isLiked: likeData === true }
+              : p
+          )
+        );
+      }
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
@@ -495,11 +828,16 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
       const newComment = await res.json();
 
-      const user = await fetchUser(currentUser.id);
+      const user = {
+        username: currentUser.username,
+        displayName: currentUser.displayName,
+      };
+      userCache.set(currentUser.id, user);
+      localStorage.setItem(`user_${currentUser.id}`, JSON.stringify(user));
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
-        authorId: newComment.authorId || currentUser.id,
+        authorId: currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
         username: user.displayName,
@@ -569,7 +907,7 @@ const HomePage = () => {
           time={post.time}
           text={post.text}
           image={post.image}
-          isLiked={post.isLiked}
+          isLiked={ post.isLiked }
           likeCount={post.likeCount}
           isBookmarked={post.isBookmarked}
           isReshared={post.isReshared}
@@ -621,7 +959,7 @@ const HomePage = () => {
               </div>
               <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10">
-                  {["for You", "Following"].map((tab) => (
+                  {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
@@ -660,6 +998,108 @@ const HomePage = () => {
                   ) : (
                     renderPosts(followingPosts)
                   )}
+                </TabsContent>
+                <TabsContent value="Presets">
+                  <div className="my-4">
+                    <h2 className="text-lg font-bold dark:text-white mb-2">Create a Feed Preset</h2>
+                    <div className="flex gap-2 mb-4">
+                      <Input
+                        placeholder="Preset name"
+                        value={newPresetName}
+                        onChange={(e) => setNewPresetName(e.target.value)}
+                        className="dark:bg-black dark:text-white dark:border-lime-500"
+                      />
+                      <Button onClick={createPreset} className="bg-lime-500 text-white hover:bg-lime-600">
+                        Create Preset
+                      </Button>
+                    </div>
+                    {presets.length > 0 && (
+                      <div className="mb-4">
+                        <h2 className="text-lg font-bold dark:text-white mb-2">Add Rule to Preset</h2>
+                        <div className="flex gap-2">
+                          <select
+                            value={selectedPresetId || ""}
+                            onChange={(e) => setSelectedPresetId(e.target.value ? Number(e.target.value) : null)}
+                            className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
+                          >
+                            <option value="" disabled>Select a preset</option>
+                            {presets.map((preset) => (
+                              <option key={preset.id} value={preset.id}>
+                                {preset.name}
+                              </option>
+                            ))}
+                          </select>
+                          <select
+                            value={newRule.type}
+                            onChange={(e) => setNewRule({ ...newRule, type: e.target.value as "TOPIC" | "KEYWORD", value: "" })}
+                            className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
+                          >
+                            <option value="TOPIC">Topic</option>
+                            <option value="KEYWORD">Keyword</option>
+                          </select>
+                          {newRule.type === "TOPIC" ? (
+                            <select
+                              value={newRule.value}
+                              onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
+                              className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
+                            >
+                              <option value="" disabled>Select a topic</option>
+                              {topics.map((topic) => (
+                                <option key={topic.id} value={topic.name}>
+                                  {topic.name}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <Input
+                              placeholder="Enter keyword"
+                              value={newRule.value}
+                              onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
+                              className="dark:bg-black dark:text-white dark:border-lime-500"
+                            />
+                          )}
+                          <Button onClick={addPresetRule} className="bg-lime-500 text-white hover:bg-lime-600">
+                            Add Rule
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                    {presets.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-10">
+                        <p className="text-lg dark:text-white">No presets available.</p>
+                        <Button
+                          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+                          onClick={createPreset}
+                        >
+                          Create a Preset
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <select
+                          value={selectedPresetId || ""}
+                          onChange={(e) => setSelectedPresetId(e.target.value ? Number(e.target.value) : null)}
+                          className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 mb-4 w-full"
+                        >
+                          <option value="" disabled>Select a preset</option>
+                          {presets.map((preset) => (
+                            <option key={preset.id} value={preset.id}>
+                              {preset.name}
+                            </option>
+                          ))}
+                        </select>
+                        {selectedPresetId ? (
+                          posts.length === 0 ? (
+                            <p className="text-lg dark:text-white">No posts match this preset.</p>
+                          ) : (
+                            renderPosts(posts)
+                          )
+                        ) : (
+                          <p className="text-lg dark:text-white">Please select a preset to view filtered posts.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
               </Tabs>
             </>

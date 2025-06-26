@@ -52,7 +52,7 @@ const FAQS = () => {
             </div>
 
 
-            <div className="dark:bg-black dark:border-lime-500 p-9  h-fit border  flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
+            <div className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
                 <Accordion
                     type="single"
                     collapsible
