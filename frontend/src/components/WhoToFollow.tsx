@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
 const WhoToFollow = () => {
     return(
-        <Card className="bg-green dark:bg-[#1a1a1a] dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
+        <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
                 <CardContent className="p-4">
 
                     <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
