@@ -503,7 +503,7 @@ const HomePage = () => {
   }, [currentUser]);
 
   return (
-    <div className="flex min-h-screen dark:bg-[#1a1a1a] text-white max-w-screen-2xl mx-auto bg-white">
+    <div className="flex min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
