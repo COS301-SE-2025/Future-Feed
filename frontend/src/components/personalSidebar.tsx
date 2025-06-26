@@ -16,7 +16,6 @@ const personalSidebar = () => {
         credentials: "include",
       });
 
-      // Optional: Clear frontend state if needed (like localStorage, etc.)
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
