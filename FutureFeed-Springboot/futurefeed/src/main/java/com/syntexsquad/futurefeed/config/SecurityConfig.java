@@ -53,10 +53,12 @@ public class SecurityConfig {
                 .userInfoEndpoint(userInfo -> userInfo
                     .userService(customOAuth2UserService)
                 )
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/").permitAll()
+            ).logout(logout -> logout
+                .logoutUrl("/logout")                
+                .logoutSuccessUrl("http://localhost:5173") 
+                .permitAll()
             );
+
 
         return http.build();
     }
