@@ -59,7 +59,7 @@ public class UserController {
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
 
-    // 🔍 Search users by keyword
+    // Search users by keyword
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(@RequestParam("q") String query) {
         List<AppUser> results = userService.searchUsers(query);
@@ -69,7 +69,16 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // 📃 Get all users
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Integer id) {
+        AppUser user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found with id: " + id);
+        }
+        return ResponseEntity.ok(UserProfileResponse.fromUser(user));
+    }
+
+    // Get all users
     @GetMapping("/all")
     public ResponseEntity<?> getAllUsers() {
         List<AppUser> users = userService.getAllUsers();
