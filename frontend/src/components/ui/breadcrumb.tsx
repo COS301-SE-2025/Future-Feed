@@ -25,7 +25,7 @@ function BreadcrumbItem({ className, ...props }: React.ComponentProps<"li">) {
   return (
     <li
       data-slot="breadcrumb-item"
-      className={cn("dark:text-whiteinline-flex items-center gap-1.5", className)}
+      className={cn("dark:text-white inline-flex items-center gap-1.5", className)}
       {...props}
     />
   )

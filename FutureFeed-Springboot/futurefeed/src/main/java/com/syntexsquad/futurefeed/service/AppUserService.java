@@ -110,4 +110,9 @@ public class AppUserService {
     private String generateUsernameFromEmail(String email) {
         return email.split("@")[0] + "_" + System.currentTimeMillis(); // ensures uniqueness
     }
+
+    public AppUser getUserById(Integer id) {
+    return userRepo.findById(id).orElse(null);
+    }
+
 }

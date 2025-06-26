@@ -52,7 +52,7 @@ const Help = () => {
             </div>
 
 
-            <div className="dark:bg-black p-9  h-fit border dark:border-slate-300 flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
+            <div className="dark:bg-black p-9  h-fit border dark:border-lime-600 flex justify-between items-center sticky top-5 z-10 rounded-2xl mx-7">
                 <Accordion
                     type="single"
                     collapsible
