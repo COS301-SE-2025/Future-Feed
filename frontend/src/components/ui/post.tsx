@@ -85,7 +85,6 @@ const Post: React.FC<PostProps> = ({
     }
   };
 
-  // Safely get initials for AvatarFallback
   const getInitials = (name: string | null | undefined) => {
     return name && typeof name === "string" && name.length > 0
       ? name.slice(0, 2).toUpperCase()
@@ -105,7 +104,7 @@ const Post: React.FC<PostProps> = ({
               <h2 className="font-bold dark:text-white">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
                 <span className="text-sm dark:text-gray-400">{time}</span>
-                {currentUser?.id === authorId && (
+                {currentUser && currentUser.id === authorId && (
                   <Button
                     variant="ghost"
                     size="sm"
