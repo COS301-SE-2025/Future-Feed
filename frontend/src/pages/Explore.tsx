@@ -13,13 +13,13 @@ const Explore = () => {
   return (
     <div className="flex min-h-screen  bg-gray-200 dark:bg-black dark:text-white">
       {/* PersonalSidebar Left */}
-      <aside className="w-[275px]  ">
+      <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       
 
       {/* Main Explore Content */}
-      <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-black dark:border-lime-500 rounded-2xl p-6 min-h-screen">
+      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto mt-11">
 
          {/* Mobile Search Input */}
       <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-black bg-lime-600">
