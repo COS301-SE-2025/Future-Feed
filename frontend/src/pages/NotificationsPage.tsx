@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Settings } from "lucide-react"
-import PersonalSidebar from "@/components/personalSidebar"
+import PersonalSidebar from "@/components/PersonalSidebar"
 import { Input } from "@/components/ui/input"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
@@ -160,7 +160,7 @@ useEffect(() => {
 
       {/* Right PersonalSidebar */}
       <aside className="">
-        <RightSidebar  query={query} setQuery={setQuery} />
+        <RightSidebar />
       </aside>
       
        {/* Mobile RHS below main content */}
