@@ -153,7 +153,7 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found: " + username);
         }
 
-        // 🔐 Invalidate session and clear SecurityContext
+        // Invalidate session and clear SecurityContext
         request.getSession().invalidate();
         SecurityContextHolder.clearContext();
 
