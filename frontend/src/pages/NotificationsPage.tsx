@@ -21,11 +21,6 @@ interface SearchUser {
   
 }
 
-interface FollowStatusMap {
-  [userId: number]: boolean
-}
-
-
 
 const Explore = () => {
  const [query, setQuery] = useState("");
