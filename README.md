@@ -58,7 +58,7 @@
     <tr>
       <td><strong>Demo 2 Video</strong></td>
       <td>
-        <a href="###" target="_blank">
+        <a href="https://drive.google.com/file/d/1xwmgU_PGgQFe_5PyJvnriXfUUS-HuvCu/view?usp=drive_link" target="_blank">
           Watch Video
         </a>
       </td>
@@ -66,7 +66,7 @@
     <tr>
       <td><strong>Demo 2 Presentation</strong></td>
       <td>
-        <a href="###" target="_blank">
+        <a href="https://docs.google.com/presentation/d/1vkvTeodjbLmFlRf9lci6GSyVWoAMxiIs/edit?usp=drive_link&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
           View Slides
         </a>
       </td>
