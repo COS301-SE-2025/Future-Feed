@@ -12,7 +12,7 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { Link } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-"use client"
+
 import { AlignJustify } from "lucide-react"
 
 import { Label } from "@/components/ui/label"
