@@ -3,7 +3,7 @@ import {
   SquareArrowOutUpRight,
 } from "lucide-react"
 
-"use client"
+
 import * as React from "react"
 import {
   Command,
