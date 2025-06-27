@@ -30,7 +30,7 @@ interface FollowRelation {
 }
 
 const Explore = () => {
-  const [query, setQuery] = useState("");
+ 
   const [users, setUsers] = useState<User[]>([]);
   const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
@@ -237,7 +237,7 @@ const Explore = () => {
       </main>
 
       <aside>
-        <RightSidebar query={query} setQuery={setQuery} />
+        <RightSidebar  />
       </aside>
     </div>
   );
