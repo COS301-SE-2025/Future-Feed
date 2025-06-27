@@ -81,7 +81,6 @@ const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("for You");
   const [presets, setPresets] = useState<Preset[]>([]);
-  const [selectedPresetId, setSelectedPresetId] = useState<number | null>(null);
   const [newPresetName, setNewPresetName] = useState("");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [newRule, setNewRule] = useState<{ type: "TOPIC" | "KEYWORD"; value: string }>({ type: "KEYWORD", value: "" });
