@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 import { Link } from "react-router-dom"
-import PersonalSidebar from "@/components/personalSidebar"
+import PersonalSidebar from "@/components/PersonalSidebar"
 import Post from "@/components/ui/post"
 import { formatRelativeTime } from "@/lib/timeUtils"
 import GRP1 from "../assets/GRP1.jpg"
@@ -29,6 +29,15 @@ interface CommentData {
   handle: string
 }
 
+interface RawComment {
+  id: number
+  postId: number
+  userId?: number
+  content: string
+  createdAt: string
+}
+
+
 interface PostData {
   id: number
   username: string
@@ -46,6 +55,19 @@ interface PostData {
   comments: CommentData[]
   showComments: boolean
 }
+
+interface RawPost {
+  id: number
+  content: string
+  createdAt: string
+  imageUrl?: string
+  user?: {
+    id: number
+    username: string
+    displayName: string
+  }
+}
+
 
 const UserProfile = () => {
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -111,7 +133,7 @@ const UserProfile = () => {
       if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`)
       const apiPosts = await res.json()
 
-      const validPosts = apiPosts.filter((post: any) => {
+      const validPosts = (apiPosts as RawPost[]).filter((post) => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post)
           return false
@@ -120,14 +142,14 @@ const UserProfile = () => {
       })
 
       const formattedPosts = await Promise.all(
-        validPosts.map(async (post: any) => {
+        validPosts.map(async (post: RawPost) => {
           const [commentsRes, likesCountRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
           ])
 
           const comments = commentsRes.ok ? await commentsRes.json() : []
-          const validComments = comments.filter((comment: any) => {
+          const validComments = (comments as RawComment[]).filter((comment) => {
             if (!comment.userId) {
               console.warn("Skipping comment with undefined userId:", comment)
               return false
@@ -135,22 +157,25 @@ const UserProfile = () => {
             return true
           })
 
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: any) => {
-              const user = await fetchUser(comment.userId)
+          const commentsWithUsers: CommentData[] = await Promise.all(
+            validComments.map(async (comment: RawComment): Promise<CommentData> => {
+              const userInfo = await fetchUser(comment.userId!) // Non-null because filtered earlier
               return {
-                ...comment,
-                authorId: comment.userId,
-                username: user.displayName,
-                handle: `@${user.username}`,
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId!, // Definitely present
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: userInfo.displayName,
+                handle: `@${userInfo.username}`,
               }
             })
           )
 
           return {
             id: post.id,
-            username: post.user.displayName || `User ${post.user.id}`,
-            handle: `@${post.user.username || `user${post.user.id}`}`,
+            username: post.user?.displayName || `User ${post.user?.id}`,
+            handle: `@${post.user?.username || `user${post.user?.id}`}`,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
@@ -158,7 +183,7 @@ const UserProfile = () => {
             isBookmarked: false,
             isReshared: false,
             commentCount: validComments.length,
-            authorId: post.user.id,
+            authorId: post.user!.id, // Post user validated before
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount: 0,
             comments: commentsWithUsers,
@@ -394,13 +419,13 @@ const UserProfile = () => {
                     onReshare={handleReshare}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
-                    show BSAuthenticationError: Failed to authenticate user
-Comments={post.showComments}
+                    showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
                     currentUser={user}
                     authorId={post.authorId}
                   />
+
                 </div>
               ))
             )}
