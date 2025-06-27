@@ -4,7 +4,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Trash2, MessageCircle } from "lucide-react"
+import {  MessageCircle } from "lucide-react"
 {/* https://FAQS.x.com/en/using-x/how-to-post*/ }
 import { useNavigate } from "react-router-dom"
 import {
