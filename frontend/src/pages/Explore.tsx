@@ -143,7 +143,7 @@ const Explore = () => {
   }, []);
 
   const renderUserCard = (user: User) => (
-    <Card key={user.id} className="dark:bg-black dark:text-white border dark:border-lime-500 rounded-2xl">
+    <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -174,12 +174,12 @@ const Explore = () => {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-200 dark:bg-[#1a1a1a] dark:text-white">
+    <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
       <aside className="w-[275px]">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl p-6 min-h-screen">
+      <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-black dark:border-lime-500 rounded-2xl p-6 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
           <Input
             type="text"
@@ -198,7 +198,7 @@ const Explore = () => {
         </div>
 
         <Tabs defaultValue="accounts" className="w-full p-2">
-          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-[#1a1a1a]">
+          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-black">
             {["forYou", "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
