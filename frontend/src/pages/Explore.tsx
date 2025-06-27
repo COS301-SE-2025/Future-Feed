@@ -179,7 +179,7 @@ const Explore = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 max-w-2xl border bg-gray-200 dark:bg-black dark:border-lime-500 rounded-2xl p-6 min-h-screen">
+      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
           <Input
             type="text"
