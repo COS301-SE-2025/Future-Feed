@@ -65,10 +65,10 @@ Our design strategy focuses on two key approaches: **Decomposition Strategy** an
 4. Provide clear, concise instructions and tooltips to guide users through complex tasks.  
 
 ### 5. Security  
-- The system design shall allow for adding new features with minimal impact on existing functionality.  
+- A measure of the system’s ability to protect data and information from unauthorized access while still providing access to people and systems that are authorized.
 **Quantification:**  
-1. The architecture shall support horizontal scaling to manage increased user load.  
-2. Data sharding will be used in database design.  
+1. All user data shall be transmitted over encrypted channels (HTTPS)
+2. The system shall use secure password storage such as password hashing
 
 ### 6. Testability  
 - Our system's testability measures our test coverage and the ability to place a clear distinction between failing and passing units in our code.  
