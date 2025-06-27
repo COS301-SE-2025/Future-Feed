@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import { useSpring, animated } from "@react-spring/web";
 
 interface UserProfile {
   id: number;
@@ -67,8 +68,12 @@ interface PresetRule {
 }
 
 const HomePage = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [isViewTopicsModalOpen, setIsViewTopicsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
+  const [newTopicName, setNewTopicName] = useState("");
+  const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [followingPosts, setFollowingPosts] = useState<PostData[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
@@ -83,6 +88,27 @@ const HomePage = () => {
   const userCache = new Map<number, { username: string; displayName: string }>();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+  // Animation for post modal
+  const postModalProps = useSpring({
+    opacity: isPostModalOpen ? 1 : 0,
+    transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 220, friction: 30 },
+  });
+
+  // Animation for topic creation modal
+  const topicModalProps = useSpring({
+    opacity: isTopicModalOpen ? 1 : 0,
+    transform: isTopicModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 220, friction: 30 },
+  });
+
+  // Animation for view topics modal
+  const viewTopicsModalProps = useSpring({
+    opacity: isViewTopicsModalOpen ? 1 : 0,
+    transform: isViewTopicsModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 220, friction: 30 },
+  });
 
   interface PostUser {
     id: number;
@@ -203,10 +229,6 @@ const HomePage = () => {
           const validComments = comments.filter((comment: any) => {
             if (!comment.userId) {
               console.warn("Skipping comment with undefined userId:", comment);
-              return false;
-            }
-            if (!comment.user?.username || !comment.user?.displayName) {
-              console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
             }
             return true;
           });
@@ -322,7 +344,7 @@ const HomePage = () => {
 
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = comments.filter((comment: any) => {
-            if (!commentcom/userId) {
+            if (!comment.userId) {
               console.warn("Skipping comment with undefined userId:", comment);
               return false;
             }
@@ -450,6 +472,32 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error creating preset:", err);
       setError("Failed to create preset.");
+    }
+  };
+
+  const createTopic = async () => {
+    if (!newTopicName.trim()) {
+      setError("Topic name cannot be empty.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/topics`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        credentials: "include",
+        body: JSON.stringify({ name: newTopicName }),
+      });
+      if (!res.ok) throw new Error("Failed to create topic");
+      const newTopic: Topic = await res.json();
+      setTopics([...topics, newTopic]);
+      setNewTopicName("");
+      setIsTopicModalOpen(false);
+    } catch (err) {
+      console.error("Error creating topic:", err);
+      setError("Failed to create topic.");
     }
   };
 
@@ -606,6 +654,26 @@ const HomePage = () => {
       if (!res.ok) throw new Error("Failed to create post");
       const newPost = await res.json();
 
+      // Assign topics to the new post
+      if (selectedTopicIds.length > 0) {
+        const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            postId: newPost.id,
+            topicIds: selectedTopicIds,
+          }),
+        });
+        if (!assignRes.ok) {
+          console.warn("Failed to assign topics to post:", await assignRes.text());
+          setError("Post created, but failed to assign topics.");
+        }
+      }
+
       const formattedPost: PostData = {
         id: newPost.id,
         username: currentUser.displayName,
@@ -626,8 +694,9 @@ const HomePage = () => {
 
       setPosts([formattedPost, ...posts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
       setFollowingPosts([formattedPost, ...followingPosts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
-      setIsModalOpen(false);
+      setIsPostModalOpen(false);
       setPostText("");
+      setSelectedTopicIds([]);
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post.");
@@ -907,7 +976,7 @@ const HomePage = () => {
           time={post.time}
           text={post.text}
           image={post.image}
-          isLiked={ post.isLiked }
+          isLiked={post.isLiked}
           likeCount={post.likeCount}
           isBookmarked={post.isBookmarked}
           isReshared={post.isReshared}
@@ -933,8 +1002,22 @@ const HomePage = () => {
     <div className="flex min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
+        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2">
+          <Button
+            onClick={() => setIsTopicModalOpen(true)}
+            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-lime-600 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+          >
+            Create Topic
+          </Button>
+          <Button
+            onClick={() => setIsViewTopicsModalOpen(true)}
+            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-lime-600 border-3 border-lime-500 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a] "
+          >
+            View Topics
+          </Button>
+        </div>
       </aside>
-      <div className={`flex flex-1 max-w-[calc(100%-295px)] ${isModalOpen ? "backdrop-blur-sm" : ""}`}>
+      <div className={`flex flex-1 max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}>
         <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
@@ -953,7 +1036,7 @@ const HomePage = () => {
             <>
               <div
                 className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                onClick={() => setIsModalOpen(true)}
+                onClick={() => setIsPostModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
@@ -975,7 +1058,7 @@ const HomePage = () => {
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => setIsPostModalOpen(true)}
                       >
                         Create your first post
                       </Button>
@@ -1000,106 +1083,9 @@ const HomePage = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  <div className="my-4">
-                    <h2 className="text-lg font-bold dark:text-white mb-2">Create a Feed Preset</h2>
-                    <div className="flex gap-2 mb-4">
-                      <Input
-                        placeholder="Preset name"
-                        value={newPresetName}
-                        onChange={(e) => setNewPresetName(e.target.value)}
-                        className="dark:bg-black dark:text-white dark:border-lime-500"
-                      />
-                      <Button onClick={createPreset} className="bg-lime-500 text-white hover:bg-lime-600">
-                        Create Preset
-                      </Button>
-                    </div>
-                    {presets.length > 0 && (
-                      <div className="mb-4">
-                        <h2 className="text-lg font-bold dark:text-white mb-2">Add Rule to Preset</h2>
-                        <div className="flex gap-2">
-                          <select
-                            value={selectedPresetId || ""}
-                            onChange={(e) => setSelectedPresetId(e.target.value ? Number(e.target.value) : null)}
-                            className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
-                          >
-                            <option value="" disabled>Select a preset</option>
-                            {presets.map((preset) => (
-                              <option key={preset.id} value={preset.id}>
-                                {preset.name}
-                              </option>
-                            ))}
-                          </select>
-                          <select
-                            value={newRule.type}
-                            onChange={(e) => setNewRule({ ...newRule, type: e.target.value as "TOPIC" | "KEYWORD", value: "" })}
-                            className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
-                          >
-                            <option value="TOPIC">Topic</option>
-                            <option value="KEYWORD">Keyword</option>
-                          </select>
-                          {newRule.type === "TOPIC" ? (
-                            <select
-                              value={newRule.value}
-                              onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                              className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2"
-                            >
-                              <option value="" disabled>Select a topic</option>
-                              {topics.map((topic) => (
-                                <option key={topic.id} value={topic.name}>
-                                  {topic.name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <Input
-                              placeholder="Enter keyword"
-                              value={newRule.value}
-                              onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                              className="dark:bg-black dark:text-white dark:border-lime-500"
-                            />
-                          )}
-                          <Button onClick={addPresetRule} className="bg-lime-500 text-white hover:bg-lime-600">
-                            Add Rule
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                    {presets.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-10">
-                        <p className="text-lg dark:text-white">No presets available.</p>
-                        <Button
-                          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                          onClick={createPreset}
-                        >
-                          Create a Preset
-                        </Button>
-                      </div>
-                    ) : (
-                      <div>
-                        <select
-                          value={selectedPresetId || ""}
-                          onChange={(e) => setSelectedPresetId(e.target.value ? Number(e.target.value) : null)}
-                          className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 mb-4 w-full"
-                        >
-                          <option value="" disabled>Select a preset</option>
-                          {presets.map((preset) => (
-                            <option key={preset.id} value={preset.id}>
-                              {preset.name}
-                            </option>
-                          ))}
-                        </select>
-                        {selectedPresetId ? (
-                          posts.length === 0 ? (
-                            <p className="text-lg dark:text-white">No posts match this preset.</p>
-                          ) : (
-                            renderPosts(posts)
-                          )
-                        ) : (
-                          <p className="text-lg dark:text-white">Please select a preset to view filtered posts.</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                  <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">
+                          Presets to be implemented
+                        </p>
                 </TabsContent>
               </Tabs>
             </>
@@ -1110,17 +1096,21 @@ const HomePage = () => {
             <WhatsHappening />
           </div>
           <div className="w-[320px] mt-5 ml-3">
-            <WhoToFollow currentUserId={currentUser?.id} />
+            <WhoToFollow  />
           </div>
         </aside>
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30">
+      {isPostModalOpen && (
+        <animated.div
+          style={postModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+        >
           <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
             <button
               onClick={() => {
-                setIsModalOpen(false);
+                setIsPostModalOpen(false);
                 setPostText("");
+                setSelectedTopicIds([]);
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
@@ -1136,6 +1126,23 @@ const HomePage = () => {
                 className="w-full mb-4 text-gray-900 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
                 rows={8}
               />
+              <div className="mb-4">
+                <select
+                  multiple
+                  value={selectedTopicIds.map(String)}
+                  onChange={(e) =>
+                    setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
+                  }
+                  className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
+                >
+                  {topics.map((topic) => (
+                    <option key={topic.id} value={topic.id}>
+                      {topic.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+              </div>
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
@@ -1162,7 +1169,78 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-        </div>
+        </animated.div>
+      )}
+      {isTopicModalOpen && (
+        <animated.div
+          style={topicModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+        >
+          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+            <button
+              onClick={() => {
+                setIsTopicModalOpen(false);
+                setNewTopicName("");
+              }}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Create a Topic</h2>
+            <div className="flex flex-col">
+              <Input
+                placeholder="Topic name"
+                value={newTopicName}
+                onChange={(e) => setNewTopicName(e.target.value)}
+                className="mb-4 dark:bg-black dark:text-white dark:border-lime-500"
+              />
+              <Button
+                onClick={createTopic}
+                className="bg-lime-500 text-white hover:bg-lime-600"
+                disabled={!newTopicName.trim() || !currentUser}
+              >
+                Create
+              </Button>
+            </div>
+          </div>
+        </animated.div>
+      )}
+      {isViewTopicsModalOpen && (
+        <animated.div
+          style={viewTopicsModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+        >
+          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+            <button
+              onClick={() => setIsViewTopicsModalOpen(false)}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">All Topics</h2>
+            <div className="flex flex-col">
+              {topics.length === 0 ? (
+                <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
+              ) : (
+                <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
+                  {topics.map((topic) => (
+                    <li key={topic.id} className="text-sm text-lime-700 dark:text-white mb-2">
+                      {topic.name}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <Button
+                onClick={() => setIsViewTopicsModalOpen(false)}
+                className="mt-4 bg-lime-500 text-white hover:bg-lime-600"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </animated.div>
       )}
     </div>
   );
