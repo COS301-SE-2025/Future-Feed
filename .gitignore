@@ -21,8 +21,6 @@ __pycache__/
 npm-debug.log*
 
 # Java
-*.class
-*.jar
 *.war
 *.nar
 *.ear

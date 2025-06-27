@@ -59,4 +59,14 @@ public class PostController {
                     .body("Search error: " + ex.getMessage());
         }
     }
+
+    @GetMapping
+    public ResponseEntity<List<Post>> getAllPosts() {
+        return ResponseEntity.ok(postService.getAllPosts());
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Integer userId) {
+        return ResponseEntity.ok(postService.getPostsByUserId(userId));
+    }
 }
