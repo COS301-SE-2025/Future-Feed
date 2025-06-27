@@ -92,8 +92,8 @@ const Post: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl mt-3 mb-4", className)}>
-      <CardContent className="p-4">
+    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4", className)}>
+      <CardContent className="p-1 mt-[-15px] ml-[20px]">
         <div className="flex gap-4">
           <Avatar>
             <AvatarImage src={currentUser?.profilePicture} alt={handle} />
@@ -109,7 +109,7 @@ const Post: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={onDelete}
-                    className="text-red-500 hover:text-red-600 dark:hover:text-red-400"
+                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400"
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-5 w-5" />
@@ -126,14 +126,14 @@ const Post: React.FC<PostProps> = ({
                 className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
               />
             )}
-            <div className="flex justify-between mt-4 mr-10">
+            <div className="flex justify-between mt-4 mr-15 mb-[-12px]">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLike}
                 className={cn(
                   "flex items-center gap-2",
-                  isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
+                  isLiked ? "text-red-500 dark:text-red-400 " : "text-gray-500 dark:text-white",
                   "hover:text-red-500 dark:hover:text-red-400"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
@@ -214,13 +214,13 @@ const Post: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full dark:bg-black dark:text-white dark:border-lime-500 resize-none"
+                    className="w-full mr-4 dark:bg-black hover:border-white dark:text-white dark:border-lime-500 resize-none border-2 border-lime-500"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
                   <Button
                     onClick={handleSubmitComment}
-                    className="bg-lime-500 text-white hover:bg-lime-600"
+                    className="bg-lime-500 mt-3 mr-4 text-white hover:bg-lime-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
