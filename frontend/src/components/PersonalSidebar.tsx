@@ -6,7 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "./mode-toggle";
 import { ThemeProvider } from "@/components/theme-provider"
 
-const personalSidebar = () => {
+const PersonalSidebar = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -92,4 +92,4 @@ const personalSidebar = () => {
   );
 };
 
-export default personalSidebar;
+export default PersonalSidebar;
