@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/sheet"
 
 const LandingPage = () => {
-    {/*code for dynamic imagess*/ }
+
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<HTMLDivElement[]>([]);
     const section1Ref = useRef<HTMLDivElement>(null);
