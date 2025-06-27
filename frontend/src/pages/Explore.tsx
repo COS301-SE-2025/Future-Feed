@@ -184,8 +184,7 @@ const Explore = () => {
           <Input
             type="text"
             placeholder="Search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            
             className="bg-lime-600 rounded-full dark:bg-[#1a1a1a] dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
           />
         </div>
