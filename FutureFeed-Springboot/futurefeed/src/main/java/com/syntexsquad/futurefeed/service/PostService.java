@@ -23,9 +23,14 @@ public class PostService {
         this.appUserRepository = appUserRepository;
     }
 
+    public Post getPostById(Integer id) {
+    return postRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Post with ID " + id + " not found"));
+    }
+
     public boolean existsById(Integer postId) {
     return postRepository.existsById(postId);
-}
+    }
 
     public Post createPost(PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
