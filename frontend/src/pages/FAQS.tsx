@@ -4,7 +4,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
-import { Trash2, MessageCircle } from "lucide-react"
+import {  MessageCircle } from "lucide-react"
 {/* https://FAQS.x.com/en/using-x/how-to-post*/ }
 import { useNavigate } from "react-router-dom"
 import {
@@ -52,7 +52,7 @@ const FAQS = () => {
             </div>
 
 
-            <div className="dark:bg-black dark:border-lime-500 p-9  h-fit border  flex justify-between items-center sticky top-5 z-10 max-w-4xl rounded-2xl mx-7">
+            <div className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
                 <Accordion
                     type="single"
                     collapsible
@@ -68,9 +68,9 @@ const FAQS = () => {
                             <p>
                                 Type your post(up to 280 characters) into the composite box at the top of your Home timeline, or select the Post button in the navigation bar.
                             </p>
-                            <p className="font-bold">Step 2</p>
+                            <p className="dark:text-lime-500 font-bold">Step 2</p>
                             <p>You can select 1 picture at a time(for now) </p>
-                            <p className="font-bold">Step 3</p>
+                            <p className="dark:text-lime-500 font-bold">Step 3</p>
                             <p> Select the Post button to post the Feed to your profile,done.</p>
                         </AccordionContent>
                     </AccordionItem>
@@ -86,7 +86,7 @@ const FAQS = () => {
                             <p className="dark:text-lime-500 font-bold">Step 2</p>
                             <p> Navigate to the post you wish to delete</p>
                             <p className="font-bold dark:text-lime-500">Step 3</p>
-                            <p><Trash2 /> Click the  icon </p>
+                            <p> Click the <p className="font-bold dark:text-lime-500">X</p> icon </p>
                             <p className="font-bold dark:text-lime-500">Step 4</p>
                             <p>Click the Delete post</p>
                         </AccordionContent>

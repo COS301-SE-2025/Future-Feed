@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
 
 @Service
 public class AppUserService {
@@ -98,7 +99,20 @@ public class AppUserService {
         });
     }
 
+    public List<AppUser> getAllUsers() {
+    return userRepo.findAll();
+    }
+
+    public List<AppUser> searchUsers(String keyword) {
+    return userRepo.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(keyword, keyword);  
+    }
+
     private String generateUsernameFromEmail(String email) {
         return email.split("@")[0] + "_" + System.currentTimeMillis(); // ensures uniqueness
     }
+
+    public AppUser getUserById(Integer id) {
+    return userRepo.findById(id).orElse(null);
+    }
+
 }

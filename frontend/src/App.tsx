@@ -1,5 +1,3 @@
-
-import React from "react";
 import { Routes, Route } from "react-router-dom"
 import UserProfile from "./pages/UserProfile"
 import Notifications from "./pages/Notifications";

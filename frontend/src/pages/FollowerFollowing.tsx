@@ -1,5 +1,5 @@
 // src/pages/FollowerFollowing.tsx
-import PersonalSidebar from "@/components/personalSidebar"
+import PersonalSidebar from "@/components/PersonalSidebar"
 import RightSidebar from "@/components/RightSidebar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -17,7 +17,7 @@ const FollowerFollowing = () => {
       <PersonalSidebar />
 
       {/* Center Notification Feed */}
-      <main className="h-fit p-6 dark:bg-black flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-lime-600 min-h-screen">
+      <main className="h-fit p-6 dark:bg-black flex-1 mx-7 my-7 rounded-2xl border dark:border-lime-600 min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black border dark:border-black">
         <Input
           type="text"

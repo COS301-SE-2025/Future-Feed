@@ -34,6 +34,17 @@ public class LikeController {
         }
     }
 
+    @GetMapping("/has-liked/{postId}")
+    public ResponseEntity<?> hasLiked(@PathVariable Integer postId) {
+        try {
+            boolean hasLiked = likeService.hasUserLikedPost(postId);
+            return ResponseEntity.ok(hasLiked);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+        }
+    }
+
+
     @GetMapping("/count/{postId}")
     public ResponseEntity<Long> countLikes(@PathVariable Integer postId) {
         return ResponseEntity.ok(likeService.countLikes(postId));

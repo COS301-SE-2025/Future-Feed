@@ -1,5 +1,5 @@
 // src/pages/Notifications.tsx
-import PersonalSidebar from "@/components/personalSidebar"
+import PersonalSidebar from "@/components/PersonalSidebar"
 import RightSidebar from "@/components/RightSidebar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
@@ -14,10 +14,12 @@ const Notifications = () => {
   return (
     <div className="flex min-h-screen dark:bg-black bg-gray-200 dark:text-white">
       {/* Left Sidebar */}
+      <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
       <PersonalSidebar />
+      </aside>
 
       {/* Center Notification Feed */}
-      <main className="h-fit p-6 dark:bg-black flex-1 max-w-4xl mx-7 rounded-2xl border dark:border-lime-500 min-h-screen">
+      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto mt-11">
         {/*search for mbiles*/ }
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black  dark:border-lime-500">
         <Input

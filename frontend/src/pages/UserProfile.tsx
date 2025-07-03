@@ -1,248 +1,447 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useEffect, useState } from "react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
+import { Link } from "react-router-dom"
+import PersonalSidebar from "@/components/PersonalSidebar"
+import Post from "@/components/ui/post"
+import { formatRelativeTime } from "@/lib/timeUtils"
+import GRP1 from "../assets/GRP1.jpg"
 
-import { Link } from "react-router-dom";
-import EditProfile from "./EditProfile"
+interface UserProfile {
+  id: number
+  username: string
+  displayName: string
+  profilePicture?: string
+  bio?: string | null
+  dateOfBirth?: string | null
+  email: string
+}
 
-import GRP1 from "../assets/GRP1.jpg";
-import PersonalSidebar from "@/components/personalSidebar"
-{/*sheet */ }
+interface CommentData {
+  id: number
+  postId: number
+  authorId: number
+  content: string
+  createdAt: string
+  username: string
+  handle: string
+}
 
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+interface RawComment {
+  id: number
+  postId: number
+  userId?: number
+  content: string
+  createdAt: string
+}
+
+
+interface PostData {
+  id: number
+  username: string
+  handle: string
+  time: string
+  text: string
+  image?: string
+  isLiked: boolean
+  isBookmarked: boolean
+  isReshared: boolean
+  commentCount: number
+  authorId: number
+  likeCount: number
+  reshareCount: number
+  comments: CommentData[]
+  showComments: boolean
+}
+
+interface RawPost {
+  id: number
+  content: string
+  createdAt: string
+  imageUrl?: string
+  user?: {
+    id: number
+    username: string
+    displayName: string
+  }
+}
+
 
 const UserProfile = () => {
+  const [user, setUser] = useState<UserProfile | null>(null)
+  const [posts, setPosts] = useState<PostData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const userCache = new Map<number, { username: string; displayName: string }>()
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
+
+  const fetchUser = async (userId: number) => {
+    if (userCache.has(userId)) {
+      return userCache.get(userId)!
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/users/${userId}`, {
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error("Failed to fetch user")
+      const user = await res.json()
+      const validUser = {
+        username: user.username || `user${userId}`,
+        displayName: user.displayName || `User ${userId}`,
+      }
+      userCache.set(userId, validUser)
+      return validUser
+    } catch {
+      const fallback = { username: `user${userId}`, displayName: `User ${userId}` }
+      userCache.set(userId, fallback)
+      return fallback
+    }
+  }
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`)
+      const data: UserProfile = await res.json()
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName")
+      }
+      setUser(data)
+      userCache.set(data.id, { username: data.username, displayName: data.displayName })
+      console.log("Current User Details:", data) // Log user details
+      return data
+    } catch (err) {
+      console.error("Error fetching user info:", err)
+      setError("Failed to load user info. Please log in again.")
+      setUser(null)
+      return null
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchUserPosts = async (userId: number) => {
+    try {
+      const res = await fetch(`${API_URL}/api/posts/user/${userId}`, {
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`)
+      const apiPosts = await res.json()
+
+      const validPosts = (apiPosts as RawPost[]).filter((post) => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post)
+          return false
+        }
+        return true
+      })
+
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: RawPost) => {
+          const [commentsRes, likesCountRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+          ])
+
+          const comments = commentsRes.ok ? await commentsRes.json() : []
+          const validComments = (comments as RawComment[]).filter((comment) => {
+            if (!comment.userId) {
+              console.warn("Skipping comment with undefined userId:", comment)
+              return false
+            }
+            return true
+          })
+
+          const commentsWithUsers: CommentData[] = await Promise.all(
+            validComments.map(async (comment: RawComment): Promise<CommentData> => {
+              const userInfo = await fetchUser(comment.userId!) // Non-null because filtered earlier
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId!, // Definitely present
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: userInfo.displayName,
+                handle: `@${userInfo.username}`,
+              }
+            })
+          )
+
+          return {
+            id: post.id,
+            username: post.user?.displayName || `User ${post.user?.id}`,
+            handle: `@${post.user?.username || `user${post.user?.id}`}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            image: post.imageUrl,
+            isLiked: false,
+            isBookmarked: false,
+            isReshared: false,
+            commentCount: validComments.length,
+            authorId: post.user!.id, // Post user validated before
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount: 0,
+            comments: commentsWithUsers,
+            showComments: false,
+          }
+        })
+      )
+      setPosts(formattedPosts)
+    } catch (err) {
+      console.error("Error fetching posts:", err)
+      setError("Failed to load posts.")
+    }
+  }
+
+  const handleLike = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId)
+      if (!post) return
+
+      const method = post.isLiked ? "DELETE" : "POST"
+      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
+        method,
+        credentials: "include",
+      })
+
+      if (!res.ok) throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post`)
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                isLiked: !p.isLiked,
+                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+              }
+            : p
+        )
+      )
+    } catch (err) {
+      console.error("Error toggling like:", err)
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`)
+    }
+  }
+
+  const handleBookmark = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      )
+    )
+  }
+
+  const handleReshare = () => {
+    setError("Reshare functionality is currently unavailable.")
+  }
+
+  const handleAddComment = async (postId: number, commentText: string) => {
+    if (!user) {
+      setError("Please log in to comment.")
+      return
+    }
+    if (!commentText.trim()) {
+      setError("Comment cannot be empty.")
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/comments/${postId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain",
+        },
+        credentials: "include",
+        body: commentText,
+      })
+
+      if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`)
+      const newComment = await res.json()
+
+      const formattedComment: CommentData = {
+        id: newComment.id,
+        postId: newComment.postId,
+        authorId: newComment.userId || user.id,
+        content: newComment.content,
+        createdAt: newComment.createdAt,
+        username: user.displayName,
+        handle: `@${user.username}`,
+      }
+
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
+            : post
+        )
+      )
+    } catch (err) {
+      console.error("Error adding comment:", err)
+      setError("Failed to add comment.")
+    }
+  }
+
+  const handleDeletePost = async (postId: number) => {
+    if (!user) {
+      setError("Please log in to delete posts.")
+      return
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+
+      if (!res.ok) throw new Error("Failed to delete post")
+      const responseText = await res.text()
+      if (responseText !== "Post deleted successfully") {
+        throw new Error("Unexpected delete response")
+      }
+
+      setPosts(posts.filter((post) => post.id !== postId))
+    } catch (err) {
+      console.error("Error deleting post:", err)
+      setError("Failed to delete post.")
+    }
+  }
+
+  const toggleComments = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    )
+  }
+
+  useEffect(() => {
+    const loadData = async () => {
+      const currentUser = await fetchCurrentUser()
+      if (currentUser?.id) { // Only fetch posts if currentUser is valid
+        await fetchUserPosts(currentUser.id)
+      } else {
+        setError("Cannot fetch posts: User not authenticated.")
+      }
+    }
+    loadData()
+  }, [])
+
+  if (loading) return <div className="p-4 text-white">Loading profile...</div>
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>
+
   return (
-    /*BELOW HERE IS THE WRAPPER / BODY DIV          
-    w-[250px] p-6 border-r border-gray-800
-    
-    
-    */
-    <div className="flex min-h-screen  dark:bg-black dark:text-white overflow-y-auto">
+    <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
       <PersonalSidebar />
-      {/* 
-      <aside className=" h-fit bg-black text-white w-[200px] p-6 mt-6 ml-4 rounded-2xl border border-gray-800 shadow-md hidden md:block">
-        <div className="text-2xl font-bold mb-6">Future Feed</div>
-        <nav className="flex flex-col space-y-4 text-lg text-gray-300">
-
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Home size={20} /> Home
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <User size={20} /> Profile
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Bell size={20} /> Notifications
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Settings size={20} /> Settings
-          </a>
-          <a href="#" className="flex items-center gap-3 hover:text-blue-500">
-            <Search size={20} /> Search
-          </a>
-          
-
-        </nav>
-      </aside>
-
-      Sidebar */}
-
-      {/* Profile Main Section */}
-      <main className="w-[1100px] mx-auto dark:lime-500">
-        {/* Banner + Avatar + Name */}
+      <main className="w-[1100px] mx-auto">
         <div className="relative">
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-
-              <AvatarImage src={GRP1} alt="@syntexsquad" />
-              <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
+              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
           </div>
         </div>
 
-        {/* Name, handle, edit button */}
-        <div className="pt-16 px-4 ">
+        <div className="pt-16 px-4">
           <div className="flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl font-bold">Syntex Squad</h1>
-
-              <p className="dark:text-gray-400">@syntexsquad</p>
-              <p className="mt-2 text-sm">This is my bio</p>
-
-
-
+              <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
+              <p className="dark:text-gray-400">@{user.username}</p>
+              <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-          <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">Edit Profile</Button>
-        </Link>
-            
-
-            {/*<Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="text-emerald-800 dark:hover:text-black dark:text-lime-500 dark:bg-black dark:border-lime-500 dark:hover:bg-lime-500">Edit Profile</Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>Edit Profile</SheetTitle>
-                  <SheetDescription>
-                    Make changes to your profile here. Click save when you&apos;re done.
-                  </SheetDescription>
-                </SheetHeader>
-                <div className="grid flex-1 auto-rows-min gap-6 px-4">
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-name">Name</Label>
-                    <Input id="sheet-name" placeholder="Syntex Squad" />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-username">Username</Label>
-                    <Input id="sheet-username" placeholder="@syntexsquad" />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="sheet-bio">Bio</Label>
-                    <Input id="sheet-name" placeholder="Oh Yeaaaaa!" />
-                  </div>
-                </div>
-                <SheetFooter>
-                  <Button type="submit" variant="outline" className="dark:hover:text-black dark:text-slate-300 dark:hover:bg-blue-500">Save changes</Button>
-                  <SheetClose asChild>
-                    <Button variant="outline" className="dark:text-black dark:bg-blue-500 dark:hover:bg-gray-800">Close</Button>
-                  </SheetClose>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>*/}
-
-            {/*BELOW IS THE SHEET COMPONENT THAT ACTS AS A POPUP*/}
-            {/*<Button variant="outline" className="text-black bg-slate-300 border-gray-700 hover:bg-gray-800">
-              Edit Profile
-            </Button>*/}
+              <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">
+                Edit Profile
+              </Button>
+            </Link>
           </div>
 
-
-
-
-
-
-          <div className="mt-4 flex content-between gap-2  text-sm dark:text-gray-400">
-            <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-          <span className="font-medium dark:text-white">150</span> Following · {" "}
-          
-        </Link>
-        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-          <span className="font-medium dark:text-white">1.2k</span> Followers · {" "}
-          
-        </Link>
-        <Link to="/followers" className="flex items-center gap-3  hover:underline cursor-pointer ">
-           <span className="font-medium dark:text-white">1</span> Bots ·{" "}
-          
-        </Link>
-            <span className="font-medium dark:text-white">6</span> Posts
-            
-            
-            
+          <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">0</span> Following ·
+            </Link>
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">0</span> Followers ·
+            </Link>
+            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">0</span> Bots ·
+            </Link>
+            <span className="font-medium dark:text-white">{posts.length}</span> Posts
           </div>
         </div>
 
         <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
 
-        {/* Tabs */}
         <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="grid w-full dark:bg-black  grid-cols-5 dark:bg-transparent  dark:border-lime-500">
-
+          <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="media">Media</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
-
           </TabsList>
 
           <TabsContent value="posts" className="p-0">
-            {[
-              {
-                time: "2h ago",
-                text: "Excited to share my latest project with you all!",
-              },
-              {
-                time: "5h ago",
-                text: "Loving the new Future Feed design 💻",
-              },
-              {
-                time: "1d ago",
-                text: "Shadcn actually so nice, Thank you Mr Arne",
-              },
-              {
-                time: "2d ago",
-                text: "Debugging is like being the detective in a crime movie where you're also the murderer 😅",
-              },
-              {
-                time: "3d ago",
-                text: "Setting up design is hard",
-              },
-              {
-                time: "4d ago",
-                text: "Excited for demo 2 with my team",
-                image: GRP1
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {posts.length === 0 ? (
+              <div className="p-4 text-gray-400">No posts yet.</div>
+            ) : (
+              posts.map((post) => (
+                <div key={post.id} className="mb-4">
+                  <Post
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={handleReshare}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                  />
 
-              },
-            ].map((post, index) => (
-              <Card key={index} className="mt-3 dark:bg-[#1a1a1a] dark:border-lime-500 border border-2 border-lime-500  rounded-2xl">
-                <CardContent className="p-4">
-                  <div className="flex gap-4">
-                    <Avatar>
-                      <AvatarImage src={GRP1} />
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 ">
-                      <div className="flex justify-between">
-                        <h2 className="font-bold dark:text-white">Syntex Squad </h2>
-                        <span className="text-sm dark:text-gray-400">{post.time}</span>
-                      </div>
-                      <p className="dark:text-gray-300">@syntexsquad</p>
-                      <p className="mt-2 dark:text-white">{post.text}</p>
-                      {post.image && (
-                        <img
-                          src={post.image}
-                          alt="Post"
-                          className="mt-4 rounded-lg border dark:border-gray-700"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))
+            )}
           </TabsContent>
-          {/*expand this area to add replies media etc*/}
 
           <TabsContent value="replies">
             <div className="p-4 dark:text-gray-400">No replies yet.</div>
           </TabsContent>
-
           <TabsContent value="media">
             <div className="p-4 dark:text-gray-400">No media yet.</div>
           </TabsContent>
-
           <TabsContent value="likes">
             <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
           </TabsContent>
-
           <TabsContent value="highlights">
-            <div className="p-4 dark:text-gray-400">No highlights available  yet.</div>
-
+            <div className="p-4 dark:text-gray-400">No highlights available yet.</div>
           </TabsContent>
         </Tabs>
       </main>
@@ -250,4 +449,4 @@ const UserProfile = () => {
   )
 }
 
-export default UserProfile;
+export default UserProfile

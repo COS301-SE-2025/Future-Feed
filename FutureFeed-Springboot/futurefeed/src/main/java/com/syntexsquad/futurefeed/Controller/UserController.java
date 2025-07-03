@@ -8,6 +8,9 @@ import com.syntexsquad.futurefeed.service.AppUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.stream.Collectors;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -55,6 +58,36 @@ public class UserController {
 
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
+
+    // Search users by keyword
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam("q") String query) {
+        List<AppUser> results = userService.searchUsers(query);
+        List<UserProfileResponse> response = results.stream()
+                .map(UserProfileResponse::fromUser)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Integer id) {
+        AppUser user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found with id: " + id);
+        }
+        return ResponseEntity.ok(UserProfileResponse.fromUser(user));
+    }
+
+    // Get all users
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllUsers() {
+        List<AppUser> users = userService.getAllUsers();
+        List<UserProfileResponse> response = users.stream()
+                .map(UserProfileResponse::fromUser)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(response);
+    }
+
 
     @PutMapping("/update")
     public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest request, Authentication authentication) {
@@ -120,7 +153,7 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found: " + username);
         }
 
-        // 🔐 Invalidate session and clear SecurityContext
+        // Invalidate session and clear SecurityContext
         request.getSession().invalidate();
         SecurityContextHolder.clearContext();
 
