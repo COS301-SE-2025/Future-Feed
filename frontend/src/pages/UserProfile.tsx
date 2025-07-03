@@ -92,6 +92,7 @@ const UserProfile = () => {
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const [followers, setFollowers] = useState<User[]>([]);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
 
@@ -163,6 +164,23 @@ const UserProfile = () => {
       setFollowingUsers(followedUsers);
     } catch (err) {
       console.error("Failed to fetch following users", err);
+    }
+  };
+
+  const fetchFollowers = async (userId: number, allUsers: User[]) => {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data: FollowRelation[] = await res.json();
+      const followerUserIds = data.map((relation) => relation.followerId);
+      const followerUsers = allUsers.filter((user) =>
+        followerUserIds.includes(user.id)
+      );
+      setFollowers(followerUsers);
+    } catch (err) {
+      console.error("Failed to fetch followers", err);
     }
   };
 
@@ -372,6 +390,7 @@ const UserProfile = () => {
         await fetchUserPosts(currentUser.id);
         const allUsers = await fetchUsers();
         await fetchFollowing(currentUser.id, allUsers);
+        await fetchFollowers(currentUser.id, allUsers);
       } else {
         setError("Cannot fetch posts: User not authenticated.");
       }
@@ -421,7 +440,7 @@ const UserProfile = () => {
               <span className="font-medium dark:text-white">{followingUsers.length ?? 0}</span> Following ·
             </Link>
             <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Followers ·
+              <span className="font-medium dark:text-white">{followers.length ?? 0}</span> Followers ·
             </Link>
             <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Bots ·

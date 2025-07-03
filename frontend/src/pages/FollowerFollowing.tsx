@@ -45,7 +45,8 @@ const FollowerFollowing = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const userCache = new Map<number, { username: string; displayName: string }>();
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
+  const [followers, setFollowers] = useState<User[]>([]);
 
   const fetchCurrentUser = async () => {
     try {
@@ -93,7 +94,24 @@ const FollowerFollowing = () => {
         console.error("Failed to fetch following users", err);
       }
     };
-  
+
+    const fetchFollowers = async (userId: number, allUsers: User[]) => {
+      try {
+        const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data: FollowRelation[] = await res.json();
+        const followerUserIds = data.map((relation) => relation.followerId);
+        const followerUsers = allUsers.filter((user) =>
+          followerUserIds.includes(user.id)
+        );
+        setFollowers(followerUsers);
+      } catch (err) {
+        console.error("Failed to fetch followers", err);
+      }
+    };
+
     const checkFollowStatus = async (userId: number) => {
       try {
         const res = await fetch(`${API_URL}/api/follow/status/${userId}`, {
@@ -146,27 +164,27 @@ const FollowerFollowing = () => {
   
     useEffect(() => {
       const loadData = async () => {
-      const currentUser = await fetchCurrentUser();
-      if (currentUser) {
-        setCurrentUserId(currentUser.id);
+        const currentUser = await fetchCurrentUser();
+        if (currentUser) {
+          setCurrentUserId(currentUser.id);
 
-        const allUsers = await fetchUsers();
-        setUsers(allUsers);
+          const allUsers = await fetchUsers();
+          setUsers(allUsers);
 
-        await fetchFollowing(currentUser.id, allUsers);
+          await fetchFollowing(currentUser.id, allUsers);
+          await fetchFollowers(currentUser.id, allUsers); // ✅ ADD THIS
 
-        const statusEntries = await Promise.all(
-          allUsers.map(async (user: User) => {
-            const isFollowing = await checkFollowStatus(user.id);
-            return [user.id, isFollowing] as const;
-          })
-        );
+          const statusEntries = await Promise.all(
+            allUsers.map(async (user: User) => {
+              const isFollowing = await checkFollowStatus(user.id);
+              return [user.id, isFollowing] as const;
+            })
+          );
 
-        setFollowStatus(Object.fromEntries(statusEntries));
-      }
-    };
+          setFollowStatus(Object.fromEntries(statusEntries));
+        }
+      };
 
-  
       loadData();
     }, []);
 
@@ -188,14 +206,14 @@ const FollowerFollowing = () => {
           {followStatus[user.id] ? (
             <button
               onClick={() => handleUnfollow(user.id)}
-              className="px-4 py-1 rounded-full border border-gray-400 text-white hover:bg-lime-500"
+              className="px-4 py-1 rounded-full border border-gray-400 dark:text-white font-semibold hover:bg-lime-500 hover:cursor-pointer"
             >
               Unfollow
             </button>
           ) : (
             <button
               onClick={() => handleFollow(user.id)}
-              className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
+              className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
             >
               Follow
             </button>
@@ -256,21 +274,25 @@ const FollowerFollowing = () => {
 
           {/* Example Notification */}
           <TabsContent value="followers">
-            <Card className="dark:bg-black dark:text-white border dark:border-lime-600 rounded-2xl">
-              <CardContent className="flex gap-3 items-start p-4">
-                 <Avatar className="w-14 h-14 border-4 border-slate-300">
-              <AvatarImage src={GRP1} alt="@syntexsquad" />
-              <AvatarFallback>SYNTEXSQUAD,BRUH</AvatarFallback>
-            </Avatar>
-                <div>
-                  <p>
-                    You currently have no followers
-                  </p>
-                  <p className="dark:text-blue-500 cursor-pointer hover:underline">Show more.</p>
-                </div>
-              </CardContent>
-            </Card>
+            {followers.length > 0 ? (
+              <div className="space-y-4">
+                {followers.map((user) => renderUserCard(user))}
+              </div>
+            ) : (
+              <Card className="dark:bg-black dark:text-white border dark:border-lime-600 rounded-2xl">
+                <CardContent className="flex gap-3 items-start p-4">
+                  <Avatar className="w-14 h-14 border-4 border-slate-300">
+                    <AvatarImage src={GRP1} alt="@NoFollowers" />
+                    <AvatarFallback>NF</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p>You currently have no followers.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
+
 
           {/* You can add verified/mentions TabsContent similarly */}
           <TabsContent value="following">
