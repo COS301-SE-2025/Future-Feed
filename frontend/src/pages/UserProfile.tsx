@@ -436,13 +436,13 @@ const UserProfile = () => {
           </div>
 
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">{followingUsers.length ?? 0}</span> Following ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">{followers.length ?? 0}</span> Followers ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Bots ·
             </Link>
             <span className="font-medium dark:text-white">{posts.length}</span> Posts

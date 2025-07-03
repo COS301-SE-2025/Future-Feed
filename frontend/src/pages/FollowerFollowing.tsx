@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
 import { Input } from "@/components/ui/input"
+import { useLocation } from "react-router-dom"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -47,6 +48,9 @@ const FollowerFollowing = () => {
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState<User[]>([]);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const tabParam = searchParams.get("tab") || "followers";
 
   const fetchCurrentUser = async () => {
     try {
@@ -249,7 +253,7 @@ const FollowerFollowing = () => {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="followers" className="w-full p-3 ">
+        <Tabs defaultValue={tabParam} className="w-full p-3 ">
           <TabsList className="w-full  flex justify-around dark:bg-black border dark:border-lime-600 rounded-2xl">
             <TabsTrigger
               value="followers"
