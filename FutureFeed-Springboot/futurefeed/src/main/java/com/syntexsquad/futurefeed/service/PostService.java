@@ -5,6 +5,7 @@ import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
+import com.syntexsquad.futurefeed.repository.CommentRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,11 +20,13 @@ public class PostService {
     private final PostRepository postRepository;
     private final AppUserRepository appUserRepository;
     private final LikeRepository likerepository;
+    private final CommentRepository commentRepository;
 
-    public PostService(PostRepository postRepository, AppUserRepository appUserRepository, LikeRepository likerepository) {
+    public PostService(PostRepository postRepository, AppUserRepository appUserRepository, LikeRepository likerepository, CommentRepository commentRepository) {
         this.postRepository = postRepository;
         this.appUserRepository = appUserRepository;
         this.likerepository = likerepository;
+        this.commentRepository = commentRepository;
     }
 
     public Post getPostById(Integer id) {
@@ -93,5 +96,15 @@ public class PostService {
         List<Integer> postIds = likerepository.findPostIdsByUserId(userId);
         return postRepository.findAllById(postIds);
     }
+    public List<Post> getPostsCommentedByUser(Integer userId) {
+        List<Comment> comments = commentRepository.findByUserId(userId);
+        List<Integer> postIds = comments.stream()
+                .map(Comment::getPostId)
+                .distinct()
+                .toList();
+
+        return postRepository.findAllById(postIds);
+    }
+
 
 }
