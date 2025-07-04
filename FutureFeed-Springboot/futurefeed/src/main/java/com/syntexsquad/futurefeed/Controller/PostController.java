@@ -84,6 +84,12 @@ public class PostController {
         List<Post> likedPosts = postService.getLikedPostsByUserId(userId);
         return ResponseEntity.ok(likedPosts);
     }
+    @GetMapping("/commented/{userId}")
+    public ResponseEntity<List<Post>> getCommentedPosts(@PathVariable Integer userId) {
+        List<Post> posts = postService.getPostsCommentedByUser(userId);
+        return ResponseEntity.ok(posts);
+    }
+
 
 
 }
