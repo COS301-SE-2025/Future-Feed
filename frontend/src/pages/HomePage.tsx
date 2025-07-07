@@ -7,7 +7,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { FaImage, FaTimes } from "react-icons/fa";
+import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 
@@ -100,6 +100,7 @@ const HomePage = () => {
   const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const userCache = new Map<number, { username: string; displayName: string }>();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -860,10 +861,10 @@ const fetchFollowingPosts = async () => {
   };
 
   return (
-    <div className="flex min-h-screen dark:bg-black text-white mx-auto bg-white">
-      <aside className="w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2">
+        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
             className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-lime-600 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
@@ -878,8 +879,26 @@ const fetchFollowingPosts = async () => {
           </Button>
         </div>
       </aside>
-      <div className={`flex flex-1 max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}>
-        <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+
+      <button className="lg:hidden fixed top-5 right-5  bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
+        onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+      </button>
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
+          <div className="w-full max-w-xs p-4">
+            <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
+              <button onClick={()=>{setIsTopicModalOpen(true); setIsMobileMenuOpen(false);}}
+            className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"> Create Topic</button>
+              <button onClick={()=>{setIsViewTopicsModalOpen(true); setIsMobileMenuOpen(false);}} className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3">
+                View Topics
+              </button>
+              </div>
+            </div>
+          </div>
+      )}
+      <div className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}>
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
@@ -902,12 +921,12 @@ const fetchFollowingPosts = async () => {
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
               <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
-                <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10">
+                <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="flex-1 rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500"
+                      className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
                     >
                       {tab.replace(/^\w/, (c) => c.toUpperCase())}
                     </TabsTrigger>
@@ -952,11 +971,11 @@ const fetchFollowingPosts = async () => {
             </>
           )}
         </main>
-        <aside className="w-[350px] mt-6 sticky top-0 h-screen overflow-y-auto hidden lg:block">
-          <div className="w-[320px] mt-6 ml-3">
+        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
             <WhatsHappening />
           </div>
-          <div className="w-[320px] mt-5 ml-3">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
             <WhoToFollow  />
           </div>
         </aside>
@@ -964,7 +983,7 @@ const fetchFollowingPosts = async () => {
       {isPostModalOpen && (
         <animated.div
           style={postModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
         >
           <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
             <button
