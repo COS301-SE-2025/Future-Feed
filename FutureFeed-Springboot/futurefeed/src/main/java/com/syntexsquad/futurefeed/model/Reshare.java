@@ -1,6 +1,7 @@
 package com.syntexsquad.futurefeed.model;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,13 +14,13 @@ public class Reshare {
     private Integer userId;
 
     @Id
-    @Column(name = "post_id")
-    private Integer postId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // Getters and Setters
     public Integer getUserId() {
         return userId;
     }
@@ -28,12 +29,12 @@ public class Reshare {
         this.userId = userId;
     }
 
-    public Integer getPostId() {
-        return postId;
+    public Post getPost() {
+        return post;
     }
 
-    public void setPostId(Integer postId) {
-        this.postId = postId;
+    public void setPost(Post post) {
+        this.post = post;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -42,5 +43,15 @@ public class Reshare {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    @Transient
+    public Integer getPostId() {
+        return post != null ? post.getId() : null;
+    }
+
+    public void setPostId(Integer postId) {
+        if (post == null) post = new UserPost();
+        post.setId(postId);
     }
 }
