@@ -864,7 +864,7 @@ const fetchFollowingPosts = async () => {
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2">
+        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
             className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-lime-600 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
@@ -880,18 +880,17 @@ const fetchFollowingPosts = async () => {
         </div>
       </aside>
 
-      <button className="lg:hidden fixed bottom-4 right-4  bg-lime-500 text-white p-3 rounded-full z-20"
+      <button className="lg:hidden fixed top-5 right-5  bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
         onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
-        {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+        {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
-          <div className="w-full max-w-xs">
-            <PersonalSidebar/>
-            <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2">
+          <div className="w-full max-w-xs p-4">
+            <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
               <button onClick={()=>{setIsTopicModalOpen(true); setIsMobileMenuOpen(false);}}
-            className="w-full"> Create Topic</button>
-              <button onClick={()=>{setIsViewTopicsModalOpen(true); setIsMobileMenuOpen(false);}} className="w-full mt-3">
+            className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"> Create Topic</button>
+              <button onClick={()=>{setIsViewTopicsModalOpen(true); setIsMobileMenuOpen(false);}} className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3">
                 View Topics
               </button>
               </div>
@@ -899,7 +898,7 @@ const fetchFollowingPosts = async () => {
           </div>
       )}
       <div className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}>
-        <main className="flex-1 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
