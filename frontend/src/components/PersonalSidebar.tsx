@@ -63,25 +63,25 @@ const PersonalSidebar = () => {
 
     </aside>
        {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 sm:hidden dark:slate-100 z-50">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 sm:hidden dark:slate-100 z-50 bg-white">
         <Link to="/home" className="flex flex-col items-center">
-          <Home strokeWidth={3} className="w-4 h-4 " />
+          <Home strokeWidth={3} className="w-5 h-5 " />
 
         </Link>
         <Link to="/profile" className="flex items-center gap-3 dark:hover:text-blue-500">
-          <User strokeWidth={3} className="w-4 h-4" />
+          <User strokeWidth={3} className="w-5 h-5" />
         </Link>
         <Link to="/notifications" className="flex items-center gap-3 hover:text-blue-500 ">
-          <Bell strokeWidth={3} className="w-4 h-4" /> 
+          <Bell strokeWidth={3} className="w-5 h-5" /> 
         
          
         </Link>
         <Link to="/settings" className="flex items-center gap-3 hover:text-blue-500 ">
-          <Settings strokeWidth={3}  className="w-4 h-4" /> 
+          <Settings strokeWidth={3}  className="w-5 h-5" /> 
         </Link>
 
         <Link to="/explore" className="flex flex-col items-center">
-          <Search strokeWidth={3}  className="w-4 h-4" />
+          <Search strokeWidth={3}  className="w-5 h-5" />
           
         </Link>
         
