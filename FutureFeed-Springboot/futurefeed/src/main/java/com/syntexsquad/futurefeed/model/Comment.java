@@ -14,8 +14,9 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(name = "post_id")
-    private Integer postId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
 
     @Column(name = "user_id")
     private Integer userId;
@@ -25,4 +26,14 @@ public class Comment {
 
     @Column(name = "created_at", columnDefinition = "timestamp default CURRENT_TIMESTAMP")
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Transient
+    public Integer getPostId() {
+        return post != null ? post.getId() : null;
+    }
+
+    public void setPostId(Integer postId) {
+        if (post == null) post = new UserPost();
+        post.setId(postId);
+    }
 }
