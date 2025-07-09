@@ -7,6 +7,8 @@ import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
+import com.syntexsquad.futurefeed.repository.LikeRepository;
+import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,8 @@ public class PostServiceTest {
 
     private PostRepository postRepository;
     private AppUserRepository appUserRepository;
+    private LikeRepository likeRepository;
+    private CommentRepository commentRepository;
     private PostService postService;
 
     private final String testEmail = "user@example.com";
@@ -37,7 +41,9 @@ public class PostServiceTest {
     void setUp() {
         postRepository = mock(PostRepository.class);
         appUserRepository = mock(AppUserRepository.class);
-        postService = new PostService(postRepository, appUserRepository);
+        likeRepository = mock(LikeRepository.class);
+        commentRepository = mock(CommentRepository.class);
+        postService = new PostService(postRepository, appUserRepository, likeRepository, commentRepository);
 
         // Mock OAuth2User with email attribute
         OAuth2User mockOAuth2User = mock(OAuth2User.class);
