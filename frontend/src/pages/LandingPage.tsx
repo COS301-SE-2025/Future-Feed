@@ -118,6 +118,9 @@ const LandingPage = () => {
             <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
                 <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
+                    <div className="rounded-3xl border-4 border-white w-[300px] h-[590px] object-cover absolute">
+
+                    </div>
                     <AnimatePresence mode="wait">
                         <motion.img
                             key={currentImage}
@@ -127,7 +130,7 @@ const LandingPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.2, ease: "easeInOut" }}
-                            className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
+                            className=""
                         />
                     </AnimatePresence>
                 </div>
