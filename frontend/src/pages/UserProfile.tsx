@@ -75,6 +75,87 @@ const UserProfile = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
+  const [reshares, setReshares] = useState<PostData[]>([])
+
+// 👇 New: fetchResharedPosts function
+const fetchResharedPosts = async () => {
+  try {
+    const res = await fetch(`${API_URL}/api/reshares`, {
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error(`Failed to fetch reshares: ${res.status}`);
+    const resharedList: { id: number; userId: number; postId: number; resharedAt: string }[] = await res.json();
+
+    // Get each post by ID
+    const resharedPosts = await Promise.all(
+      resharedList.map(async (reshare) => {
+        const postRes = await fetch(`${API_URL}/api/posts/${reshare.postId}`, {
+          credentials: "include",
+        });
+        if (!postRes.ok) {
+          console.warn(`Skipping reshare for missing post ID: ${reshare.postId}`);
+          return null;
+        }
+        const post: RawPost = await postRes.json();
+
+        if (!post.user?.id) {
+          console.warn("Skipping invalid post:", post);
+          return null;
+        }
+
+        const [commentsRes, likesCountRes] = await Promise.all([
+          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+        ]);
+
+        const comments = commentsRes.ok ? await commentsRes.json() : [];
+        const validComments = (comments as RawComment[]).filter((c) => !!c.userId);
+
+        const commentsWithUsers: CommentData[] = await Promise.all(
+          validComments.map(async (comment: RawComment): Promise<CommentData> => {
+            const userInfo = await fetchUser(comment.userId!);
+            return {
+              id: comment.id,
+              postId: comment.postId,
+              authorId: comment.userId!,
+              content: comment.content,
+              createdAt: comment.createdAt,
+              username: userInfo.displayName,
+              handle: `@${userInfo.username}`,
+            };
+          })
+        );
+
+        return {
+          id: post.id,
+          username: post.user.displayName,
+          handle: `@${post.user.username}`,
+          time: formatRelativeTime(post.createdAt),
+          text: post.content,
+          ...(post.imageUrl ? { image: post.imageUrl } : {}),
+          isLiked: false,
+          isBookmarked: false,
+          isReshared: true,
+          commentCount: validComments.length,
+          authorId: post.user.id,
+          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+          reshareCount: 1,
+          comments: commentsWithUsers,
+          showComments: false,
+        };
+      })
+    );
+
+
+    const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
+    setReshares(validReshares);
+  } catch (err) {
+    console.error("Error fetching reshares:", err);
+    setError("Failed to load reshared posts.");
+  }
+};
+
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
 
@@ -323,16 +404,20 @@ const UserProfile = () => {
   }
 
   useEffect(() => {
-    const loadData = async () => {
-      const currentUser = await fetchCurrentUser()
-      if (currentUser?.id) { // Only fetch posts if currentUser is valid
-        await fetchUserPosts(currentUser.id)
-      } else {
-        setError("Cannot fetch posts: User not authenticated.")
-      }
+  const loadData = async () => {
+    setLoading(true);
+    const currentUser = await fetchCurrentUser();
+    if (currentUser?.id) {
+      await fetchUserPosts(currentUser.id);
+      await fetchResharedPosts(); 
+    } else {
+      setError("Cannot fetch posts: User not authenticated.");
     }
-    loadData()
-  }, [])
+    setLoading(false);
+  };
+  loadData();
+}, []);
+
 
   if (loading) return <div className="p-4 text-white">Loading profile...</div>
   if (!user) return <div className="p-4 text-black">Not logged in.</div>
@@ -384,8 +469,8 @@ const UserProfile = () => {
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="reshares">Reshares</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="media">Media</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
           </TabsList>
@@ -431,11 +516,49 @@ const UserProfile = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="reshares" className="p-0">
+  {error && (
+    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+      <p>{error}</p>
+    </div>
+  )}
+  {reshares.length === 0 ? (
+    <div className="p-4 text-gray-400">No reshared posts yet.</div>
+  ) : (
+    reshares.map((post) => (
+      <div key={post.id} className="mb-4">
+        <Post
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={handleReshare}
+          onDelete={() => handleDeletePost(post.id)}
+          onToggleComments={() => toggleComments(post.id)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!user}
+          currentUser={user}
+          authorId={post.authorId}
+        />
+      </div>
+    ))
+  )}
+</TabsContent>
+
+
           <TabsContent value="replies">
             <div className="p-4 dark:text-gray-400">No replies yet.</div>
-          </TabsContent>
-          <TabsContent value="media">
-            <div className="p-4 dark:text-gray-400">No media yet.</div>
           </TabsContent>
           <TabsContent value="likes">
             <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
