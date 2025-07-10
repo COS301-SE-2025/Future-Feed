@@ -77,7 +77,6 @@ const UserProfile = () => {
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
 
-// 👇 New: fetchResharedPosts function
 const fetchResharedPosts = async () => {
   try {
     const res = await fetch(`${API_URL}/api/reshares`, {
@@ -87,7 +86,6 @@ const fetchResharedPosts = async () => {
     if (!res.ok) throw new Error(`Failed to fetch reshares: ${res.status}`);
     const resharedList: { id: number; userId: number; postId: number; resharedAt: string }[] = await res.json();
 
-    // Get each post by ID
     const resharedPosts = await Promise.all(
       resharedList.map(async (reshare) => {
         const postRes = await fetch(`${API_URL}/api/posts/${reshare.postId}`, {
@@ -194,7 +192,7 @@ const fetchResharedPosts = async () => {
       }
       setUser(data)
       userCache.set(data.id, { username: data.username, displayName: data.displayName })
-      console.log("Current User Details:", data) // Log user details
+      console.log("Current User Details:", data) 
       return data
     } catch (err) {
       console.error("Error fetching user info:", err)
@@ -240,11 +238,11 @@ const fetchResharedPosts = async () => {
 
           const commentsWithUsers: CommentData[] = await Promise.all(
             validComments.map(async (comment: RawComment): Promise<CommentData> => {
-              const userInfo = await fetchUser(comment.userId!) // Non-null because filtered earlier
+              const userInfo = await fetchUser(comment.userId!) 
               return {
                 id: comment.id,
                 postId: comment.postId,
-                authorId: comment.userId!, // Definitely present
+                authorId: comment.userId!, 
                 content: comment.content,
                 createdAt: comment.createdAt,
                 username: userInfo.displayName,
@@ -264,7 +262,7 @@ const fetchResharedPosts = async () => {
             isBookmarked: false,
             isReshared: false,
             commentCount: validComments.length,
-            authorId: post.user!.id, // Post user validated before
+            authorId: post.user!.id, 
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount: 0,
             comments: commentsWithUsers,
