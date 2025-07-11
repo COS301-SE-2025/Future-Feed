@@ -115,10 +115,10 @@ const LandingPage = () => {
                 </Sheet>
 
             </div>
-            <div className="flex h-screen w-screen overflow-hidden ">
+            <div className="flex flex-col md:flex-row  h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
-                    <div className="rounded-3xl border-4 border-white w-[300px] h-[590px] object-cover absolute">
+                <div className="w-1/2 hidden md:flex  justify-center items-start pt-8 sticky top-0 h-screen">
+                    <div className="rounded-3xl border-4 border-white w-[290px] h-[590px] object-cover absolute">
 
                     </div>
                     <AnimatePresence mode="wait">
@@ -136,7 +136,7 @@ const LandingPage = () => {
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-full md:w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth items-center text-center ">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
