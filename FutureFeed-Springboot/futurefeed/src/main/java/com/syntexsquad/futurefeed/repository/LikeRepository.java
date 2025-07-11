@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 public interface LikeRepository extends JpaRepository<Like, LikeId> {
 
     @Query("SELECT COUNT(l) > 0 FROM Like l WHERE l.userId = :userId AND l.post.id = :postId")
@@ -21,9 +23,11 @@ public interface LikeRepository extends JpaRepository<Like, LikeId> {
     @Query("SELECT COUNT(l) FROM Like l WHERE l.post.id = :postId")
     long countByPostId(@Param("postId") Integer postId);
 
-    // Add this method to delete all likes for a post before deleting the post
     @Modifying
     @Transactional
     @Query("DELETE FROM Like l WHERE l.post.id = :postId")
     void deleteAllByPostId(@Param("postId") Integer postId);
+
+    @Query("SELECT l.post.id FROM Like l WHERE l.userId = :userId")
+    List<Integer> findPostIdsByUserId(@Param("userId") Integer userId);
 }

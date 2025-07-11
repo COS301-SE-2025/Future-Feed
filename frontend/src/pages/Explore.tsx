@@ -157,14 +157,14 @@ const Explore = () => {
         {followStatus[user.id] ? (
           <button
             onClick={() => handleUnfollow(user.id)}
-            className="px-4 py-1 rounded-full border border-gray-400 text-white hover:bg-lime-500"
+            className="px-4 py-1 rounded-full border border-gray-400 font-semibold dark:text-white hover:bg-lime-500 hover:cursor-pointer"
           >
             Unfollow
           </button>
         ) : (
           <button
             onClick={() => handleFollow(user.id)}
-            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600"
+            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
           >
             Follow
           </button>
