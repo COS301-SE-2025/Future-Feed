@@ -136,7 +136,7 @@ const LandingPage = () => {
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-full md:w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth items-center text-center ">
+                <div ref={scrollContainerRef} className=" w-full md:w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth items-center  ">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
