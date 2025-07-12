@@ -30,7 +30,7 @@ public class SeederRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        boolean ENABLE_SEEDING = true; // <-- toggle this on/off manually
+        boolean ENABLE_SEEDING = false; // <-- toggle this on/off manually
 
         if (!ENABLE_SEEDING) return;
 
