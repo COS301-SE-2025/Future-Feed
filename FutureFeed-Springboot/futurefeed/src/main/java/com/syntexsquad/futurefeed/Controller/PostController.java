@@ -18,6 +18,16 @@ public class PostController {
         this.postService = postService;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getPostById(@PathVariable Integer id) {
+        try {
+            Post post = postService.getPostById(id);
+            return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Error: " + e.getMessage());
+        }
+    }
+
     @PostMapping
     public ResponseEntity<?> createPost(@RequestBody PostRequest postRequest) {
         if (postRequest.getContent() == null || postRequest.getContent().trim().isEmpty()) {
@@ -69,4 +79,17 @@ public class PostController {
     public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Integer userId) {
         return ResponseEntity.ok(postService.getPostsByUserId(userId));
     }
+    @GetMapping("/liked/{userId}")
+    public ResponseEntity<List<Post>> getLikedPosts(@PathVariable Integer userId) {
+        List<Post> likedPosts = postService.getLikedPostsByUserId(userId);
+        return ResponseEntity.ok(likedPosts);
+    }
+    @GetMapping("/commented/{userId}")
+    public ResponseEntity<List<Post>> getCommentedPosts(@PathVariable Integer userId) {
+        List<Post> posts = postService.getPostsCommentedByUser(userId);
+        return ResponseEntity.ok(posts);
+    }
+
+
+
 }

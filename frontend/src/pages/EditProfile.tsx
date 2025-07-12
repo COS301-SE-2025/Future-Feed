@@ -8,6 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Camera } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
 
 interface FormData {
   displayName: string;
@@ -16,12 +26,12 @@ interface FormData {
   dob: string;
 }
 
-// You can also use a real camera icon SVG URL here if preferred
 const DEFAULT_ICON_DATA_URI =
   "data:image/svg+xml,%3Csvg fill='black' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 5h-3.17l-.59-.65A2 2 0 0014.83 4h-5.66a2 2 0 00-1.41.35L7.17 5H4a2 2 0 00-2 2v11a2 2 0 002 2h16a2 2 0 002-2V7a2 2 0 00-2-2zm0 13H4V7h4.05l.59-.65.59-.65h5.54l.59.65.59.65H20zm-8-1a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z'/%3E%3C/svg%3E";
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     displayName: "",
     bio: "",
@@ -80,6 +90,23 @@ const EditProfile: React.FC = () => {
       console.error(err);
     }
   };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/delete`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete account");
+
+      navigate("/"); // Redirect to landing page after delete
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
@@ -169,6 +196,46 @@ const EditProfile: React.FC = () => {
             >
               Save Changes
             </Button>
+
+            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  className="mt-4 h-[58px] w-[186px] rounded-[25px] border border-red-600 bg-white text-[15px] font-bold text-red-600 hover:bg-red-100 hover:shadow-[1px_1px_10px_red] cursor-pointer"
+                >
+                  Delete Account
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Delete Account</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete your account? This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex justify-end gap-4">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowDeleteDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    className="border border-red-600 text-red-600 hover:bg-red-100"
+                    onClick={() => {
+                      setShowDeleteDialog(false);
+                      handleDeleteAccount();
+                    }}
+                  >
+                    Yes, Delete
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+
           </form>
         </CardContent>
       </Card>
