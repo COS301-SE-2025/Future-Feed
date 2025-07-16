@@ -18,25 +18,21 @@ public class BookmarkController {
     }
 
     @PostMapping("/{userId}/{postId}")
-    public ResponseEntity<String> addBookmark(@PathVariable Long userId, @PathVariable Integer postId) {
+    public ResponseEntity<String> addBookmark(@PathVariable Integer userId, @PathVariable Integer postId) {
         return bookmarkService.addBookmark(userId, postId)
                 ? ResponseEntity.ok("Bookmark added.")
                 : ResponseEntity.badRequest().body("Bookmark already exists.");
     }
 
     @DeleteMapping("/{userId}/{postId}")
-    public ResponseEntity<String> removeBookmark(@PathVariable Long userId, @PathVariable Integer postId) {
+    public ResponseEntity<String> removeBookmark(@PathVariable Integer userId, @PathVariable Integer postId) {
         return bookmarkService.removeBookmark(userId, postId)
                 ? ResponseEntity.ok("Bookmark removed.")
                 : ResponseEntity.badRequest().body("Bookmark not found.");
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity<List<BookmarkDto>> getBookmarks(@PathVariable Long userId) {
+    public ResponseEntity<List<BookmarkDto>> getBookmarks(@PathVariable Integer userId) {
         return ResponseEntity.ok(bookmarkService.getUserBookmarkDtos(userId));
     }
-
-
-
-
 }

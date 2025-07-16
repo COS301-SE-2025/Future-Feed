@@ -20,7 +20,7 @@ public class BookmarkService {
         this.postRepo = postRepo;
     }
 
-    public boolean addBookmark(Long userId, Integer postId) {
+    public boolean addBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
 
@@ -30,7 +30,7 @@ public class BookmarkService {
         return true;
     }
 
-    public boolean removeBookmark(Long userId, Integer postId) {
+    public boolean removeBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
 
@@ -42,11 +42,11 @@ public class BookmarkService {
                 .orElse(false);
     }
 
-    public List<Bookmark> getUserBookmarks(Long userId) {
+    public List<Bookmark> getUserBookmarks(Integer userId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         return bookmarkRepo.findByUser(user);
     }
-    public List<BookmarkDto> getUserBookmarkDtos(Long userId) {
+    public List<BookmarkDto> getUserBookmarkDtos(Integer userId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
 
