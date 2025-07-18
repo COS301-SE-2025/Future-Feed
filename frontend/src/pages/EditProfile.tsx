@@ -192,24 +192,23 @@ const EditProfile: React.FC = () => {
 
             <Button
               type="submit"
-              className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-3 mt-1 cursor-pointer"
+              className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-3 mt-3 cursor-pointer"
             >
               Save Changes
             </Button>
 
             <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
               <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  className="mt-4 h-[58px] w-[186px] rounded-[25px] border border-red-600 bg-white text-[15px] font-bold text-red-600 hover:bg-red-100 hover:shadow-[1px_1px_10px_red] cursor-pointer"
+                <p
+                  className="mt-10 text-text-[15px] text-red-600 underline underline-offset-2 cursor-pointer hover:text-red-700 transition"
                 >
-                  Delete Account
-                </Button>
+                  Delete your account
+                </p>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                   <DialogTitle>Delete Account</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription >
                     Are you sure you want to delete your account? This action cannot be undone.
                   </DialogDescription>
                 </DialogHeader>
@@ -217,13 +216,14 @@ const EditProfile: React.FC = () => {
                   <Button
                     type="button"
                     variant="secondary"
+                    className="cursor-pointer"
                     onClick={() => setShowDeleteDialog(false)}
                   >
                     Cancel
                   </Button>
                   <Button
                     type="button"
-                    className="border border-red-600 text-red-600 hover:bg-red-100"
+                    className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
                     onClick={() => {
                       setShowDeleteDialog(false);
                       handleDeleteAccount();
@@ -234,6 +234,7 @@ const EditProfile: React.FC = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+
 
 
           </form>
