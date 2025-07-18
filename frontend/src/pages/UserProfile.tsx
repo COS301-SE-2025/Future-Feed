@@ -68,14 +68,73 @@ interface RawPost {
   }
 }
 
+interface User {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture: string;
+  bio: string;
+}
+
+interface FollowRelation {
+  id: number;
+  followerId: number;
+  followedId: number;
+  followedAt: string;
+}
 
 const UserProfile = () => {
+  // const [users, setUsers] = useState<User[]>([])
   const [user, setUser] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<PostData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
+  const [followers, setFollowers] = useState<User[]>([])
+  const [followingUsers, setFollowingUsers] = useState<User[]>([])
+
+  const fetchFollowing = async (userId: number, allUsers: User[]) => {
+      try {
+        const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+  
+        const data: FollowRelation[] = await res.json();
+        const followedUserIds = data.map((relation) => relation.followedId);
+        const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+        setFollowingUsers(followedUsers);
+      } catch (err) {
+        console.error("Failed to fetch following users", err);
+      }
+    };
+
+    const fetchFollowers = async (userId: number, allUsers: User[]) => {
+      try {
+        const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data: FollowRelation[] = await res.json();
+        const followerUserIds = data.map((relation) => relation.followerId);
+        const followerUsers = allUsers.filter((user) =>
+          followerUserIds.includes(user.id)
+        );
+        setFollowers(followerUsers);
+      } catch (err) {
+        console.error("Failed to fetch followers", err);
+      }
+    };
+
+    const fetchUsers = async () => {
+      const res = await fetch(`${API_URL}/api/user/all`, {
+        method: "GET",
+        credentials: "include",
+      });
+      return await res.json();
+    };
 
 const fetchResharedPosts = async () => {
   try {
@@ -408,6 +467,11 @@ const fetchResharedPosts = async () => {
     if (currentUser?.id) {
       await fetchUserPosts(currentUser.id);
       await fetchResharedPosts(); 
+
+      const allUsers = await fetchUsers();
+      // setUsers(allUsers);
+      await fetchFollowing(currentUser.id, allUsers);
+      await fetchFollowers(currentUser.id, allUsers);
     } else {
       setError("Cannot fetch posts: User not authenticated.");
     }
@@ -449,13 +513,13 @@ const fetchResharedPosts = async () => {
           </div>
 
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Following ·
+            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Followers ·
+            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">{followers ? followers.length : 0}</span> Followers ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Bots ·
             </Link>
             <span className="font-medium dark:text-white">{posts.length}</span> Posts
@@ -467,7 +531,7 @@ const fetchResharedPosts = async () => {
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="reshares">Reshares</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
@@ -514,14 +578,14 @@ const fetchResharedPosts = async () => {
             )}
           </TabsContent>
 
-          <TabsContent value="reshares" className="p-0">
+          <TabsContent value="refeeds" className="p-0">
   {error && (
     <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
       <p>{error}</p>
     </div>
   )}
   {reshares.length === 0 ? (
-    <div className="p-4 text-gray-400">No reshared posts yet.</div>
+    <div className="p-4 text-gray-400">No re-feeds yet.</div>
   ) : (
     reshares.map((post) => (
       <div key={post.id} className="mb-4">
