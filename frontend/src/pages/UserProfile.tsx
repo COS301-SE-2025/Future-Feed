@@ -68,14 +68,73 @@ interface RawPost {
   }
 }
 
+interface User {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture: string;
+  bio: string;
+}
+
+interface FollowRelation {
+  id: number;
+  followerId: number;
+  followedId: number;
+  followedAt: string;
+}
 
 const UserProfile = () => {
+  // const [users, setUsers] = useState<User[]>([])
   const [user, setUser] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<PostData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
+  const [followers, setFollowers] = useState<User[]>([])
+  const [followingUsers, setFollowingUsers] = useState<User[]>([])
+
+  const fetchFollowing = async (userId: number, allUsers: User[]) => {
+      try {
+        const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+  
+        const data: FollowRelation[] = await res.json();
+        const followedUserIds = data.map((relation) => relation.followedId);
+        const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+        setFollowingUsers(followedUsers);
+      } catch (err) {
+        console.error("Failed to fetch following users", err);
+      }
+    };
+
+    const fetchFollowers = async (userId: number, allUsers: User[]) => {
+      try {
+        const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data: FollowRelation[] = await res.json();
+        const followerUserIds = data.map((relation) => relation.followerId);
+        const followerUsers = allUsers.filter((user) =>
+          followerUserIds.includes(user.id)
+        );
+        setFollowers(followerUsers);
+      } catch (err) {
+        console.error("Failed to fetch followers", err);
+      }
+    };
+
+    const fetchUsers = async () => {
+      const res = await fetch(`${API_URL}/api/user/all`, {
+        method: "GET",
+        credentials: "include",
+      });
+      return await res.json();
+    };
 
 const fetchResharedPosts = async () => {
   try {
@@ -408,6 +467,11 @@ const fetchResharedPosts = async () => {
     if (currentUser?.id) {
       await fetchUserPosts(currentUser.id);
       await fetchResharedPosts(); 
+
+      const allUsers = await fetchUsers();
+      // setUsers(allUsers);
+      await fetchFollowing(currentUser.id, allUsers);
+      await fetchFollowers(currentUser.id, allUsers);
     } else {
       setError("Cannot fetch posts: User not authenticated.");
     }
@@ -449,13 +513,13 @@ const fetchResharedPosts = async () => {
           </div>
 
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Following ·
+            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Followers ·
+            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-white">{followers ? followers.length : 0}</span> Followers ·
             </Link>
-            <Link to="/followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Bots ·
             </Link>
             <span className="font-medium dark:text-white">{posts.length}</span> Posts
