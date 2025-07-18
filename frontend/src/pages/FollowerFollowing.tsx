@@ -232,14 +232,14 @@ const FollowerFollowing = () => {
       <PersonalSidebar />
 
       {/* Center Notification Feed */}
-      <main className="h-fit p-6 dark:bg-black flex-1 mx-7 my-7 rounded-2xl border dark:border-lime-600 min-h-screen">
+      <main className="h-fit p-6 dark:bg-black flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black border dark:border-black">
-        <Input
-          type="text"
-          placeholder="Search"
-          className="rounded-full bg-black dark:bg-black dark:text-white dark:placeholder:text-lime-600 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-        />
-      </div>
+          <Input
+            type="text"
+            placeholder="Search"
+            className="rounded-full bg-black dark:bg-black dark:text-white dark:placeholder:text-lime-600 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
+          />
+        </div>
 
         {/* Header */}
         <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-600 z-10">
@@ -254,12 +254,12 @@ const FollowerFollowing = () => {
 
         {/* Tabs */}
         <Tabs defaultValue={tabParam} className="w-full p-3 ">
-          <TabsList className="w-full  flex justify-around dark:bg-black border dark:border-lime-600 rounded-2xl">
+          <TabsList className="w-full flex justify-around dark:bg-black border dark:border-lime-600 rounded-2xl">
             <TabsTrigger
               value="followers"
               className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
             >
-              Followers 
+              Followers ({followers ? followers.length : 0})
             </TabsTrigger>
             <TabsTrigger
               value="following"
@@ -283,17 +283,7 @@ const FollowerFollowing = () => {
                 {followers.map((user) => renderUserCard(user))}
               </div>
             ) : (
-              <Card className="dark:bg-black dark:text-white border dark:border-lime-600 rounded-2xl">
-                <CardContent className="flex gap-3 items-start p-4">
-                  <Avatar className="w-14 h-14 border-4 border-slate-300">
-                    <AvatarImage src={GRP1} alt="@NoFollowers" />
-                    <AvatarFallback>NF</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p>You currently have no followers.</p>
-                  </div>
-                </CardContent>
-              </Card>
+                  <p className="p-4 dark:text-gray-400">You currently have no followers.</p>
             )}
           </TabsContent>
 
@@ -304,6 +294,7 @@ const FollowerFollowing = () => {
               {followingUsers.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
+
           <TabsContent value="bots">
             <p className="p-4 dark:text-gray-400">You are currently not following any bots</p>
           </TabsContent>
@@ -312,9 +303,9 @@ const FollowerFollowing = () => {
         {/**for mobile devices */}
         </Tabs>
          <div className="w-full dark:bg-black px-4 mt-7 py-2 space-y-6 block lg:hidden">
-      <WhatsHappening />
-      <WhoToFollow />
-    </div>
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
       </main>
 
       {/* Right Sidebar */}
