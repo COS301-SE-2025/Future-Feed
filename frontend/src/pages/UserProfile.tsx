@@ -531,7 +531,7 @@ const fetchResharedPosts = async () => {
         <Tabs defaultValue="posts" className="w-full">
           <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="reshares">Reshares</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
@@ -578,14 +578,14 @@ const fetchResharedPosts = async () => {
             )}
           </TabsContent>
 
-          <TabsContent value="reshares" className="p-0">
+          <TabsContent value="refeeds" className="p-0">
   {error && (
     <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
       <p>{error}</p>
     </div>
   )}
   {reshares.length === 0 ? (
-    <div className="p-4 text-gray-400">No reshared posts yet.</div>
+    <div className="p-4 text-gray-400">No re-feeds yet.</div>
   ) : (
     reshares.map((post) => (
       <div key={post.id} className="mb-4">
