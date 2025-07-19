@@ -592,16 +592,49 @@ const UserProfile = () => {
   }
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!user) {
-      setError("Please log in to comment.")
-      return
-    }
-    if (!commentText.trim()) {
-      setError("Comment cannot be empty.")
-      return
-    }
-
     try {
+      const post = posts.find((p) => p.id === postId) ||
+                  reshares.find((p) => p.id === postId) ||
+                  bookmarkedPosts.find((p) => p.id === postId)
+      if (!post) {
+        setError("Post not found.")
+        return
+      }
+      if (!user) {
+        setError("Please log in to comment.")
+        return
+      }
+      if (!commentText.trim()) {
+        setError("Comment cannot be empty.")
+        return
+      }
+
+      const updateCommentState = (prevPosts: PostData[]) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                comments: [
+                  ...p.comments,
+                  {
+                    id: Date.now(), // Temporary ID
+                    postId,
+                    authorId: user.id,
+                    content: commentText,
+                    createdAt: new Date().toISOString(),
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                  },
+                ],
+                commentCount: p.commentCount + 1,
+              }
+            : p
+        )
+
+      setPosts(updateCommentState)
+      setReshares(updateCommentState)
+      setBookmarkedPosts(updateCommentState)
+
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
         headers: {
@@ -611,9 +644,32 @@ const UserProfile = () => {
         body: commentText,
       })
 
-      if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`)
-      const newComment = await res.json()
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`Failed to add comment to post ${postId}: ${res.status} ${errorText}`)
+        const revertCommentState = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  comments: p.comments.filter((c) => c.id !== Date.now()),
+                  commentCount: p.commentCount - 1,
+                }
+              : p
+          )
 
+        setPosts(revertCommentState)
+        setReshares(revertCommentState)
+        setBookmarkedPosts(revertCommentState)
+
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.")
+        } else {
+          throw new Error(`Failed to add comment: ${errorText}`)
+        }
+      }
+
+      const newComment = await res.json()
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
@@ -624,39 +680,22 @@ const UserProfile = () => {
         handle: `@${user.username}`,
       }
 
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
+      const updateCommentStatus = (prevPosts: PostData[]) =>
+        prevPosts.map((p) =>
+          p.id === postId
             ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
+                ...p,
+                comments: p.comments.map((c) =>
+                  c.id === Date.now() ? formattedComment : c
+                ),
+                commentCount: p.commentCount,
               }
-            : post
+            : p
         )
-      )
-      setReshares((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
-            : post
-        )
-      )
-      setBookmarkedPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
-            : post
-        )
-      )
+
+      setPosts(updateCommentStatus)
+      setReshares(updateCommentStatus)
+      setBookmarkedPosts(updateCommentStatus)
     } catch (err) {
       console.error("Error adding comment:", err)
       setError("Failed to add comment.")
