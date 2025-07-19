@@ -100,13 +100,13 @@ const Bots: React.FC = () => {
             <PersonalSidebar />
         </aside>
       <main className="flex-1 p-4 lg:p-6">
-        <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-lime-500 bg-white dark:bg-[#1a1a1a] dark:text-white shadow-[2px_2px_20px_#000000]">
+        <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-lime-500 bg-white dark:bg-[#1a1a1a] dark:text-white shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-2xl text-lime-600 dark:text-lime-500">Bots Management</CardTitle>
               <Button
                 onClick={() => setIsCreateModalOpen(true)}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
               >
                 <FaPlus className="mr-2" /> Create Bot
               </Button>
@@ -140,7 +140,7 @@ const Bots: React.FC = () => {
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
-                              className="dark:border-lime-500 dark:text-lime-500"
+                              className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
                               onClick={() => {
                                 setEditingBot(bot);
                                 setNewBotName(bot.name);
@@ -152,13 +152,13 @@ const Bots: React.FC = () => {
                             </Button>
                             <Button
                               variant="outline"
-                              className="dark:border-lime-500 dark:text-lime-500"
+                              className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
                               onClick={() => deleteBot(bot.id)}
                             >
                               <FaTrash />
                             </Button>
                             <Button
-                              className={bot.isActive ? "bg-red-500 hover:bg-red-600" : "bg-lime-500 hover:bg-lime-600"}
+                              className={bot.isActive ? "bg-red-500 hover:bg-red-600 cursor-pointer" : "bg-lime-500 hover:bg-lime-600 cursor-pointer"}
                               onClick={() => toggleBotStatus(bot.id, bot.isActive)}
                             >
                               {bot.isActive ? "Deactivate" : "Activate"}
@@ -186,7 +186,7 @@ const Bots: React.FC = () => {
                           <div className="flex gap-2">
                             <Button
                               variant="outline"
-                              className="dark:border-lime-500 dark:text-lime-500"
+                              className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
                               onClick={() => {
                                 setEditingBot(bot);
                                 setNewBotName(bot.name);
@@ -198,13 +198,13 @@ const Bots: React.FC = () => {
                             </Button>
                             <Button
                               variant="outline"
-                              className="dark:border-lime-500 dark:text-lime-500"
+                              className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
                               onClick={() => deleteBot(bot.id)}
                             >
                               <FaTrash />
                             </Button>
                             <Button
-                              className="bg-red-500 hover:bg-red-600"
+                              className="bg-red-500 hover:bg-red-600 cursor-pointer"
                               onClick={() => toggleBotStatus(bot.id, bot.isActive)}
                             >
                               Deactivate
@@ -244,7 +244,7 @@ const Bots: React.FC = () => {
                   setNewBotName("");
                   setNewBotDescription("");
                 }}
-                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400"
+                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
               >
                 <FaTimes className="w-6 h-6" />
               </Button>
@@ -264,7 +264,7 @@ const Bots: React.FC = () => {
               />
               <Button
                 onClick={createBot}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
                 disabled={!newBotName.trim() || !newBotDescription.trim()}
               >
                 Create Bot
@@ -290,7 +290,7 @@ const Bots: React.FC = () => {
                   setNewBotDescription("");
                   setEditingBot(null);
                 }}
-                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400"
+                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
               >
                 <FaTimes className="w-6 h-6" />
               </Button>
@@ -310,7 +310,7 @@ const Bots: React.FC = () => {
               />
               <Button
                 onClick={updateBot}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
                 disabled={!newBotName.trim() || !newBotDescription.trim()}
               >
                 Update Bot
