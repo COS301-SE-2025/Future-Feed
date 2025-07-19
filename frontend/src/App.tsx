@@ -8,7 +8,7 @@ import Help from './pages/Help';
 import LandingPage from "./pages/LandingPage";
 import FollowerFollowing from "./pages/FollowerFollowing";
 import HomePage from './pages/HomePage';
-
+import Bots from './pages/Bots';
 import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
@@ -36,6 +36,7 @@ function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
+      <Route path="/bots" element={<Bots />} />
     </Routes>
     </>
 

@@ -1,6 +1,6 @@
 // src/components/personalSidebar.tsx
 
-import { Home, User, Bell, Settings, Search, LogOut } from "lucide-react";
+import { Home, User, Bell, Settings, Search, LogOut, Bot } from "lucide-react";
 
 import { Link, useNavigate } from "react-router-dom";
 import { ModeToggle } from "./mode-toggle";
@@ -32,6 +32,9 @@ const PersonalSidebar = () => {
         </Link>
         <Link to="/profile" className="flex items-center gap-3 dark:hover:text-white">
           <User size={20} /> Profile
+        </Link>
+        <Link to="/bots" className="flex items-center gap-3 dark:hover:text-white">
+          <Bot size={20} /> My Bots
         </Link>
         <Link to="/notifications" className="flex items-center gap-3 dark:hover:text-white ">
           <Bell size={20} /> Notifications
