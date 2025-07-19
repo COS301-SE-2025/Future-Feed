@@ -37,7 +37,6 @@ interface RawComment {
   createdAt: string
 }
 
-
 interface PostData {
   id: number
   username: string
@@ -69,152 +68,235 @@ interface RawPost {
 }
 
 interface User {
-  id: number;
-  username: string;
-  displayName: string;
-  email: string;
-  profilePicture: string;
-  bio: string;
+  id: number
+  username: string
+  displayName: string
+  email: string
+  profilePicture: string
+  bio: string
 }
 
 interface FollowRelation {
-  id: number;
-  followerId: number;
-  followedId: number;
-  followedAt: string;
+  id: number
+  followerId: number
+  followedId: number
+  followedAt: string
 }
 
 const UserProfile = () => {
-  // const [users, setUsers] = useState<User[]>([])
   const [user, setUser] = useState<UserProfile | null>(null)
   const [posts, setPosts] = useState<PostData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
+  const [bookmarkedPosts, setBookmarkedPosts] = useState<PostData[]>([])
   const [followers, setFollowers] = useState<User[]>([])
   const [followingUsers, setFollowingUsers] = useState<User[]>([])
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
+
   const fetchFollowing = async (userId: number, allUsers: User[]) => {
-      try {
-        const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
-          method: "GET",
-          credentials: "include",
-        });
-  
-        const data: FollowRelation[] = await res.json();
-        const followedUserIds = data.map((relation) => relation.followedId);
-        const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
-        setFollowingUsers(followedUsers);
-      } catch (err) {
-        console.error("Failed to fetch following users", err);
-      }
-    };
-
-    const fetchFollowers = async (userId: number, allUsers: User[]) => {
-      try {
-        const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
-          method: "GET",
-          credentials: "include",
-        });
-        const data: FollowRelation[] = await res.json();
-        const followerUserIds = data.map((relation) => relation.followerId);
-        const followerUsers = allUsers.filter((user) =>
-          followerUserIds.includes(user.id)
-        );
-        setFollowers(followerUsers);
-      } catch (err) {
-        console.error("Failed to fetch followers", err);
-      }
-    };
-
-    const fetchUsers = async () => {
-      const res = await fetch(`${API_URL}/api/user/all`, {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
         method: "GET",
         credentials: "include",
-      });
-      return await res.json();
-    };
-
-const fetchResharedPosts = async () => {
-  try {
-    const res = await fetch(`${API_URL}/api/reshares`, {
-      credentials: "include",
-    });
-
-    if (!res.ok) throw new Error(`Failed to fetch reshares: ${res.status}`);
-    const resharedList: { id: number; userId: number; postId: number; resharedAt: string }[] = await res.json();
-
-    const resharedPosts = await Promise.all(
-      resharedList.map(async (reshare) => {
-        const postRes = await fetch(`${API_URL}/api/posts/${reshare.postId}`, {
-          credentials: "include",
-        });
-        if (!postRes.ok) {
-          console.warn(`Skipping reshare for missing post ID: ${reshare.postId}`);
-          return null;
-        }
-        const post: RawPost = await postRes.json();
-
-        if (!post.user?.id) {
-          console.warn("Skipping invalid post:", post);
-          return null;
-        }
-
-        const [commentsRes, likesCountRes] = await Promise.all([
-          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-        ]);
-
-        const comments = commentsRes.ok ? await commentsRes.json() : [];
-        const validComments = (comments as RawComment[]).filter((c) => !!c.userId);
-
-        const commentsWithUsers: CommentData[] = await Promise.all(
-          validComments.map(async (comment: RawComment): Promise<CommentData> => {
-            const userInfo = await fetchUser(comment.userId!);
-            return {
-              id: comment.id,
-              postId: comment.postId,
-              authorId: comment.userId!,
-              content: comment.content,
-              createdAt: comment.createdAt,
-              username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
-            };
-          })
-        );
-
-        return {
-          id: post.id,
-          username: post.user.displayName,
-          handle: `@${post.user.username}`,
-          time: formatRelativeTime(post.createdAt),
-          text: post.content,
-          ...(post.imageUrl ? { image: post.imageUrl } : {}),
-          isLiked: false,
-          isBookmarked: false,
-          isReshared: true,
-          commentCount: validComments.length,
-          authorId: post.user.id,
-          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-          reshareCount: 1,
-          comments: commentsWithUsers,
-          showComments: false,
-        };
       })
-    );
-
-
-    const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
-    setReshares(validReshares);
-  } catch (err) {
-    console.error("Error fetching reshares:", err);
-    setError("Failed to load reshared posts.");
+      const data: FollowRelation[] = await res.json()
+      const followedUserIds = data.map((relation) => relation.followedId)
+      const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id))
+      setFollowingUsers(followedUsers)
+    } catch (err) {
+      console.error("Failed to fetch following users", err)
+    }
   }
-};
 
+  const fetchFollowers = async (userId: number, allUsers: User[]) => {
+    try {
+      const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      })
+      const data: FollowRelation[] = await res.json()
+      const followerUserIds = data.map((relation) => relation.followerId)
+      const followerUsers = allUsers.filter((user) => followerUserIds.includes(user.id))
+      setFollowers(followerUsers)
+    } catch (err) {
+      console.error("Failed to fetch followers", err)
+    }
+  }
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
+  const fetchUsers = async () => {
+    const res = await fetch(`${API_URL}/api/user/all`, {
+      method: "GET",
+      credentials: "include",
+    })
+    return await res.json()
+  }
+
+  const fetchResharedPosts = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/reshares`, {
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error(`Failed to fetch reshares: ${res.status}`)
+      const resharedList: { id: number; userId: number; postId: number; resharedAt: string }[] = await res.json()
+
+      const resharedPosts = await Promise.all(
+        resharedList.map(async (reshare) => {
+          const postRes = await fetch(`${API_URL}/api/posts/${reshare.postId}`, {
+            credentials: "include",
+          })
+          if (!postRes.ok) {
+            console.warn(`Skipping reshare for missing post ID: ${reshare.postId}`)
+            return null
+          }
+          const post: RawPost = await postRes.json()
+
+          if (!post.user?.id) {
+            console.warn("Skipping invalid post:", post)
+            return null
+          }
+
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+          ])
+
+          const comments = commentsRes.ok ? await commentsRes.json() : []
+          const validComments = (comments as RawComment[]).filter((c) => !!c.userId)
+
+          const commentsWithUsers: CommentData[] = await Promise.all(
+            validComments.map(async (comment: RawComment): Promise<CommentData> => {
+              const userInfo = await fetchUser(comment.userId!)
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId!,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: userInfo.displayName,
+                handle: `@${userInfo.username}`,
+              }
+            })
+          )
+
+          let isLiked = false
+          if (hasLikedRes.ok) {
+            const likeData = await hasLikedRes.json()
+            isLiked = likeData === true
+          }
+
+          return {
+            id: post.id,
+            username: post.user.displayName,
+            handle: `@${post.user.username}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            ...(post.imageUrl ? { image: post.imageUrl } : {}),
+            isLiked,
+            isBookmarked: false,
+            isReshared: true,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount: 1,
+            comments: commentsWithUsers,
+            showComments: false,
+          }
+        })
+      )
+
+      const validReshares = resharedPosts.filter((p): p is PostData => p !== null)
+      setReshares(validReshares)
+    } catch (err) {
+      console.error("Error fetching reshares:", err)
+      setError("Failed to load reshared posts.")
+    }
+  }
+
+  const fetchBookmarkedPosts = async (userId: number) => {
+    try {
+      const book = await fetch(`${API_URL}/api/bookmarks/${userId}`, {
+        credentials: "include",
+      })
+      if (!book.ok) throw new Error(`Failed to fetch bookmarks: ${book.status}`)
+      const bookmarkedList: { id: number; userId: number; postId: number; bookmarkedAt: string }[] = await book.json()
+
+      const bookmarkedPosts = await Promise.all(
+        bookmarkedList.map(async (bookmark) => {
+          const postRes = await fetch(`${API_URL}/api/posts/${bookmark.postId}`, {
+            credentials: "include",
+          })
+          if (!postRes.ok) {
+            console.warn(`Skipping bookmark for missing post ID: ${bookmark.postId}`)
+            return null
+          }
+          const post: RawPost = await postRes.json()
+
+          if (!post.user?.id) {
+            console.warn("Skipping invalid post:", post)
+            return null
+          }
+
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+          ])
+
+          const comments = commentsRes.ok ? await commentsRes.json() : []
+          const validComments = (comments as RawComment[]).filter((c) => !!c.userId)
+
+          const commentsWithUsers: CommentData[] = await Promise.all(
+            validComments.map(async (comment: RawComment): Promise<CommentData> => {
+              const userInfo = await fetchUser(comment.userId!)
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId!,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: userInfo.displayName,
+                handle: `@${userInfo.username}`,
+              }
+            })
+          )
+
+          let isLiked = false
+          if (hasLikedRes.ok) {
+            const likeData = await hasLikedRes.json()
+            isLiked = likeData === true
+          }
+
+          return {
+            id: post.id,
+            username: post.user.displayName,
+            handle: `@${post.user.username}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            ...(post.imageUrl ? { image: post.imageUrl } : {}),
+            isLiked,
+            isBookmarked: true,
+            isReshared: false,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount: 0,
+            comments: commentsWithUsers,
+            showComments: false,
+          }
+        })
+      )
+
+      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null)
+      setBookmarkedPosts(validBookmarks)
+    } catch (err) {
+      console.error("Error fetching bookmarks:", err)
+      setError("Failed to load bookmarked posts.")
+    }
+  }
 
   const fetchUser = async (userId: number) => {
     if (userCache.has(userId)) {
@@ -251,7 +333,6 @@ const fetchResharedPosts = async () => {
       }
       setUser(data)
       userCache.set(data.id, { username: data.username, displayName: data.displayName })
-      console.log("Current User Details:", data) 
       return data
     } catch (err) {
       console.error("Error fetching user info:", err)
@@ -281,9 +362,10 @@ const fetchResharedPosts = async () => {
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: RawPost) => {
-          const [commentsRes, likesCountRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
           ])
 
           const comments = commentsRes.ok ? await commentsRes.json() : []
@@ -310,6 +392,12 @@ const fetchResharedPosts = async () => {
             })
           )
 
+          let isLiked = false
+          if (hasLikedRes.ok) {
+            const likeData = await hasLikedRes.json()
+            isLiked = likeData === true
+          }
+
           return {
             id: post.id,
             username: post.user?.displayName || `User ${post.user?.id}`,
@@ -317,7 +405,7 @@ const fetchResharedPosts = async () => {
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
-            isLiked: false,
+            isLiked,
             isBookmarked: false,
             isReshared: false,
             commentCount: validComments.length,
@@ -338,17 +426,19 @@ const fetchResharedPosts = async () => {
 
   const handleLike = async (postId: number) => {
     try {
-      const post = posts.find((p) => p.id === postId)
-      if (!post) return
+      const post = posts.find((p) => p.id === postId) ||
+                  reshares.find((p) => p.id === postId) ||
+                  bookmarkedPosts.find((p) => p.id === postId)
+      if (!post) {
+        setError("Post not found.")
+        return
+      }
+      if (!user) {
+        setError("Please log in to like/unlike posts.")
+        return
+      }
 
-      const method = post.isLiked ? "DELETE" : "POST"
-      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
-        method,
-        credentials: "include",
-      })
-
-      if (!res.ok) throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post`)
-      setPosts((prevPosts) =>
+      const updatePostState = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
           p.id === postId
             ? {
@@ -358,19 +448,143 @@ const fetchResharedPosts = async () => {
               }
             : p
         )
-      )
+
+      setPosts(updatePostState)
+      setReshares(updatePostState)
+      setBookmarkedPosts(updatePostState)
+
+      const method = post.isLiked ? "DELETE" : "POST"
+      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
+        method,
+        credentials: "include",
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`Failed to ${post.isLiked ? "unlike" : "like"} post ${postId}: ${res.status} ${errorText}`)
+        const revertPostState = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isLiked: post.isLiked,
+                  likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
+                }
+              : p
+          )
+
+        setPosts(revertPostState)
+        setReshares(revertPostState)
+        setBookmarkedPosts(revertPostState)
+
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.")
+        } else {
+          throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post: ${errorText}`)
+        }
+      }
+
+      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, {
+        credentials: "include",
+      })
+      if (hasLikedRes.ok) {
+        const likeData = await hasLikedRes.json()
+        const updateLikeStatus = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isLiked: likeData === true }
+              : p
+          )
+
+        setPosts(updateLikeStatus)
+        setReshares(updateLikeStatus)
+        setBookmarkedPosts(updateLikeStatus)
+      }
     } catch (err) {
       console.error("Error toggling like:", err)
       setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`)
     }
   }
 
-  const handleBookmark = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
-      )
-    )
+  const handleBookmark = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId) ||
+                  reshares.find((p) => p.id === postId) ||
+                  bookmarkedPosts.find((p) => p.id === postId)
+      if (!post) {
+        setError("Post not found.")
+        return
+      }
+      if (!user) {
+        setError("Please log in to bookmark/unbookmark posts.")
+        return
+      }
+
+      const updateBookmarkState = (prevPosts: PostData[]) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? { ...p, isBookmarked: !p.isBookmarked }
+            : p
+        )
+
+      setPosts(updateBookmarkState)
+      setReshares(updateBookmarkState)
+      setBookmarkedPosts(updateBookmarkState)
+
+      const method = post.isBookmarked ? "DELETE" : "POST"
+      const url = post.isBookmarked ? `${API_URL}/api/bookmarks/${postId}` : `${API_URL}/api/bookmarks`
+      const body = post.isBookmarked ? null : JSON.stringify({ postId })
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body,
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`Failed to ${post.isBookmarked ? "unbookmark" : "bookmark"} post ${postId}: ${res.status} ${errorText}`)
+        const revertBookmarkState = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isBookmarked: post.isBookmarked }
+              : p
+          )
+
+        setPosts(revertBookmarkState)
+        setReshares(revertBookmarkState)
+        setBookmarkedPosts(revertBookmarkState)
+
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.")
+        } else {
+          throw new Error(`Failed to ${post.isBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`)
+        }
+      }
+
+      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/has-bookmarked/${postId}`, {
+        credentials: "include",
+      })
+      if (hasBookmarkedRes.ok) {
+        const bookmarkData = await hasBookmarkedRes.json()
+        const updateBookmarkStatus = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isBookmarked: bookmarkData === true }
+              : p
+          )
+
+        setPosts(updateBookmarkStatus)
+        setReshares(updateBookmarkStatus)
+        setBookmarkedPosts(updateBookmarkStatus)
+      }
+    } catch (err) {
+      console.error("Error toggling bookmark:", err)
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isBookmarked ? "unbookmark" : "bookmark"} post.`)
+    }
   }
 
   const handleReshare = () => {
@@ -421,6 +635,28 @@ const fetchResharedPosts = async () => {
             : post
         )
       )
+      setReshares((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
+            : post
+        )
+      )
+      setBookmarkedPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
+            : post
+        )
+      )
     } catch (err) {
       console.error("Error adding comment:", err)
       setError("Failed to add comment.")
@@ -446,6 +682,8 @@ const fetchResharedPosts = async () => {
       }
 
       setPosts(posts.filter((post) => post.id !== postId))
+      setReshares(reshares.filter((post) => post.id !== postId))
+      setBookmarkedPosts(bookmarkedPosts.filter((post) => post.id !== postId))
     } catch (err) {
       console.error("Error deleting post:", err)
       setError("Failed to delete post.")
@@ -458,28 +696,36 @@ const fetchResharedPosts = async () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     )
+    setReshares((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    )
+    setBookmarkedPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    )
   }
 
   useEffect(() => {
-  const loadData = async () => {
-    setLoading(true);
-    const currentUser = await fetchCurrentUser();
-    if (currentUser?.id) {
-      await fetchUserPosts(currentUser.id);
-      await fetchResharedPosts(); 
-
-      const allUsers = await fetchUsers();
-      // setUsers(allUsers);
-      await fetchFollowing(currentUser.id, allUsers);
-      await fetchFollowers(currentUser.id, allUsers);
-    } else {
-      setError("Cannot fetch posts: User not authenticated.");
+    const loadData = async () => {
+      setLoading(true)
+      const currentUser = await fetchCurrentUser()
+      if (currentUser?.id) {
+        await fetchUserPosts(currentUser.id)
+        await fetchResharedPosts()
+        await fetchBookmarkedPosts(currentUser.id)
+        const allUsers = await fetchUsers()
+        await fetchFollowing(currentUser.id, allUsers)
+        await fetchFollowers(currentUser.id, allUsers)
+      } else {
+        setError("Cannot fetch posts: User not authenticated.")
+      }
+      setLoading(false)
     }
-    setLoading(false);
-  };
-  loadData();
-}, []);
-
+    loadData()
+  }, [])
 
   if (loading) return <div className="p-4 text-white">Loading profile...</div>
   if (!user) return <div className="p-4 text-black">Not logged in.</div>
@@ -532,9 +778,9 @@ const fetchResharedPosts = async () => {
           <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
             <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="re-feeds">Re-Feeds</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="replies">Replies</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="comments">Comments</TabsTrigger>
             <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="highlights">Highlights</TabsTrigger>
+            <TabsTrigger className="dark:text-lime-500" value="bookmarks">Bookmarks</TabsTrigger>
           </TabsList>
 
           <TabsContent value="posts" className="p-0">
@@ -572,61 +818,95 @@ const fetchResharedPosts = async () => {
                     currentUser={user}
                     authorId={post.authorId}
                   />
-
                 </div>
               ))
             )}
           </TabsContent>
 
-          <TabsContent value="refeeds" className="p-0">
-  {error && (
-    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-      <p>{error}</p>
-    </div>
-  )}
-  {reshares.length === 0 ? (
-    <div className="p-4 text-gray-400">No re-feeds yet.</div>
-  ) : (
-    reshares.map((post) => (
-      <div key={post.id} className="mb-4">
-        <Post
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={handleReshare}
-          onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!user}
-          currentUser={user}
-          authorId={post.authorId}
-        />
-      </div>
-    ))
-  )}
-</TabsContent>
+          <TabsContent value="re-feeds" className="p-0">
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {reshares.length === 0 ? (
+              <div className="p-4 text-gray-400">No re-feeds yet.</div>
+            ) : (
+              reshares.map((post) => (
+                <div key={post.id} className="mb-4">
+                  <Post
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={handleReshare}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                  />
+                </div>
+              ))
+            )}
+          </TabsContent>
 
-
-          <TabsContent value="replies">
-            <div className="p-4 dark:text-gray-400">No replies yet.</div>
+          <TabsContent value="comments">
+            <div className="p-4 dark:text-gray-400">No comments yet.</div>
           </TabsContent>
           <TabsContent value="likes">
             <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
           </TabsContent>
-          <TabsContent value="highlights">
-            <div className="p-4 dark:text-gray-400">No highlights available yet.</div>
+          <TabsContent value="bookmarks">
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {bookmarkedPosts.length === 0 ? (
+              <div className="p-4 text-gray-400">No bookmarks yet.</div>
+            ) : (
+              bookmarkedPosts.map((post) => (
+                <div key={post.id} className="mb-4">
+                  <Post
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={handleReshare}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                  />
+                </div>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </main>
