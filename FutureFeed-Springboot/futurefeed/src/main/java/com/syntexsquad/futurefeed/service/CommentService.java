@@ -63,5 +63,10 @@ public class CommentService {
     public List<Comment> getCommentsForPost(Integer postId) {
         return commentRepository.findByPostId(postId);
     }
+
+    public boolean hasUserCommented(Integer postId) {
+        AppUser user = getAuthenticatedUser();
+        return commentRepository.existsByUser_IdAndPost_Id(user.getId(), postId);
+    }
 }
 

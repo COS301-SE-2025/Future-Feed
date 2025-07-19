@@ -4,6 +4,7 @@ import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
@@ -37,5 +38,15 @@ public class CommentController {
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<Comment>> getCommentsByPost(@PathVariable Integer postId) {
         return ResponseEntity.ok(commentService.getCommentsForPost(postId));
+    }
+
+    @GetMapping("/has-commented/{postId}")
+    public ResponseEntity<?> hasUserCommented(@PathVariable Integer postId) {
+        try {
+            boolean hasCommented = commentService.hasUserCommented(postId);
+            return ResponseEntity.ok(hasCommented);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).body("Unauthorized or user not found");
+        }
     }
 }
