@@ -63,4 +63,10 @@ public class BookmarkService {
                 .toList();
     }
 
+    public boolean isBookmarked(Integer userId, Integer postId) {
+        AppUser user = userRepo.findById(userId).orElseThrow();
+        Post post = postRepo.findById(postId).orElseThrow();
+        return bookmarkRepo.findByUserAndPost(user, post).isPresent();
+    }
+
 }

@@ -31,6 +31,11 @@ public class BookmarkController {
                 : ResponseEntity.badRequest().body("Bookmark not found.");
     }
 
+    @GetMapping("/{userId}/{postId}/exists")
+    public ResponseEntity<Boolean> isBookmarked(@PathVariable Integer userId, @PathVariable Integer postId) {
+        return ResponseEntity.ok(bookmarkService.isBookmarked(userId, postId));
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<BookmarkDto>> getBookmarks(@PathVariable Integer userId) {
         return ResponseEntity.ok(bookmarkService.getUserBookmarkDtos(userId));
