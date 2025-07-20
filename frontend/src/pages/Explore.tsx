@@ -10,6 +10,7 @@ import RightSidebar from "@/components/RightSidebar";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -30,11 +31,11 @@ interface FollowRelation {
 }
 
 const Explore = () => {
- 
   const [users, setUsers] = useState<User[]>([]);
   const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchCurrentUserId = async () => {
     const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -121,6 +122,7 @@ const Explore = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      setLoading(true);
       const userId = await fetchCurrentUserId();
       setCurrentUserId(userId);
 
@@ -137,6 +139,7 @@ const Explore = () => {
       );
 
       setFollowStatus(Object.fromEntries(statusEntries));
+      setLoading(false);
     };
 
     loadData();
@@ -173,6 +176,22 @@ const Explore = () => {
     </Card>
   );
 
+  const renderSkeleton = () => (
+    Array.from({ length: 4 }).map((_, idx) => (
+      <Card key={idx} className="dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl">
+        <CardContent className="flex gap-3 items-start p-4">
+          <Skeleton className="w-14 h-14 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-1/3" />
+            <Skeleton className="h-3 w-2/3" />
+          </div>
+          <Skeleton className="h-8 w-20 rounded-full" />
+        </CardContent>
+      </Card>
+    ))
+  );
+
   return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
       <aside className="w-[275px]">
@@ -184,7 +203,6 @@ const Explore = () => {
           <Input
             type="text"
             placeholder="Search"
-            
             className="bg-lime-600 rounded-full dark:bg-[#1a1a1a] dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
           />
         </div>
@@ -218,13 +236,13 @@ const Explore = () => {
 
           <TabsContent value="accounts">
             <div className="space-y-4">
-              {users.map((user) => renderUserCard(user))}
+              {loading ? renderSkeleton() : users.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
             <div className="space-y-4">
-              {followingUsers.map((user) => renderUserCard(user))}
+              {loading ? renderSkeleton() : followingUsers.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
         </Tabs>
@@ -236,7 +254,7 @@ const Explore = () => {
       </main>
 
       <aside>
-        <RightSidebar  />
+        <RightSidebar />
       </aside>
     </div>
   );
