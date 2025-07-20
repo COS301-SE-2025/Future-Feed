@@ -1,4 +1,4 @@
-// src/pages/Explore.tsx
+
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
