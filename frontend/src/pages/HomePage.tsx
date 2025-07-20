@@ -321,7 +321,7 @@ const fetchAllPosts = async () => {
 
 const fetchFollowingPosts = async () => {
   if (!currentUser?.id) return;
-  setLoadingForYou(true);
+  setLoadingFollowing(true);
 
   try {
     const [followRes, myResharesRes] = await Promise.all([
@@ -439,7 +439,7 @@ const fetchFollowingPosts = async () => {
     console.error("Error fetching following posts:", err);
     setError("Failed to load posts from followed users.");
   } finally {
-    setLoadingForYou(false);
+    setLoadingFollowing(false);
   }
 };
 
