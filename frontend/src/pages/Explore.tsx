@@ -36,6 +36,8 @@ const Explore = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
+  const [followingId, setFollowingId] = useState<number | null>(null);
 
   const fetchCurrentUserId = async () => {
     const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -87,6 +89,8 @@ const Explore = () => {
 
   const handleFollow = async (id: number) => {
     try {
+      setFollowingId(id);
+      await new Promise((res) => setTimeout(res, 600));
       await fetch(`${API_URL}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,11 +104,15 @@ const Explore = () => {
       }
     } catch (err) {
       console.error("Follow failed", err);
+    } finally {
+      setFollowingId(null);
     }
   };
 
   const handleUnfollow = async (id: number) => {
     try {
+      setUnfollowingId(id);
+      await new Promise((res) => setTimeout(res, 600));
       await fetch(`${API_URL}/api/follow/${id}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -117,6 +125,8 @@ const Explore = () => {
       }
     } catch (err) {
       console.error("Unfollow failed", err);
+    } finally {
+      setUnfollowingId(null);
     }
   };
 
@@ -145,38 +155,56 @@ const Explore = () => {
     loadData();
   }, []);
 
-  const renderUserCard = (user: User) => (
-    <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
-      <CardContent className="flex gap-3 items-start p-4">
-        <Avatar className="w-14 h-14 border-4 border-slate-300">
-          <AvatarImage src={user.profilePicture} alt={user.username} />
-          <AvatarFallback>{user.username[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <p className="font-semibold">{user.displayName}</p>
-          <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
-          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
-        </div>
-        {followStatus[user.id] ? (
-          <button
-            onClick={() => handleUnfollow(user.id)}
-            className="px-4 py-1 rounded-full border border-gray-400 font-semibold dark:text-white hover:bg-lime-500 hover:cursor-pointer"
-          >
-            Unfollow
-          </button>
-        ) : (
-          <button
-            onClick={() => handleFollow(user.id)}
-            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
-          >
-            Follow
-          </button>
-        )}
-      </CardContent>
-    </Card>
-  );
+  const renderUserCard = (user: User) => {
+    if (unfollowingId === user.id || followingId === user.id) {
+      return (
+        <Card key={user.id} className="dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl">
+          <CardContent className="flex gap-3 items-start p-4">
+            <Skeleton className="w-14 h-14 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+            <Skeleton className="h-8 w-20 rounded-full" />
+          </CardContent>
+        </Card>
+      );
+    }
 
-  const renderSkeleton = () => (
+    return (
+      <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
+        <CardContent className="flex gap-3 items-start p-4">
+          <Avatar className="w-14 h-14 border-4 border-slate-300">
+            <AvatarImage src={user.profilePicture} alt={user.username} />
+            <AvatarFallback>{user.username[0]}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="font-semibold">{user.displayName}</p>
+            <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
+            <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
+          </div>
+          {followStatus[user.id] ? (
+            <button
+              onClick={() => handleUnfollow(user.id)}
+              className="px-4 py-1 rounded-full border border-gray-400 font-semibold dark:text-white hover:bg-lime-500 hover:cursor-pointer"
+            >
+              Unfollow
+            </button>
+          ) : (
+            <button
+              onClick={() => handleFollow(user.id)}
+              className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+            >
+              Follow
+            </button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderSkeleton = () =>
     Array.from({ length: 4 }).map((_, idx) => (
       <Card key={idx} className="dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
@@ -189,8 +217,7 @@ const Explore = () => {
           <Skeleton className="h-8 w-20 rounded-full" />
         </CardContent>
       </Card>
-    ))
-  );
+    ));
 
   return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
