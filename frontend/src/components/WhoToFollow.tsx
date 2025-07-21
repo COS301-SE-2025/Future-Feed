@@ -1,6 +1,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom";
 const WhoToFollow = () => {
     return(
         <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
@@ -27,7 +28,10 @@ const WhoToFollow = () => {
 
                         </div>
                         <div>
-                            <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+                            <Link to="/explore" className="flex items-center gap-3 dark:hover:text-white">
+                                      <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+                                    </Link>
+                            
                         </div>
                     </div>
                 </CardContent>

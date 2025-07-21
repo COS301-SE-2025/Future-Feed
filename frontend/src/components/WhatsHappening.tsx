@@ -1,7 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 
 const WhatsHappening = () => {
+    
     return(
         <Card className="dark:bg-black dark:text-lime-500 border dark:border-lime-500 rounded-3xl border-2 border-lime-500  bg-lime-600 text-white">
                 <CardContent className="p-4">
@@ -20,7 +22,10 @@ const WhatsHappening = () => {
                             <p className="font-semibold">The River</p>
                         </div>
                         <div>
-                            <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+                             <Link to="/home" className="flex items-center gap-3 dark:hover:text-white">
+                                       <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+                                    </Link>
+                           
                         </div>
                     </div>
                 </CardContent>
