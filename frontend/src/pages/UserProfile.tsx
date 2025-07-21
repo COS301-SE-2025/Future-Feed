@@ -890,12 +890,18 @@ const UserProfile = () => {
 
           <TabsContent value="re-feeds" className="p-0">
             {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p>{error}</p>
-              </div>
-            )}
-            {reshares.length === 0 ? (
-              <div className="p-4 text-gray-400">No re-feeds yet.</div>
+    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+      <p>{error}</p>
+    </div>
+  )}
+  {postsLoading ? (
+    <div className="flex flex-col gap-6 py-4">
+      {[...Array(3)].map((_, idx) => (
+        <div key={idx}>{renderPostCard()}</div>
+      ))}
+    </div>
+  ) : reshares.length === 0 ? (
+    <div className="p-4 text-gray-400">No re-feeds yet.</div>
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -929,20 +935,42 @@ const UserProfile = () => {
           </TabsContent>
 
           <TabsContent value="comments">
-            <div className="p-4 dark:text-gray-400">No comments yet.</div>
+            {postsLoading ? (
+    <div className="flex flex-col gap-6 py-4">
+      {[...Array(3)].map((_, idx) => (
+        <div key={idx}>{renderPostCard()}</div>
+      ))}
+    </div>
+  ) : (
+    <div className="p-4 dark:text-gray-400">No comments yet.</div>
+  )}
           </TabsContent>
           <TabsContent value="likes">
-            <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
+             {postsLoading ? (
+    <div className="flex flex-col gap-6 py-4">
+      {[...Array(3)].map((_, idx) => (
+        <div key={idx}>{renderPostCard()}</div>
+      ))}
+    </div>
+  ) : (
+    <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
+  )}
           </TabsContent>
           <TabsContent value="bookmarks">
-            {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p>{error}</p>
-              </div>
-            )}
-            {bookmarkedPosts.length === 0 ? (
-              <div className="p-4 text-gray-400">No bookmarks yet.</div>
-            ) : (
+           {error && (
+    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+      <p>{error}</p>
+    </div>
+  )}
+  {postsLoading ? (
+    <div className="flex flex-col gap-6 py-4">
+      {[...Array(3)].map((_, idx) => (
+        <div key={idx}>{renderPostCard()}</div>
+      ))}
+    </div>
+  ) : bookmarkedPosts.length === 0 ? (
+    <div className="p-4 text-gray-400">No bookmarks yet.</div>
+  ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
                   <Post
