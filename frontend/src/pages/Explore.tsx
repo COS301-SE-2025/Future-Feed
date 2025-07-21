@@ -234,7 +234,7 @@ const Explore = () => {
           />
         </div>
 
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
+        <div className="flex justify-between items-center p-2  sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
           <Link to="/settings">
             <Settings size={20} className="dark:text-lime-500" />
@@ -280,9 +280,14 @@ const Explore = () => {
         </div>
       </main>
 
-      <aside>
-        <RightSidebar />
-      </aside>
+       <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+            <WhoToFollow  />
+          </div>
+        </aside>
     </div>
   );
 };
