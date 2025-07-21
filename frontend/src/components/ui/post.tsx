@@ -115,7 +115,7 @@ const Post: React.FC<PostProps> = ({
               <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
-                  {formatTime(time)}
+                  {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
                   <Button
