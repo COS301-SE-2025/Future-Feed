@@ -91,17 +91,6 @@ const Post: React.FC<PostProps> = ({
       : "NN";
   };
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
-
   return (
     <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4", className)}>
       <CardContent className="p-1 mt-[-15px] ml-[20px]">
@@ -115,7 +104,7 @@ const Post: React.FC<PostProps> = ({
               <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
-                  {formatTime(time)}
+                  {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
                   <Button
