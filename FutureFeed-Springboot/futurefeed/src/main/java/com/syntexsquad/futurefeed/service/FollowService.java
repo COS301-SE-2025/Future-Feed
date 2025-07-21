@@ -1,8 +1,11 @@
 package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.FollowStatusResponse;
+import com.syntexsquad.futurefeed.dto.FollowedUserDto;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Follower;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.FollowerRepository;
@@ -24,7 +27,16 @@ public class FollowService {
         this.followerRepository = followerRepository;
         this.appUserRepository = appUserRepository;
     }
+    public List<FollowedUserDto> getTopFollowedUsers(int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Object[]> results = followerRepository.findTopFollowedUsers(pageable);
 
+        return results.stream().map(obj -> {
+            AppUser user = (AppUser) obj[0];
+            Long  count = (Long) obj[1];
+            return new FollowedUserDto(user.getId(), user.getUsername(), user.getEmail(), count);
+        }).toList();
+    }
     private AppUser getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
