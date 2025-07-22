@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useFollowStore } from "@/store/useFollowStore"
 
 interface TopFollowedUser {
   id: number
@@ -16,10 +17,11 @@ const WhoToFollow = () => {
   const [topUsers, setTopUsers] = useState<TopFollowedUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [followingLoading, setFollowingLoading] = useState<Record<number, boolean>>({})
-  const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({})
+  const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({})
 
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
+
+  const { followStatus, updateFollowStatus } = useFollowStore()
 
   useEffect(() => {
     const fetchTopUsers = async () => {
@@ -32,66 +34,58 @@ const WhoToFollow = () => {
         const data = await res.json()
         setTopUsers(data)
 
-        // check follow status for each user
+        // Fetch follow status for each user
         const statuses = await Promise.all(
           data.map(async (user: TopFollowedUser) => {
-            try {
-              const res = await fetch(`${API_Url}/api/follow/status/${user.id}`, {
-                method: "GET",
-                credentials: "include",
-              })
-              if (!res.ok) return [user.id, false]
-              const json = await res.json()
-              return [user.id, json.following]
-            } catch {
-              return [user.id, false]
-            }
+            const res = await fetch(`${API_Url}/api/follow/status/${user.id}`, {
+              method: "GET",
+              credentials: "include",
+            })
+            const json = await res.json()
+            return [user.id, json.following] as const
           })
         )
-
-        setFollowStatus(Object.fromEntries(statuses))
+        statuses.forEach(([id, status]) => updateFollowStatus(id, status))
       } catch (err) {
-        setError("Could not load recommendations.")
         console.error(err)
+        setError("Could not load recommendations.")
       } finally {
         setLoading(false)
       }
     }
 
     fetchTopUsers()
-  }, [])
+  }, [updateFollowStatus])
 
   const handleFollow = async (userId: number) => {
-    setFollowingLoading((prev) => ({ ...prev, [userId]: true }))
+    setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      const res = await fetch(`${API_Url}/api/follow`, {
+      await fetch(`${API_Url}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ followedId: userId }),
       })
-      if (!res.ok) throw new Error("Failed to follow user")
-      setFollowStatus((prev) => ({ ...prev, [userId]: true }))
+      updateFollowStatus(userId, true)
     } catch (err) {
       console.error(`Failed to follow user ${userId}`, err)
     } finally {
-      setFollowingLoading((prev) => ({ ...prev, [userId]: false }))
+      setLoadingFollow((prev) => ({ ...prev, [userId]: false }))
     }
   }
 
   const handleUnfollow = async (userId: number) => {
-    setFollowingLoading((prev) => ({ ...prev, [userId]: true }))
+    setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      const res = await fetch(`${API_Url}/api/follow/${userId}`, {
+      await fetch(`${API_Url}/api/follow/${userId}`, {
         method: "DELETE",
         credentials: "include",
       })
-      if (!res.ok) throw new Error("Failed to unfollow user")
-      setFollowStatus((prev) => ({ ...prev, [userId]: false }))
+      updateFollowStatus(userId, false)
     } catch (err) {
       console.error(`Failed to unfollow user ${userId}`, err)
     } finally {
-      setFollowingLoading((prev) => ({ ...prev, [userId]: false }))
+      setLoadingFollow((prev) => ({ ...prev, [userId]: false }))
     }
   }
 
@@ -116,42 +110,42 @@ const WhoToFollow = () => {
           <p className="text-sm text-red-400">{error}</p>
         ) : (
           <div className="space-y-4 text-sm">
-            {topUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 border border-lime-500">
-                    <AvatarImage src={user.imageUrl} alt={`@${user.username}`} />
-                    <AvatarFallback>
-                      {user.username.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold">{user.username}</p>
-                    <p className="dark:text-lime-500">@{user.name.split("@")[0]}</p>
-                  </div>
-                </div>
+            {topUsers.map((user) => {
+              const isFollowing = followStatus[user.id]
 
-                {followingLoading[user.id] ? (
-                  <Skeleton className="h-8 w-16 rounded-2xl" />
-                ) : followStatus[user.id] ? (
-                  <Button
-                    
-                    className="rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
-                    onClick={() => handleUnfollow(user.id)}
-                  >
-                    Unfollow
-                  </Button>
-                ) : (
-                  <Button
-                   
-                    className="rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
-                    onClick={() => handleFollow(user.id)}
-                  >
-                    Follow
-                  </Button>
-                )}
-              </div>
-            ))}
+              return (
+                <div key={user.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10 border border-lime-500">
+                      <AvatarImage src={user.imageUrl} alt={`@${user.username}`} />
+                      <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">{user.username}</p>
+                      <p className="dark:text-lime-500">@{user.name.split("@")[0]}</p>
+                    </div>
+                  </div>
+
+                  {loadingFollow[user.id] ? (
+                    <Skeleton className="h-8 w-16 rounded-2xl" />
+                  ) : isFollowing ? (
+                    <Button
+                      className="rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+                      onClick={() => handleUnfollow(user.id)}
+                    >
+                      Unfollow
+                    </Button>
+                  ) : (
+                    <Button
+                      className="rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+                      onClick={() => handleFollow(user.id)}
+                    >
+                      Follow
+                    </Button>
+                  )}
+                </div>
+              )
+            })}
 
             <div>
               <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
