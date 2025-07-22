@@ -135,16 +135,16 @@ const WhoToFollow = () => {
                   <Skeleton className="h-8 w-16 rounded-2xl" />
                 ) : followStatus[user.id] ? (
                   <Button
-                    variant="outline"
-                    className="dark:text-white rounded-2xl dark:bg-[#1a1a1a] dark:border-lime-500 hover:bg-red-600 hover:text-white text-lime-600 cursor-pointer"
+                    
+                    className="rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
                     onClick={() => handleUnfollow(user.id)}
                   >
                     Unfollow
                   </Button>
                 ) : (
                   <Button
-                    variant="outline"
-                    className="dark:text-lime-500 rounded-2xl dark:bg-[#1a1a1a] dark:border-lime-500 hover:bg-lime-500 hover:text-black text-lime-600 cursor-pointer"
+                   
+                    className="rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
                     onClick={() => handleFollow(user.id)}
                   >
                     Follow
