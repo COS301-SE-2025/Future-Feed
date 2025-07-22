@@ -8,12 +8,12 @@ from bs4 import BeautifulSoup
 
 load_dotenv()
 
-llm_llama = ChatTogether( model="meta-llama/Llama-Vision-Free", temperature=0.7)
+llm_llama = ChatTogether(model="meta-llama/Llama-Vision-Free", temperature=0.7)
 
 @tool
 def fetch_context(url: str) -> str:
     """Fetch and summarize from a URL to provide context to the bot"""
-    try: 
+    try:
         response = requests.get(url, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
         for tag in soup(["script", "style", "noscript"]):
@@ -26,7 +26,8 @@ def fetch_context(url: str) -> str:
         return clean_text[:3000]
     except Exception as e:
         return f"Failed to fetch context: {str(e)}"
-    
+
+# Always define tools here
 tools = [fetch_context]
 
 def create_bot_agent(bot_prompt: str, context_url: str = None):
@@ -34,10 +35,7 @@ def create_bot_agent(bot_prompt: str, context_url: str = None):
     if context_url:
         context = fetch_context.invoke(context_url)
         full_prompt += f"\n\nContext:\n{context}"
-    else:
-        tools = []
 
-    agent = initialize_agent(tools=tools,llm=llm_llama, agent="zero-shot-react-description", verbose=True)
+    # Always pass the non-empty tools list
+    agent = initialize_agent(tools=tools, llm=llm_llama, agent="zero-shot-react-description", verbose=True)
     return lambda: agent.run(full_prompt)
-
-
