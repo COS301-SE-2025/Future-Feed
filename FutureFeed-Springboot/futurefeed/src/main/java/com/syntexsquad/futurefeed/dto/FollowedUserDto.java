@@ -8,5 +8,6 @@ public class FollowedUserDto {
     private Integer id;
     private String username;
     private String name;
+    private String profilePicture;
     private long followerCount;
 }

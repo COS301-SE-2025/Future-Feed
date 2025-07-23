@@ -34,7 +34,7 @@ public class FollowService {
         return results.stream().map(obj -> {
             AppUser user = (AppUser) obj[0];
             Long  count = (Long) obj[1];
-            return new FollowedUserDto(user.getId(), user.getUsername(), user.getEmail(), count);
+            return new FollowedUserDto(user.getId(), user.getUsername(), user.getDisplayName(), user.getProfilePicture(), count);
         }).toList();
     }
     private AppUser getAuthenticatedUser() {
