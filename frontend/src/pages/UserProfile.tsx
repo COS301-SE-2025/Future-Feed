@@ -90,6 +90,7 @@ const UserProfile = () => {
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
+  const [likedPosts, setLikedPosts] = useState<PostData[]>([])
   const [bookmarkedPosts, setBookmarkedPosts] = useState<PostData[]>([])
   const [followers, setFollowers] = useState<User[]>([])
   const [followingUsers, setFollowingUsers] = useState<User[]>([])
@@ -298,6 +299,106 @@ const UserProfile = () => {
     }
   }
 
+  const fetchLikedPosts = async (userId: number) => {
+  try {
+    const likesRes = await fetch(`${API_URL}/api/posts/liked/${userId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!likesRes.ok) {
+      const errorText = await likesRes.text();
+      throw new Error(`Failed to fetch liked posts: ${likesRes.status} ${errorText}`);
+    }
+
+    const likedList: RawPost[] = await likesRes.json();
+
+    if (!Array.isArray(likedList) || likedList.length === 0) {
+      console.warn("No liked posts found for user:", userId);
+      setLikedPosts([]);
+      return;
+    }
+
+    const likedPosts = await Promise.all(
+      likedList.map(async (post) => {
+        try {
+          if (!post.user?.id || !post.user.username || !post.user.displayName) {
+            console.warn(`Invalid post data for post ID ${post.id}:`, post);
+            return null;
+          }
+
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+          ]);
+
+          const comments = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = (comments as RawComment[]).filter(
+            (c) => c.userId && c.content
+          );
+
+          const commentsWithUsers: CommentData[] = (
+            await Promise.all(
+              validComments.map(async (comment: RawComment) => {
+                try {
+                  const userInfo = await fetchUser(comment.userId!);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId!,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: userInfo.displayName,
+                    handle: `@${userInfo.username}`,
+                  };
+                } catch (err) {
+                  console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                  return null;
+                }
+              })
+            )
+          ).filter((comment): comment is CommentData => comment !== null);
+
+          const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+          const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+
+          return {
+            id: post.id,
+            username: post.user.displayName,
+            handle: `@${post.user.username}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            ...(post.imageUrl ? { image: post.imageUrl } : {}),
+            isLiked,
+            isBookmarked: false, 
+            isReshared: false, 
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount,
+            reshareCount: 0,
+            comments: commentsWithUsers,
+            showComments: false,
+          };
+        } catch (err) {
+          console.warn(`Error processing post ID ${post.id}:`, err);
+          return null;
+        }
+      })
+    );
+
+    const validLikes = likedPosts.filter((p): p is PostData => p !== null);
+    setLikedPosts(validLikes);
+
+    if (validLikes.length === 0) {
+      console.warn("No valid liked posts after processing.");
+    }
+  } catch (err) {
+    console.error("Error fetching liked posts:", err);
+    setError(`Failed to load liked posts: ${err instanceof Error ? err.message : "Unknown error"}`);
+  }
+};
+
   const fetchUser = async (userId: number) => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!
@@ -428,7 +529,8 @@ const UserProfile = () => {
     try {
       const post = posts.find((p) => p.id === postId) ||
                   reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId)
+                  bookmarkedPosts.find((p) => p.id === postId) ||
+                  likedPosts.find((p) => p.id === postId)
       if (!post) {
         setError("Post not found.")
         return
@@ -452,6 +554,7 @@ const UserProfile = () => {
       setPosts(updatePostState)
       setReshares(updatePostState)
       setBookmarkedPosts(updatePostState)
+      setLikedPosts(updatePostState)
 
       const method = post.isLiked ? "DELETE" : "POST"
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
@@ -476,6 +579,7 @@ const UserProfile = () => {
         setPosts(revertPostState)
         setReshares(revertPostState)
         setBookmarkedPosts(revertPostState)
+        setLikedPosts(revertPostState)
 
         if (res.status === 401) {
           setError("Session expired. Please log in again.")
@@ -499,6 +603,7 @@ const UserProfile = () => {
         setPosts(updateLikeStatus)
         setReshares(updateLikeStatus)
         setBookmarkedPosts(updateLikeStatus)
+        setLikedPosts(updateLikeStatus)
       }
     } catch (err) {
       console.error("Error toggling like:", err)
@@ -510,7 +615,8 @@ const UserProfile = () => {
     try {
       const post = posts.find((p) => p.id === postId) ||
                   reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId)
+                  bookmarkedPosts.find((p) => p.id === postId) ||
+                  likedPosts.find((p) => p.id === postId)
       if (!post) {
         setError("Post not found.")
         return
@@ -530,6 +636,7 @@ const UserProfile = () => {
       setPosts(updateBookmarkState)
       setReshares(updateBookmarkState)
       setBookmarkedPosts(updateBookmarkState)
+      setLikedPosts(updateBookmarkState)
 
       const method = post.isBookmarked ? "DELETE" : "POST"
       const url = post.isBookmarked ? `${API_URL}/api/bookmarks/${postId}` : `${API_URL}/api/bookmarks`
@@ -557,6 +664,7 @@ const UserProfile = () => {
         setPosts(revertBookmarkState)
         setReshares(revertBookmarkState)
         setBookmarkedPosts(revertBookmarkState)
+        setLikedPosts(revertBookmarkState)
 
         if (res.status === 401) {
           setError("Session expired. Please log in again.")
@@ -580,6 +688,7 @@ const UserProfile = () => {
         setPosts(updateBookmarkStatus)
         setReshares(updateBookmarkStatus)
         setBookmarkedPosts(updateBookmarkStatus)
+        setLikedPosts(updateBookmarkStatus)
       }
     } catch (err) {
       console.error("Error toggling bookmark:", err)
@@ -657,6 +766,17 @@ const UserProfile = () => {
             : post
         )
       )
+      setLikedPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
+            : post
+        )
+      )
     } catch (err) {
       console.error("Error adding comment:", err)
       setError("Failed to add comment.")
@@ -706,6 +826,11 @@ const UserProfile = () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     )
+    setLikedPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    )
   }
 
   useEffect(() => {
@@ -716,6 +841,7 @@ const UserProfile = () => {
         await fetchUserPosts(currentUser.id)
         await fetchResharedPosts()
         await fetchBookmarkedPosts(currentUser.id)
+        await fetchLikedPosts(currentUser.id)
         const allUsers = await fetchUsers()
         await fetchFollowing(currentUser.id, allUsers)
         await fetchFollowers(currentUser.id, allUsers)
@@ -866,9 +992,47 @@ const UserProfile = () => {
           <TabsContent value="comments">
             <div className="p-4 dark:text-gray-400">No comments yet.</div>
           </TabsContent>
+
           <TabsContent value="likes">
-            <div className="p-4 dark:text-gray-400">No liked posts yet.</div>
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {likedPosts.length === 0 ? (
+              <div className="p-4 text-gray-400">No likes yet.</div>
+            ) : (
+              likedPosts.map((post) => (
+                <div key={post.id} className="mb-4">
+                  <Post
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={handleReshare}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                  />
+                </div>
+              ))
+            )}
           </TabsContent>
+
           <TabsContent value="bookmarks">
             {error && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
