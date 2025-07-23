@@ -90,6 +90,7 @@ const UserProfile = () => {
   const [error, setError] = useState<string | null>(null)
   const userCache = new Map<number, { username: string; displayName: string }>()
   const [reshares, setReshares] = useState<PostData[]>([])
+  const [commentedPosts, setCommented] = useState<PostData[]>([])
   const [likedPosts, setLikedPosts] = useState<PostData[]>([])
   const [bookmarkedPosts, setBookmarkedPosts] = useState<PostData[]>([])
   const [followers, setFollowers] = useState<User[]>([])
@@ -216,6 +217,107 @@ const UserProfile = () => {
       setError("Failed to load reshared posts.")
     }
   }
+
+  const fetchCommentedPosts = async (userId: number) => {
+  try {
+    const com = await fetch(`${API_URL}/api/posts/commented/${userId}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!com.ok) {
+      const errorText = await com.text();
+      throw new Error(`Failed to fetch commented posts: ${com.status} ${errorText}`);
+    }
+
+    const commentedList: { id: number; content: string; imageUrl: string | null; createdAt: string }[] = await com.json();
+    console.log("Fetched commented posts:", commentedList);
+
+    if (!Array.isArray(commentedList) || commentedList.length === 0) {
+      console.warn("No commented posts found for user:", userId);
+      setCommented([]);
+      return;
+    }
+
+    const commentedPosts = await Promise.all(
+      commentedList.map(async (post) => {
+        try {
+          // Use fallback user data since userId is missing
+          const userInfo = { id: 0, username: `user${post.id}`, displayName: `User ${post.id}` };
+
+          const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+          ]);
+
+          if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
+          if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
+          if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.id}: ${hasLikedRes.status}`);
+
+          const comments = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+
+          const commentsWithUsers: CommentData[] = (
+            await Promise.all(
+              validComments.map(async (comment: RawComment) => {
+                try {
+                  const commentUserInfo = await fetchUser(comment.userId!);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId!,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: commentUserInfo.displayName,
+                    handle: `@${commentUserInfo.username}`,
+                  };
+                } catch (err) {
+                  console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                  return null;
+                }
+              })
+            )
+          ).filter((comment): comment is CommentData => comment !== null);
+
+          const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+          const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+
+          return {
+            id: post.id,
+            username: userInfo.displayName,
+            handle: `@${userInfo.username}`,
+            time: formatRelativeTime(post.createdAt),
+            text: post.content,
+            ...(post.imageUrl ? { image: post.imageUrl } : {}),
+            isLiked,
+            isBookmarked: false,
+            isReshared: false,
+            commentCount: validComments.length,
+            authorId: userInfo.id,
+            likeCount,
+            reshareCount: 0,
+            comments: commentsWithUsers,
+            showComments: false,
+          };
+        } catch (err) {
+          console.warn(`Error processing post ID ${post.id}:`, err);
+          return null;
+        }
+      })
+    );
+
+    const validComments = commentedPosts.filter((p): p is PostData => p !== null);
+    setCommented(validComments);
+
+    if (validComments.length === 0) {
+      console.warn("No valid commented posts after processing.");
+    }
+  } catch (err) {
+    console.error("Error fetching commented posts:", err);
+    setError(`Failed to load commented posts: ${err instanceof Error ? err.message : "Unknown error"}`);
+  }
+};
 
   const fetchBookmarkedPosts = async (userId: number) => {
     try {
@@ -555,6 +657,7 @@ const UserProfile = () => {
       setReshares(updatePostState)
       setBookmarkedPosts(updatePostState)
       setLikedPosts(updatePostState)
+      setCommented(updatePostState)
 
       const method = post.isLiked ? "DELETE" : "POST"
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
@@ -580,6 +683,7 @@ const UserProfile = () => {
         setReshares(revertPostState)
         setBookmarkedPosts(revertPostState)
         setLikedPosts(revertPostState)
+        setCommented(revertPostState)
 
         if (res.status === 401) {
           setError("Session expired. Please log in again.")
@@ -604,6 +708,7 @@ const UserProfile = () => {
         setReshares(updateLikeStatus)
         setBookmarkedPosts(updateLikeStatus)
         setLikedPosts(updateLikeStatus)
+        setCommented(updateLikeStatus)
       }
     } catch (err) {
       console.error("Error toggling like:", err)
@@ -637,6 +742,7 @@ const UserProfile = () => {
       setReshares(updateBookmarkState)
       setBookmarkedPosts(updateBookmarkState)
       setLikedPosts(updateBookmarkState)
+      setCommented(updateBookmarkState)
 
       const method = post.isBookmarked ? "DELETE" : "POST"
       const url = post.isBookmarked ? `${API_URL}/api/bookmarks/${postId}` : `${API_URL}/api/bookmarks`
@@ -665,6 +771,7 @@ const UserProfile = () => {
         setReshares(revertBookmarkState)
         setBookmarkedPosts(revertBookmarkState)
         setLikedPosts(revertBookmarkState)
+        setCommented(revertBookmarkState)
 
         if (res.status === 401) {
           setError("Session expired. Please log in again.")
@@ -689,6 +796,7 @@ const UserProfile = () => {
         setReshares(updateBookmarkStatus)
         setBookmarkedPosts(updateBookmarkStatus)
         setLikedPosts(updateBookmarkStatus)
+        setCommented(updateBookmarkStatus)
       }
     } catch (err) {
       console.error("Error toggling bookmark:", err)
@@ -777,6 +885,17 @@ const UserProfile = () => {
             : post
         )
       )
+      setCommented((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                comments: [...post.comments, formattedComment],
+                commentCount: post.commentCount + 1,
+              }
+            : post
+        )
+      )
     } catch (err) {
       console.error("Error adding comment:", err)
       setError("Failed to add comment.")
@@ -804,6 +923,8 @@ const UserProfile = () => {
       setPosts(posts.filter((post) => post.id !== postId))
       setReshares(reshares.filter((post) => post.id !== postId))
       setBookmarkedPosts(bookmarkedPosts.filter((post) => post.id !== postId))
+      setLikedPosts(likedPosts.filter((post) => post.id !== postId))
+      setCommented(commentedPosts.filter((post) => post.id !== postId))
     } catch (err) {
       console.error("Error deleting post:", err)
       setError("Failed to delete post.")
@@ -831,6 +952,11 @@ const UserProfile = () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     )
+    setCommented((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    )
   }
 
   useEffect(() => {
@@ -842,6 +968,7 @@ const UserProfile = () => {
         await fetchResharedPosts()
         await fetchBookmarkedPosts(currentUser.id)
         await fetchLikedPosts(currentUser.id)
+        await fetchCommentedPosts(currentUser.id)
         const allUsers = await fetchUsers()
         await fetchFollowing(currentUser.id, allUsers)
         await fetchFollowers(currentUser.id, allUsers)
@@ -990,7 +1117,43 @@ const UserProfile = () => {
           </TabsContent>
 
           <TabsContent value="comments">
-            <div className="p-4 dark:text-gray-400">No comments yet.</div>
+            {error && (
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {commentedPosts.length === 0 ? (
+              <div className="p-4 text-gray-400">No commented posts yet.</div>
+            ) : (
+              commentedPosts.map((post) => (
+                <div key={post.id} className="mb-4">
+                  <Post
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={handleReshare}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                  />
+                </div>
+              ))
+            )}
           </TabsContent>
 
           <TabsContent value="likes">
