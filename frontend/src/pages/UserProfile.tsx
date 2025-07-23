@@ -804,9 +804,103 @@ const UserProfile = () => {
     }
   }
 
-  const handleReshare = () => {
-    setError("Reshare functionality is currently unavailable.")
-  }
+  const handleReshare = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId) ||
+                  reshares.find((p) => p.id === postId) ||
+                  bookmarkedPosts.find((p) => p.id === postId) ||
+                  likedPosts.find((p) => p.id === postId) ||
+                  commentedPosts.find((p) => p.id === postId)
+      if (!post) {
+        setError("Post not found.")
+        return
+      }
+      if (!user) {
+        setError("Please log in to reshare/unreshare posts.")
+        return
+      }
+
+      const updateReshareState = (prevPosts: PostData[]) =>
+        prevPosts.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                isReshared: !p.isReshared,
+                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+              }
+            : p
+        )
+
+      setPosts(updateReshareState)
+      setReshares(updateReshareState)
+      setBookmarkedPosts(updateReshareState)
+      setLikedPosts(updateReshareState)
+      setCommented(updateReshareState)
+
+      const method = post.isReshared ? "DELETE" : "POST"
+      const url = post.isReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`
+      const body = post.isReshared ? null : JSON.stringify({ postId })
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body,
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error(`Failed to ${post.isReshared ? "unreshare" : "reshare"} post ${postId}: ${res.status} ${errorText}`)
+        const revertReshareState = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  isReshared: post.isReshared,
+                  reshareCount: post.isReshared ? p.reshareCount + 1 : p.reshareCount - 1,
+                }
+              : p
+          )
+
+        setPosts(revertReshareState)
+        setReshares(revertReshareState)
+        setBookmarkedPosts(revertReshareState)
+        setLikedPosts(revertReshareState)
+        setCommented(revertReshareState)
+
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.")
+        } else {
+          throw new Error(`Failed to ${post.isReshared ? "unreshare" : "reshare"} post: ${errorText}`)
+        }
+      }
+
+      const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, {
+        credentials: "include",
+      })
+      if (hasResharedRes.ok) {
+        const reshareData = await hasResharedRes.json()
+        const updateReshareStatus = (prevPosts: PostData[]) =>
+          prevPosts.map((p) =>
+            p.id === postId
+              ? { ...p, isReshared: reshareData === true }
+              : p
+          )
+
+        setPosts(updateReshareStatus)
+        setReshares(updateReshareStatus)
+        setBookmarkedPosts(updateReshareStatus)
+        setLikedPosts(updateReshareStatus)
+        setCommented(updateReshareStatus)
+      }
+    } catch (err) {
+      console.error("Error toggling reshare:", err)
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`)
+    }
+  };
+
 
   const handleAddComment = async (postId: number, commentText: string) => {
     if (!user) {
@@ -1062,7 +1156,7 @@ const UserProfile = () => {
                     onLike={() => handleLike(post.id)}
                     onBookmark={() => handleBookmark(post.id)}
                     onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
+                    onReshare={() => handleReshare(post.id)}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     showComments={post.showComments}
@@ -1102,7 +1196,7 @@ const UserProfile = () => {
                     onLike={() => handleLike(post.id)}
                     onBookmark={() => handleBookmark(post.id)}
                     onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
+                    onReshare={() => handleReshare(post.id)}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     showComments={post.showComments}
@@ -1142,7 +1236,7 @@ const UserProfile = () => {
                     onLike={() => handleLike(post.id)}
                     onBookmark={() => handleBookmark(post.id)}
                     onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
+                    onReshare={() => handleReshare(post.id)}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     showComments={post.showComments}
@@ -1182,7 +1276,7 @@ const UserProfile = () => {
                     onLike={() => handleLike(post.id)}
                     onBookmark={() => handleBookmark(post.id)}
                     onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
+                    onReshare={() => handleReshare(post.id)}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     showComments={post.showComments}
@@ -1222,7 +1316,7 @@ const UserProfile = () => {
                     onLike={() => handleLike(post.id)}
                     onBookmark={() => handleBookmark(post.id)}
                     onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
+                    onReshare={() => handleReshare(post.id)}
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     showComments={post.showComments}
