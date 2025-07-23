@@ -231,7 +231,6 @@ const UserProfile = () => {
     }
 
     const commentedList: { id: number; content: string; imageUrl: string | null; createdAt: string }[] = await com.json();
-    console.log("Fetched commented posts:", commentedList);
 
     if (!Array.isArray(commentedList) || commentedList.length === 0) {
       console.warn("No commented posts found for user:", userId);
@@ -717,92 +716,80 @@ const UserProfile = () => {
   }
 
   const handleBookmark = async (postId: number) => {
-    try {
-      const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId)
-      if (!post) {
-        setError("Post not found.")
-        return
-      }
-      if (!user) {
-        setError("Please log in to bookmark/unbookmark posts.")
-        return
-      }
+  let post: PostData | undefined;
+  try {
+    post = posts.find((p) => p.id === postId) ||
+           reshares.find((p) => p.id === postId) ||
+           bookmarkedPosts.find((p) => p.id === postId) ||
+           likedPosts.find((p) => p.id === postId);
+    
+    if (!post) {
+      setError("Post not found.");
+      return;
+    }
+    
+    if (!user) {
+      setError("Please log in to bookmark/unbookmark posts.");
+      return;
+    }
 
-      const updateBookmarkState = (prevPosts: PostData[]) =>
+    // Store the original bookmark state
+    const originalBookmarkState = post.isBookmarked;
+
+    // Optimistic update
+    const updateBookmarkState = (prevPosts: PostData[]) =>
+      prevPosts.map((p) =>
+        p.id === postId
+          ? { ...p, isBookmarked: !p.isBookmarked }
+          : p
+      );
+
+    setPosts(updateBookmarkState);
+    setReshares(updateBookmarkState);
+    setBookmarkedPosts(updateBookmarkState);
+    setLikedPosts(updateBookmarkState);
+    setCommented(updateBookmarkState);
+
+    const method = post.isBookmarked ? "DELETE" : "POST";
+    const url = `${API_URL}/api/bookmarks/${user.id}/${postId}`;
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Failed to ${originalBookmarkState ? "unbookmark" : "bookmark"} post ${postId}: ${res.status} ${errorText}`);
+      
+      const revertBookmarkState = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
           p.id === postId
-            ? { ...p, isBookmarked: !p.isBookmarked }
+            ? { ...p, isBookmarked: originalBookmarkState }
             : p
-        )
+        );
 
-      setPosts(updateBookmarkState)
-      setReshares(updateBookmarkState)
-      setBookmarkedPosts(updateBookmarkState)
-      setLikedPosts(updateBookmarkState)
-      setCommented(updateBookmarkState)
+      setPosts(revertBookmarkState);
+      setReshares(revertBookmarkState);
+      setBookmarkedPosts(revertBookmarkState);
+      setLikedPosts(revertBookmarkState);
+      setCommented(revertBookmarkState);
 
-      const method = post.isBookmarked ? "DELETE" : "POST"
-      const url = post.isBookmarked ? `${API_URL}/api/bookmarks/${postId}` : `${API_URL}/api/bookmarks`
-      const body = post.isBookmarked ? null : JSON.stringify({ postId })
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body,
-      })
-
-      if (!res.ok) {
-        const errorText = await res.text()
-        console.error(`Failed to ${post.isBookmarked ? "unbookmark" : "bookmark"} post ${postId}: ${res.status} ${errorText}`)
-        const revertBookmarkState = (prevPosts: PostData[]) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isBookmarked: post.isBookmarked }
-              : p
-          )
-
-        setPosts(revertBookmarkState)
-        setReshares(revertBookmarkState)
-        setBookmarkedPosts(revertBookmarkState)
-        setLikedPosts(revertBookmarkState)
-        setCommented(revertBookmarkState)
-
-        if (res.status === 401) {
-          setError("Session expired. Please log in again.")
-        } else {
-          throw new Error(`Failed to ${post.isBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`)
-        }
+      if (res.status === 401) {
+        setError("Session expired. Please log in again.");
+      } else {
+        setError(errorText || `Failed to ${originalBookmarkState ? "unbookmark" : "bookmark"} post.`);
       }
-
-      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/has-bookmarked/${postId}`, {
-        credentials: "include",
-      })
-      if (hasBookmarkedRes.ok) {
-        const bookmarkData = await hasBookmarkedRes.json()
-        const updateBookmarkStatus = (prevPosts: PostData[]) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isBookmarked: bookmarkData === true }
-              : p
-          )
-
-        setPosts(updateBookmarkStatus)
-        setReshares(updateBookmarkStatus)
-        setBookmarkedPosts(updateBookmarkStatus)
-        setLikedPosts(updateBookmarkStatus)
-        setCommented(updateBookmarkStatus)
-      }
-    } catch (err) {
-      console.error("Error toggling bookmark:", err)
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isBookmarked ? "unbookmark" : "bookmark"} post.`)
+      return;
     }
+  } catch (err) {
+    console.error("Error toggling bookmark:", err);
+    setError(`Failed to ${post ? (post.isBookmarked ? "unbookmark" : "bookmark") : "process"} post.`);
   }
+};
 
   const handleReshare = async (postId: number) => {
     try {
