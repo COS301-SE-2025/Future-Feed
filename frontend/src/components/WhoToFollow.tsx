@@ -10,7 +10,7 @@ interface TopFollowedUser {
   username: string
   name: string
   followerCount: number
-  imageUrl?: string
+  profilePicture?: string
 }
 
 const WhoToFollow = () => {
@@ -117,12 +117,12 @@ const WhoToFollow = () => {
                 <div key={user.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10 border border-lime-500">
-                      <AvatarImage src={user.imageUrl} alt={`@${user.username}`} />
-                      <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
+                      <AvatarFallback>{user.username}</AvatarFallback>
                     </Avatar>
                     <div>
                       <p className="font-semibold">{user.username}</p>
-                      <p className="dark:text-lime-500">@{user.name.split("@")[0]}</p>
+                      <p className="dark:text-lime-500">@{user.name}</p>
                     </div>
                   </div>
 
