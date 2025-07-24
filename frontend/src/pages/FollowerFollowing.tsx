@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
+import { Button } from "@/components/ui/button"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -185,19 +186,19 @@ const FollowerFollowing = () => {
           
         </div>
         {followStatus[user.id] ? (
-          <button
+          <Button
             onClick={() => handleUnfollow(user.id)}
-            className="px-4 py-1 rounded-full border border-gray-400 dark:text-white font-semibold hover:bg-lime-500 hover:cursor-pointer"
+            className="px-4 py-1 rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
           >
             Unfollow
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             onClick={() => handleFollow(user)}
             className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
           >
             Follow
-          </button>
+          </Button>
         )}
       </CardContent>
     </Card>
