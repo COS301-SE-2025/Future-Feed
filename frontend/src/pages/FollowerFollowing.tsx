@@ -12,6 +12,7 @@ import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -236,8 +237,11 @@ const FollowerFollowing = () => {
 
         <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-600 z-10">
           <Avatar className=" w-24 h-24 border-4 dark:border-lime-600">
-            <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
-            <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+               <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              
+            </Link>
           </Avatar>
           <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
           <p className="dark:text-gray-400">@{user.username}</p>
