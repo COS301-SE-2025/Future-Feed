@@ -10,6 +10,7 @@ import WhatsHappening from "@/components/WhatsHappening"
 import { Input } from "@/components/ui/input"
 import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useFollowStore } from "@/store/useFollowStore"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -22,32 +23,32 @@ interface UserProfile {
   dateOfBirth?: string | null
   email: string
 }
+interface TopFollowedUser extends UserProfile {
+  followerCount: number
+}
 
 interface User {
   id: number;
   username: string;
+  name:string;
   displayName: string;
   email: string;
-  profilePicture: string;
-  bio: string;
+  profilePicture?: string | null;
+  bio?: string | null;
+  dateOfBirth?: string | null;
 }
 
-interface FollowRelation {
-  id: number;
-  followerId: number;
-  followedId: number;
-  followedAt: string;
-}
 
 const FollowerFollowing = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [user, setUser] = useState<UserProfile | null>(null)
-  const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
+  const { updateFollowStatus, addFollowingUser, removeFollowingUser } = useFollowStore();
+  const { followStatus } = useFollowStore();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const { followingUsers, fetchFollowers, fetchFollowing, setFollowers ,followers, setFollowingUsers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
-  const [followers, setFollowers] = useState<User[]>([]);
+  
   const [followersLoading, setFollowersLoading] = useState(true);
   const [followingLoading, setFollowingLoading] = useState(true);
   const location = useLocation();
@@ -84,44 +85,6 @@ const FollowerFollowing = () => {
     return await res.json();
   };
 
-  const fetchFollowing = async (userId: number, allUsers: User[]) => {
-    try {
-      setFollowingLoading(true);
-      const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
-        method: "GET",
-        credentials: "include",
-      });
-
-      const data: FollowRelation[] = await res.json();
-      const followedUserIds = data.map((relation) => relation.followedId);
-      const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
-      setFollowingUsers(followedUsers);
-    } catch (err) {
-      console.error("Failed to fetch following users", err);
-    } finally {
-      setFollowingLoading(false);
-    }
-  };
-
-  const fetchFollowers = async (userId: number, allUsers: User[]) => {
-    try {
-      setFollowersLoading(true);
-      const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
-        method: "GET",
-        credentials: "include",
-      });
-      const data: FollowRelation[] = await res.json();
-      const followerUserIds = data.map((relation) => relation.followerId);
-      const followerUsers = allUsers.filter((user) =>
-        followerUserIds.includes(user.id)
-      );
-      setFollowers(followerUsers);
-    } catch (err) {
-      console.error("Failed to fetch followers", err);
-    } finally {
-      setFollowersLoading(false);
-    }
-  };
 
   const checkFollowStatus = async (userId: number) => {
     try {
@@ -138,15 +101,16 @@ const FollowerFollowing = () => {
     }
   };
 
-  const handleFollow = async (id: number) => {
+  const handleFollow = async (user: User) => {
     try {
       await fetch(`${API_URL}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ followedId: id }),
+        body: JSON.stringify({ followedId: user.id }),
       });
-      setFollowStatus((prev) => ({ ...prev, [id]: true }));
+      updateFollowStatus(user.id, true);
+    addFollowingUser(user);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -156,14 +120,15 @@ const FollowerFollowing = () => {
     }
   };
 
-  const handleUnfollow = async (id: number) => {
+  const handleUnfollow = async (userId: number) => {
     try {
-      await fetch(`${API_URL}/api/follow/${id}`, {
+      await fetch(`${API_URL}/api/follow/${userId}`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-      setFollowStatus((prev) => ({ ...prev, [id]: false }));
+      updateFollowStatus(userId, false);
+    removeFollowingUser(userId);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -181,9 +146,12 @@ const FollowerFollowing = () => {
 
         const allUsers = await fetchUsers();
         setUsers(allUsers);
+        console.log("Fetched all users:", allUsers);
 
         await fetchFollowing(currentUser.id, allUsers);
+        setFollowingLoading(false);
         await fetchFollowers(currentUser.id, allUsers);
+        setFollowersLoading(false);
 
         const statusEntries = await Promise.all(
           allUsers.map(async (user: User) => {
@@ -191,8 +159,9 @@ const FollowerFollowing = () => {
             return [user.id, isFollowing] as const;
           })
         );
+        useFollowStore.getState().bulkSetFollowStatus(Object.fromEntries(statusEntries));
 
-        setFollowStatus(Object.fromEntries(statusEntries));
+        
       }
     };
 
@@ -207,12 +176,13 @@ const FollowerFollowing = () => {
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
-          <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+          <AvatarFallback>{user.username}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
           <p className="font-semibold">{user.displayName}</p>
           <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
-          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
+          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio || ""}</p>
+          
         </div>
         {followStatus[user.id] ? (
           <button
@@ -223,7 +193,7 @@ const FollowerFollowing = () => {
           </button>
         ) : (
           <button
-            onClick={() => handleFollow(user.id)}
+            onClick={() => handleFollow(user)}
             className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
           >
             Follow
@@ -298,7 +268,7 @@ const FollowerFollowing = () => {
             {followersLoading ? renderSkeleton() : (
               followers.length > 0 ? (
                 <div className="space-y-4">
-                  {followers.map((user) => renderUserCard(user))}
+                  {followers.map((user: User) => renderUserCard(user))}
                 </div>
               ) : (
                 <p className="p-4 dark:text-gray-400">You currently have no followers.</p>
@@ -309,7 +279,7 @@ const FollowerFollowing = () => {
           <TabsContent value="following">
             {followingLoading ? renderSkeleton() : (
               <div className="space-y-4">
-                {followingUsers.map((user) => renderUserCard(user))}
+                {followingUsers.map((user: User) => renderUserCard(user))}
               </div>
             )}
           </TabsContent>

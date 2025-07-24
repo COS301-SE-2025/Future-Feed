@@ -320,7 +320,7 @@ const UserProfile = () => {
       return userCache.get(userId)!
     }
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch user")

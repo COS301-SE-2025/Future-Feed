@@ -5,12 +5,19 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useFollowStore } from "@/store/useFollowStore"
 
-interface TopFollowedUser {
+interface User {
   id: number
   username: string
-  name: string
+  name:string
+  displayName: string
+  email: string
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+}
+
+interface TopFollowedUser extends User {
   followerCount: number
-  profilePicture?: string
 }
 
 const WhoToFollow = () => {
@@ -21,7 +28,7 @@ const WhoToFollow = () => {
 
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
 
-  const { followStatus, updateFollowStatus } = useFollowStore()
+  const { followStatus,followingUsers,setFollowingUsers,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
 
   useEffect(() => {
     const fetchTopUsers = async () => {
@@ -66,7 +73,11 @@ const WhoToFollow = () => {
         credentials: "include",
         body: JSON.stringify({ followedId: userId }),
       })
-      updateFollowStatus(userId, true)
+      updateFollowStatus(userId, true);
+      const userToAdd = topUsers.find((u) => u.id === userId)
+    if (userToAdd) {
+      addFollowingUser(userToAdd)
+    }
     } catch (err) {
       console.error(`Failed to follow user ${userId}`, err)
     } finally {
@@ -81,7 +92,8 @@ const WhoToFollow = () => {
         method: "DELETE",
         credentials: "include",
       })
-      updateFollowStatus(userId, false)
+      updateFollowStatus(userId, false);
+      removeFollowingUser(userId)
     } catch (err) {
       console.error(`Failed to unfollow user ${userId}`, err)
     } finally {
