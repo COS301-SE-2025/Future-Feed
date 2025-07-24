@@ -209,6 +209,8 @@ const HomePage = () => {
   };
 
 const fetchAllPosts = async () => {
+  setLoadingForYou(true);
+
   try {
     const [postsRes, myResharesRes] = await Promise.all([
       fetch(`${API_URL}/api/posts`, { credentials: "include" }),
@@ -312,11 +314,14 @@ const fetchAllPosts = async () => {
   } catch (err) {
     console.error("Error fetching posts:", err);
     setError("Failed to load posts.");
+  } finally {
+    setLoadingForYou(false);
   }
 };
 
 const fetchFollowingPosts = async () => {
   if (!currentUser?.id) return;
+  setLoadingFollowing(true);
 
   try {
     const [followRes, myResharesRes] = await Promise.all([
@@ -433,6 +438,8 @@ const fetchFollowingPosts = async () => {
   } catch (err) {
     console.error("Error fetching following posts:", err);
     setError("Failed to load posts from followed users.");
+  } finally {
+    setLoadingFollowing(false);
   }
 };
 
@@ -489,9 +496,11 @@ const fetchFollowingPosts = async () => {
 
   useEffect(() => {
     if (currentUser?.id) {
-      if (activeTab === "Following") {
+      
+      if (activeTab === "Following" && followingPosts.length === 0) {
         fetchFollowingPosts();
-      } else {
+      } 
+      if (activeTab === "for You" && posts.length === 0) {
         fetchAllPosts();
       }
     }
@@ -829,6 +838,26 @@ const fetchFollowingPosts = async () => {
     );
   };
 
+  const renderSkeletonPosts = () => {
+  return Array.from({ length: 5 }).map((_, index) => (
+    <div
+      key={index}
+      className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+    >
+      <div className="flex items-center space-x-4">
+        <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+        <div className="flex-1">
+          <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+        </div>
+      </div>
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+    </div>
+  ));
+};
+const [loadingForYou, setLoadingForYou] = useState(true);
+const [loadingFollowing, setLoadingFollowing] = useState(true);
+
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -933,34 +962,36 @@ const fetchFollowingPosts = async () => {
                   ))}
                 </TabsList>
                 <TabsContent value="for You" className="p-0">
-                  {posts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts available.</p>
-                      <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => setIsPostModalOpen(true)}
-                      >
-                        Create your first post
-                      </Button>
-                    </div>
-                  ) : (
-                    renderPosts(posts)
-                  )}
+                {loadingForYou ? renderSkeletonPosts() :
+    posts.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10">
+        <p className="text-lg dark:text-white">No posts available.</p>
+        <Button
+          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+          onClick={() => setIsPostModalOpen(true)}
+        >
+          Create your first post
+        </Button>
+      </div>
+    ) : (
+      renderPosts(posts)
+    )}
                 </TabsContent>
                 <TabsContent value="Following">
-                  {followingPosts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts from followed users.</p>
-                      <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchFollowingPosts()}
-                      >
-                        Refresh
-                      </Button>
-                    </div>
-                  ) : (
-                    renderPosts(followingPosts)
-                  )}
+                  {loadingFollowing ? renderSkeletonPosts() :
+    followingPosts.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10">
+        <p className="text-lg dark:text-white">No posts from followed users.</p>
+        <Button
+          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+          onClick={() => fetchFollowingPosts()}
+        >
+          Refresh
+        </Button>
+      </div>
+    ) : (
+      renderPosts(followingPosts)
+    )}
                 </TabsContent>
                 <TabsContent value="Presets">
                   <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">
