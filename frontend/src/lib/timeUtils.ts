@@ -12,7 +12,6 @@ export const formatRelativeTime = (date: string): string => {
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffHours < 1) {
     // Within the first hour: show seconds or minutes
