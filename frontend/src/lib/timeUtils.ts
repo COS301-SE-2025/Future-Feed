@@ -1,7 +1,5 @@
 export const formatRelativeTime = (date: string): string => {
-  console.log(`Input date: ${date}`);
   const normalizedDate = date.replace(/(\.\d{3})\d+/, '$1Z');
-  console.log(`Normalized date: ${normalizedDate}`);
   const postDate = new Date(normalizedDate);
   
   if (isNaN(postDate.getTime())) {
