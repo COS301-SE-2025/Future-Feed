@@ -3,6 +3,7 @@ package com.syntexsquad.futurefeed.Controller;
 import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.PostService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -75,21 +76,27 @@ public class PostController {
         return ResponseEntity.ok(postService.getAllPosts());
     }
 
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<Post>> getPaginatedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(postService.getPaginatedPosts(page, size));
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<Post>> getPostsByUser(@PathVariable Integer userId) {
         return ResponseEntity.ok(postService.getPostsByUserId(userId));
     }
+
     @GetMapping("/liked/{userId}")
     public ResponseEntity<List<Post>> getLikedPosts(@PathVariable Integer userId) {
         List<Post> likedPosts = postService.getLikedPostsByUserId(userId);
         return ResponseEntity.ok(likedPosts);
     }
+
     @GetMapping("/commented/{userId}")
     public ResponseEntity<List<Post>> getCommentedPosts(@PathVariable Integer userId) {
         List<Post> posts = postService.getPostsCommentedByUser(userId);
         return ResponseEntity.ok(posts);
     }
-
-
-
 }
