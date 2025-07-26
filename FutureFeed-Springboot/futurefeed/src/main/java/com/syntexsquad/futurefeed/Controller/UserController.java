@@ -1,10 +1,12 @@
 package com.syntexsquad.futurefeed.Controller;
 
+import com.syntexsquad.futurefeed.dto.FollowedUserDto;
 import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.dto.UserUpdateRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.service.AppUserService;
 
+import com.syntexsquad.futurefeed.service.FollowService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -22,16 +24,22 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final AppUserService userService;
+    private final FollowService followService;
 
-    public UserController(AppUserService userService) {
+
+    public UserController(AppUserService userService, FollowService followService ) {
         this.userService = userService;
+        this.followService = followService;
     }
 
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return (authentication != null) ? authentication.getName() : null;
     }
-
+    @GetMapping("/top-followed")
+    public ResponseEntity<List<FollowedUserDto>> getTopFollowedUsers() {
+        return ResponseEntity.ok(followService.getTopFollowedUsers(3));
+    }
     @GetMapping("/myInfo")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
