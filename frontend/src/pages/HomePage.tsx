@@ -588,6 +588,15 @@ const HomePage = () => {
       setError("Please log in to delete posts.");
       return;
     }
+    
+    // Store the original posts in case we need to restore them
+    const originalPosts = [...posts];
+    const originalFollowingPosts = [...followingPosts];
+
+    setPosts(posts.filter((post) => post.id !== postId));
+    setFollowingPosts(followingPosts.filter((post) => post.id !== postId));
+    setError(null);
+
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -601,11 +610,14 @@ const HomePage = () => {
         throw new Error("Unexpected delete response");
       }
 
-      setPosts(posts.filter((post) => post.id !== postId));
-      setFollowingPosts(followingPosts.filter((post) => post.id !== postId));
     } catch (err) {
       console.error("Error deleting post:", err);
-      setError("Failed to delete post.");
+      setError("Failed to delete post. Restoring ...");
+
+      setPosts(originalPosts);
+      setFollowingPosts(originalFollowingPosts);
+
+      setTimeout(() => setError(null), 3000);
     }
   };
 
