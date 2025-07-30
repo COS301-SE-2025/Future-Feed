@@ -70,6 +70,11 @@ public class BotExecutionService {
 
             String output = outputNode.asText().trim();
 
+            // Validate output before saving
+            if (isInvalidOutput(output)) {
+                throw new RuntimeException("Bot output is invalid or empty, skipping post creation.");
+            }
+
             // Save post
             BotPost post = new BotPost();
             post.setContent(output);
@@ -88,4 +93,30 @@ public class BotExecutionService {
             throw new RuntimeException("Bot execution failed: " + e.getMessage(), e);
         }
     }
+
+    private boolean isInvalidOutput(String output) {
+        if (output == null || output.isEmpty()) {
+            return true;
+        }
+
+        String lower = output.toLowerCase();
+
+        // Check minimal length
+        if (output.length() < 20) {
+            return true;
+        }
+
+        // Check for known failure or irrelevant phrases
+        if (lower.contains("sorry, i couldn't extract meaningful content") ||
+            lower.contains("failed to fetch context") ||
+            lower.contains("no relevant news found") ||
+            lower.contains("error") ||
+            lower.contains("could not") ||
+            lower.contains("unable to")) {
+            return true;
+        }
+
+        return false;
+    }
 }
+
