@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "bots")
@@ -31,8 +32,8 @@ public class Bot {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    @JsonIgnore
     private AppUser owner;
-
     // ======= Getters and Setters =======
 
     public Integer getId() {

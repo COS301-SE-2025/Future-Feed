@@ -1,6 +1,6 @@
 package com.syntexsquad.futurefeed.Controller;
 
-import com.syntexsquad.futurefeed.model.BotPosts;
+import com.syntexsquad.futurefeed.dto.BotPostDTO;
 import com.syntexsquad.futurefeed.service.BotPostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +16,12 @@ public class BotPostController {
     private BotPostService botPostService;
 
     @PostMapping("/link")
-    public ResponseEntity<BotPosts> linkBotToPost(@RequestParam Integer botId, @RequestParam Integer postId) {
-        BotPosts botPost = botPostService.linkBotToPost(botId, postId);
-        return ResponseEntity.ok(botPost);
+    public ResponseEntity<BotPostDTO> linkBotToPost(@RequestParam Integer botId, @RequestParam Integer postId) {
+        return ResponseEntity.ok(botPostService.linkBotToPost(botId, postId));
     }
 
     @GetMapping("/by-bot/{botId}")
-    public ResponseEntity<List<BotPosts>> getPostsByBot(@PathVariable Integer botId) {
+    public ResponseEntity<List<BotPostDTO>> getPostsByBot(@PathVariable Integer botId) {
         return ResponseEntity.ok(botPostService.getPostsByBot(botId));
     }
 }

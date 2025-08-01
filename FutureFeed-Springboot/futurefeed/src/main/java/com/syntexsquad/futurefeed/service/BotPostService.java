@@ -1,5 +1,6 @@
 package com.syntexsquad.futurefeed.service;
 
+import com.syntexsquad.futurefeed.dto.BotPostDTO;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.model.BotPosts;
 import com.syntexsquad.futurefeed.model.Post;
@@ -23,7 +24,7 @@ public class BotPostService {
     @Autowired
     private PostRepository postRepository;
 
-    public BotPosts linkBotToPost(Integer botId, Integer postId) {
+    public BotPostDTO linkBotToPost(Integer botId, Integer postId) {
         Bot bot = botRepository.findById(botId)
                 .orElseThrow(() -> new RuntimeException("Bot not found"));
 
@@ -34,10 +35,17 @@ public class BotPostService {
         botPost.setBot(bot);
         botPost.setPost(post);
 
-        return botPostRepository.save(botPost);
+        BotPosts saved = botPostRepository.save(botPost);
+
+        return new BotPostDTO(
+                saved.getId(),
+                saved.getBot().getId(),
+                saved.getPost().getId(),
+                saved.getCreatedAt()
+        );
     }
 
-    public List<BotPosts> getPostsByBot(Integer botId) {
-        return botPostRepository.findByBotId(botId);
+    public List<BotPostDTO> getPostsByBot(Integer botId) {
+        return botPostRepository.findDtoByBotId(botId);
     }
 }

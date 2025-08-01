@@ -8,7 +8,16 @@ public class BotPostDTO {
     private Integer postId;
     private LocalDateTime createdAt;
 
-    // Getters and Setters
+    public BotPostDTO() {
+    }
+
+    public BotPostDTO(Integer id, Integer botId, Integer postId, LocalDateTime createdAt) {
+        this.id = id;
+        this.botId = botId;
+        this.postId = postId;
+        this.createdAt = createdAt;
+    }
+
     public Integer getId() {
         return id;
     }

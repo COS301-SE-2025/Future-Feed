@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "bot_posts")
@@ -13,10 +14,12 @@ public class BotPosts {
 
     @ManyToOne
     @JoinColumn(name = "bot_id", nullable = false)
+    @JsonIgnore
     private Bot bot;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
+    @JsonIgnore
     private Post post;
 
     @Column(name = "created_at")
