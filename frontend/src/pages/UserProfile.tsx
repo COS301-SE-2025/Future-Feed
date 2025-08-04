@@ -320,7 +320,7 @@ const UserProfile = () => {
       return userCache.get(userId)!
     }
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch user")
@@ -797,8 +797,11 @@ const UserProfile = () => {
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+               <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
               <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              
+            </Link>
             </Avatar>
           </div>
         </div>

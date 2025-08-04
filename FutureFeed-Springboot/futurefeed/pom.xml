@@ -63,12 +63,6 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-oauth2-client</artifactId>
     </dependency>
-    <!-- Java Melody -->
-    <dependency>
-        <groupId>net.bull.javamelody</groupId>
-        <artifactId>javamelody-spring-boot-starter</artifactId>
-        <version>2.4.0</version> <!-- Use the latest compatible version for Spring Boot 3 -->
-    </dependency>
         <!-- Development -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

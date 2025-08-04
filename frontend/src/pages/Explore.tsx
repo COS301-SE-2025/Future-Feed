@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
@@ -11,6 +10,9 @@ import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useFollowStore } from "@/store/useFollowStore";
+import { Button } from "@/components/ui/button";
+
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -32,12 +34,12 @@ interface FollowRelation {
 
 const Explore = () => {
   const [users, setUsers] = useState<User[]>([]);
-  const [followStatus, setFollowStatus] = useState<Record<number, boolean>>({});
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const [followingUsers, setFollowingUsers] = useState<User[]>([]);
+  const { followingUserIds, setFollowingUserIds } = useFollowStore();
   const [loading, setLoading] = useState(true);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
+  const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
 
   const fetchCurrentUserId = async () => {
     const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -66,7 +68,7 @@ const Explore = () => {
       const data: FollowRelation[] = await res.json();
       const followedUserIds = data.map((relation) => relation.followedId);
       const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
-      setFollowingUsers(followedUsers);
+      setFollowingUserIds(followedUserIds);
     } catch (err) {
       console.error("Failed to fetch following users", err);
     }
@@ -97,7 +99,7 @@ const Explore = () => {
         credentials: "include",
         body: JSON.stringify({ followedId: id }),
       });
-      setFollowStatus((prev) => ({ ...prev, [id]: true }));
+      setFollowStatus(id, true);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -118,7 +120,7 @@ const Explore = () => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
-      setFollowStatus((prev) => ({ ...prev, [id]: false }));
+      setFollowStatus(id, false);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -148,7 +150,7 @@ const Explore = () => {
         })
       );
 
-      setFollowStatus(Object.fromEntries(statusEntries));
+      bulkSetFollowStatus(Object.fromEntries(statusEntries));
       setLoading(false);
     };
 
@@ -156,6 +158,7 @@ const Explore = () => {
   }, []);
 
   const renderUserCard = (user: User) => {
+    
     if (unfollowingId === user.id || followingId === user.id) {
       return (
         <Card key={user.id} className="dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl">
@@ -185,19 +188,19 @@ const Explore = () => {
             <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
           </div>
           {followStatus[user.id] ? (
-            <button
+            <Button
               onClick={() => handleUnfollow(user.id)}
-              className="px-4 py-1 rounded-full border border-gray-400 font-semibold dark:text-white hover:bg-lime-500 hover:cursor-pointer"
+              className="px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
             >
               Unfollow
-            </button>
+            </Button>
           ) : (
-            <button
+            <Button
               onClick={() => handleFollow(user.id)}
-              className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+              className="px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
             >
               Follow
-            </button>
+            </Button>
           )}
         </CardContent>
       </Card>
@@ -269,7 +272,11 @@ const Explore = () => {
 
           <TabsContent value="accounts following">
             <div className="space-y-4">
-              {loading ? renderSkeleton() : followingUsers.map((user) => renderUserCard(user))}
+              {loading
+      ? renderSkeleton()
+      : users
+          .filter((user) => followingUserIds.includes(user.id))
+          .map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
         </Tabs>
