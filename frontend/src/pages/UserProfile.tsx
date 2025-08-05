@@ -399,20 +399,23 @@ const UserProfile = () => {
     }
   };
 
-  const renderPostCard = () => (
-    <div className="flex flex-col gap-2 border border-border rounded-xl p-4">
-      <div className="flex items-center gap-4">
-        <Skeleton className="h-10 w-10 rounded-full" />
+  const renderSkeletonPosts = () => {
+    return Array.from({ length: 5 }).map((_, index) => (
+    <div
+      key={index}
+      className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+    >
+      <div className="flex items-center space-x-4">
+        <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
         <div className="flex-1">
-          <Skeleton className="h-4 w-24 mb-2" />
-          <Skeleton className="h-3 w-40" />
+          <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
         </div>
       </div>
-      <Skeleton className="h-4 w-full mt-4" />
-      <Skeleton className="h-3 w-3/4 mt-2" />
-      <Skeleton className="h-60 w-full mt-4 rounded-xl" />
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
     </div>
-  );
+  ));
+  };
 
   const fetchLikedPosts = async (userId: number) => {
     setTabLoading((prev) => ({ ...prev, likes: true }));
@@ -1033,7 +1036,7 @@ const UserProfile = () => {
     );
     setLikedPosts((prevPosts) =>
       prevPosts.map((post) =>
-        post.id === postId ? { ...post, toString: !post.showComments } : post
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
     setCommented((prevPosts) =>
@@ -1160,9 +1163,7 @@ const UserProfile = () => {
             )}
             {tabLoading.posts ? (
               <div className="flex flex-col gap-6 py-4">
-                {[...Array(3)].map((_, idx) => (
-                  <div key={idx}>{renderPostCard()}</div>
-                ))}
+                {renderSkeletonPosts()}
               </div>
             ) : posts.length === 0 ? (
               <div className="p-4 text-gray-400">No posts yet.</div>
@@ -1205,9 +1206,7 @@ const UserProfile = () => {
             )}
             {tabLoading.refeeds ? (
               <div className="flex flex-col gap-6 py-4">
-                {[...Array(3)].map((_, idx) => (
-                  <div key={idx}>{renderPostCard()}</div>
-                ))}
+                {renderSkeletonPosts()}
               </div>
             ) : reshares.length === 0 ? (
               <div className="p-4 text-gray-400">No re-feeds yet.</div>
@@ -1250,9 +1249,7 @@ const UserProfile = () => {
             )}
             {tabLoading.comments ? (
               <div className="flex flex-col gap-6 py-4">
-                {[...Array(3)].map((_, idx) => (
-                  <div key={idx}>{renderPostCard()}</div>
-                ))}
+                {renderSkeletonPosts()}
               </div>
             ) : commentedPosts.length === 0 ? (
               <div className="p-4 text-gray-400">No commented posts yet.</div>
@@ -1295,9 +1292,7 @@ const UserProfile = () => {
             )}
             {tabLoading.likes ? (
               <div className="flex flex-col gap-6 py-4">
-                {[...Array(3)].map((_, idx) => (
-                  <div key={idx}>{renderPostCard()}</div>
-                ))}
+                {renderSkeletonPosts()}
               </div>
             ) : likedPosts.length === 0 ? (
               <div className="p-4 text-gray-400">No likes yet.</div>
@@ -1340,9 +1335,7 @@ const UserProfile = () => {
             )}
             {tabLoading.bookmarks ? (
               <div className="flex flex-col gap-6 py-4">
-                {[...Array(3)].map((_, idx) => (
-                  <div key={idx}>{renderPostCard()}</div>
-                ))}
+                {renderSkeletonPosts()}
               </div>
             ) : bookmarkedPosts.length === 0 ? (
               <div className="p-4 text-gray-400">No bookmarks yet.</div>
