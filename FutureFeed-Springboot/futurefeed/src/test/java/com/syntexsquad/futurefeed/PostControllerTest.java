@@ -3,11 +3,12 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.PostController;
 import com.syntexsquad.futurefeed.dto.PostRequest;
+import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
+import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -36,6 +37,9 @@ public class PostControllerTest {
 
     @MockBean
     private PostService postService;
+
+    @MockBean
+    private MediaService mediaService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -104,7 +108,7 @@ public class PostControllerTest {
         post2.setContent("Keyword match two");
         post2.setImageUrl("https://example.com/2.jpg");
 
-        List<Post> mockResults = List.of(post1, post2); // <- use List<Post>
+        List<Post> mockResults = List.of(post1, post2);
         when(postService.searchPosts("keyword")).thenReturn(mockResults);
 
         mockMvc.perform(get("/api/posts/search")
@@ -121,7 +125,6 @@ public class PostControllerTest {
     @Test
     void testDeletePost_shouldReturnSuccessMessage() throws Exception {
         int postId = 1;
-
         when(postService.deletePost(postId)).thenReturn(true);
 
         mockMvc.perform(delete("/api/posts/del/{id}", postId))
@@ -132,7 +135,6 @@ public class PostControllerTest {
     @Test
     void testDeletePost_notFound_shouldReturn404() throws Exception {
         int postId = 999;
-
         when(postService.deletePost(postId)).thenReturn(false);
 
         mockMvc.perform(delete("/api/posts/del/{id}", postId))
@@ -143,7 +145,6 @@ public class PostControllerTest {
     @Test
     void testDeletePost_serverError_shouldReturn500() throws Exception {
         int postId = 1;
-
         when(postService.deletePost(postId)).thenThrow(new RuntimeException("DB failure"));
 
         mockMvc.perform(delete("/api/posts/del/{id}", postId))
@@ -155,7 +156,8 @@ public class PostControllerTest {
     static class TestSecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable().authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.csrf().disable()
+                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             return http.build();
         }
     }
