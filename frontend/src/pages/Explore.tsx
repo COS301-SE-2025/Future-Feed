@@ -287,13 +287,13 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
 
           <TabsContent value="accounts">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {loading ? renderSkeleton() : users.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
               {followingloading
       ? renderSkeleton()
       : users
