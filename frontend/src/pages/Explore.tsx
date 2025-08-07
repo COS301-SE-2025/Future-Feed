@@ -37,6 +37,7 @@ const Explore = () => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
   const [loading, setLoading] = useState(true);
+  const [followingloading, setfollowingloading] = useState(true);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
@@ -135,13 +136,19 @@ const Explore = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setfollowingloading(true);
       const userId = await fetchCurrentUserId();
       setCurrentUserId(userId);
 
+   
       const allUsers = await fetchUsers();
       setUsers(allUsers);
+      setLoading(false);
+      
 
       await fetchFollowing(userId, allUsers);
+      setfollowingloading(false);
+
 
       const statusEntries = await Promise.all(
         allUsers.map(async (user: User) => {
@@ -151,7 +158,7 @@ const Explore = () => {
       );
 
       bulkSetFollowStatus(Object.fromEntries(statusEntries));
-      setLoading(false);
+     
     };
 
     loadData();
@@ -272,7 +279,7 @@ const Explore = () => {
 
           <TabsContent value="accounts following">
             <div className="space-y-4">
-              {loading
+              {followingloading
       ? renderSkeleton()
       : users
           .filter((user) => followingUserIds.includes(user.id))
