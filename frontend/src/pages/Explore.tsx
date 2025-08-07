@@ -190,7 +190,7 @@ const loadFollowingData = async (userId: number) => {
     }
 
     return (
-      <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
+      <Card key={user.id} className="w-full dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -204,14 +204,14 @@ const loadFollowingData = async (userId: number) => {
           {followStatus[user.id] ? (
             <Button
               onClick={() => handleUnfollow(user.id)}
-              className="w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
+              className="min-w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
             >
               Unfollow
             </Button>
           ) : (
             <Button
               onClick={() => handleFollow(user.id)}
-              className="w-[90px] px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
+              className="min-w-[90px] px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
             >
               Follow
             </Button>
@@ -238,11 +238,11 @@ const loadFollowingData = async (userId: number) => {
 
   return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
-      <aside className="w-[275px]">
+      <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
           <Input
             type="text"
@@ -287,13 +287,13 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
 
           <TabsContent value="accounts">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
               {loading ? renderSkeleton() : users.map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
               {followingloading
       ? renderSkeleton()
       : users
