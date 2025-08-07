@@ -34,6 +34,9 @@ interface FollowRelation {
 
 const Explore = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState("accounts");
+  // State to manage current user ID and following user IDs
+  const [hasLoadedFolllowing, setHasLoadedFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
   const [loading, setLoading] = useState(true);
@@ -136,7 +139,7 @@ const Explore = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      setfollowingloading(true);
+      
       const userId = await fetchCurrentUserId();
       setCurrentUserId(userId);
 
@@ -146,8 +149,7 @@ const Explore = () => {
       setLoading(false);
       
 
-      await fetchFollowing(userId, allUsers);
-      setfollowingloading(false);
+   
 
 
       const statusEntries = await Promise.all(
@@ -163,7 +165,12 @@ const Explore = () => {
 
     loadData();
   }, []);
-
+const loadFollowingData = async (userId: number) => {
+  setfollowingloading(true);
+   await fetchFollowing(userId, users);
+   setfollowingloading(false);
+   setHasLoadedFollowing(true);
+}
   const renderUserCard = (user: User) => {
     
     if (unfollowingId === user.id || followingId === user.id) {
@@ -197,14 +204,14 @@ const Explore = () => {
           {followStatus[user.id] ? (
             <Button
               onClick={() => handleUnfollow(user.id)}
-              className="px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+              className="w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
             >
               Unfollow
             </Button>
           ) : (
             <Button
               onClick={() => handleFollow(user.id)}
-              className="px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+              className="w-[90px] px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
             >
               Follow
             </Button>
@@ -251,7 +258,15 @@ const Explore = () => {
           </Link>
         </div>
 
-        <Tabs defaultValue="accounts" className="w-full p-2">
+        <Tabs
+        value={activeTab}
+        onValueChange={ (val) => {
+          setActiveTab(val);
+          if (val === "accounts following" && !hasLoadedFolllowing && currentUserId !== null) {
+            loadFollowingData(currentUserId);
+          }
+        }}
+         className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-black">
             {["forYou", "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
