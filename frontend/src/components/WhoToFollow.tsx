@@ -28,7 +28,7 @@ const WhoToFollow = () => {
 
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
 
-  const { followStatus,followingUsers,setFollowingUsers,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
+  const { followStatus,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
 
   useEffect(() => {
     const fetchTopUsers = async () => {

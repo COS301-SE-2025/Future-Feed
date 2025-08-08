@@ -109,6 +109,7 @@ const [isSearching, setIsSearching] = useState(false);
       const data: FollowRelation[] = await res.json();
       const followedUserIds = data.map((relation) => relation.followedId);
       const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+      console.log(followedUsers);
       setFollowingUserIds(followedUserIds);
     } catch (err) {
       console.error("Failed to fetch following users", err);

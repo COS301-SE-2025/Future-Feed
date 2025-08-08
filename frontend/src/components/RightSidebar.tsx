@@ -1,4 +1,4 @@
-import { Input } from "@/components/ui/input";
+
 import WhatsHappening from "./WhatsHappening";
 import WhoToFollow from "./WhoToFollow";
 
