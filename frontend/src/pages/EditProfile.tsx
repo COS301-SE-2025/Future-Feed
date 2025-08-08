@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Camera } from "lucide-react";
+import { ArrowLeft, Camera, Trash2, User } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ModeToggle } from "@/components/mode-toggle";
 import {
@@ -18,7 +18,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-
 interface FormData {
   displayName: string;
   bio: string;
@@ -26,8 +25,15 @@ interface FormData {
   dob: string;
 }
 
-const DEFAULT_ICON_DATA_URI =
-  "data:image/svg+xml,%3Csvg fill='black' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M20 5h-3.17l-.59-.65A2 2 0 0014.83 4h-5.66a2 2 0 00-1.41.35L7.17 5H4a2 2 0 00-2 2v11a2 2 0 002 2h16a2 2 0 002-2V7a2 2 0 00-2-2zm0 13H4V7h4.05l.59-.65.59-.65h5.54l.59.65.59.65H20zm-8-1a5 5 0 110-10 5 5 0 010 10zm0-8a3 3 0 100 6 3 3 0 000-6z'/%3E%3C/svg%3E";
+interface UserResponse {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture: string;
+  bio: string;
+  dateOfBirth: string;
+}
 
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
@@ -35,34 +41,48 @@ const EditProfile: React.FC = () => {
   const [formData, setFormData] = useState<FormData>({
     displayName: "",
     bio: "",
-    profileImage: DEFAULT_ICON_DATA_URI,
+    profileImage: "",
     dob: "",
   });
+  const [initialProfilePicture, setInitialProfilePicture] = useState<string>("");
 
   useEffect(() => {
     fetch(`${import.meta.env.VITE_API_URL}/api/user/myInfo`, {
       credentials: "include",
     })
-      .then((res) => res.json())
-      .then((data) =>
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user info");
+        return res.json();
+      })
+      .then((data: UserResponse) => {
+        const profilePicture = data.profilePicture?.startsWith("blob:") || !data.profilePicture
+          ? ""
+          : data.profilePicture;
         setFormData({
           displayName: data.displayName || "",
           bio: data.bio || "",
-          profileImage:
-            data.profilePicture?.startsWith("blob:") || !data.profilePicture
-              ? DEFAULT_ICON_DATA_URI
-              : data.profilePicture,
+          profileImage: profilePicture,
           dob: data.dateOfBirth || "",
-        })
-      )
-      .catch(console.error);
+        });
+        setInitialProfilePicture(profilePicture);
+      })
+      .catch((err) => {
+        console.error("Error fetching user info:", err);
+      });
   }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const imageURL = URL.createObjectURL(file);
-      setFormData({ ...formData, profileImage: imageURL });
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64String = reader.result as string;
+        setFormData({ ...formData, profileImage: base64String });
+      };
+      reader.onerror = () => {
+        console.error("Error reading file");
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -70,24 +90,40 @@ const EditProfile: React.FC = () => {
     e.preventDefault();
 
     try {
+      const body = {
+        displayName: formData.displayName,
+        bio: formData.bio,
+        dateOfBirth: formData.dob,
+        ...(formData.profileImage !== initialProfilePicture && { profilePicture: formData.profileImage }),
+      };
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/user/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
-          displayName: formData.displayName,
-          bio: formData.bio,
-          dateOfBirth: formData.dob,
-          profilePicture: formData.profileImage,
-        }),
+        body: JSON.stringify(body),
       });
 
-      if (!response.ok) throw new Error("Failed to update profile");
-      navigate("/profile");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update profile: ${errorText}`);
+      }
+
+      const updatedUser: UserResponse = await response.json();
+      if (
+        updatedUser.displayName === formData.displayName &&
+        updatedUser.bio === formData.bio &&
+        updatedUser.dateOfBirth === formData.dob &&
+        (formData.profileImage === initialProfilePicture || updatedUser.profilePicture === formData.profileImage)
+      ) {
+        navigate("/profile");
+      } else {
+        throw new Error("Profile update response does not match submitted data");
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Error updating profile:", err);
     }
   };
 
@@ -98,15 +134,16 @@ const EditProfile: React.FC = () => {
         credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to delete account");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete account: ${errorText}`);
+      }
 
       navigate("/"); // Redirect to landing page after delete
     } catch (err) {
-      console.error(err);
+      console.error("Error deleting account:", err);
     }
   };
-
-
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
@@ -125,6 +162,44 @@ const EditProfile: React.FC = () => {
             <ArrowLeft className="h-5 w-5 text-black" />
           </Button>
         </Link>
+        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <DialogTrigger asChild>
+            <Button
+              className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+              variant="ghost"
+            >
+              <Trash2 className="h-5 w-5 text-red-600" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Account</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete your account? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                className="cursor-pointer"
+                onClick={() => setShowDeleteDialog(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
+                onClick={() => {
+                  setShowDeleteDialog(false);
+                  handleDeleteAccount();
+                }}
+              >
+                Yes, Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <CardHeader>
           <CardTitle className="text-center text-4xl">Edit Profile</CardTitle>
         </CardHeader>
@@ -132,18 +207,18 @@ const EditProfile: React.FC = () => {
           <form onSubmit={handleSubmit} className="flex flex-col items-center">
             <div className="mb-3 flex w-full justify-center">
               <label htmlFor="profile-pic-upload" className="relative cursor-pointer">
-                {formData.profileImage === DEFAULT_ICON_DATA_URI ? (
-                  <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500">
-                    <Camera className="h-12 w-12 text-white" />
-                  </div>
-                ) : (
+                {formData.profileImage ? (
                   <img
                     src={formData.profileImage}
                     alt="Profile"
                     className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500"
                   />
+                ) : (
+                  <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500">
+                    <User className="h-12 w-12 text-white" />
+                  </div>
                 )}
-                <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.2)]" />
+                <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.1)]" />
                 <Input
                   type="file"
                   id="profile-pic-upload"
@@ -196,47 +271,6 @@ const EditProfile: React.FC = () => {
             >
               Save Changes
             </Button>
-
-            <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-              <DialogTrigger asChild>
-                <p
-                  className="mt-10 text-text-[15px] text-red-600 underline underline-offset-2 cursor-pointer hover:text-red-700 transition"
-                >
-                  Delete your account
-                </p>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Delete Account</DialogTitle>
-                  <DialogDescription >
-                    Are you sure you want to delete your account? This action cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="flex justify-end gap-4">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="cursor-pointer"
-                    onClick={() => setShowDeleteDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="button"
-                    className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
-                    onClick={() => {
-                      setShowDeleteDialog(false);
-                      handleDeleteAccount();
-                    }}
-                  >
-                    Yes, Delete
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-
-
-
           </form>
         </CardContent>
       </Card>
