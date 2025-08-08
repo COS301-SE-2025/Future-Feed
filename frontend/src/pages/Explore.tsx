@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
-import { Input } from "@/components/ui/input";
+import {Input } from "@/components/ui/input";
+
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import RightSidebar from "@/components/RightSidebar";
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFollowStore } from "@/store/useFollowStore";
 import { Button } from "@/components/ui/button";
+import SearchUser from "@/components/SearchUser";
 
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -33,6 +35,11 @@ interface FollowRelation {
 }
 
 const Explore = () => {
+  //search
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+const [isSearching, setIsSearching] = useState(false);
+
+  //
   const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
   // State to manage current user ID and following user IDs
@@ -44,6 +51,36 @@ const Explore = () => {
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
+  //
+  const handleSearch = async (query: string) => {
+  if (!query) {
+    setIsSearching(false);
+    setSearchResults([]);
+    return;
+  }
+
+  setIsSearching(true);
+  try {
+    const res = await fetch(`${API_URL}/api/user/search?q=${encodeURIComponent(query)}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Search failed");
+    const data: User[] = await res.json();
+    setSearchResults(data);
+
+    // Also set follow status for the searched users
+    const statusEntries = await Promise.all(
+      data.map(async (user) => [user.id, await checkFollowStatus(user.id)] as const)
+    );
+    bulkSetFollowStatus(Object.fromEntries(statusEntries));
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+  //
 
   const fetchCurrentUserId = async () => {
     const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -244,15 +281,21 @@ const loadFollowingData = async (userId: number) => {
 
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="bg-lime-600 rounded-full dark:bg-[#1a1a1a] dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-          />
+          <div className="sticky top-4 z-10 bg-gray-200 dark:bg-black">
+        <Input
+          type="text"
+        
+          placeholder="Search"
+        
+          className="border-lime-600 border-3 dark:placeholder:text-lime-500 rounded-2xl px-4 py-2 dark:bg-black dark:text-slate-100 border dark:border-lime-500 focus:ring-0 focus:outline-none"
+        />
+      </div>
+         
         </div>
 
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
+          
           <Link to="/settings">
             <Settings size={20} className="dark:text-lime-500" />
           </Link>
@@ -288,17 +331,20 @@ const loadFollowingData = async (userId: number) => {
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
-              {loading ? renderSkeleton() : users.map((user) => renderUserCard(user))}
+             {loading
+      ? renderSkeleton()
+      : (isSearching ? searchResults : users).map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
-              {followingloading
+             {followingloading
       ? renderSkeleton()
-      : users
-          .filter((user) => followingUserIds.includes(user.id))
-          .map((user) => renderUserCard(user))}
+      : (isSearching
+          ? searchResults.filter((u) => followingUserIds.includes(u.id))
+          : users.filter((u) => followingUserIds.includes(u.id))
+        ).map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
         </Tabs>
@@ -309,7 +355,11 @@ const loadFollowingData = async (userId: number) => {
         </div>
       </main>
 
-      <aside>
+      <aside className="gap-4 flex flex-col ">
+        <div className="sticky p-3 top-4 z-10 bg-gray-200 dark:bg-black">
+         <SearchUser onSearch={handleSearch} /> 
+        </div>
+        
         <RightSidebar />
       </aside>
     </div>
