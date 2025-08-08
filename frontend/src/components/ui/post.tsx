@@ -133,7 +133,7 @@ const Post: React.FC<PostProps> = ({
                 {topics.map((topic) => (
                   <span
                     key={topic.id}
-                    className="inline-block bg-lime-100 dark:bg-lime-900 text-lime-800 dark:text-lime-200 text-xs sm:text-sm px-2 py-1 rounded-full"
+                    className="inline-block border dark:border-lime-400 border-lime-500 bg-lime-100 dark:bg-lime-900 text-lime-800 dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
                   >
                     {topic.name}
                   </span>
