@@ -5,7 +5,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { Skeleton } from "@/components/ui/skeleton";
-import StaticPost from "@/components/ui/StaticPost";
+import StaticPost from "@/components/ui/staticPost";
 
 interface UserProfile {
   id: number;
