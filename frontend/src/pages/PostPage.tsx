@@ -576,6 +576,7 @@ const PostPage = () => {
           isUserLoaded={!!currentUser}
           currentUser={currentUser}
           authorId={post.authorId}
+          postId={post.id}
         />
       </main>
       <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">

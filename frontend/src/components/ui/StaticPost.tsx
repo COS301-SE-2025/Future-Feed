@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft, Share2 } from "lucide-react";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
@@ -50,6 +51,7 @@ interface PostProps {
   currentUser: UserProfile | null;
   authorId: number;
   profilePicture?: string;
+  postId: number; // Added for share link
 }
 
 const StaticPost: React.FC<PostProps> = ({
@@ -78,13 +80,25 @@ const StaticPost: React.FC<PostProps> = ({
   profilePicture,
 }) => {
   const [newComment, setNewComment] = React.useState("");
+  const [isCopied, setIsCopied] = React.useState(false);
   const navigate = useNavigate();
+
+  const postUrl = window.location.href;
 
   const handleSubmitComment = () => {
     if (newComment.trim() && isUserLoaded) {
       onAddComment(newComment);
       setNewComment("");
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(postUrl).then(() => {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 3000); // Hide pill after 3 seconds
+    }).catch((err) => {
+      console.error("Failed to copy link:", err);
+    });
   };
 
   const getInitials = (name: string | null | undefined) => {
@@ -94,7 +108,12 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl my-7 mb-4", className)}>
+    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl my-7 mb-4 relative", className)}>
+      {isCopied && (
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-lime-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
+          Link copied!
+        </div>
+      )}
       <CardContent className="p-1 mt-[-15px] ml-[20px]">
         <Button
           variant="ghost"
@@ -187,6 +206,39 @@ const StaticPost: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Re-Feed</span>
                 <span className="text-xs sm:text-sm ml-1">({reshareCount})</span>
               </Button>
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400"
+                    )}
+                    aria-label="Share post"
+                  >
+                    <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline text-sm">Share</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 dark:bg-[#1a1a1a] border-2 border-lime-500">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={postUrl}
+                      readOnly
+                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border dark:border-lime-500"
+                    />
+                    <Button
+                      onClick={handleCopyLink}
+                      className="bg-lime-500 text-white hover:bg-lime-600"
+                      aria-label="Copy link"
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               
               <Button
                 variant="ghost"
