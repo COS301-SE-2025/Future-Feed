@@ -12,18 +12,22 @@ import WhatsHappening from "@/components/WhatsHappening";
 interface Bot {
   id: number;
   name: string;
-  description: string;
+  prompt: string;
   createdAt: string;
   isActive: boolean;
+  schedule: "hourly" | "daily" | "weekly" | "monthly";
+  contextSource: string;
 }
 
 const Bots: React.FC = () => {
   const [bots, setBots] = useState<Bot[]>([
-    { id: 1, name: "SoccerBot", description: "Fetches latest soccer news", createdAt: "2025-07-01", isActive: true },
-    { id: 2, name: "GamingBot", description: "Fetches latest gaming news", createdAt: "2025-07-02", isActive: false },
+    { id: 1, name: "SoccerBot", prompt: "Fetches latest soccer news", createdAt: "2025-07-01", isActive: true, schedule: "daily", contextSource: "https://example.com/soccer" },
+    { id: 2, name: "GamingBot", prompt: "Fetches latest gaming news", createdAt: "2025-07-02", isActive: false, schedule: "weekly", contextSource: "https://example.com/gaming" },
   ]);
   const [newBotName, setNewBotName] = useState("");
   const [newBotDescription, setNewBotDescription] = useState("");
+  const [newBotSchedule, setNewBotSchedule] = useState<Bot["schedule"]>("daily");
+  const [newBotContextSource, setNewBotContextSource] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
@@ -42,43 +46,63 @@ const Bots: React.FC = () => {
     config: { tension: 220, friction: 30 },
   });
 
-  const createBot = () => {
-    if (!newBotName.trim() || !newBotDescription.trim()) {
-      setError("Bot name and description cannot be empty.");
-      return;
-    }
-    const newBot: Bot = {
-      id: bots.length + 1,
-      name: newBotName,
-      description: newBotDescription,
-      createdAt: new Date().toISOString().split("T")[0],
-      isActive: true,
-    };
-    setBots([...bots, newBot]);
-    setNewBotName("");
-    setNewBotDescription("");
-    setIsCreateModalOpen(false);
-    setError(null);
+  const createBot = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
+    setError("All fields are required.");
+    return;
+  }
+
+  const newBot: Bot = {
+    id: bots.length + 1,
+    name: newBotName,
+    prompt: newBotDescription,
+    createdAt: new Date().toISOString().split("T")[0],
+    isActive: true,
+    schedule: newBotSchedule,
+    contextSource: newBotContextSource,
   };
 
-  const updateBot = () => {
-    if (!editingBot || !newBotName.trim() || !newBotDescription.trim()) {
-      setError("Bot name and description cannot be empty.");
-      return;
-    }
-    setBots(
-      bots.map((bot) =>
-        bot.id === editingBot.id
-          ? { ...bot, name: newBotName, description: newBotDescription }
-          : bot
-      )
-    );
-    setNewBotName("");
-    setNewBotDescription("");
-    setIsEditModalOpen(false);
-    setEditingBot(null);
-    setError(null);
-  };
+  setBots([...bots, newBot]);
+  setNewBotName("");
+  setNewBotDescription("");
+  setNewBotSchedule("daily");
+  setNewBotContextSource("");
+  setIsCreateModalOpen(false);
+  setError(null);
+};
+
+
+  const updateBot = (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!editingBot || !newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
+    setError("All fields are required.");
+    return;
+  }
+
+  setBots(
+    bots.map((bot) =>
+      bot.id === editingBot.id
+        ? {
+            ...bot,
+            name: newBotName,
+            prompt: newBotDescription,
+            schedule: newBotSchedule,
+            contextSource: newBotContextSource,
+          }
+        : bot
+    )
+  );
+
+  setNewBotName("");
+  setNewBotDescription("");
+  setNewBotSchedule("daily");
+  setNewBotContextSource("");
+  setIsEditModalOpen(false);
+  setEditingBot(null);
+  setError(null);
+};
+
 
   const deleteBot = (botId: number) => {
     setBots(bots.filter((bot) => bot.id !== botId));
@@ -133,7 +157,7 @@ const Bots: React.FC = () => {
                         <CardContent className="p-4 flex justify-between items-center">
                           <div>
                             <h3 className="text-lg font-bold">{bot.name}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{bot.description}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
                             <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                             <p className="text-sm text-gray-400">Status: {bot.isActive ? "Active" : "Inactive"}</p>
                           </div>
@@ -144,7 +168,7 @@ const Bots: React.FC = () => {
                               onClick={() => {
                                 setEditingBot(bot);
                                 setNewBotName(bot.name);
-                                setNewBotDescription(bot.description);
+                                setNewBotDescription(bot.prompt);
                                 setIsEditModalOpen(true);
                               }}
                             >
@@ -180,7 +204,7 @@ const Bots: React.FC = () => {
                         <CardContent className="p-4 flex justify-between items-center">
                           <div>
                             <h3 className="text-lg font-bold">{bot.name}</h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{bot.description}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
                             <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                           </div>
                           <div className="flex gap-2">
@@ -190,7 +214,7 @@ const Bots: React.FC = () => {
                               onClick={() => {
                                 setEditingBot(bot);
                                 setNewBotName(bot.name);
-                                setNewBotDescription(bot.description);
+                                setNewBotDescription(bot.prompt);
                                 setIsEditModalOpen(true);
                               }}
                             >
@@ -235,7 +259,7 @@ const Bots: React.FC = () => {
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
         >
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
-            <div className="flex justify-between items-center mb-4">
+             <div className="flex justify-between items-center mb-4">
               <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Create New Bot</CardTitle>
               <Button
                 variant="ghost"
@@ -249,28 +273,55 @@ const Bots: React.FC = () => {
                 <FaTimes className="w-6 h-6" />
               </Button>
             </div>
+          <form onSubmit={createBot}>
+
             <CardContent className="flex flex-col gap-4">
+              {/* Bot Name */}
               <Input
                 placeholder="Bot Name"
                 value={newBotName}
                 onChange={(e) => setNewBotName(e.target.value)}
                 className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
               />
+
+              {/* Bot Prompt */}
               <Input
-                placeholder="Bot Description"
+                placeholder="Bot Prompt"
                 value={newBotDescription}
                 onChange={(e) => setNewBotDescription(e.target.value)}
                 className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
               />
+
+              {/* Bot Schedule */}
+              <select
+                value={newBotSchedule}
+                onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
+                className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500 border p-2 rounded-md"
+              >
+                <option value="hourly">Hourly</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+
+              {/* Context Source */}
+              <Input
+                placeholder="Context Source (URL)"
+                value={newBotContextSource}
+                onChange={(e) => setNewBotContextSource(e.target.value)}
+                className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
+              />
+
               <Button
-                onClick={createBot}
+                type="submit"
                 className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
-                disabled={!newBotName.trim() || !newBotDescription.trim()}
+                disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
               >
                 Create Bot
               </Button>
             </CardContent>
-          </Card>
+          </form>
+        </Card>
         </animated.div>
       )}
 
@@ -280,7 +331,7 @@ const Bots: React.FC = () => {
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
         >
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-1">
               <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Edit Bot</CardTitle>
               <Button
                 variant="ghost"
@@ -295,27 +346,46 @@ const Bots: React.FC = () => {
                 <FaTimes className="w-6 h-6" />
               </Button>
             </div>
-            <CardContent className="flex flex-col gap-4">
-              <Input
-                placeholder="Bot Name"
-                value={newBotName}
-                onChange={(e) => setNewBotName(e.target.value)}
-                className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
-              />
-              <Input
-                placeholder="Bot Description"
-                value={newBotDescription}
-                onChange={(e) => setNewBotDescription(e.target.value)}
-                className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
-              />
-              <Button
-                onClick={updateBot}
-                className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
-                disabled={!newBotName.trim() || !newBotDescription.trim()}
-              >
-                Update Bot
-              </Button>
-            </CardContent>
+            <form onSubmit={updateBot}>
+              <CardContent className="flex flex-col gap-4">
+                <Input
+                  placeholder="Bot Name"
+                  value={newBotName}
+                  onChange={(e) => setNewBotName(e.target.value)}
+                  className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
+                />
+                <Input
+                  placeholder="Bot Prompt"
+                  value={newBotDescription}
+                  onChange={(e) => setNewBotDescription(e.target.value)}
+                  className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
+                />
+                <select
+                  value={newBotSchedule}
+                  onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
+                  className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500 border p-2 rounded-md"
+                >
+                  <option value="hourly">Hourly</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+                <Input
+                  placeholder="Context Source (URL)"
+                  value={newBotContextSource}
+                  onChange={(e) => setNewBotContextSource(e.target.value)}
+                  className="dark:bg-[#1a1a1a] dark:text-white dark:border-lime-500"
+                />
+                <Button
+                  type="submit"
+                  className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
+                  disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
+                >
+                  Update Bot
+                </Button>
+              </CardContent>
+            </form>
+
           </Card>
         </animated.div>
       )}
