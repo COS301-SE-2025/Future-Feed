@@ -52,6 +52,12 @@ public class AppUserService {
         userRepo.save(user);
     }
 
+    public List<AppUser> getAllUsersExceptCurrent(AppUser currentUser) {
+        return userRepo.findAll().stream()
+                .filter(user -> !user.getId().equals(currentUser.getId()))
+                .toList();
+    }
+
     public AppUser authenticateUser(String username, String rawPassword) {
         AppUser user = userRepo.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid username or password."));

@@ -198,50 +198,17 @@ const HomePage = () => {
     }
   };
 
-  const fetchTopics = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/topics`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
-      const data: Topic[] = await res.json();
-      setTopics(data);
-    } catch (err) {
-      console.error("Error fetching topics:", err);
-      setError("Failed to load topics.");
-    }
-  };
+const fetchAllPosts = async () => {
+  setLoadingForYou(true);
 
-  const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
-    try {
-      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-        credentials: "include",
-      });
-      if (!res.ok) {
-        console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
-        return [];
-      }
-      const topicIds: number[] = await res.json();
-      const fetchedTopics = topics.filter((topic) => topicIds.includes(topic.id));
-      console.debug(`Fetched topics for post ${postId}:`, fetchedTopics);
-      return fetchedTopics;
-    } catch (err) {
-      console.error(`Error fetching topics for post ${postId}:`, err);
-      return [];
-    }
-  };
-
-  const fetchAllPosts = async () => {
-    try {
-      const [postsRes, myResharesRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      ]);
-      if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
-      const apiPosts: ApiPost[] = await postsRes.json();
-      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+  try {
+    const [postsRes, myResharesRes] = await Promise.all([
+      fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+    ]);
+    if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
+    const apiPosts: ApiPost[] = await postsRes.json();
+    const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
 
       const validPosts = apiPosts
         .filter((post: ApiPost) => {
@@ -324,27 +291,29 @@ const HomePage = () => {
         })
       );
 
-      setPosts((prevPosts) =>
-        formattedPosts.map((newPost) => {
-          const existingPost = prevPosts.find((p) => p.id === newPost.id);
-          return {
-            ...newPost,
-            comments: existingPost
-              ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
-              : newPost.comments,
-            showComments: existingPost?.showComments || newPost.showComments,
-            topics: existingPost?.topics?.length ? existingPost.topics : newPost.topics,
-          };
-        })
-      );
-    } catch (err) {
-      console.error("Error fetching posts:", err);
-      setError("Failed to load posts.");
-    }
-  };
+    setPosts((prevPosts) =>
+      formattedPosts.map((newPost) => {
+        const existingPost = prevPosts.find((p) => p.id === newPost.id);
+        return {
+          ...newPost,
+          comments: existingPost
+            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+            : newPost.comments,
+          showComments: existingPost?.showComments || newPost.showComments,
+        };
+      })
+    );
+  } catch (err) {
+    console.error("Error fetching posts:", err);
+    setError("Failed to load posts.");
+  } finally {
+    setLoadingForYou(false);
+  }
+};
 
-  const fetchFollowingPosts = async () => {
-    if (!currentUser?.id) return;
+const fetchFollowingPosts = async () => {
+  if (!currentUser?.id) return;
+  setLoadingFollowing(true);
 
     try {
       const [followRes, myResharesRes] = await Promise.all([
@@ -448,22 +417,38 @@ const HomePage = () => {
         })
       );
 
-      setFollowingPosts((prevPosts) =>
-        formattedPosts.map((newPost) => {
-          const existingPost = prevPosts.find((p) => p.id === newPost.id);
-          return {
-            ...newPost,
-            comments: existingPost
-              ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
-              : newPost.comments,
-            showComments: existingPost?.showComments || newPost.showComments,
-            topics: existingPost?.topics?.length ? existingPost.topics : newPost.topics,
-          };
-        })
-      );
+    setFollowingPosts((prevPosts) =>
+      formattedPosts.map((newPost) => {
+        const existingPost = prevPosts.find((p) => p.id === newPost.id);
+        return {
+          ...newPost,
+          comments: existingPost
+            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
+            : newPost.comments,
+          showComments: existingPost?.showComments || newPost.showComments,
+        };
+      })
+    );
+  } catch (err) {
+    console.error("Error fetching following posts:", err);
+    setError("Failed to load posts from followed users.");
+  } finally {
+    setLoadingFollowing(false);
+  }
+};
+
+  const fetchTopics = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
+      const data: Topic[] = await res.json();
+      setTopics(data);
     } catch (err) {
-      console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
+      console.error("Error fetching topics:", err);
+      setError("Failed to load topics.");
     }
   };
 
@@ -505,9 +490,11 @@ const HomePage = () => {
 
   useEffect(() => {
     if (currentUser?.id) {
-      if (activeTab === "Following") {
+      
+      if (activeTab === "Following" && followingPosts.length === 0) {
         fetchFollowingPosts();
-      } else {
+      } 
+      if (activeTab === "for You" && posts.length === 0) {
         fetchAllPosts();
       }
     }
@@ -847,6 +834,26 @@ const HomePage = () => {
     );
   };
 
+  const renderSkeletonPosts = () => {
+  return Array.from({ length: 5 }).map((_, index) => (
+    <div
+      key={index}
+      className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+    >
+      <div className="flex items-center space-x-4">
+        <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+        <div className="flex-1">
+          <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+        </div>
+      </div>
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+    </div>
+  ));
+};
+const [loadingForYou, setLoadingForYou] = useState(true);
+const [loadingFollowing, setLoadingFollowing] = useState(true);
+
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -971,34 +978,36 @@ const HomePage = () => {
                   ))}
                 </TabsList>
                 <TabsContent value="for You" className="p-0">
-                  {posts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts available.</p>
-                      <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => setIsPostModalOpen(true)}
-                      >
-                        Create your first post
-                      </Button>
-                    </div>
-                  ) : (
-                    renderPosts(posts)
-                  )}
+                {loadingForYou ? renderSkeletonPosts() :
+    posts.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10">
+        <p className="text-lg dark:text-white">No posts available.</p>
+        <Button
+          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+          onClick={() => setIsPostModalOpen(true)}
+        >
+          Create your first post
+        </Button>
+      </div>
+    ) : (
+      renderPosts(posts)
+    )}
                 </TabsContent>
                 <TabsContent value="Following">
-                  {followingPosts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts from followed users.</p>
-                      <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchFollowingPosts()}
-                      >
-                        Refresh
-                      </Button>
-                    </div>
-                  ) : (
-                    renderPosts(followingPosts)
-                  )}
+                  {loadingFollowing ? renderSkeletonPosts() :
+    followingPosts.length === 0 ? (
+      <div className="flex flex-col items-center justify-center py-10">
+        <p className="text-lg dark:text-white">No posts from followed users.</p>
+        <Button
+          className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+          onClick={() => fetchFollowingPosts()}
+        >
+          Refresh
+        </Button>
+      </div>
+    ) : (
+      renderPosts(followingPosts)
+    )}
                 </TabsContent>
                 <TabsContent value="Presets">
                   <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">

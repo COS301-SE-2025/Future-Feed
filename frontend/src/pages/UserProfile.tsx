@@ -8,6 +8,7 @@ import PersonalSidebar from "@/components/PersonalSidebar"
 import Post from "@/components/ui/post"
 import { formatRelativeTime } from "@/lib/timeUtils"
 import GRP1 from "../assets/GRP1.jpg"
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserProfile {
   id: number
@@ -93,6 +94,7 @@ const UserProfile = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<PostData[]>([])
   const [followers, setFollowers] = useState<User[]>([])
   const [followingUsers, setFollowingUsers] = useState<User[]>([])
+  const [postsLoading, setPostsLoading] = useState(true);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
 
@@ -297,13 +299,28 @@ const UserProfile = () => {
       setError("Failed to load bookmarked posts.")
     }
   }
+  const renderPostCard = () => (
+  <div className="flex flex-col gap-2 border border-border rounded-xl p-4">
+    <div className="flex items-center gap-4">
+      <Skeleton className="h-10 w-10 rounded-full" />
+      <div className="flex-1">
+        <Skeleton className="h-4 w-24 mb-2" />
+        <Skeleton className="h-3 w-40" />
+      </div>
+    </div>
+    <Skeleton className="h-4 w-full mt-4" />
+    <Skeleton className="h-3 w-3/4 mt-2" />
+    <Skeleton className="h-60 w-full mt-4 rounded-xl" />
+  </div>
+);
+
 
   const fetchUser = async (userId: number) => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!
     }
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
         credentials: "include",
       })
       if (!res.ok) throw new Error("Failed to fetch user")
@@ -346,6 +363,7 @@ const UserProfile = () => {
 
   const fetchUserPosts = async (userId: number) => {
     try {
+      setPostsLoading(true);
       const res = await fetch(`${API_URL}/api/posts/user/${userId}`, {
         credentials: "include",
       })
@@ -421,8 +439,10 @@ const UserProfile = () => {
     } catch (err) {
       console.error("Error fetching posts:", err)
       setError("Failed to load posts.")
+    } finally {
+      setPostsLoading(false);
     }
-  }
+  };
 
   const handleLike = async (postId: number) => {
     try {
@@ -749,7 +769,7 @@ const UserProfile = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true)
+      setLoading(true);
       const currentUser = await fetchCurrentUser()
       if (currentUser?.id) {
         await fetchUserPosts(currentUser.id)
@@ -761,8 +781,8 @@ const UserProfile = () => {
       } else {
         setError("Cannot fetch posts: User not authenticated.")
       }
-      setLoading(false)
-    }
+      setLoading(false);
+    };
     loadData()
   }, [])
 
@@ -777,8 +797,11 @@ const UserProfile = () => {
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+               <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
               <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              
+            </Link>
             </Avatar>
           </div>
         </div>
@@ -823,43 +846,49 @@ const UserProfile = () => {
           </TabsList>
 
           <TabsContent value="posts" className="p-0">
-            {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p>{error}</p>
-              </div>
-            )}
-            {posts.length === 0 ? (
-              <div className="p-4 text-gray-400">No posts yet.</div>
-            ) : (
-              posts.map((post) => (
-                <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={handleReshare}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
-                </div>
-              ))
-            )}
+        {error && (
+    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+      <p>{error}</p>
+    </div>
+  )}
+ {postsLoading ? (
+  <div className="flex flex-col gap-6 py-4">
+    {[...Array(3)].map((_, idx) => (
+      <div key={idx}>{renderPostCard()}</div>
+    ))}
+  </div>
+) : posts.length === 0 ? (
+  <div className="p-4 text-gray-400">No posts yet.</div>
+) : (
+    posts.map((post) => (
+      <div key={post.id} className="mb-4">
+        <Post
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={handleReshare}
+          onDelete={() => handleDeletePost(post.id)}
+          onToggleComments={() => toggleComments(post.id)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!user}
+          currentUser={user}
+          authorId={post.authorId}
+        />
+      </div>
+    ))
+  )}
           </TabsContent>
 
           <TabsContent value="re-feeds" className="p-0">
