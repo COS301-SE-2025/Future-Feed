@@ -1334,30 +1334,32 @@ const renderSkeletonPosts = () => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
+                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
+                    <Post
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                    />
+                  </Link>
                 </div>
               ))
             )}
@@ -1377,30 +1379,32 @@ const renderSkeletonPosts = () => {
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
+                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
+                    <Post
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                    />
+                  </Link>
                 </div>
               ))
             )}
@@ -1420,30 +1424,32 @@ const renderSkeletonPosts = () => {
             ) : (
               commentedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
+                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
+                    <Post
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                    />
+                  </Link>
                 </div>
               ))
             )}
@@ -1463,30 +1469,32 @@ const renderSkeletonPosts = () => {
             ) : (
               likedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
+                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
+                    <Post
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                    />
+                  </Link>
                 </div>
               ))
             )}
@@ -1506,30 +1514,32 @@ const renderSkeletonPosts = () => {
             ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                  />
+                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
+                    <Post
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                    />
+                  </Link>
                 </div>
               ))
             )}

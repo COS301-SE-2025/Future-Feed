@@ -14,6 +14,7 @@ import Construction from "./pages/Construction";
 import RegisterPage from "./pages/RegisterPage";
 import Forgot from "./pages/Forgot";
 import EditProfilePage from "./pages/EditProfile";
+import PostPage from "./pages/PostPage";
 
 
 function App() {
@@ -25,18 +26,19 @@ function App() {
       <Route path="/profile" element={<UserProfile />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/explore" element={<Explore />} />
-       <Route path="/settings" element={<Settings />} />
-       <Route path="/FAQS" element={<FAQS />} />
-       <Route path="/help" element={<Help />} />
-        <Route path="/" element={<LandingPage />} />
-         <Route path="/followers" element={<FollowerFollowing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/home" element={<HomePage />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/FAQS" element={<FAQS />} />
+      <Route path="/help" element={<Help />} />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/followers" element={<FollowerFollowing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/home" element={<HomePage />} />
       <Route path="/construction" element={<Construction />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
       <Route path="/bots" element={<Bots />} />
+      <Route path="/post/:postId" element={<PostPage />} />
     </Routes>
     </>
 
