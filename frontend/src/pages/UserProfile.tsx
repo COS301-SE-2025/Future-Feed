@@ -362,80 +362,98 @@ const fetchResharedPosts = async () => {
     setTabLoading((prev) => ({ ...prev, bookmarks: true }));
     try {
       const book = await fetch(`${API_URL}/api/bookmarks/${userId}`, {
+        method: "GET",
         credentials: "include",
-      });
-      if (!book.ok) throw new Error(`Failed to fetch bookmarks: ${book.status}`);
-      const bookmarkedList: { id: number; userId: number; postId: number; bookmarkedAt: string }[] = await book.json();
+    });
+      if (!book.ok) {
+        const errorText = await book.text();
+        throw new Error(`Failed to fetch bookmarked posts: ${book.status} ${errorText}`);
+      }
+      const bookmarkedList: { 
+      postId: number; 
+      content: string; 
+      imageUrl: string | null; 
+      createdAt: string; 
+      user: UserInfo | null
+      }[] = await book.json();
+      if (!Array.isArray(bookmarkedList) || bookmarkedList.length === 0) {
+        console.warn("No bookmarked posts found for user");
+        setLikedPosts([]);
+        setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
+        return;
+      }
       const bookmarkedPosts = await Promise.all(
-        bookmarkedList.map(async (bookmark) => {
-          const postRes = await fetch(`${API_URL}/api/posts/${bookmark.postId}`, {
-            credentials: "include",
-          });
-          if (!postRes.ok) {
-            console.warn(`Skipping bookmark for missing post ID: ${bookmark.postId}`);
+        bookmarkedList.map(async (post) => {
+          try {
+            console.log("Processing bookmarked post:", post);
+            const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.postId}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.postId}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.postId}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/bookmarks/${userId}/${post.postId}/exists`, { credentials: "include" }),
+            ]);
+            if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.postId}: ${commentsRes.status}`);
+            if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.postId}: ${likesCountRes.status}`);
+            if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.postId}: ${hasLikedRes.status}`);
+            if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${post.postId}: ${hasBookmarkedRes.status}`);
+            const comments = commentsRes.ok ? await commentsRes.json() : [];
+            const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+            const commentsWithUsers: CommentData[] = (
+              await Promise.all(
+                validComments.map(async (comment: RawComment) => {
+                  try {
+                    const commentUserInfo = await fetchUser(comment.userId!);
+                    return {
+                      id: comment.id,
+                      postId: comment.postId,
+                      authorId: comment.userId!,
+                      content: comment.content,
+                      createdAt: comment.createdAt,
+                      username: commentUserInfo.displayName,
+                      handle: `@${commentUserInfo.username}`,
+                    };
+                  } catch (err) {
+                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                    return null;
+                  }
+                })
+              )
+            ).filter((comment): comment is CommentData => comment !== null);
+            const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+            const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+            return {
+              id: post.postId,
+              username: userInfo.displayName,
+              handle: `@${userInfo.username}`,
+              time: formatRelativeTime(post.createdAt),
+              text: post.content,
+              ...(post.imageUrl ? { image: post.imageUrl } : {}),
+              isLiked,
+              isBookmarked: true,
+              isReshared: false,
+              commentCount: validComments.length,
+              authorId: userInfo.id, 
+              likeCount,
+              reshareCount: 0,
+              comments: commentsWithUsers,
+              showComments: false,
+            };
+          } catch (err) {
+            console.warn(`Error processing post ID ${post.postId}:`, err);
             return null;
           }
-          const post: RawPost = await postRes.json();
-          if (!post.user?.id) {
-            console.warn("Skipping invalid post:", post);
-            return null;
-          }
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/bookmarks/${userId}/${post.id}/exists`, { credentials: "include" }),
-          ]);
-          const comments = commentsRes.ok ? await commentsRes.json() : [];
-          const validComments = (comments as RawComment[]).filter((c) => !!c.userId);
-          const commentsWithUsers: CommentData[] = await Promise.all(
-            validComments.map(async (comment: RawComment): Promise<CommentData> => {
-              const userInfo = await fetchUser(comment.userId!);
-              return {
-                id: comment.id,
-                postId: comment.postId,
-                authorId: comment.userId!,
-                content: comment.content,
-                createdAt: comment.createdAt,
-                username: userInfo.displayName,
-                handle: `@${userInfo.username}`,
-              };
-            })
-          );
-          let isLiked = false;
-          if (hasLikedRes.ok) {
-            const likeData = await hasLikedRes.json();
-            isLiked = likeData === true;
-          }
-          if (!hasBookmarkedRes.ok) {
-            console.warn(`Failed to fetch bookmark status for post ID ${post.id}: ${hasBookmarkedRes.status}`);
-          }
-          const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          return {
-            id: post.id,
-            username: post.user.displayName,
-            handle: `@${post.user.username}`,
-            time: formatRelativeTime(post.createdAt),
-            text: post.content,
-            ...(post.imageUrl ? { image: post.imageUrl } : {}),
-            isLiked,
-            isBookmarked,
-            isReshared: false,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount: 0,
-            comments: commentsWithUsers,
-            showComments: false,
-          };
         })
       );
       const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null);
       setBookmarkedPosts(validBookmarks);
       setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
+      if (validBookmarks.length === 0) {
+        console.warn("No valid bookmarked posts after processing.");
+      }
     } catch (err) {
-      console.error("Error fetching bookmarks:", err);
-      setError("Failed to load bookmarked posts.");
+      console.error("Error fetching bookmarked posts:", err);
+      setError(`Failed to load bookmarked posts: ${err instanceof Error ? err.message : "Unknown error"}`);
     } finally {
       setTabLoading((prev) => ({ ...prev, bookmarks: false }));
     }
@@ -486,7 +504,6 @@ const fetchResharedPosts = async () => {
       const likedPosts = await Promise.all(
         likedList.map(async (post) => {
           try {
-            console.log("Processing liked post:", post);
             const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
           const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
@@ -549,7 +566,7 @@ const fetchResharedPosts = async () => {
       );
       const validLikes = likedPosts.filter((p): p is PostData => p !== null);
       setLikedPosts(validLikes);
-      setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
+      setFetchedTabs((prev) => ({ ...prev, likes: true }));
       if (validLikes.length === 0) {
         console.warn("No valid liked posts after processing.");
       }
