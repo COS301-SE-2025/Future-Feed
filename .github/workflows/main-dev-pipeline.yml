@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - dev
+      - '**' #Run on all branches for feature branch pushes
   pull_request:
     branches:
       - main
@@ -16,8 +17,8 @@ jobs:
     steps:
       - name: Branch protection checks
         run: |
-          if [ "${GITHUB_EVENT_NAME}" == "push" && "${GITHUB_REF}" ] && [ "refs/heads/main" ] ; then 
-            echo "Error : Direct pushes to main are not allowed. Please use a pull request ."
+          if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]]; then 
+            echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
             exit 1
           fi
       - uses: actions/checkout@v4
