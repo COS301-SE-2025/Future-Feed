@@ -126,7 +126,7 @@ const fetchUser = async (userId: number): Promise<UserInfo> => {
     return userCache.get(userId)!;
   }
   try {
-    const res = await fetch(`${API_URL}/api/users/${userId}`, { credentials: "include" });
+    const res = await fetch(`${API_URL}/api/user/${userId}`, { credentials: "include" });
     if (!res.ok) throw new Error(`Failed to fetch user ${userId}`);
     const user = await res.json();
     const userInfo: UserInfo = {
@@ -242,18 +242,16 @@ const fetchResharedPosts = async (currentUserId: number) => {
       resharedList.map(async (reshare) => {
         try {
           const userInfo: UserInfo = reshare.post.user ?? (await fetchUser(reshare.userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, hasResharedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${reshare.post.id}/exists`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/has-reshared/${reshare.post.id}`, { credentials: "include" }),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${reshare.post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${reshare.post.id}: ${likesCountRes.status}`);
           if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${reshare.post.id}: ${hasLikedRes.status}`);
           if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${reshare.post.id}: ${hasBookmarkedRes.status}`);
-          if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${reshare.post.id}: ${hasResharedRes.status}`);
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
           const commentsWithUsers: CommentData[] = (
@@ -280,7 +278,6 @@ const fetchResharedPosts = async (currentUserId: number) => {
           const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
           return {
             id: reshare.post.id,
             username: userInfo.displayName,
@@ -290,7 +287,7 @@ const fetchResharedPosts = async (currentUserId: number) => {
             ...(reshare.post.imageUrl ? { image: reshare.post.imageUrl } : {}),
             isLiked,
             isBookmarked,
-            isReshared,
+            isReshared: true,
             commentCount: validComments.length,
             authorId: userInfo.id,
             likeCount,
@@ -346,18 +343,16 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
       commentedList.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, hasResharedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/has-reshared/${post.id}`, { credentials: "include" }),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
           if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.id}: ${hasLikedRes.status}`);
           if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${post.id}: ${hasBookmarkedRes.status}`);
-          if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
           const commentsWithUsers: CommentData[] = (
@@ -384,7 +379,6 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
           const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
           return {
             id: post.id,
             username: userInfo.displayName,
@@ -394,7 +388,7 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
             ...(post.imageUrl ? { image: post.imageUrl } : {}),
             isLiked,
             isBookmarked,
-            isReshared,
+            isReshared: false,
             commentCount: validComments.length,
             authorId: userInfo.id,
             likeCount,
@@ -450,18 +444,16 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
       likedList.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, hasResharedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/has-reshared/${post.id}`, { credentials: "include" }),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
           if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.id}: ${hasLikedRes.status}`);
           if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${post.id}: ${hasBookmarkedRes.status}`);
-          if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
           const commentsWithUsers: CommentData[] = (
@@ -488,7 +480,6 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
           const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
           return {
             id: post.id,
             username: userInfo.displayName,
@@ -498,7 +489,7 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
             ...(post.imageUrl ? { image: post.imageUrl } : {}),
             isLiked,
             isBookmarked,
-            isReshared,
+            isReshared: false,
             commentCount: validComments.length,
             authorId: userInfo.id,
             likeCount,
@@ -555,18 +546,16 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
             console.warn("Skipping invalid post:", post);
             return null;
           }
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, hasResharedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/has-reshared/${post.id}`, { credentials: "include" }),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
           if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.id}: ${hasLikedRes.status}`);
           if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${post.id}: ${hasBookmarkedRes.status}`);
-          if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
           const commentsWithUsers: CommentData[] = (
@@ -593,7 +582,6 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
           const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
           return {
             id: post.id,
             username: post.user.displayName,
@@ -603,7 +591,7 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
             ...(post.imageUrl ? { image: post.imageUrl } : {}),
             isLiked,
             isBookmarked,
-            isReshared,
+            isReshared: false,
             commentCount: validComments.length,
             authorId: post.user.id,
             likeCount,
@@ -646,7 +634,7 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
       user: UserInfo | null 
     }[] = await res.json();
     if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-      console.warn("No posts found for user:", userId);
+      console.log("No posts found for user:", userId);
       setPosts([]);
       setFetchedTabs((prev) => ({ ...prev, posts: true }));
       return;
@@ -655,18 +643,16 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
       apiPosts.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, hasResharedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
-            fetch(`${API_URL}/api/reshares/has-reshared/${post.id}`, { credentials: "include" }),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
           if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${post.id}: ${hasLikedRes.status}`);
           if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${post.id}: ${hasBookmarkedRes.status}`);
-          if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
           const comments = commentsRes.ok ? await commentsRes.json() : [];
           const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
           const commentsWithUsers: CommentData[] = (
@@ -693,7 +679,6 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
           const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
           const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-          const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
           return {
             id: post.id,
             username: userInfo.displayName,
@@ -703,7 +688,7 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
             ...(post.imageUrl ? { image: post.imageUrl } : {}),
             isLiked,
             isBookmarked,
-            isReshared,
+            isReshared: false,
             commentCount: validComments.length,
             authorId: userInfo.id,
             likeCount,
@@ -1008,29 +993,29 @@ const handleReshare = async (postId: number) => {
         throw new Error(`Failed to ${wasReshared ? "unreshare" : "reshare"} post: ${errorText}`);
       }
     }
-    const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, {
-      credentials: "include",
-    });
-    if (hasResharedRes.ok) {
-      const reshareData = await hasResharedRes.json();
-      const updateReshareStatus = (prevPosts: PostData[]) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isReshared: reshareData === true }
-            : p
-        );
-      setPosts(updateReshareStatus);
-      setBookmarkedPosts(updateReshareStatus);
-      setCommented(updateReshareStatus);
-      setLikedPosts(updateReshareStatus);
-      setReshares((prev) =>
-        reshareData === true
-          ? prev.some((p) => p.id === postId)
-            ? updateReshareStatus(prev)
-            : [...prev, { ...post, isReshared: true }]
-          : prev.filter((p) => p.id !== postId)
-      );
-    }
+    // const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, {
+    //   credentials: "include",
+    // });
+    // if (hasResharedRes.ok) {
+    //   const reshareData = await hasResharedRes.json();
+    //   const updateReshareStatus = (prevPosts: PostData[]) =>
+    //     prevPosts.map((p) =>
+    //       p.id === postId
+    //         ? { ...p, isReshared: reshareData === true }
+    //         : p
+    //     );
+    //   setPosts(updateReshareStatus);
+    //   setBookmarkedPosts(updateReshareStatus);
+    //   setCommented(updateReshareStatus);
+    //   setLikedPosts(updateReshareStatus);
+    //   setReshares((prev) =>
+    //     reshareData === true
+    //       ? prev.some((p) => p.id === postId)
+    //         ? updateReshareStatus(prev)
+    //         : [...prev, { ...post, isReshared: true }]
+    //       : prev.filter((p) => p.id !== postId)
+    //   );
+    // }
   } catch (err) {
     console.error("Error toggling reshare:", err);
     setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`);
