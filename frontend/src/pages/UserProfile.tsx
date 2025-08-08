@@ -542,9 +542,17 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
             return null;
           }
           const post: RawPost = await postRes.json();
+          // Check if post.user exists; if not, fetch user info
+          let userInfo: UserInfo;
           if (!post.user?.id) {
-            console.warn("Skipping invalid post:", post);
-            return null;
+            console.warn(`Post ID ${bookmark.postId} has no user data; fetching user info.`);
+            userInfo = await fetchUser(bookmark.userId || currentUserId); // Fallback to currentUserId if userId is unavailable
+          } else {
+            userInfo = {
+              id: post.user.id,
+              username: post.user.username,
+              displayName: post.user.displayName,
+            };
           }
           const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
@@ -584,8 +592,8 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
           const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
           return {
             id: post.id,
-            username: post.user.displayName,
-            handle: `@${post.user.username}`,
+            username: userInfo.displayName,
+            handle: `@${userInfo.username}`,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -593,7 +601,7 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
             isBookmarked,
             isReshared: false,
             commentCount: validComments.length,
-            authorId: post.user.id,
+            authorId: userInfo.id,
             likeCount,
             reshareCount: 0,
             comments: commentsWithUsers,
