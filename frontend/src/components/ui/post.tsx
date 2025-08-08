@@ -126,7 +126,7 @@ const Post: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
+            <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
             <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
