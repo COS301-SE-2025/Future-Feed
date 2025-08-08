@@ -3,9 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
-import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { Skeleton } from "@/components/ui/skeleton";
+import StaticPost from "@/components/ui/StaticPost";
 
 interface UserProfile {
   id: number;
@@ -357,84 +357,84 @@ const PostPage = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!currentUser) {
-      setError("Please log in to comment.");
-      return;
-    }
-    if (!post) {
-      setError("Post not found.");
-      return;
-    }
-    if (!commentText.trim()) {
-      setError("Comment cannot be empty.");
-      return;
-    }
-    try {
-      setPost((prev) => {
-        if (!prev || prev.id !== postId) return prev;
-        return {
-          ...prev,
-          comments: [
-            ...prev.comments,
-            {
-              id: Date.now(),
-              postId,
-              authorId: currentUser.id,
-              content: commentText,
-              createdAt: new Date().toISOString(),
-              username: currentUser.displayName,
-              handle: `@${currentUser.username}`,
-            },
-          ],
-          commentCount: prev.commentCount + 1,
-        };
-      });
-      const res = await fetch(`${API_URL}/api/comments/${postId}`, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        credentials: "include",
-        body: commentText,
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`Failed to add comment to post ${postId}: ${res.status} ${errorText}`);
-        setPost((prev) => {
-          if (!prev || prev.id !== postId) return prev;
-          return {
-            ...prev,
-            comments: prev.comments.filter((c) => c.id !== Date.now()),
-            commentCount: prev.commentCount - 1,
-          };
-        });
-        if (res.status === 401) {
-          setError("Session expired. Please log in again.");
-        } else {
-          throw new Error(`Failed to add comment: ${errorText}`);
-        }
-      }
-      const newComment = await res.json();
-      const formattedComment: CommentData = {
-        id: newComment.id,
-        postId: newComment.postId,
-        authorId: newComment.userId || currentUser.id,
-        content: newComment.content,
-        createdAt: newComment.createdAt,
-        username: currentUser.displayName,
-        handle: `@${currentUser.username}`,
+  if (!currentUser) {
+    setError("Please log in to comment.");
+    return;
+  }
+  if (!post) {
+    setError("Post not found.");
+    return;
+  }
+  if (!commentText.trim()) {
+    setError("Comment cannot be empty.");
+    return;
+  }
+  try {
+    setPost((prev) => {
+      if (!prev || prev.id !== postId) return prev;
+      return {
+        ...prev,
+        comments: [
+          ...prev.comments,
+          {
+            id: Date.now(),
+            postId,
+            authorId: currentUser.id,
+            content: commentText,
+            createdAt: new Date().toISOString(),
+            username: currentUser.displayName,
+            handle: `@${currentUser.username}`,
+          },
+        ],
+        commentCount: prev.commentCount + 1,
       };
+    });
+    const res = await fetch(`${API_URL}/api/comments/${postId}`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      credentials: "include",
+      body: commentText,
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Failed to add comment to post ${postId}: ${res.status} ${errorText}`);
       setPost((prev) => {
         if (!prev || prev.id !== postId) return prev;
         return {
           ...prev,
-          comments: prev.comments.map((c) => (c.id === Date.now() ? formattedComment : c)),
-          commentCount: prev.commentCount,
+          comments: prev.comments.filter((c) => c.id !== Date.now()),
+          commentCount: prev.commentCount - 1,
         };
       });
-    } catch (err) {
-      console.error("Error adding comment:", err);
-      setError("Failed to add comment.");
+      if (res.status === 401) {
+        setError("Session expired. Please log in again.");
+      } else {
+        throw new Error(`Failed to add comment: ${errorText}`);
+      }
     }
-  };
+    const newComment = await res.json();
+    const formattedComment: CommentData = {
+      id: newComment.id,
+      postId: newComment.postId,
+      authorId: newComment.userId || currentUser.id,
+      content: newComment.content,
+      createdAt: newComment.createdAt,
+      username: currentUser.displayName,
+      handle: `@${currentUser.username}`,
+    };
+    setPost((prev) => {
+      if (!prev || prev.id !== postId) return prev;
+      return {
+        ...prev,
+        comments: prev.comments.map((c) => (c.id === Date.now() ? formattedComment : c)),
+        commentCount: prev.commentCount,
+      };
+    });
+  } catch (err) {
+    console.error("Error adding comment:", err);
+    setError("Failed to add comment.");
+  }
+};
 
   const handleDeletePost = async (postId: number) => {
     if (!currentUser) {
@@ -460,13 +460,6 @@ const PostPage = () => {
       console.error("Error deleting post:", err);
       setError("Failed to delete post.");
     }
-  };
-
-  const toggleComments = (postId: number) => {
-    setPost((prev) => {
-      if (!prev || prev.id !== postId) return prev;
-      return { ...prev, showComments: !prev.showComments };
-    });
   };
 
   useEffect(() => {
@@ -561,7 +554,7 @@ const PostPage = () => {
         <PersonalSidebar />
       </aside>
       <main className="w-[1100px] mx-auto p-4">
-        <Post
+        <StaticPost
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -574,11 +567,10 @@ const PostPage = () => {
           commentCount={post.commentCount}
           onLike={() => handleLike(post.id)}
           onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
           onReshare={() => handleReshare(post.id)}
           reshareCount={post.isReshared ? 1 : 0}
           onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!currentUser}
