@@ -34,6 +34,7 @@ interface PostProps {
   onAddComment: (commentText: string) => void;
   onReshare: () => void;
   onDelete: () => void;
+  onNavigate: () => void;
   className?: string;
   onToggleComments: () => void;
   showComments: boolean;
@@ -68,6 +69,7 @@ const Post: React.FC<PostProps> = ({
   onAddComment,
   onReshare,
   onDelete,
+  onNavigate,
   className,
   onToggleComments,
   showComments,
@@ -91,8 +93,29 @@ const Post: React.FC<PostProps> = ({
       : "NN";
   };
 
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === "BUTTON" ||
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.closest("button") ||
+      target.closest("input") ||
+      target.closest("textarea")
+    ) {
+      return;
+    }
+    onNavigate();
+  };
+
   return (
-    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4", className)}>
+    <Card
+      className={cn(
+        "dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        className
+      )}
+      onClick={handleClick} 
+    >
       <CardContent className="p-1 mt-[-15px] ml-[20px]">
         <div className="flex gap-4">
           <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
@@ -110,7 +133,10 @@ const Post: React.FC<PostProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={onDelete}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
                     className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
@@ -132,7 +158,10 @@ const Post: React.FC<PostProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onLike}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLike();
+                }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
@@ -144,11 +173,13 @@ const Post: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Like</span>
                 <span className="text-xs sm:text-sm ml-1">({likeCount})</span>
               </Button>
-              
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onToggleComments}
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  onToggleComments();
+                }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
@@ -160,11 +191,13 @@ const Post: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Comment</span>
                 <span className="text-xs sm:text-sm ml-1">({commentCount})</span>
               </Button>
-              
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onReshare}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onReshare();
+                }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
@@ -176,11 +209,13 @@ const Post: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Re-Feed</span>
                 <span className="text-xs sm:text-sm ml-1">({reshareCount})</span>
               </Button>
-              
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onBookmark}
+                onClick={(e) => {
+                  e.stopPropagation(); 
+                  onBookmark();
+                }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
@@ -192,7 +227,6 @@ const Post: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Bookmark</span>
               </Button>
             </div>
-            
             {showComments && (
               <div className="mt-4">
                 {comments.length > 0 ? (
@@ -229,7 +263,10 @@ const Post: React.FC<PostProps> = ({
                     disabled={!isUserLoaded}
                   />
                   <Button
-                    onClick={handleSubmitComment}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSubmitComment();
+                    }}
                     className="bg-lime-500 mt-3 mr-4 text-white hover:bg-lime-600 text-xs sm:text-sm"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >

@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
@@ -131,6 +131,7 @@ const UserProfile = () => {
   });
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const navigate = useNavigate();
 
 const fetchUser = async (userId: number): Promise<UserInfo> => {
   if (userCache.has(userId)) {
@@ -1383,7 +1384,6 @@ const renderSkeletonPosts = () => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
                     <Post
                       username={post.username}
                       handle={post.handle}
@@ -1402,13 +1402,13 @@ const renderSkeletonPosts = () => {
                       onReshare={() => handleReshare(post.id)}
                       onDelete={() => handleDeletePost(post.id)}
                       onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
                       showComments={post.showComments}
                       comments={post.comments}
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
                     />
-                  </Link>
                 </div>
               ))
             )}
@@ -1428,7 +1428,6 @@ const renderSkeletonPosts = () => {
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
                     <Post
                       username={post.username}
                       handle={post.handle}
@@ -1447,13 +1446,13 @@ const renderSkeletonPosts = () => {
                       onReshare={() => handleReshare(post.id)}
                       onDelete={() => handleDeletePost(post.id)}
                       onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)} 
                       showComments={post.showComments}
                       comments={post.comments}
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
                     />
-                  </Link>
                 </div>
               ))
             )}
@@ -1473,7 +1472,6 @@ const renderSkeletonPosts = () => {
             ) : (
               commentedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
                     <Post
                       username={post.username}
                       handle={post.handle}
@@ -1492,13 +1490,13 @@ const renderSkeletonPosts = () => {
                       onReshare={() => handleReshare(post.id)}
                       onDelete={() => handleDeletePost(post.id)}
                       onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
                       showComments={post.showComments}
                       comments={post.comments}
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
                     />
-                  </Link>
                 </div>
               ))
             )}
@@ -1518,7 +1516,6 @@ const renderSkeletonPosts = () => {
             ) : (
               likedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
                     <Post
                       username={post.username}
                       handle={post.handle}
@@ -1537,13 +1534,13 @@ const renderSkeletonPosts = () => {
                       onReshare={() => handleReshare(post.id)}
                       onDelete={() => handleDeletePost(post.id)}
                       onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)} 
                       showComments={post.showComments}
                       comments={post.comments}
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
                     />
-                  </Link>
                 </div>
               ))
             )}
@@ -1563,7 +1560,6 @@ const renderSkeletonPosts = () => {
             ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Link key={post.id} to={`/post/${post.id}`} className="block mb-4">
                     <Post
                       username={post.username}
                       handle={post.handle}
@@ -1582,13 +1578,13 @@ const renderSkeletonPosts = () => {
                       onReshare={() => handleReshare(post.id)}
                       onDelete={() => handleDeletePost(post.id)}
                       onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)} 
                       showComments={post.showComments}
                       comments={post.comments}
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
                     />
-                  </Link>
                 </div>
               ))
             )}
