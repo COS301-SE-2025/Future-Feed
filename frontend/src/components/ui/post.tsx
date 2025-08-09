@@ -126,14 +126,14 @@ const Post: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
+            <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
             <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
                   <span
                     key={topic.id}
-                    className="inline-block bg-lime-100 dark:bg-lime-900 text-lime-800 dark:text-lime-200 text-xs sm:text-sm px-2 py-1 rounded-full"
+                    className="inline-block border dark:border-lime-400 border-lime-500 bg-lime-100 dark:bg-lime-900 text-lime-800 dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
                   >
                     {topic.name}
                   </span>

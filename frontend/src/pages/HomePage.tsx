@@ -10,6 +10,9 @@ import { Input } from "@/components/ui/input";
 import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
+import { useNavigate } from "react-router-dom";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ModeToggle } from "@/components/mode-toggle";
 
 interface ApiFollow {
   followedId: number;
@@ -243,7 +246,7 @@ const HomePage = () => {
       ]);
       if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
       const apiPosts: ApiPost[] = await postsRes.json();
-      console.debug("Fetched posts:", apiPosts.map(post => ({id: post.id, createdAt: post.createdAt})));
+      console.debug("Fetched posts:", apiPosts.map(post => ({ id: post.id, createdAt: post.createdAt })));
       const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
       const bookmarks: ApiBookmark[] = bookmarksRes.ok ? await bookmarksRes.json() : [];
 
@@ -689,10 +692,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
           : p
       )
     );
@@ -700,10 +703,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
           : p
       )
     );
@@ -748,10 +751,10 @@ const HomePage = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: originalIsLiked,
-                likeCount: originalLikeCount,
-              }
+              ...p,
+              isLiked: originalIsLiked,
+              likeCount: originalLikeCount,
+            }
             : p
         )
       );
@@ -759,10 +762,10 @@ const HomePage = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: originalIsLiked,
-                likeCount: originalLikeCount,
-              }
+              ...p,
+              isLiked: originalIsLiked,
+              likeCount: originalLikeCount,
+            }
             : p
         )
       );
@@ -783,10 +786,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -794,10 +797,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -824,10 +827,10 @@ const HomePage = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isReshared: originalIsReshared,
-                reshareCount: originalReshareCount,
-              }
+              ...p,
+              isReshared: originalIsReshared,
+              reshareCount: originalReshareCount,
+            }
             : p
         )
       );
@@ -835,10 +838,10 @@ const HomePage = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isReshared: originalIsReshared,
-                reshareCount: originalReshareCount,
-              }
+              ...p,
+              isReshared: originalIsReshared,
+              reshareCount: originalReshareCount,
+            }
             : p
         )
       );
@@ -871,10 +874,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -882,10 +885,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -917,13 +920,13 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [
-                  ...post.comments.filter((c) => c.id !== tempCommentId),
-                  formattedComment,
-                ],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [
+                ...post.comments.filter((c) => c.id !== tempCommentId),
+                formattedComment,
+              ],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -931,13 +934,13 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [
-                  ...post.comments.filter((c) => c.id !== tempCommentId),
-                  formattedComment,
-                ],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [
+                ...post.comments.filter((c) => c.id !== tempCommentId),
+                formattedComment,
+              ],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -949,10 +952,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -960,10 +963,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -1033,6 +1036,20 @@ const HomePage = () => {
             : p
         )
       );
+    }
+  };
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${import.meta.env.VITE_API_URL}/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
     }
   };
 
@@ -1137,6 +1154,7 @@ const HomePage = () => {
           >
             View Topics
           </Button>
+
         </div>
       </aside>
 
@@ -1149,7 +1167,19 @@ const HomePage = () => {
       {isMobileMenuOpen && (
         <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
           <div className="w-full max-w-xs p-4">
+            <ThemeProvider >
+                      <div className="pe-9 flex mb-30 ml-30 gap-2 rounded ">
+                        <ModeToggle />
+                      </div>
+            </ThemeProvider>
+            <button
+                onClick={handleLogout}
+                className="mb-2 w-full py-2 px-4 bg-lime-900 text-white rounded hover:bg-lime-600 transition-colors"
+              >
+                Logout
+              </button>
             <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
+              
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
@@ -1168,14 +1198,14 @@ const HomePage = () => {
               >
                 View Topics
               </button>
+
             </div>
           </div>
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${
-          isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""
-        }`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""
+          }`}
       >
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
