@@ -1450,6 +1450,7 @@ const renderSkeletonPosts = () => {
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
+                      topics={post.topics || []}
                     />
                 </div>
               ))
@@ -1494,6 +1495,7 @@ const renderSkeletonPosts = () => {
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
+                      topics={post.topics || []}
                     />
                 </div>
               ))
@@ -1538,6 +1540,7 @@ const renderSkeletonPosts = () => {
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
+                      topics={post.topics || []}
                     />
                 </div>
               ))
@@ -1582,6 +1585,7 @@ const renderSkeletonPosts = () => {
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
+                      topics={post.topics || []}
                     />
                 </div>
               ))
@@ -1626,6 +1630,7 @@ const renderSkeletonPosts = () => {
                       isUserLoaded={!!user}
                       currentUser={user}
                       authorId={post.authorId}
+                      topics={post.topics || []}
                     />
                 </div>
               ))
