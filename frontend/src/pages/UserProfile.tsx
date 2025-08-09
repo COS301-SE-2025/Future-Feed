@@ -54,6 +54,11 @@ interface PostData {
   reshareCount: number;
   comments: CommentData[];
   showComments: boolean;
+  topics: Topic[];
+}
+interface Topic {
+  id: number;
+  name: string;
 }
 
 interface RawPost {
@@ -183,6 +188,33 @@ const fetchCurrentUser = async () => {
   }
 };
 
+const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+  try {
+    const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      credentials: "include",
+    });
+    if (!res.ok) {
+      console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
+      return [];
+    }
+    const topicIds: number[] = await res.json();
+    
+    const resTopics = await fetch(`${API_URL}/api/topics`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      credentials: "include",
+    });
+    const allTopics: Topic[] = resTopics.ok ? await resTopics.json() : [];
+    const postTopics = topicIds
+      .map((id) => allTopics.find((topic) => topic.id === id))
+      .filter((topic): topic is Topic => !!topic);
+    return postTopics;
+  } catch (err) {
+    console.warn(`Error fetching topics for post ${postId}:`, err);
+    return [];
+  }
+};
+
 const fetchFollowing = async (userId: number, allUsers: User[]) => {
   try {
     const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
@@ -261,11 +293,12 @@ const fetchResharedPosts = async (currentUserId: number) => {
       resharedList.map(async (reshare) => {
         try {
           const userInfo: UserInfo = reshare.post.user ?? (await fetchUser(reshare.userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${reshare.post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${reshare.post.id}/exists`, { credentials: "include" }),
+            fetchTopicsForPost(reshare.post.id),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${reshare.post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${reshare.post.id}: ${likesCountRes.status}`);
@@ -313,6 +346,7 @@ const fetchResharedPosts = async (currentUserId: number) => {
             reshareCount: 0,
             comments: commentsWithUsers,
             showComments: false,
+            topics: topicsRes,
           };
         } catch (err) {
           console.warn(`Error processing post ID ${reshare.post.id}:`, err);
@@ -364,11 +398,12 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
       commentedList.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
@@ -416,6 +451,7 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
             reshareCount: 0,
             comments: commentsWithUsers,
             showComments: false,
+            topics: topicsRes,
           };
         } catch (err) {
           console.warn(`Error processing post ID ${post.id}:`, err);
@@ -467,11 +503,12 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
       likedList.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
@@ -519,6 +556,7 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
             reshareCount: 0,
             comments: commentsWithUsers,
             showComments: false,
+            topics: topicsRes,
           };
         } catch (err) {
           console.warn(`Error processing post ID ${post.id}:`, err);
@@ -579,11 +617,12 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
               displayName: post.user.displayName,
             };
           }
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
@@ -631,6 +670,7 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
             reshareCount: 0,
             comments: commentsWithUsers,
             showComments: false,
+            topics: topicsRes,
           };
         } catch (err) {
           console.warn(`Error processing post ID ${bookmark.postId}:`, err);
@@ -678,11 +718,12 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
       apiPosts.map(async (post) => {
         try {
           const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/bookmarks/${currentUserId}/${post.id}/exists`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
           ]);
           if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${post.id}: ${commentsRes.status}`);
           if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${post.id}: ${likesCountRes.status}`);
@@ -730,6 +771,7 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
             reshareCount: 0,
             comments: commentsWithUsers,
             showComments: false,
+            topics: topicsRes,
           };
         } catch (err) {
           console.warn(`Error processing post ID ${post.id}:`, err);

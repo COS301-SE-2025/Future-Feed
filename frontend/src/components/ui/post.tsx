@@ -17,6 +17,11 @@ interface UserProfile {
   dateOfBirth?: string | null;
 }
 
+interface Topic {
+  id: number;
+  name: string;
+}
+
 interface PostProps {
   username: string;
   handle: string;
@@ -50,6 +55,7 @@ interface PostProps {
   isUserLoaded: boolean;
   currentUser: UserProfile | null;
   authorId: number;
+  topics: Topic[];
 }
 
 const Post: React.FC<PostProps> = ({
@@ -77,6 +83,7 @@ const Post: React.FC<PostProps> = ({
   isUserLoaded,
   currentUser,
   authorId,
+  topics,
 }) => {
   const [newComment, setNewComment] = React.useState("");
 
@@ -126,7 +133,7 @@ const Post: React.FC<PostProps> = ({
             <div className="flex justify-between items-center">
               <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
+                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -140,13 +147,25 @@ const Post: React.FC<PostProps> = ({
                     className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
-                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 " />
                   </Button>
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
+            <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
             <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            {topics.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {topics.map((topic) => (
+                  <span
+                    key={topic.id}
+                    className="inline-block border dark:border-lime-400 border-lime-500 bg-lime-100 dark:bg-lime-900 text-lime-800 dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
+                  >
+                    {topic.name}
+                  </span>
+                ))}
+              </div>
+            )}
             {image && (
               <img
                 src={image}
