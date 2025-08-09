@@ -93,6 +93,17 @@ interface UserInfo {
 
 const userCache = new Map<number, UserInfo>();
 
+const profileDataCache = {
+  user: null as UserProfile | null,
+  followers: [] as User[],
+  followingUsers: [] as User[],
+  posts: [] as PostData[],
+  reshares: [] as PostData[],
+  commented: [] as PostData[],
+  likedPosts: [] as PostData[],
+  bookmarkedPosts: [] as PostData[],
+};
+
 const UserProfile = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -181,8 +192,11 @@ const fetchFollowing = async (userId: number, allUsers: User[]) => {
     const followedUserIds = data.map((relation) => relation.followedId);
     const followedUsers = allUsers.filter(( user) => followedUserIds.includes(user.id));
     setFollowingUsers(followedUsers);
+    profileDataCache.followingUsers = followedUsers;
+    return followedUsers;
   } catch (err) {
     console.error("Failed to fetch following users", err);
+    return [];
   }
 };
 
@@ -196,8 +210,11 @@ const fetchFollowers = async (userId: number, allUsers: User[]) => {
     const followerUserIds = data.map((relation) => relation.followerId);
     const followerUsers = allUsers.filter((user) => followerUserIds.includes(user.id));
     setFollowers(followerUsers);
+    profileDataCache.followers = followerUsers;
+    return followerUsers;
   } catch (err) {
     console.error("Failed to fetch followers", err);
+    return [];
   }
 };
 
@@ -236,6 +253,7 @@ const fetchResharedPosts = async (currentUserId: number) => {
       console.warn("No reshared posts found for user");
       setReshares([]);
       setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
+      profileDataCache.reshares = [];
       return;
     }
     const resharedPosts = await Promise.all(
@@ -304,6 +322,7 @@ const fetchResharedPosts = async (currentUserId: number) => {
     const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
     setReshares(validReshares);
     setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
+    profileDataCache.reshares = validReshares;
     if (validReshares.length === 0) {
       console.warn("No valid reshared posts after processing.");
     }
@@ -337,6 +356,7 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
       console.warn("No commented posts found for user:", userId);
       setCommented([]);
       setFetchedTabs((prev) => ({ ...prev, comments: true }));
+      profileDataCache.commented = [];
       return;
     }
     const commentedPosts = await Promise.all(
@@ -405,6 +425,7 @@ const fetchCommentedPosts = async (userId: number, currentUserId: number) => {
     const validComments = commentedPosts.filter((p): p is PostData => p !== null);
     setCommented(validComments);
     setFetchedTabs((prev) => ({ ...prev, comments: true }));
+    profileDataCache.commented = validComments;
     if (validComments.length === 0) {
       console.warn("No valid commented posts after processing.");
     }
@@ -438,6 +459,7 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
       console.warn("No liked posts found for user:", userId);
       setLikedPosts([]);
       setFetchedTabs((prev) => ({ ...prev, likes: true }));
+      profileDataCache.likedPosts = [];
       return;
     }
     const likedPosts = await Promise.all(
@@ -506,6 +528,7 @@ const fetchLikedPosts = async (userId: number, currentUserId: number) => {
     const validLikes = likedPosts.filter((p): p is PostData => p !== null);
     setLikedPosts(validLikes);
     setFetchedTabs((prev) => ({ ...prev, likes: true }));
+    profileDataCache.likedPosts = validLikes;
     if (validLikes.length === 0) {
       console.warn("No valid liked posts after processing.");
     }
@@ -529,6 +552,7 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
       console.warn("No bookmarked posts found for user:", userId);
       setBookmarkedPosts([]);
       setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
+      profileDataCache.bookmarkedPosts = [];
       return;
     }
     const bookmarkedPosts = await Promise.all(
@@ -616,6 +640,7 @@ const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
     const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null);
     setBookmarkedPosts(validBookmarks);
     setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
+    profileDataCache.bookmarkedPosts = validBookmarks;
     if (validBookmarks.length === 0) {
       console.warn("No valid bookmarked posts after processing.");
     }
@@ -645,7 +670,8 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
       console.log("No posts found for user:", userId);
       setPosts([]);
       setFetchedTabs((prev) => ({ ...prev, posts: true }));
-      return;
+      profileDataCache.posts = [];
+      return [];
     }
     const formattedPosts = await Promise.all(
       apiPosts.map(async (post) => {
@@ -713,12 +739,15 @@ const fetchUserPosts = async (userId: number, currentUserId: number) => {
     const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
     setPosts(validPosts);
     setFetchedTabs((prev) => ({ ...prev, posts: true }));
+    profileDataCache.posts = validPosts;
     if (validPosts.length === 0) {
       console.warn("No valid posts after processing.");
     }
+    return validPosts;
   } catch (err) {
     console.error("Error fetching posts:", err);
     setError(`Failed to load posts: ${err instanceof Error ? err.message : "Unknown error"}`);
+    return [];
   } finally {
     setTabLoading((prev) => ({ ...prev, posts: false }));
   }
@@ -1213,6 +1242,25 @@ const renderSkeletonPosts = () => {
   useEffect(() => {
     const loadInitialData = async () => {
       setLoading(true);
+      if (profileDataCache.user) {
+        setUser(profileDataCache.user);
+        setFollowers(profileDataCache.followers);
+        setFollowingUsers(profileDataCache.followingUsers);
+        setPosts(profileDataCache.posts);
+        setReshares(profileDataCache.reshares);
+        setCommented(profileDataCache.commented);
+        setLikedPosts(profileDataCache.likedPosts);
+        setBookmarkedPosts(profileDataCache.bookmarkedPosts);
+        setFetchedTabs({
+          posts: profileDataCache.posts.length > 0,
+          refeeds: profileDataCache.reshares.length > 0,
+          comments: profileDataCache.commented.length > 0,
+          likes: profileDataCache.likedPosts.length > 0,
+          bookmarks: profileDataCache.bookmarkedPosts.length > 0,
+        });
+        setLoading(false);
+        return;
+      }
       const currentUser = await fetchCurrentUser();
       if (currentUser?.id) {
         const allUsers = await fetchUsers();
@@ -1221,6 +1269,7 @@ const renderSkeletonPosts = () => {
           fetchFollowers(currentUser.id, allUsers),
           fetchUserPosts(currentUser.id, currentUser.id),
         ]);
+        profileDataCache.user = currentUser;
       } else {
         setError("Cannot fetch data: User not authenticated.");
       }
