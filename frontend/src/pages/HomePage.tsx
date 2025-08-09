@@ -1105,6 +1105,7 @@ const HomePage = () => {
           onReshare={() => handleReshare(post.id)}
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
+          onNavigate={() => navigate(`/post/${post.id}`)} 
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
