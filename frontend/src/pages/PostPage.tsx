@@ -5,7 +5,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { Skeleton } from "@/components/ui/skeleton";
-import StaticPost from "@/components/ui/staticPost";
+import StaticPost from "@/components/ui/StaticPost";
 
 interface UserProfile {
   id: number;
@@ -553,7 +553,7 @@ const PostPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="w-[1100px] mx-auto p-4">
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
         <StaticPost
           username={post.username}
           handle={post.handle}
