@@ -331,7 +331,7 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
 
           <TabsContent value="accounts">
-            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
              {loading
       ? renderSkeleton()
       : (isSearching ? searchResults : users).map((user) => renderUserCard(user))}
@@ -339,7 +339,7 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
              {followingloading
       ? renderSkeleton()
       : (isSearching
