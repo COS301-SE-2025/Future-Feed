@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.dto.BotResponseDTO;
+import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
 import com.syntexsquad.futurefeed.service.BotService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,5 +45,21 @@ public class BotController {
         } catch (RuntimeException e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
+    }
+    @GetMapping("/{id}/active")
+    public ResponseEntity<Boolean> isBotActive(@PathVariable Integer id) {
+        boolean active = botService.isBotActive(id);
+        return ResponseEntity.ok(active);
+    }
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<Bot> activateBot(@PathVariable Integer id) {
+        Bot bot = botService.activateBot(id);
+        return ResponseEntity.ok(bot);
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<Bot> deactivateBot(@PathVariable Integer id) {
+        Bot bot = botService.deactivateBot(id);
+        return ResponseEntity.ok(bot);
     }
 }
