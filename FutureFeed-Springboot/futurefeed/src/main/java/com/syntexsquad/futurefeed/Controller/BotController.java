@@ -6,6 +6,7 @@ import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
 import com.syntexsquad.futurefeed.service.BotService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -65,5 +66,15 @@ public class BotController {
     @GetMapping("/active")
     public ResponseEntity<List<Bot>> getActiveBots() {
         return ResponseEntity.ok(botService.getActiveBots());
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBot(@PathVariable Integer id) {
+        boolean deleted = botService.deleteBot(id);
+        if (deleted) {
+            return ResponseEntity.ok("Bot deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Bot not found with ID: " + id);
+        }
     }
 }
