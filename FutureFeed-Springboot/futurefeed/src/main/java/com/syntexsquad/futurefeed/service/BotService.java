@@ -97,4 +97,8 @@ public class BotService {
         bot.setActive(false);
         return botRepository.save(bot);
     }
+
+    public List<Bot> getActiveBots() {
+        return botRepository.findByActiveTrue();
+    }
 }
