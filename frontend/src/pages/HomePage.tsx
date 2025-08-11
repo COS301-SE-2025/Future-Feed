@@ -1067,10 +1067,10 @@ const HomePage = () => {
   };
 
   const renderSkeletonPosts = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
+    return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
