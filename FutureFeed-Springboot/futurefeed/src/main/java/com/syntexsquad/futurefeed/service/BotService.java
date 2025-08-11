@@ -78,4 +78,23 @@ public class BotService {
         dto.setCreatedAt(bot.getCreatedAt());
         return dto;
     }
+
+    public boolean isBotActive(Integer botId) {
+        return botRepository.findById(botId)
+                .map(Bot::isActive) // use getter
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+    }
+    public Bot activateBot(Integer botId) {
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+        bot.setActive(true);
+        return botRepository.save(bot);
+    }
+
+    public Bot deactivateBot(Integer botId) {
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+        bot.setActive(false);
+        return botRepository.save(bot);
+    }
 }
