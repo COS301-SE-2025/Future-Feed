@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from "react"; // Added useEffect
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
-import { useSpring, animated } from "@react-spring/web";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 
@@ -40,75 +39,116 @@ const Bots: React.FC = () => {
   }, []);
 
   const fetchAllBots = async () => {
-  setLoading((prev) => ({ ...prev, allBots: true }));
-  try {
-    const res = await fetch(`${API_URL}/api/bots/my`, {
-      method: "GET",
-      credentials: "include",
-    });
-    if (!res.ok) {
-      if (res.status === 401) {
-        throw new Error("Unauthorized: Please log in to view bots.");
-      } else if (res.status === 404) {
-        throw new Error("Bots endpoint not found. Please check the server configuration.");
-      } else {
-        const errorText = await res.text();
-        throw new Error(`Failed to fetch bots: ${res.status} ${errorText}`);
+    setLoading((prev) => ({ ...prev, allBots: true }));
+    try {
+      const res = await fetch(`${API_URL}/api/bots/my`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Unauthorized: Please log in to view bots.");
+        } else if (res.status === 404) {
+          throw new Error("Bots endpoint not found. Please check the server configuration.");
+        } else {
+          const errorText = await res.text();
+          throw new Error(`Failed to fetch bots: ${res.status} ${errorText}`);
+        }
       }
+      const botList: {
+        id: number;
+        ownerId: number;
+        name: string;
+        prompt: string;
+        schedule: "hourly" | "daily" | "weekly" | "monthly";
+        contextSource: string | null;
+        createdAt: string;
+      }[] = await res.json();
+
+      const mappedBots: Bot[] = botList.map((bot) => ({
+        id: bot.id,
+        name: bot.name,
+        prompt: bot.prompt,
+        createdAt: bot.createdAt.split("T")[0],
+        isActive: true,
+        schedule: bot.schedule,
+        contextSource: bot.contextSource || "",
+      }));
+
+      setBots(mappedBots);
+    } catch (error: any) {
+      console.error("Error fetching bots:", error);
+      setError(error.message || "Failed to fetch bots. Please try again later.");
+    } finally {
+      setLoading((prev) => ({ ...prev, allBots: false }));
     }
-    const botList: {
-      id: number;
-      ownerId: number;
-      name: string;
-      prompt: string;
-      schedule: "hourly" | "daily" | "weekly" | "monthly";
-      contextSource: string | null;
-      createdAt: string;
-    }[] = await res.json();
+  };
 
-    const mappedBots: Bot[] = botList.map((bot) => ({
-      id: bot.id,
-      name: bot.name,
-      prompt: bot.prompt,
-      createdAt: bot.createdAt.split("T")[0],
-      isActive: true,
-      schedule: bot.schedule,
-      contextSource: bot.contextSource || "",
-    }));
-
-    setBots(mappedBots);
-  } catch (error: any) {
-    console.error("Error fetching bots:", error);
-    setError(error.message || "Failed to fetch bots. Please try again later.");
-  } finally {
-    setLoading((prev) => ({ ...prev, allBots: false }));
-  }
-};
-
-  const createBot = (e: React.FormEvent) => {
+  const createBot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
       setError("All fields are required.");
       return;
     }
 
-    const newBot: Bot = {
-      id: Date.now(), 
-      name: newBotName,
-      prompt: newBotDescription,
-      createdAt: new Date().toISOString().split("T")[0],
-      isActive: true,
-      schedule: newBotSchedule,
-      contextSource: newBotContextSource,
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/bots`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newBotName,
+          prompt: newBotDescription,
+          schedule: newBotSchedule,
+          contextSource: newBotContextSource,
+        }),
+      });
 
-    setBots([...bots, newBot]);
-    setNewBotName("");
-    setNewBotDescription("");
-    setNewBotSchedule("daily");
-    setNewBotContextSource("");
-    setIsCreateModalOpen(false);
-    setError(null);
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error("Unauthorized: Please log in to create a bot.");
+        } else if (res.status === 400) {
+          const errorText = await res.text();
+          throw new Error(`Invalid input: ${errorText}`);
+        } else {
+          const errorText = await res.text();
+          throw new Error(`Failed to create bot: ${res.status} ${errorText}`);
+        }
+      }
+
+      const newBot: {
+        id: number;
+        ownerId: number;
+        name: string;
+        prompt: string;
+        schedule: "hourly" | "daily" | "weekly" | "monthly";
+        contextSource: string | null;
+        createdAt: string;
+      } = await res.json();
+
+      setBots([
+        ...bots,
+        {
+          id: newBot.id,
+          name: newBot.name,
+          prompt: newBot.prompt,
+          createdAt: newBot.createdAt.split("T")[0],
+          isActive: true, // Default to true since API doesn't provide isActive
+          schedule: newBot.schedule,
+          contextSource: newBot.contextSource || "",
+        },
+      ]);
+
+      setNewBotName("");
+      setNewBotDescription("");
+      setNewBotSchedule("daily");
+      setNewBotContextSource("");
+      setIsCreateModalOpen(false);
+      setError(null);
+    } catch (error: any) {
+      console.error("Error creating bot:", error);
+      setError(error.message || "Failed to create bot. Please try again.");
+    }
   };
 
   const updateBot = (e: React.FormEvent) => {
@@ -299,14 +339,7 @@ const Bots: React.FC = () => {
       </aside>
 
       {isCreateModalOpen && (
-        <animated.div
-          style={useSpring({
-            opacity: isCreateModalOpen ? 1 : 0,
-            transform: isCreateModalOpen ? "translateY(0px)" : "translateY(50px)",
-            config: { tension: 220, friction: 30 },
-          })}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
-        >
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
             <div className="flex justify-between items-center mb-4">
               <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Create New Bot</CardTitle>
@@ -364,18 +397,11 @@ const Bots: React.FC = () => {
               </CardContent>
             </form>
           </Card>
-        </animated.div>
+        </div>
       )}
 
       {isEditModalOpen && editingBot && (
-        <animated.div
-          style={useSpring({
-            opacity: isEditModalOpen ? 1 : 0,
-            transform: isEditModalOpen ? "translateY(0px)" : "translateY(50px)",
-            config: { tension: 220, friction: 30 },
-          })}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
-        >
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
             <div className="flex justify-between items-center mb-1">
               <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Edit Bot</CardTitle>
@@ -434,7 +460,7 @@ const Bots: React.FC = () => {
               </CardContent>
             </form>
           </Card>
-        </animated.div>
+        </div>
       )}
     </div>
   );
