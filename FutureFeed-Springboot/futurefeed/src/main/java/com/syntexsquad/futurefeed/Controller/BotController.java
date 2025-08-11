@@ -62,4 +62,8 @@ public class BotController {
         Bot bot = botService.deactivateBot(id);
         return ResponseEntity.ok(bot);
     }
+    @GetMapping("/active")
+    public ResponseEntity<List<Bot>> getActiveBots() {
+        return ResponseEntity.ok(botService.getActiveBots());
+    }
 }
