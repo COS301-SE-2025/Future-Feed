@@ -2,9 +2,11 @@ package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.dto.BotResponseDTO;
+import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
 import com.syntexsquad.futurefeed.service.BotService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -43,6 +45,36 @@ public class BotController {
             return ResponseEntity.ok(Map.of("output", output));
         } catch (RuntimeException e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+    @GetMapping("/{id}/active")
+    public ResponseEntity<Boolean> isBotActive(@PathVariable Integer id) {
+        boolean active = botService.isBotActive(id);
+        return ResponseEntity.ok(active);
+    }
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<Bot> activateBot(@PathVariable Integer id) {
+        Bot bot = botService.activateBot(id);
+        return ResponseEntity.ok(bot);
+    }
+
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<Bot> deactivateBot(@PathVariable Integer id) {
+        Bot bot = botService.deactivateBot(id);
+        return ResponseEntity.ok(bot);
+    }
+    @GetMapping("/active")
+    public ResponseEntity<List<Bot>> getActiveBots() {
+        return ResponseEntity.ok(botService.getActiveBots());
+    }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteBot(@PathVariable Integer id) {
+        boolean deleted = botService.deleteBot(id);
+        if (deleted) {
+            return ResponseEntity.ok("Bot deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Bot not found with ID: " + id);
         }
     }
 }
