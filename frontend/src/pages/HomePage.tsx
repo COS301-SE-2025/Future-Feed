@@ -1124,8 +1124,8 @@ const HomePage = () => {
         await Promise.all([fetchAllPosts(), fetchTopics()]);
       }
     };
-    loadData(); // Initial load 
-    const intervalId = setInterval(loadData, 60000); // Refresh every 60 seconds 
+    loadData(); 
+    const intervalId = setInterval(loadData, 120000); // Refresh every 2 minutes 
 
     return () => clearInterval(intervalId);
   }, []);
