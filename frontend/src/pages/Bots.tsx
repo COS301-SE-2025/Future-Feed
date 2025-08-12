@@ -76,9 +76,9 @@ const Bots: React.FC = () => {
       }));
 
       setBots(mappedBots);
-    } catch (error: any) {
-      console.error("Error fetching bots:", error);
-      setError(error.message || "Failed to fetch bots. Please try again later.");
+    } catch (err) {
+      console.error("Error fetching bots:", err);
+      setError("Failed to fetch bots. Please try again later.");
     } finally {
       setLoading((prev) => ({ ...prev, allBots: false }));
     }
@@ -145,9 +145,9 @@ const Bots: React.FC = () => {
       setNewBotContextSource("");
       setIsCreateModalOpen(false);
       setError(null);
-    } catch (error: any) {
-      console.error("Error creating bot:", error);
-      setError(error.message || "Failed to create bot. Please try again.");
+    } catch (err) {
+      console.error("Error creating bot:", err);
+      setError("Failed to create bot. Please try again.");
     }
   };
 
