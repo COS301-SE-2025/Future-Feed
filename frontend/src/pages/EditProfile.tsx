@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Camera, Trash2, User } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
 import {
   Dialog,
   DialogTrigger,
@@ -148,132 +147,130 @@ const EditProfile: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
       <ThemeProvider>
-        <div className="pe-9 flex items-center gap-2">
-          <ModeToggle />
-        </div>
-      </ThemeProvider>
-
-      <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
-        <Link to="/profile">
-          <Button
-            className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-lime-500 dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
-            variant="ghost"
-          >
-            <ArrowLeft className="h-5 w-5 text-black" />
-          </Button>
-        </Link>
-        <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-          <DialogTrigger asChild>
-            <Button
-              className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
-              variant="ghost"
-            >
-              <Trash2 className="h-5 w-5 text-red-600" />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Delete Account</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete your account? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex justify-end gap-4">
+        <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+          <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
+            <Link to="/profile">
               <Button
-                type="button"
-                variant="secondary"
-                className="cursor-pointer"
-                onClick={() => setShowDeleteDialog(false)}
+                className="h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-lime-500 dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
+                variant="ghost"
               >
-                Cancel
+                <ArrowLeft className="h-5 w-5 text-black" />
               </Button>
+            </Link>
+          </div>
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogTrigger asChild>
               <Button
-                type="button"
-                className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
-                onClick={() => {
-                  setShowDeleteDialog(false);
-                  handleDeleteAccount();
-                }}
+                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+                variant="ghost"
               >
-                Yes, Delete
+                <Trash2 className="h-5 w-5 text-red-600" />
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        <CardHeader>
-          <CardTitle className="text-center text-4xl">Edit Profile</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="flex flex-col items-center">
-            <div className="mb-3 flex w-full justify-center">
-              <label htmlFor="profile-pic-upload" className="relative cursor-pointer">
-                {formData.profileImage ? (
-                  <img
-                    src={formData.profileImage}
-                    alt="Profile"
-                    className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500"
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete your account? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={() => setShowDeleteDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
+                  onClick={() => {
+                    setShowDeleteDialog(false);
+                    handleDeleteAccount();
+                  }}
+                >
+                  Yes, Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <CardHeader>
+            <CardTitle className="text-center text-4xl">Edit Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="flex flex-col items-center">
+              <div className="mb-3 flex w-full justify-center">
+                <label htmlFor="profile-pic-upload" className="relative cursor-pointer">
+                  {formData.profileImage ? (
+                    <img
+                      src={formData.profileImage}
+                      alt="Profile"
+                      className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500"
+                    />
+                  ) : (
+                    <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500">
+                      <User className="h-12 w-12 text-white" />
+                    </div>
+                  )}
+                  <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.1)]" />
+                  <Input
+                    type="file"
+                    id="profile-pic-upload"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
                   />
-                ) : (
-                  <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500">
-                    <User className="h-12 w-12 text-white" />
-                  </div>
-                )}
-                <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.1)]" />
+                </label>
+              </div>
+
+              {/* Display Name */}
+              <div className="mb-3 w-full max-w-[500px]">
+                <LabelBlock label="Display Name" htmlFor="display-name" />
                 <Input
-                  type="file"
-                  id="profile-pic-upload"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="hidden"
+                  id="display-name"
+                  placeholder="Enter your display name"
+                  value={formData.displayName}
+                  onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
                 />
-              </label>
-            </div>
+              </div>
 
-            {/* Display Name */}
-            <div className="mb-3 w-full max-w-[500px]">
-              <LabelBlock label="Display Name" htmlFor="display-name" />
-              <Input
-                id="display-name"
-                placeholder="Enter your display name"
-                value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
-              />
-            </div>
+              {/* DOB */}
+              <div className="mb-3 w-full max-w-[500px]">
+                <LabelBlock label="Date of Birth" htmlFor="dob" />
+                <Input
+                  id="dob"
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                />
+              </div>
 
-            {/* DOB */}
-            <div className="mb-3 w-full max-w-[500px]">
-              <LabelBlock label="Date of Birth" htmlFor="dob" />
-              <Input
-                id="dob"
-                type="date"
-                value={formData.dob}
-                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
-              />
-            </div>
+              {/* Bio */}
+              <div className="mb-3 w-full max-w-[500px]">
+                <LabelBlock label="Bio" htmlFor="bio" />
+                <Textarea
+                  id="bio"
+                  placeholder="Bio..."
+                  value={formData.bio}
+                  onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                />
+              </div>
 
-            {/* Bio */}
-            <div className="mb-3 w-full max-w-[500px]">
-              <LabelBlock label="Bio" htmlFor="bio" />
-              <Textarea
-                id="bio"
-                placeholder="Bio..."
-                value={formData.bio}
-                onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-3 mt-3 cursor-pointer"
-            >
-              Save Changes
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <Button
+                type="submit"
+                className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-3 mt-3 cursor-pointer"
+              >
+                Save Changes
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </ThemeProvider>
     </div>
   );
 };
