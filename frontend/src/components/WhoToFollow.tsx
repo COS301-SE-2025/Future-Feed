@@ -28,7 +28,7 @@ const WhoToFollow = () => {
 
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
 
-  const { followStatus,followingUsers,setFollowingUsers,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
+  const { followStatus,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
 
   useEffect(() => {
     const fetchTopUsers = async () => {
@@ -142,14 +142,14 @@ const WhoToFollow = () => {
                     <Skeleton className="h-8 w-16 rounded-2xl" />
                   ) : isFollowing ? (
                     <Button
-                      className="rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+                      className="w-[90px] rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
                       onClick={() => handleUnfollow(user.id)}
                     >
                       Unfollow
                     </Button>
                   ) : (
                     <Button
-                      className="rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+                      className="w-[90px] rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
