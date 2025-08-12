@@ -25,9 +25,6 @@ interface UserProfile {
   dateOfBirth?: string | null
   email: string
 }
-interface TopFollowedUser extends UserProfile {
-  followerCount: number
-}
 
 interface User {
   id: number;
@@ -47,7 +44,7 @@ const FollowerFollowing = () => {
   const { updateFollowStatus, addFollowingUser, removeFollowingUser } = useFollowStore();
   const { followStatus } = useFollowStore();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const { followingUsers, fetchFollowers, fetchFollowing, setFollowers ,followers, setFollowingUsers } = useFollowStore();
+  const { followingUsers, fetchFollowers, fetchFollowing,followers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
   
