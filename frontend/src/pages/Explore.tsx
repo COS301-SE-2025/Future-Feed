@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
-import { Input } from "@/components/ui/input";
+import {Input } from "@/components/ui/input";
+
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import RightSidebar from "@/components/RightSidebar";
@@ -12,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFollowStore } from "@/store/useFollowStore";
 import { Button } from "@/components/ui/button";
+import SearchUser from "@/components/SearchUser";
 
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -33,13 +35,52 @@ interface FollowRelation {
 }
 
 const Explore = () => {
+  //search
+  const [searchResults, setSearchResults] = useState<User[]>([]);
+const [isSearching, setIsSearching] = useState(false);
+
+  //
   const [users, setUsers] = useState<User[]>([]);
+  const [activeTab, setActiveTab] = useState("accounts");
+  // State to manage current user ID and following user IDs
+  const [hasLoadedFolllowing, setHasLoadedFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
   const [loading, setLoading] = useState(true);
+  const [followingloading, setfollowingloading] = useState(true);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
+  //
+  const handleSearch = async (query: string) => {
+  if (!query) {
+    setIsSearching(false);
+    setSearchResults([]);
+    return;
+  }
+
+  setIsSearching(true);
+  try {
+    const res = await fetch(`${API_URL}/api/user/search?q=${encodeURIComponent(query)}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!res.ok) throw new Error("Search failed");
+    const data: User[] = await res.json();
+    setSearchResults(data);
+
+    // Also set follow status for the searched users
+    const statusEntries = await Promise.all(
+      data.map(async (user) => [user.id, await checkFollowStatus(user.id)] as const)
+    );
+    bulkSetFollowStatus(Object.fromEntries(statusEntries));
+
+  } catch (err) {
+    console.error(err);
+  }
+};
+  //
 
   const fetchCurrentUserId = async () => {
     const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -68,6 +109,7 @@ const Explore = () => {
       const data: FollowRelation[] = await res.json();
       const followedUserIds = data.map((relation) => relation.followedId);
       const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+      console.log(followedUsers);
       setFollowingUserIds(followedUserIds);
     } catch (err) {
       console.error("Failed to fetch following users", err);
@@ -135,13 +177,18 @@ const Explore = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      
       const userId = await fetchCurrentUserId();
       setCurrentUserId(userId);
 
+   
       const allUsers = await fetchUsers();
       setUsers(allUsers);
+      setLoading(false);
+      
 
-      await fetchFollowing(userId, allUsers);
+   
+
 
       const statusEntries = await Promise.all(
         allUsers.map(async (user: User) => {
@@ -151,12 +198,17 @@ const Explore = () => {
       );
 
       bulkSetFollowStatus(Object.fromEntries(statusEntries));
-      setLoading(false);
+     
     };
 
     loadData();
   }, []);
-
+const loadFollowingData = async (userId: number) => {
+  setfollowingloading(true);
+   await fetchFollowing(userId, users);
+   setfollowingloading(false);
+   setHasLoadedFollowing(true);
+}
   const renderUserCard = (user: User) => {
     
     if (unfollowingId === user.id || followingId === user.id) {
@@ -176,7 +228,7 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
+      <Card key={user.id} className="w-full dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -190,14 +242,14 @@ const Explore = () => {
           {followStatus[user.id] ? (
             <Button
               onClick={() => handleUnfollow(user.id)}
-              className="px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+              className="min-w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
             >
               Unfollow
             </Button>
           ) : (
             <Button
               onClick={() => handleFollow(user.id)}
-              className="px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+              className="min-w-[90px] px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
             >
               Follow
             </Button>
@@ -224,27 +276,41 @@ const Explore = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
-      <aside className="w-[275px]">
+      <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="bg-lime-600 rounded-full dark:bg-[#1a1a1a] dark:text-white border-lime-500 dark:placeholder:text-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-          />
+          <div className="sticky top-4 z-10 bg-gray-200 dark:bg-black">
+        <Input
+          type="text"
+        
+          placeholder="Search"
+        
+          className="border-lime-600 border-3 dark:placeholder:text-lime-500 rounded-2xl px-4 py-2 dark:bg-black dark:text-slate-100 border dark:border-lime-500 focus:ring-0 focus:outline-none"
+        />
+      </div>
+         
         </div>
 
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
+          
           <Link to="/settings">
             <Settings size={20} className="dark:text-lime-500" />
           </Link>
         </div>
 
-        <Tabs defaultValue="accounts" className="w-full p-2">
+        <Tabs
+        value={activeTab}
+        onValueChange={ (val) => {
+          setActiveTab(val);
+          if (val === "accounts following" && !hasLoadedFolllowing && currentUserId !== null) {
+            loadFollowingData(currentUserId);
+          }
+        }}
+         className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-black">
             {["forYou", "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
@@ -265,18 +331,21 @@ const Explore = () => {
           </TabsContent>
 
           <TabsContent value="accounts">
-            <div className="space-y-4">
-              {loading ? renderSkeleton() : users.map((user) => renderUserCard(user))}
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
+             {loading
+      ? renderSkeleton()
+      : (isSearching ? searchResults : users).map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <div className="space-y-4">
-              {loading
+            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
+             {followingloading
       ? renderSkeleton()
-      : users
-          .filter((user) => followingUserIds.includes(user.id))
-          .map((user) => renderUserCard(user))}
+      : (isSearching
+          ? searchResults.filter((u) => followingUserIds.includes(u.id))
+          : users.filter((u) => followingUserIds.includes(u.id))
+        ).map((user) => renderUserCard(user))}
             </div>
           </TabsContent>
         </Tabs>
@@ -287,7 +356,11 @@ const Explore = () => {
         </div>
       </main>
 
-      <aside>
+      <aside className="gap-4 flex flex-col ">
+        <div className="sticky p-3 top-4 z-10 bg-gray-200 dark:bg-black">
+         <SearchUser onSearch={handleSearch} /> 
+        </div>
+        
         <RightSidebar />
       </aside>
     </div>
