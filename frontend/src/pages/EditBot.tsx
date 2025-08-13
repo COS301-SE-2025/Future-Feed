@@ -6,8 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface FormData {
   botName: string;
@@ -24,6 +33,7 @@ const EditBot: React.FC = () => {
     schedule: "daily",
     contextSource: "www.mySource.com",
   });
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -31,9 +41,19 @@ const EditBot: React.FC = () => {
     try {
       console.log("Saving bot settings:", formData);
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      navigate("/bots"); 
+      navigate("/bots");
     } catch (err) {
       console.error("Error saving bot settings:", err);
+    }
+  };
+
+  const handleDeleteBot = async () => {
+    try {
+      console.log("Deleting bot:", formData.botName);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      navigate("/bots");
+    } catch (err) {
+      console.error("Error deleting bot:", err);
     }
   };
 
@@ -50,6 +70,44 @@ const EditBot: React.FC = () => {
               <ArrowLeft className="h-5 w-5 text-black" />
             </Button>
           </div>
+          <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <DialogTrigger asChild>
+              <Button
+                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+                variant="ghost"
+              >
+                <Trash2 className="h-5 w-5 text-red-600" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Delete Bot</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this bot? This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="cursor-pointer"
+                  onClick={() => setShowDeleteDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
+                  onClick={() => {
+                    setShowDeleteDialog(false);
+                    handleDeleteBot();
+                  }}
+                >
+                  Yes, Delete
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <CardHeader>
             <CardTitle className="text-center text-4xl">Edit Bot</CardTitle>
           </CardHeader>
