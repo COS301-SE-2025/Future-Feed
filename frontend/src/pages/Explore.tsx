@@ -57,12 +57,18 @@ const [isSearchActive, setIsSearchActive] = useState(false);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
   //
   const handleSearch = async (query: string) => {
+    const trimmedQuery = query.trim();
     setSearchQuery(query);
-  if (!query) {
+  if (!trimmedQuery) {
     //setIsSearching(false);
     setIsSearchActive(false);//user is not searching currenly
     //setSearchResults([]);
-    setDisplayedUsers(users); // Reset to all users when query is empty
+    //resery if users lpaded
+    if(users.length > 0){
+      setDisplayedUsers(users); // Reset to all users when query is empty
+
+    }
+    
 
     return;
   }
@@ -77,11 +83,15 @@ const [isSearchActive, setIsSearchActive] = useState(false);
 
     if (!res.ok) throw new Error("Search failed");
     const data: User[] = await res.json();
+
     //set search results after fetching
     //setSearchResults(data);
     //show search results immediately and not have them populatd by all users
 
-    setDisplayedUsers(data);
+    if(trimmedQuery === searchQuery.trim() ){ //added checking for if we're still seearching same thing
+setDisplayedUsers(data);
+    }
+    
     //console.log("search results",searchResults)
      const updateStatuses = async () => {
       const currentStatuses = useFollowStore.getState().followStatus;
@@ -105,7 +115,7 @@ const [isSearchActive, setIsSearchActive] = useState(false);
     console.error(err);
   } finally {
     //setIsSearching(false);
-    setIsSearchActive(false);
+   
   }
 };
   //
@@ -206,49 +216,82 @@ const [isSearchActive, setIsSearchActive] = useState(false);
     //handle tab changes
     
     //
-    const loadData = async () => {
-      setLoading(true);
+    let isMounted = true;
 
-      const allUsers = await fetchUsers();
-      setUsers(allUsers);
+    const loadData = async () => {
+      try {
+         setLoading(true);
+         const [allUsers, userId] = await Promise.all([
+          fetchUsers(),
+          fetchCurrentUserId()
+         ]);
+         //
+          if(isMounted) {
+         setUsers(allUsers);
      
       //initialize displayed users
-      setDisplayedUsers(allUsers);  
-      
-      const userId = await fetchCurrentUserId();
-      setCurrentUserId(userId);
+      setDisplayedUsers(allUsers);
+       setCurrentUserId(userId);
 
-   
-      
-       setLoading(false);
-
-      
-
-   
-
-
+       
       const statusEntries = await Promise.all(
         allUsers.map(async (user: User) => {
           const isFollowing = await checkFollowStatus(user.id);
           return [user.id, isFollowing] as const;
         })
       );
-
       bulkSetFollowStatus(Object.fromEntries(statusEntries));
+
+      }
+
+
+
+      } catch (err){
+        console.error("Failed to load data", err);
+      } finally {
+        if (isMounted){
+          setLoading(false);
+        }
+      }
+
+     
+
+      //const allUsers = await fetchUsers();
+       
+      
+      //const userId = await fetchCurrentUserId();
+     
+      
+
+   
+      
+      // setLoading(false);
+
+      
+
+   
+
+
+
+      
      
     };
 
     loadData();
+    
+    return () => {
+      isMounted = false;
+    };
     
   }, []);
   useEffect(() => {
   // When tab changes but search is active, maintain search results
   if (isSearchActive && searchQuery) {
     handleSearch(searchQuery);
-  } else if (!isSearchActive) {
+  } else if (!isSearchActive && users.length > 0) {
     setDisplayedUsers(users);
   }
-}, [activeTab, users]);
+}, [activeTab, isSearchActive,users]);
 
 const loadFollowingData = async (userId: number) => {
   setfollowingloading(true);
