@@ -6,6 +6,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useFollowStore } from "@/store/useFollowStore"
 import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
+//route detection for show morers
+import { useLocation } from "react-router-dom"
 
 interface User {
   id: number
@@ -34,6 +36,9 @@ const WhoToFollow = () => {
   //prevent unnecessary re-renders
   //const followStatus = useFollowStore(state => state.followStatus);
   const safeUpdateStatus = useFollowStore(state => state.safeUpdateStatus);
+  //route detection for show more
+  const location = useLocation();
+  const isExplorePage = location.pathname === '/explore';
   
 
   // Fetch top users with React Query
@@ -135,7 +140,7 @@ const WhoToFollow = () => {
   const stableStatuses = useStableFollowStatus(userIds);
 
   return (
-    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
+    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white ">
       <CardContent className="p-4">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 
@@ -191,9 +196,13 @@ const WhoToFollow = () => {
               )
             })}
 
-            <div>
+            {!isExplorePage && (
+              <div>
               <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
             </div>
+
+            )}
+            
           </div>
         )}
       </CardContent>
