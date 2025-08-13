@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -8,61 +9,72 @@ import { useFollowStore } from "@/store/useFollowStore"
 interface User {
   id: number
   username: string
-  name:string
+  name: string
   displayName: string
   email: string
-  profilePicture?: string;
-  bio?: string | null;
-  dateOfBirth?: string | null;
+  profilePicture?: string
+  bio?: string | null
+  dateOfBirth?: string | null
 }
 
 interface TopFollowedUser extends User {
   followerCount: number
 }
 
+interface FollowStatusResponse {
+  following: boolean
+}
+
 const WhoToFollow = () => {
-  const [topUsers, setTopUsers] = useState<TopFollowedUser[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({})
-
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
+  const { followStatus, removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
 
-  const { followStatus,removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
+  // Fetch top users with React Query
+  const { 
+    data: topUsers = [], 
+    isLoading, 
+    error: fetchError 
+  } = useQuery<TopFollowedUser[], Error>({
+    queryKey: ['topFollowedUsers'],
+    queryFn: async (): Promise<TopFollowedUser[]> => {
+      const res = await fetch(`${API_Url}/api/user/top-followed`, {
+        method: "GET",
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error("Failed to fetch top users")
+      return res.json() as Promise<TopFollowedUser[]>
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes until data becomes stale
+    gcTime: 60 * 60 * 1000, // 1 hour until cache is garbage collected
+  })
 
+  // Fetch follow statuses in parallel
   useEffect(() => {
-    const fetchTopUsers = async () => {
-      try {
-        const res = await fetch(`${API_Url}/api/user/top-followed`, {
-          method: "GET",
-          credentials: "include",
-        })
-        if (!res.ok) throw new Error("Failed to fetch top users")
-        const data = await res.json()
-        setTopUsers(data)
+    if (topUsers.length === 0) return
 
-        // Fetch follow status for each user
+    const fetchStatuses = async () => {
+      try {
         const statuses = await Promise.all(
-          data.map(async (user: TopFollowedUser) => {
+          topUsers.map(async (user: TopFollowedUser) => {
             const res = await fetch(`${API_Url}/api/follow/status/${user.id}`, {
               method: "GET",
               credentials: "include",
             })
-            const json = await res.json()
-            return [user.id, json.following] as const
+            const json: FollowStatusResponse = await res.json()
+            return { id: user.id, status: json.following }
           })
         )
-        statuses.forEach(([id, status]) => updateFollowStatus(id, status))
+        statuses.forEach(({ id, status }: { id: number; status: boolean }) => 
+          updateFollowStatus(id, status)
+        )
       } catch (err) {
-        console.error(err)
-        setError("Could not load recommendations.")
-      } finally {
-        setLoading(false)
+        console.error("Error fetching follow statuses:", err)
       }
     }
 
-    fetchTopUsers()
-  }, [updateFollowStatus])
+    fetchStatuses()
+  }, [topUsers, updateFollowStatus, API_Url])
 
   const handleFollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
@@ -73,11 +85,11 @@ const WhoToFollow = () => {
         credentials: "include",
         body: JSON.stringify({ followedId: userId }),
       })
-      updateFollowStatus(userId, true);
-      const userToAdd = topUsers.find((u) => u.id === userId)
-    if (userToAdd) {
-      addFollowingUser(userToAdd)
-    }
+      updateFollowStatus(userId, true)
+      const userToAdd = topUsers.find((u: TopFollowedUser) => u.id === userId)
+      if (userToAdd) {
+        addFollowingUser(userToAdd)
+      }
     } catch (err) {
       console.error(`Failed to follow user ${userId}`, err)
     } finally {
@@ -92,7 +104,7 @@ const WhoToFollow = () => {
         method: "DELETE",
         credentials: "include",
       })
-      updateFollowStatus(userId, false);
+      updateFollowStatus(userId, false)
       removeFollowingUser(userId)
     } catch (err) {
       console.error(`Failed to unfollow user ${userId}`, err)
@@ -106,7 +118,7 @@ const WhoToFollow = () => {
       <CardContent className="p-4">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 
-        {loading ? (
+        {isLoading ? (
           <div className="space-y-3">
             {[...Array(3)].map((_, idx) => (
               <div key={idx} className="flex items-center gap-3">
@@ -118,11 +130,11 @@ const WhoToFollow = () => {
               </div>
             ))}
           </div>
-        ) : error ? (
-          <p className="text-sm text-red-400">{error}</p>
+        ) : fetchError ? (
+          <p className="text-sm text-red-400">Could not load recommendations.</p>
         ) : (
           <div className="space-y-4 text-sm">
-            {topUsers.map((user) => {
+            {topUsers.map((user: TopFollowedUser) => {
               const isFollowing = followStatus[user.id]
 
               return (
@@ -142,7 +154,7 @@ const WhoToFollow = () => {
                     <Skeleton className="h-8 w-16 rounded-2xl" />
                   ) : isFollowing ? (
                     <Button
-                      className="w-[90px] rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+                      className="w-[90px] rounded-full border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
                       onClick={() => handleUnfollow(user.id)}
                     >
                       Unfollow
