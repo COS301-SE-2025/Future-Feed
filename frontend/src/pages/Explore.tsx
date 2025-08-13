@@ -35,9 +35,13 @@ interface FollowRelation {
 }
 
 const Explore = () => {
-  //search
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-const [isSearching, setIsSearching] = useState(false);
+
+
+//add sep states for search
+const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
+//monitor sesrch query and check is search is active
+const [searchQuery, setSearchQuery] = useState(''); 
+const [isSearchActive, setIsSearchActive] = useState(false);
 
   //
   const [users, setUsers] = useState<User[]>([]);
@@ -53,13 +57,18 @@ const [isSearching, setIsSearching] = useState(false);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
   //
   const handleSearch = async (query: string) => {
+    setSearchQuery(query);
   if (!query) {
-    setIsSearching(false);
-    setSearchResults([]);
+    //setIsSearching(false);
+    setIsSearchActive(false);//user is not searching currenly
+    //setSearchResults([]);
+    setDisplayedUsers(users); // Reset to all users when query is empty
+
     return;
   }
 
-  setIsSearching(true);
+  setIsSearchActive(true); // User is actively searching
+  //setIsSearching(true);
   try {
     const res = await fetch(`${API_URL}/api/user/search?q=${encodeURIComponent(query)}`, {
       method: "GET",
@@ -68,16 +77,35 @@ const [isSearching, setIsSearching] = useState(false);
 
     if (!res.ok) throw new Error("Search failed");
     const data: User[] = await res.json();
-    setSearchResults(data);
+    //set search results after fetching
+    //setSearchResults(data);
+    //show search results immediately and not have them populatd by all users
 
-    // Also set follow status for the searched users
-    const statusEntries = await Promise.all(
-      data.map(async (user) => [user.id, await checkFollowStatus(user.id)] as const)
-    );
-    bulkSetFollowStatus(Object.fromEntries(statusEntries));
+    setDisplayedUsers(data);
+    //console.log("search results",searchResults)
+     const updateStatuses = async () => {
+      const currentStatuses = useFollowStore.getState().followStatus;
+      const newStatuses = { ...currentStatuses };
 
+      await Promise.all(
+        data.map(async (user) => {
+          if (!(user.id in currentStatuses)) {
+            newStatuses[user.id] = await checkFollowStatus(user.id);
+          }
+        })
+      );
+      
+      useFollowStore.getState().bulkSetFollowStatus(newStatuses);
+    };
+    
+    // update in background
+    updateStatuses();
+    
   } catch (err) {
     console.error(err);
+  } finally {
+    //setIsSearching(false);
+    setIsSearchActive(false);
   }
 };
   //
@@ -175,16 +203,25 @@ const [isSearching, setIsSearching] = useState(false);
   };
 
   useEffect(() => {
+    //handle tab changes
+    
+    //
     const loadData = async () => {
       setLoading(true);
+
+      const allUsers = await fetchUsers();
+      setUsers(allUsers);
+     
+      //initialize displayed users
+      setDisplayedUsers(allUsers);  
       
       const userId = await fetchCurrentUserId();
       setCurrentUserId(userId);
 
    
-      const allUsers = await fetchUsers();
-      setUsers(allUsers);
-      setLoading(false);
+      
+       setLoading(false);
+
       
 
    
@@ -202,7 +239,17 @@ const [isSearching, setIsSearching] = useState(false);
     };
 
     loadData();
+    
   }, []);
+  useEffect(() => {
+  // When tab changes but search is active, maintain search results
+  if (isSearchActive && searchQuery) {
+    handleSearch(searchQuery);
+  } else if (!isSearchActive) {
+    setDisplayedUsers(users);
+  }
+}, [activeTab, users]);
+
 const loadFollowingData = async (userId: number) => {
   setfollowingloading(true);
    await fetchFollowing(userId, users);
@@ -332,21 +379,31 @@ const loadFollowingData = async (userId: number) => {
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
-             {loading
-      ? renderSkeleton()
-      : (isSearching ? searchResults : users).map((user) => renderUserCard(user))}
+            {loading ? (
+      renderSkeleton()
+    ) : (
+      displayedUsers.map(renderUserCard)
+    )}
             </div>
           </TabsContent>
 
           <TabsContent value="accounts following">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
-             {followingloading
-      ? renderSkeleton()
-      : (isSearching
-          ? searchResults.filter((u) => followingUserIds.includes(u.id))
-          : users.filter((u) => followingUserIds.includes(u.id))
-        ).map((user) => renderUserCard(user))}
-            </div>
+             {followingloading ? (
+      renderSkeleton()
+    ) : (
+      displayedUsers
+        .filter(u => followingUserIds.includes(u.id))
+        .map(renderUserCard)
+    )}
+
+          
+        
+          
+      
+        
+          </div>
+
           </TabsContent>
         </Tabs>
 

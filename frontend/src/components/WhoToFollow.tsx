@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useFollowStore } from "@/store/useFollowStore"
+import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
 
 interface User {
   id: number
@@ -26,9 +27,14 @@ interface FollowStatusResponse {
 }
 
 const WhoToFollow = () => {
-  const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({})
+  const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({});
+  //const [statusesLoading, setStatusesLoading] = useState(false); // A
   const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
-  const { followStatus, removeFollowingUser, addFollowingUser, updateFollowStatus } = useFollowStore()
+  const { removeFollowingUser, addFollowingUser} = useFollowStore()
+  //prevent unnecessary re-renders
+  //const followStatus = useFollowStore(state => state.followStatus);
+  const safeUpdateStatus = useFollowStore(state => state.safeUpdateStatus);
+  
 
   // Fetch top users with React Query
   const { 
@@ -54,6 +60,7 @@ const WhoToFollow = () => {
     if (topUsers.length === 0) return
 
     const fetchStatuses = async () => {
+     // setStatusesLoading(true);
       try {
         const statuses = await Promise.all(
           topUsers.map(async (user: TopFollowedUser) => {
@@ -66,15 +73,19 @@ const WhoToFollow = () => {
           })
         )
         statuses.forEach(({ id, status }: { id: number; status: boolean }) => 
-          updateFollowStatus(id, status)
+          //updateFollowStatus(id, status)
+        safeUpdateStatus(id, status)
         )
       } catch (err) {
         console.error("Error fetching follow statuses:", err)
       }
+      finally {
+        //setStatusesLoading(false);
+      }
     }
 
     fetchStatuses()
-  }, [topUsers, updateFollowStatus, API_Url])
+  }, [topUsers, safeUpdateStatus, API_Url])
 
   const handleFollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
@@ -85,7 +96,11 @@ const WhoToFollow = () => {
         credentials: "include",
         body: JSON.stringify({ followedId: userId }),
       })
-      updateFollowStatus(userId, true)
+      //safeuodate
+      safeUpdateStatus(userId, true);
+      // Update local state
+
+     // updateFollowStatus(userId, true)
       const userToAdd = topUsers.find((u: TopFollowedUser) => u.id === userId)
       if (userToAdd) {
         addFollowingUser(userToAdd)
@@ -104,7 +119,9 @@ const WhoToFollow = () => {
         method: "DELETE",
         credentials: "include",
       })
-      updateFollowStatus(userId, false)
+      //safeuodate
+      safeUpdateStatus(userId, false);
+      //updateFollowStatus(userId, false)
       removeFollowingUser(userId)
     } catch (err) {
       console.error(`Failed to unfollow user ${userId}`, err)
@@ -112,6 +129,10 @@ const WhoToFollow = () => {
       setLoadingFollow((prev) => ({ ...prev, [userId]: false }))
     }
   }
+  //fetch all user ids first
+  const userIds = useMemo(() => topUsers.map(user => user.id), [topUsers] );
+    // Get stable statuses for all users at the top level
+  const stableStatuses = useStableFollowStatus(userIds);
 
   return (
     <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
@@ -135,8 +156,7 @@ const WhoToFollow = () => {
         ) : (
           <div className="space-y-4 text-sm">
             {topUsers.map((user: TopFollowedUser) => {
-              const isFollowing = followStatus[user.id]
-
+              const isFollowing = stableStatuses[user.id] || false;
               return (
                 <div key={user.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
