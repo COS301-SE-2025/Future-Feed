@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Added useNavigate
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
 import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
-import { FaRobot } from "react-icons/fa"; // Specific robot icon from react-icons
+import { FaRobot } from "react-icons/fa";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface CommentData {
@@ -127,6 +128,7 @@ const BotPage = () => {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const renderSkeletonPosts = () => {
     return Array.from({ length: 5 }).map((_, index) => (
@@ -150,7 +152,6 @@ const BotPage = () => {
     const loadMockData = async () => {
       try {
         setLoading(true);
-        // Simulate API call delay
         await new Promise((resolve) => setTimeout(resolve, 1000));
         setBot(mockBotData);
         setPosts(mockPosts);
@@ -220,14 +221,12 @@ const BotPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6">
+      <main className="flex-1 p-4 lg:p-6 mt-25">
         <div className="relative">
-          <div className="-mt-15 h-40 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-              <Link to="/edit-bot" className="flex items-center justify-center gap-3 dark:hover:text-white h-full w-full">
+              <Link to="/edit-bot" className="flex items-center justify-center h-full w-full">
                 <FaRobot className="w-20 h-20 text-gray-600 dark:text-gray-300" />
-                {/* <AvatarFallback>{bot.username.slice(0, 2).toUpperCase()}</AvatarFallback> */}
               </Link>
             </Avatar>
           </div>
@@ -239,14 +238,13 @@ const BotPage = () => {
               <p className="dark:text-gray-400">@{bot.username}</p>
               <p className="mt-2 text-sm">{bot.bio || "This is my bot's bio"}</p>
             </div>
-            <Link to="/edit-bot" className="flex items-center gap-3 dark:hover:text-white">
-              <Button
-                variant="outline"
-                className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
-              >
-                Edit Bot
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="-mt-30 text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
+              onClick={() => navigate("/edit-bot")}
+            >
+              Edit Bot
+            </Button>
           </div>
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
