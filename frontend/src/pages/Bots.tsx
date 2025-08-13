@@ -13,7 +13,6 @@ interface Bot {
   name: string;
   prompt: string;
   createdAt: string;
-  isActive: boolean;
   schedule: "hourly" | "daily" | "weekly" | "monthly";
   contextSource: string;
 }
@@ -70,7 +69,6 @@ const Bots: React.FC = () => {
         name: bot.name,
         prompt: bot.prompt,
         createdAt: bot.createdAt.split("T")[0],
-        isActive: true,
         schedule: bot.schedule,
         contextSource: bot.contextSource || "",
       }));
@@ -133,7 +131,6 @@ const Bots: React.FC = () => {
           name: newBot.name,
           prompt: newBot.prompt,
           createdAt: newBot.createdAt.split("T")[0],
-          isActive: true, // Default to true since API doesn't provide isActive
           schedule: newBot.schedule,
           contextSource: newBot.contextSource || "",
         },
@@ -186,17 +183,8 @@ const Bots: React.FC = () => {
     setError(null);
   };
 
-  const toggleBotStatus = (botId: number, isActive: boolean) => {
-    setBots(
-      bots.map((bot) =>
-        bot.id === botId ? { ...bot, isActive: !isActive } : bot
-      )
-    );
-    setError(null);
-  };
-
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white font-['Cambay',Arial,sans-serif]">
+    <div className="flex min-h-screen dark:bg-black dark:text-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -239,7 +227,6 @@ const Bots: React.FC = () => {
                               <h3 className="text-lg font-bold">{bot.name}</h3>
                               <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
                               <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
-                              <p className="text-sm text-gray-400">Status: {bot.isActive ? "Active" : "Inactive"}</p>
                             </div>
                             <div className="flex gap-2">
                               <Button
@@ -263,12 +250,6 @@ const Bots: React.FC = () => {
                               >
                                 <FaTrash />
                               </Button>
-                              <Button
-                                className={bot.isActive ? "bg-red-500 hover:bg-red-600 cursor-pointer" : "bg-lime-500 hover:bg-lime-600 cursor-pointer"}
-                                onClick={() => toggleBotStatus(bot.id, bot.isActive)}
-                              >
-                                {bot.isActive ? "Deactivate" : "Activate"}
-                              </Button>
                             </div>
                           </CardContent>
                         </Card>
@@ -277,11 +258,11 @@ const Bots: React.FC = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="active">
-                  {bots.filter((bot) => bot.isActive).length === 0 ? (
+                  {bots.length === 0 ? (
                     <div className="text-center text-gray-400">No active bots.</div>
                   ) : (
                     <div className="grid gap-4">
-                      {bots.filter((bot) => bot.isActive).map((bot) => (
+                      {bots.map((bot) => (
                         <Card key={bot.id} className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500">
                           <CardContent className="p-4 flex justify-between items-center">
                             <div>
@@ -310,12 +291,6 @@ const Bots: React.FC = () => {
                                 onClick={() => deleteBot(bot.id)}
                               >
                                 <FaTrash />
-                              </Button>
-                              <Button
-                                className="bg-red-500 hover:bg-red-600 cursor-pointer"
-                                onClick={() => toggleBotStatus(bot.id, bot.isActive)}
-                              >
-                                Deactivate
                               </Button>
                             </div>
                           </CardContent>
