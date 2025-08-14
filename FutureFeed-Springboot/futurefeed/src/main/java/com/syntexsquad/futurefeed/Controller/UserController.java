@@ -67,6 +67,38 @@ public class UserController {
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
 
+    @GetMapping("/all-except-me")
+    public ResponseEntity<?> getAllUsersExceptMe(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        AppUser currentUser;
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String email = oauthToken.getPrincipal().getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.status(400).body("Email not found in OAuth2 token");
+            }
+            currentUser = userService.getUserByEmail(email);
+        } else {
+            String username = authentication.getName();
+            currentUser = userService.getUserByUsername(username);
+        }
+
+        if (currentUser == null) {
+            return ResponseEntity.status(404).body("Current user not found");
+        }
+
+        List<AppUser> otherUsers = userService.getAllUsersExceptCurrent(currentUser);
+        List<UserProfileResponse> response = otherUsers.stream()
+                .map(UserProfileResponse::fromUser)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
+
     // Search users by keyword
     @GetMapping("/search")
     public ResponseEntity<?> searchUsers(@RequestParam("q") String query) {

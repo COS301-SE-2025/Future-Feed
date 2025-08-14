@@ -6,12 +6,12 @@ import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
+import com.syntexsquad.futurefeed.util.PromptValidator;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -46,6 +46,8 @@ public class BotService {
     }
 
     public BotResponseDTO createBot(BotRequestDTO dto) {
+        PromptValidator.validatePrompt(dto.getPrompt());
+        
         AppUser user = getAuthenticatedUser();
 
         Bot bot = new Bot();

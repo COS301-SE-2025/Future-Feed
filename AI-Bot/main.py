@@ -1,12 +1,18 @@
+#main.py
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from bot_agent import create_bot_agent
+from moderation import is_prompt_safe
 
 app = FastAPI()
 
 class BotRequest(BaseModel):
     prompt: str
     context_url: str | None = None
+
+class ModerationResponse(BaseModel):
+    safe: bool
+    classification: str
 
 @app.post("/execute-bot")
 def run_bot(req: BotRequest):
@@ -16,3 +22,7 @@ def run_bot(req: BotRequest):
         return {"output": result}
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/moderate", response_model=ModerationResponse)
+def moderate_prompt(req: BotRequest):
+    return is_prompt_safe(req.prompt)

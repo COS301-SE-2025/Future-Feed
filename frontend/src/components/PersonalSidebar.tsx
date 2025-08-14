@@ -24,7 +24,7 @@ const PersonalSidebar = () => {
 
   return (
     <>
-    <aside className=" hidden sm:flex h-fit dark:bg-black dark:border-lime-500 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-3 border-lime-500 shadow-md hidden md:block bg-lime-600">
+    <aside className="h-fit dark:bg-black dark:border-lime-500 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-3 border-lime-500 shadow-md hidden lg:block bg-lime-600">
       <div className="text-2xl font-bold mb-6 text-white dark:text-lime-500">Future Feed</div>
       <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-lime-500 text-white ">
          <Link to="/home" className="flex items-center gap-3 dark:hover:text-white ">
@@ -66,7 +66,7 @@ const PersonalSidebar = () => {
 
     </aside>
        {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 sm:hidden dark:slate-100 z-50 bg-white">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 lg:hidden dark:slate-100 z-50 bg-white">
         <Link to="/home" className="flex flex-col items-center">
           <Home strokeWidth={3} className="w-5 h-5 " />
 
