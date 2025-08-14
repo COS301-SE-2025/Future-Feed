@@ -12,9 +12,7 @@ export const formatRelativeTime = (date: string): string => {
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-
-  console.log(`Input: ${date}, Normalized: ${normalizedDate}, PostDate: ${postDate.toISOString()}`);
-  console.log(`Now: ${now.toISOString()}, Diff (seconds): ${diffSeconds}, Diff (minutes): ${diffMinutes}`);
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffSeconds < 60) {
     return "just now";
@@ -23,15 +21,12 @@ export const formatRelativeTime = (date: string): string => {
   } else if (diffHours < 1) {
     return `${diffMinutes} minutes ago`;
   } else if (diffHours < 24) {
-    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    if (diffHours === 1) {
+      return "An hour ago"
+    } else {
+      return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
+    }
   } else {
-    return postDate.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "numeric",
-      hour12: true,
-    });
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
   }
 };
