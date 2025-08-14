@@ -1,15 +1,12 @@
 package com.syntexsquad.futurefeed.service;
 
-import com.syntexsquad.futurefeed.dto.BotPostDTO;
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.dto.BotResponseDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import com.syntexsquad.futurefeed.repository.BotPostRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.util.PromptValidator;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -23,15 +20,10 @@ public class BotService {
 
     private final BotRepository botRepository;
     private final AppUserRepository appUserRepository;
-    private final BotPostRepository botPostRepository;
-    private final PostService postService;
 
-
-    public BotService(BotRepository botRepository, AppUserRepository appUserRepository, BotPostRepository botPostRepository, PostService postService) {
+    public BotService(BotRepository botRepository, AppUserRepository appUserRepository) {
         this.botRepository = botRepository;
         this.appUserRepository = appUserRepository;
-        this.botPostRepository = botPostRepository;
-        this.postService = postService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -88,39 +80,4 @@ public class BotService {
         dto.setCreatedAt(bot.getCreatedAt());
         return dto;
     }
-
-    public boolean isBotActive(Integer botId) {
-        return botRepository.findById(botId)
-                .map(Bot::isActive) // use getter
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-    }
-    public Bot activateBot(Integer botId) {
-        Bot bot = botRepository.findById(botId)
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-        bot.setActive(true);
-        return botRepository.save(bot);
-    }
-
-    public Bot deactivateBot(Integer botId) {
-        Bot bot = botRepository.findById(botId)
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-        bot.setActive(false);
-        return botRepository.save(bot);
-    }
-
-    public List<Bot> getActiveBots() {
-        return botRepository.findByActiveTrue();
-    }
-    public boolean deleteBot(Integer botId) {
-        if (!botRepository.existsById(botId)) {
-            return false;
-        }
-        List<BotPostDTO> postdeleter = botPostRepository.findDtoByBotId(botId);
-        for (BotPostDTO dto : postdeleter) {
-             postService.deletePost(dto.getId());
-        }
-        botRepository.deleteById(botId);
-        return true;
-    }
-
 }
