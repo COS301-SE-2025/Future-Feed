@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // Added useNavigate
+import { useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -54,6 +54,29 @@ interface BotProfile {
   email: string;
 }
 
+interface BotPost {
+  id: number;
+  botId: number;
+  postId: number;
+  createdAt: string;
+}
+
+interface SinglePostResponse {
+  id: number;
+  content: string;
+  authorId: number;
+  createdAt: string;
+  imageUrl?: string;
+}
+
+interface RawComment {
+  id: number;
+  postId: number;
+  userId?: number;
+  content: string;
+  createdAt: string;
+}
+
 const mockBotData: BotProfile = {
   id: 1,
   username: "mybot",
@@ -62,73 +85,445 @@ const mockBotData: BotProfile = {
   email: "no email for bot",
 };
 
-const mockPosts: PostData[] = [
-  {
-    id: 1,
-    username: "My Bot",
-    handle: "@mybot",
-    time: formatRelativeTime(new Date().toISOString()),
-    text: "Hello, I'm your friendly bot sharing some cool info!",
-    image: undefined,
-    isLiked: false,
-    isBookmarked: false,
-    isReshared: false,
-    commentCount: 2,
-    authorId: 1,
-    likeCount: 10,
-    reshareCount: 5,
-    comments: [
-      {
-        id: 1,
-        postId: 1,
-        authorId: 2,
-        content: "Great post, bot!",
-        createdAt: new Date().toISOString(),
-        username: "User1",
-        handle: "@user1",
-      },
-      {
-        id: 2,
-        postId: 1,
-        authorId: 3,
-        content: "Keep it up!",
-        createdAt: new Date().toISOString(),
-        username: "User2",
-        handle: "@user2",
-      },
-    ],
-    showComments: false,
-    topics: [
-      { id: 1, name: "Bot" },
-      { id: 2, name: "AI" },
-    ],
-  },
-  {
-    id: 2,
-    username: "My Bot",
-    handle: "@mybot",
-    time: formatRelativeTime(new Date(Date.now() - 86400000).toISOString()),
-    text: "Another post from your favorite bot!",
-    image: undefined,
-    isLiked: false,
-    isBookmarked: false,
-    isReshared: false,
-    commentCount: 0,
-    authorId: 1,
-    likeCount: 3,
-    reshareCount: 1,
-    comments: [],
-    showComments: false,
-    topics: [{ id: 1, name: "Bot" }],
-  },
-];
+const API_URL = "http://localhost:8080";
 
 const BotPage = () => {
   const [bot, setBot] = useState<BotProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
+
+  const fetchUser = async (userId: number): Promise<{ id: number; username: string; displayName: string }> => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, { credentials: "include" });
+      if (!res.ok) throw new Error(`Failed to fetch user ${userId}`);
+      const user = await res.json();
+      return {
+        id: user.id ?? userId,
+        username: user.username ?? `user${userId}`,
+        displayName: user.displayName ?? `User ${userId}`,
+      };
+    } catch (err) {
+      console.warn(`Error fetching user ${userId}:`, err);
+      return {
+        id: userId,
+        username: `user${userId}`,
+        displayName: `User ${userId}`,
+      };
+    }
+  };
+
+  const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
+        return [];
+      }
+      const topicIds: number[] = await res.json();
+      const resTopics = await fetch(`${API_URL}/api/topics`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      const allTopics: Topic[] = resTopics.ok ? await resTopics.json() : [];
+      return topicIds
+        .map((id) => allTopics.find((topic) => topic.id === id))
+        .filter((topic): topic is Topic => !!topic);
+    } catch (err) {
+      console.warn(`Error fetching topics for post ${postId}:`, err);
+      return [];
+    }
+  };
+
+  const fetchBotPosts = async () => {
+    try {
+      setLoading(true);
+      setBot(mockBotData);
+
+      const botPostsResponse = await fetch(`${API_URL}/api/bot-posts/by-bot/1`, { credentials: "include" });
+      if (!botPostsResponse.ok) {
+        throw new Error(`Failed to fetch bot posts: ${botPostsResponse.status}`);
+      }
+      const botPosts: BotPost[] = await botPostsResponse.json();
+
+      // Limit to the first 10 posts
+      const limitedBotPosts = botPosts.slice(0, 10);
+
+      const formattedPosts = await Promise.all(
+        limitedBotPosts.map(async (botPost) => {
+          try {
+            const postResponse = await fetch(`${API_URL}/api/posts/${botPost.postId}`, { credentials: "include" });
+            if (!postResponse.ok) {
+              console.warn(`Skipping post ID ${botPost.postId}: ${postResponse.status}`);
+              return null;
+            }
+            const postData: SinglePostResponse = await postResponse.json();
+
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+              fetch(`${API_URL}/api/comments/post/${postData.id}`, { credentials: "include" }),
+              fetch(`${API_URL}/api/likes/count/${postData.id}`, { credentials: "include" }),
+              fetch(`${API_URL}/api/likes/has-liked/${postData.id}`, { credentials: "include" }),
+              fetch(`${API_URL}/api/bookmarks/${mockBotData.id}/${postData.id}/exists`, { credentials: "include" }),
+              // fetch(`${API_URL}/api/reshares/has-reshared/${postData.id}`, { credentials: "include" }),
+              fetchTopicsForPost(postData.id),
+            ]);
+
+            const comments = commentsRes.ok ? await commentsRes.json() : [];
+            const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+            const commentsWithUsers: CommentData[] = (
+              await Promise.all(
+                validComments.map(async (comment: RawComment) => {
+                  try {
+                    const commentUserInfo = await fetchUser(comment.userId!);
+                    return {
+                      id: comment.id,
+                      postId: comment.postId,
+                      authorId: comment.userId!,
+                      content: comment.content,
+                      createdAt: comment.createdAt,
+                      username: commentUserInfo.displayName,
+                      handle: `@${commentUserInfo.username}`,
+                    };
+                  } catch (err) {
+                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                    return null;
+                  }
+                })
+              )
+            ).filter((comment): comment is CommentData => comment !== null);
+
+            const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+            const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+            const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
+            // const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
+
+            return {
+              id: postData.id,
+              username: mockBotData.displayName,
+              handle: `@${mockBotData.username}`,
+              time: formatRelativeTime(postData.createdAt),
+              text: postData.content,
+              ...(postData.imageUrl ? { image: postData.imageUrl } : {}),
+              isLiked,
+              isBookmarked,
+              // isReshared,
+              commentCount: validComments.length,
+              authorId: postData.authorId,
+              likeCount,
+              reshareCount: 0,
+              comments: commentsWithUsers,
+              showComments: false,
+              // topics: topicsRes,
+            };
+          } catch (err) {
+            console.warn(`Error processing post ID ${botPost.postId}:`, err);
+            return null;
+          }
+        })
+      );
+
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
+      setPosts(validPosts);
+      if (validPosts.length === 0) {
+        console.warn("No valid posts after processing.");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load bot data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId);
+      if (!post) {
+        setError("Post not found.");
+        return;
+      }
+      if (!bot) {
+        setError("Please log in to like/unlike posts.");
+        return;
+      }
+      const wasLiked = post.isLiked;
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+            : p
+        )
+      );
+
+      const method = wasLiked ? "DELETE" : "POST";
+      const res = await fetch(`${API_URL}/api/likes/${postId}`, {
+        method,
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? { ...p, isLiked: wasLiked, likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1 }
+              : p
+          )
+        );
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          throw new Error(`Failed to ${wasLiked ? "unlike" : "like"} post: ${errorText}`);
+        }
+      }
+
+      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" });
+      if (hasLikedRes.ok) {
+        const likeData = await hasLikedRes.json();
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, isLiked: likeData === true } : p))
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling like:", err);
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
+    }
+  };
+
+  const handleBookmark = async (postId: number) => {
+    try {
+      const post = posts.find((p) => p.id === postId);
+      if (!post) {
+        setError("Post not found.");
+        return;
+      }
+      if (!bot) {
+        setError("Please log in to bookmark/unbookmark posts.");
+        return;
+      }
+      const wasBookmarked = post.isBookmarked;
+      setPosts((prev) =>
+        prev.map((p) => (p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p))
+      );
+
+      const method = wasBookmarked ? "DELETE" : "POST";
+      const res = await fetch(`${API_URL}/api/bookmarks/${bot.id}/${postId}`, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, isBookmarked: wasBookmarked } : p))
+        );
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.");
+          console.error("Session expired while bookmarking:", errorText);
+        } else {
+          setError(`Failed to ${wasBookmarked ? "unbookmark" : "bookmark"} post.`);
+        }
+        return;
+      }
+
+      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/${bot.id}/${postId}/exists`, {
+        credentials: "include",
+      });
+      if (hasBookmarkedRes.ok) {
+        const bookmarkData = await hasBookmarkedRes.json();
+        setPosts((prev) =>
+          prev.map((p) => (p.id === postId ? { ...p, isBookmarked: bookmarkData === true } : p))
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling bookmark:", err);
+      setError(`Failed to ${posts.find((p) => p.id === postId)?.isBookmarked ? "unbookmark" : "bookmark"} post.`);
+    }
+  };
+
+  // const handleReshare = async (postId: number) => {
+  //   try {
+  //     const post = posts.find((p) => p.id === postId);
+  //     if (!post) {
+  //       setError("Post not found.");
+  //       return;
+  //     }
+  //     if (!bot) {
+  //       setError("Please log in to reshare/unreshare posts.");
+  //       return;
+  //     }
+  //     const wasReshared = post.isReshared;
+  //     setPosts((prev) =>
+  //       prev.map((p) =>
+  //         p.id === postId
+  //           ? { ...p, isReshared: !p.isReshared, reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1 }
+  //           : p
+  //       )
+  //     );
+
+  //     const method = wasReshared ? "DELETE" : "POST";
+  //     const url = wasReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
+  //     const body = wasReshared ? null : JSON.stringify({ postId });
+  //     const res = await fetch(url, {
+  //       method,
+  //       headers: { "Content-Type": "application/json" },
+  //       credentials: "include",
+  //       body,
+  //     });
+  //     if (!res.ok) {
+  //       const errorText = await res.text();
+  //       setPosts((prev) =>
+  //         prev.map((p) =>
+  //           p.id === postId
+  //             ? { ...p, isReshared: wasReshared, reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1 }
+  //             : p
+  //         )
+  //       );
+  //       if (res.status === 401) {
+  //         setError("Session expired. Please log in again.");
+  //       } else {
+  //         throw new Error(`Failed to ${wasReshared ? "unreshare" : "reshare"} post: ${errorText}`);
+  //       }
+  //     }
+
+  //     const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, { credentials: "include" });
+  //     if (hasResharedRes.ok) {
+  //       const reshareData = await hasResharedRes.json();
+  //       setPosts((prev) =>
+  //         prev.map((p) => (p.id === postId ? { ...p, isReshared: reshareData === true } : p))
+  //       );
+  //     }
+  //   } catch (err) {
+  //     console.error("Error toggling reshare:", err);
+  //     setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`);
+  //   }
+  // };
+
+  const handleAddComment = async (postId: number, commentText: string) => {
+    if (!bot) {
+      setError("Please log in to comment.");
+      return;
+    }
+    if (!commentText.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+    try {
+      const post = posts.find((p) => p.id === postId);
+      if (!post) {
+        setError("Post not found.");
+        return;
+      }
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                comments: [
+                  ...p.comments,
+                  {
+                    id: Date.now(),
+                    postId,
+                    authorId: bot.id,
+                    content: commentText,
+                    createdAt: new Date().toISOString(),
+                    username: bot.displayName,
+                    handle: `@${bot.username}`,
+                  },
+                ],
+                commentCount: p.commentCount + 1,
+              }
+            : p
+        )
+      );
+
+      const res = await fetch(`${API_URL}/api/comments/${postId}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        credentials: "include",
+        body: commentText,
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === postId
+              ? {
+                  ...p,
+                  comments: p.comments.filter((c) => c.id !== Date.now()),
+                  commentCount: p.commentCount - 1,
+                }
+              : p
+          )
+        );
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          throw new Error(`Failed to add comment: ${errorText}`);
+        }
+      }
+
+      const newComment = await res.json();
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                comments: p.comments.map((c) =>
+                  c.id === Date.now()
+                    ? {
+                        id: newComment.id,
+                        postId: newComment.postId,
+                        authorId: newComment.userId || bot.id,
+                        content: newComment.content,
+                        createdAt: newComment.createdAt,
+                        username: bot.displayName,
+                        handle: `@${bot.username}`,
+                      }
+                    : c
+                ),
+                commentCount: p.commentCount,
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      setError("Failed to add comment.");
+    }
+  };
+
+  const handleDeletePost = async (postId: number) => {
+    if (!bot) {
+      setError("Please log in to delete posts.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to delete post");
+      const responseText = await res.text();
+      if (responseText !== "Post deleted successfully") {
+        throw new Error("Unexpected delete response");
+      }
+      setPosts((prev) => prev.filter((post) => post.id !== postId));
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      setError("Failed to delete post.");
+    }
+  };
+
+  const toggleComments = (postId: number) => {
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId ? { ...post, showComments: !post.showComments } : post
+      )
+    );
+  };
 
   const renderSkeletonPosts = () => {
     return Array.from({ length: 5 }).map((_, index) => (
@@ -149,28 +544,8 @@ const BotPage = () => {
   };
 
   useEffect(() => {
-    const loadMockData = async () => {
-      try {
-        setLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setBot(mockBotData);
-        setPosts(mockPosts);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load bot data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadMockData();
+    fetchBotPosts();
   }, []);
-
-  const toggleComments = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
-  };
 
   if (loading) {
     return (
@@ -280,12 +655,13 @@ const BotPage = () => {
                 showComments={post.showComments}
                 comments={post.comments}
                 isUserLoaded={!!bot}
-                onLike={() => {}}
-                onBookmark={() => {}}
+                onLike={() => handleLike(post.id)}
+                onBookmark={() => handleBookmark(post.id)}
+                // onReshare={() => handleReshare(post.id)}
                 onReshare={() => {}}
-                onAddComment={() => {}}
-                onDelete={() => {}}
-                onNavigate={() => {}}
+                onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                onDelete={() => handleDeletePost(post.id)}
+                onNavigate={() => navigate(`/post/${post.id}`)}
                 currentUser={bot}
                 authorId={post.authorId}
                 topics={post.topics || []}
