@@ -35,8 +35,8 @@ public class Bot {
     @JsonIgnore
     private AppUser owner;
 
-    @Column(name = "is_active", nullable = false)
-    private boolean active = true; // default to active
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isActive;
     // ======= Getters and Setters =======
 
     public Integer getId() {
@@ -104,9 +104,9 @@ public class Bot {
     }
 
     public boolean isActive() {
-        return active;
+        return isActive;
     }
-    public void setActive(boolean active) {
-        this.active = active;
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }
