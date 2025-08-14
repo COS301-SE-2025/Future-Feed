@@ -14,6 +14,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFollowStore } from "@/store/useFollowStore";
 import { Button } from "@/components/ui/button";
 import SearchUser from "@/components/SearchUser";
+//for caching users on tabs
+import { useUsersQuery, useFollowingQuery } from '@/hooks/useUsersQuery';
+import { useQueryClient } from "@tanstack/react-query";
+//import { update } from "@react-spring/web";
+//introduce debounce
+import { debounce } from "@/utils/debounce";
 
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -27,12 +33,12 @@ interface User {
   bio: string;
 }
 
-interface FollowRelation {
+/*interface FollowRelation {
   id: number;
   followerId: number;
   followedId: number;
   followedAt: string;
-}
+}*/
 
 const Explore = () => {
 
@@ -44,17 +50,32 @@ const [searchQuery, setSearchQuery] = useState('');
 const [isSearchActive, setIsSearchActive] = useState(false);
 
   //
-  const [users, setUsers] = useState<User[]>([]);
+//  const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
   // State to manage current user ID and following user IDs
   const [hasLoadedFolllowing, setHasLoadedFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
-  const [loading, setLoading] = useState(true);
-  const [followingloading, setfollowingloading] = useState(true);
+ // const [loading, setLoading] = useState(true);
+ // const [followingloading, setfollowingloading] = useState(true);
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
+
+  //
+  //cachce fetching for users in tabs
+  const queryClient = useQueryClient();
+const { 
+  data: users = [], 
+  isLoading: usersLoading, 
+  error: usersError 
+} = useUsersQuery();
+
+const { 
+  data: followingRelations = [], 
+  isLoading: followingLoading,
+  refetch: refetchFollowing 
+} = useFollowingQuery(currentUserId);
   //
   const handleSearch = async (query: string) => {
     const trimmedQuery = query.trim();
@@ -72,9 +93,22 @@ const [isSearchActive, setIsSearchActive] = useState(false);
 
     return;
   }
-
+ 
   setIsSearchActive(true); // User is actively searching
   //setIsSearching(true);
+  //first try abd flter from clinet side for instant results - quciker
+if(users.length > 0 && trimmedQuery.length <=3){
+  const filteredUsers = users.filter(user =>
+    user.username.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
+    user.displayName.toLowerCase().includes(trimmedQuery.toLowerCase())
+
+  );
+  setDisplayedUsers(filteredUsers);
+  //update
+  updateFollowStatuses(filteredUsers);
+  return;
+}
+  //then for longer queries, fetch from server
   try {
     const res = await fetch(`${API_URL}/api/user/search?q=${encodeURIComponent(query)}`, {
       method: "GET",
@@ -93,7 +127,7 @@ setDisplayedUsers(data);
     }
     
     //console.log("search results",searchResults)
-     const updateStatuses = async () => {
+    /* const updateStatuses = async () => {
       const currentStatuses = useFollowStore.getState().followStatus;
       const newStatuses = { ...currentStatuses };
 
@@ -109,15 +143,46 @@ setDisplayedUsers(data);
     };
     
     // update in background
-    updateStatuses();
+    updateStatuses();*/
     
   } catch (err) {
     console.error(err);
+          const filtered = users.filter(user => 
+        user.username.toLowerCase().includes(trimmedQuery.toLowerCase()) ||
+        user.displayName.toLowerCase().includes(trimmedQuery.toLowerCase())
+      );
+      setDisplayedUsers(filtered);
+
   } finally {
     //setIsSearching(false);
+   //setIsSearchActive(false);
    
   }
 };
+//client updatefollowstatus function
+const updateFollowStatuses = async (users: User[]) => {
+  const currentStatuses = useFollowStore.getState().followStatus;
+  const newStatuses = { ...currentStatuses };
+  
+  // Only check statuses for users we don't already know about
+  const usersToCheck = users.filter(user => !(user.id in currentStatuses));
+  
+  if (usersToCheck.length > 0) {
+    const statusUpdates = await Promise.all(
+      usersToCheck.map(async (user) => {
+        const isFollowing = await checkFollowStatus(user.id);
+        return { id: user.id, status: isFollowing };
+      })
+    );
+    
+    statusUpdates.forEach(({ id, status }) => {
+      newStatuses[id] = status;
+    });
+    
+    useFollowStore.getState().bulkSetFollowStatus(newStatuses);
+  }
+};
+//
   //
 
   const fetchCurrentUserId = async () => {
@@ -129,7 +194,7 @@ setDisplayedUsers(data);
     return data.id;
   };
 
-  const fetchUsers = async () => {
+/*  const fetchUsers = async () => {
     const res = await fetch(`${API_URL}/api/user/all`, {
       method: "GET",
       credentials: "include",
@@ -152,7 +217,7 @@ setDisplayedUsers(data);
     } catch (err) {
       console.error("Failed to fetch following users", err);
     }
-  };
+  };*/
 
   const checkFollowStatus = async (userId: number) => {
     try {
@@ -181,9 +246,15 @@ setDisplayedUsers(data);
       });
       setFollowStatus(id, true);
 
-      if (currentUserId !== null) {
-        await fetchFollowing(currentUserId, users);
-      }
+      //if (currentUserId !== null) {
+        //await fetchFollowing(currentUserId, users);
+      //}
+      //better handling
+      if(currentUserId){
+        await refetchFollowing();
+        //invalidate to force refresh
+        queryClient.invalidateQueries({queryKey: ['following',currentUserId] } );
+          }
     } catch (err) {
       console.error("Follow failed", err);
     } finally {
@@ -202,8 +273,13 @@ setDisplayedUsers(data);
       });
       setFollowStatus(id, false);
 
-      if (currentUserId !== null) {
-        await fetchFollowing(currentUserId, users);
+      //if (currentUserId !== null) {
+        //await fetchFollowing(currentUserId, users);
+      //}
+      if(currentUserId){
+        await refetchFollowing();
+        //force refresh
+        queryClient.invalidateQueries({queryKey: ['following',currentUserId] } );
       }
     } catch (err) {
       console.error("Unfollow failed", err);
@@ -216,42 +292,72 @@ setDisplayedUsers(data);
     //handle tab changes
     
     //
-    let isMounted = true;
+   // let isMounted = true;
 
     const loadData = async () => {
       try {
-         setLoading(true);
-         const [allUsers, userId] = await Promise.all([
-          fetchUsers(),
-          fetchCurrentUserId()
-         ]);
+        // setLoading(true);
+         //const [allUsers, userId] = await Promise.all([
+          //fetchUsers(),
+          //fetchCurrentUserId()
+         //]);
          //
-          if(isMounted) {
-         setUsers(allUsers);
+          //if(isMounted) {
+         //setUsers(allUsers);
      
       //initialize displayed users
-      setDisplayedUsers(allUsers);
-       setCurrentUserId(userId);
+      ////setDisplayedUsers(allUsers);
+       //setCurrentUserId(userId);
 
        
+      //const statusEntries = await Promise.all(
+        //allUsers.map(async (user: User) => {
+          //const isFollowing = await checkFollowStatus(user.id);
+          //return [user.id, isFollowing] as const;
+       // })
+      //);
+      //bulkSetFollowStatus(Object.fromEntries(statusEntries));
+
+      //}
+      //caching impl
+      const userId = await fetchCurrentUserId();
+      if( userId){
+        setCurrentUserId(userId);
+        //prefetch in backgorund
+        //const updateStatuses = async () => {
+          //const statusEntries = await Promise.all(
+            //users.map(async ( user: User) => {
+          //const isFollowing = await checkFollowStatus(user.id);
+              //return [user.id, isFollowing] as const;
+          //  })
+          //);
+          //bulkSetFollowStatus(Object.fromEntries(statusEntries));
+      //};
+     // updateStatuses();
+     //only update for users not alreaady in usefollowstore
+     const currentStatuses = useFollowStore.getState().followStatus;
+     const usersToCheck = users.filter(user => !(user.id in currentStatuses));
+
+     if(usersToCheck.length > 0) {
       const statusEntries = await Promise.all(
-        allUsers.map(async (user: User) => {
+        usersToCheck.map(async (user: User) => {
           const isFollowing = await checkFollowStatus(user.id);
           return [user.id, isFollowing] as const;
         })
       );
       bulkSetFollowStatus(Object.fromEntries(statusEntries));
+     }
+    }
 
-      }
 
 
-
-      } catch (err){
-        console.error("Failed to load data", err);
+      } catch (error) {
+       // userError = err
+        console.error("Failed to load data and user id", usersError);
       } finally {
-        if (isMounted){
-          setLoading(false);
-        }
+        //if (isMounted){
+          //setLoading(false);
+        //}
       }
 
      
@@ -276,16 +382,29 @@ setDisplayedUsers(data);
       
      
     };
+//load only if we have users but no currenuserid
+if(users.length > 0 && !currentUserId) {
 
-    loadData();
+      loadData();
+    }
+    //loadData();
     
-    return () => {
-      isMounted = false;
-    };
+    //return () => {
+     //isMounted = false;
+    //};
     
-  }, []);
+  }, [users]);//do it when users data changes
+  //handle follwoing relations
+useEffect(() => {
+  if (followingRelations.length > 0) {
+    const followedUserIds = followingRelations.map(relation => relation.followedId);
+    setFollowingUserIds(followedUserIds);
+  }
+}, [followingRelations]);
+  //
+
   useEffect(() => {
-  // When tab changes but search is active, maintain search results
+  // When tab changes but search is active,this  maintain search results
   if (isSearchActive && searchQuery) {
     handleSearch(searchQuery);
   } else if (!isSearchActive && users.length > 0) {
@@ -294,10 +413,13 @@ setDisplayedUsers(data);
 }, [activeTab, isSearchActive,users]);
 
 const loadFollowingData = async (userId: number) => {
-  setfollowingloading(true);
-   await fetchFollowing(userId, users);
-   setfollowingloading(false);
-   setHasLoadedFollowing(true);
+  await refetchFollowing();
+  setHasLoadedFollowing(true);
+  console.log(userId, "has loaded following");
+  //setfollowingloading(true);
+   //await fetchFollowing(userId, users);
+   //setfollowingloading(false);
+   //setHasLoadedFollowing(true);
 }
   const renderUserCard = (user: User) => {
     
@@ -363,6 +485,10 @@ const loadFollowingData = async (userId: number) => {
         </CardContent>
       </Card>
     ));
+ //debounce
+  const debouncedSearch = debounce(handleSearch, 300);
+
+  //
 
   return (
     <div className="flex min-h-screen bg-gray-200 dark:bg-black dark:text-white">
@@ -422,7 +548,7 @@ const loadFollowingData = async (userId: number) => {
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
-            {loading ? (
+            {usersLoading ? (
       renderSkeleton()
     ) : (
       displayedUsers.map(renderUserCard)
@@ -432,7 +558,7 @@ const loadFollowingData = async (userId: number) => {
 
           <TabsContent value="accounts following">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
-             {followingloading ? (
+             {followingLoading ? (
       renderSkeleton()
     ) : (
       displayedUsers
@@ -458,7 +584,7 @@ const loadFollowingData = async (userId: number) => {
 
       <aside className="gap-4 flex flex-col ">
         <div className="sticky p-3 top-4 z-10 bg-gray-200 dark:bg-black">
-         <SearchUser onSearch={handleSearch} /> 
+         <SearchUser onSearch={debouncedSearch} /> 
         </div>
         
         <RightSidebar />
