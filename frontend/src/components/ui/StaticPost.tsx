@@ -134,7 +134,7 @@ const StaticPost: React.FC<PostProps> = ({
             <div className="flex justify-between items-center">
               <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
+                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
