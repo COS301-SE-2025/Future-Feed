@@ -22,12 +22,9 @@ const WhatsHappening = () => {
                             <p className="dark:text-lime-500">Trending in South Africa</p>
                             <p className="font-semibold">The River</p>
                         </div>
-                        { !isHomePage && (
-                             <div>
-                            <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
-                        </div>
-
-                        )}
+                        <div className={!isHomePage ? "" : "invisible"}>
+        <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+      </div>
                        
                     </div>
                 </CardContent>

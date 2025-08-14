@@ -141,7 +141,7 @@ const WhoToFollow = () => {
 
   return (
     <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white ">
-      <CardContent className="p-4">
+      <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 
         {isLoading ? (
@@ -196,12 +196,9 @@ const WhoToFollow = () => {
               )
             })}
 
-            {!isExplorePage && (
-              <div>
-              <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
-            </div>
-
-            )}
+            <div className={!isExplorePage ? "" : "invisible"}>
+        <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+      </div>
             
           </div>
         )}
