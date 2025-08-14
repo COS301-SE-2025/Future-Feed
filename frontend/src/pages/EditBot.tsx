@@ -37,7 +37,6 @@ const EditBot: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Mock API call
     try {
       console.log("Saving bot settings:", formData);
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -155,6 +154,7 @@ const EditBot: React.FC = () => {
                     <SelectItem value="daily">Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="none">No activity</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
