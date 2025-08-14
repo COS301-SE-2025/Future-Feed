@@ -1,6 +1,6 @@
 // components/SearchUser.tsx
 //notofies page whenever search value imput changes
-import { useState,useEffect,useCallback } from "react";
+import { useState,useEffect } from "react";
 import { Input } from "@/components/ui/input";
 
 interface SearchUserProps {

@@ -68,7 +68,7 @@ const [isSearchActive, setIsSearchActive] = useState(false);
 const { 
   data: users = [], 
   isLoading: usersLoading, 
-  error: usersError 
+  
 } = useUsersQuery();
 
 const { 
@@ -351,9 +351,9 @@ const updateFollowStatuses = async (users: User[]) => {
 
 
 
-      } catch (error) {
+      } catch (err) {
        // userError = err
-        console.error("Failed to load data and user id", usersError);
+        console.error("Failed to load data and user id", err);
       } finally {
         //if (isMounted){
           //setLoading(false);
@@ -486,7 +486,11 @@ const loadFollowingData = async (userId: number) => {
       </Card>
     ));
  //debounce
-  const debouncedSearch = debounce(handleSearch, 300);
+ // const debouncedSearch = debounce(handleSearch, 300);
+ //fix lint error by specyfing tyoe
+ const debouncedSearch = debounce((query: string) => {
+  handleSearch(query);
+}, 300);
 
   //
 

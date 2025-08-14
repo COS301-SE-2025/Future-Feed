@@ -1,11 +1,13 @@
 //introduce a debounce function to prevent excessive API calls for searching in explore page
 
-export const debounce = <F extends (...args: any[]) => any>(
-  func: F,
+// utils/debounce.ts
+export const debounce = <Args extends unknown[]>(
+  func: (...args: Args) => void,
   wait: number
-): ((...args: Parameters<F>) => void) => {
-  let timeout: NodeJS.Timeout;
-  return (...args: Parameters<F>) => {
+): ((...args: Args) => void) => {
+  //let timeout: ReturnType<typeof setTimeout>;
+  let timeout: NodeJS.Timeout; // Use NodeJS.Timeout for better type safety in TypeScript
+  return (...args: Args) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
