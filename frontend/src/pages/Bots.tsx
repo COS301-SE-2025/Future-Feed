@@ -7,6 +7,7 @@ import PersonalSidebar from "@/components/PersonalSidebar";
 import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
+import { Link } from "react-router-dom";
 
 interface Bot {
   id: number;
@@ -221,38 +222,46 @@ const Bots: React.FC = () => {
                   ) : (
                     <div className="grid gap-4">
                       {bots.map((bot) => (
-                        <Card key={bot.id} className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500">
-                          <CardContent className="p-4 flex justify-between items-center">
-                            <div>
-                              <h3 className="text-lg font-bold">{bot.name}</h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
-                              <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
-                                onClick={() => {
-                                  setEditingBot(bot);
-                                  setNewBotName(bot.name);
-                                  setNewBotDescription(bot.prompt);
-                                  setNewBotSchedule(bot.schedule);
-                                  setNewBotContextSource(bot.contextSource);
-                                  setIsEditModalOpen(true);
-                                }}
-                              >
-                                <FaEdit />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
-                                onClick={() => deleteBot(bot.id)}
-                              >
-                                <FaTrash />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <Link to={`/bot/${bot.id}`} key={bot.id}>
+                          <Card className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <CardContent className="p-4 flex justify-between items-center">
+                              <div>
+                                <h3 className="text-lg font-bold">{bot.name}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                                <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setEditingBot(bot);
+                                    setNewBotName(bot.name);
+                                    setNewBotDescription(bot.prompt);
+                                    setNewBotSchedule(bot.schedule);
+                                    setNewBotContextSource(bot.contextSource);
+                                    setIsEditModalOpen(true);
+                                  }}
+                                >
+                                  <FaEdit />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    deleteBot(bot.id);
+                                  }}
+                                >
+                                  <FaTrash />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -263,38 +272,46 @@ const Bots: React.FC = () => {
                   ) : (
                     <div className="grid gap-4">
                       {bots.map((bot) => (
-                        <Card key={bot.id} className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500">
-                          <CardContent className="p-4 flex justify-between items-center">
-                            <div>
-                              <h3 className="text-lg font-bold">{bot.name}</h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
-                              <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
-                                onClick={() => {
-                                  setEditingBot(bot);
-                                  setNewBotName(bot.name);
-                                  setNewBotDescription(bot.prompt);
-                                  setNewBotSchedule(bot.schedule);
-                                  setNewBotContextSource(bot.contextSource);
-                                  setIsEditModalOpen(true);
-                                }}
-                              >
-                                <FaEdit />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
-                                onClick={() => deleteBot(bot.id)}
-                              >
-                                <FaTrash />
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
+                        <Link to={`/bot/${bot.id}`} key={bot.id}>
+                          <Card className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <CardContent className="p-4 flex justify-between items-center">
+                              <div>
+                                <h3 className="text-lg font-bold">{bot.name}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                                <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setEditingBot(bot);
+                                    setNewBotName(bot.name);
+                                    setNewBotDescription(bot.prompt);
+                                    setNewBotSchedule(bot.schedule);
+                                    setNewBotContextSource(bot.contextSource);
+                                    setIsEditModalOpen(true);
+                                  }}
+                                >
+                                  <FaEdit />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  className="dark:border-lime-500 dark:text-lime-500 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    deleteBot(bot.id);
+                                  }}
+                                >
+                                  <FaTrash />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       ))}
                     </div>
                   )}
