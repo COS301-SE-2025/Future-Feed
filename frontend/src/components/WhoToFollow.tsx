@@ -8,6 +8,7 @@ import { useFollowStore } from "@/store/useFollowStore"
 import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
 //route detection for show morers
 import { useLocation } from "react-router-dom"
+import { Link } from "react-router-dom"
 
 interface User {
   id: number
@@ -196,9 +197,11 @@ const WhoToFollow = () => {
               )
             })}
 
+            <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
         <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
       </div>
+      </Link>
             
           </div>
         )}

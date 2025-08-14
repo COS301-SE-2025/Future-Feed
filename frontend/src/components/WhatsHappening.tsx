@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import {useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 
 const WhatsHappening = () => {
@@ -22,9 +23,11 @@ const WhatsHappening = () => {
                             <p className="dark:text-lime-500">Trending in South Africa</p>
                             <p className="font-semibold">The River</p>
                         </div>
+                        <Link to="/home" className="flex items-center gap-3 dark:hover:text-white">
                         <div className={!isHomePage ? "" : "invisible"}>
         <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
       </div>
+      </Link>
                        
                     </div>
                 </CardContent>

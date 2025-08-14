@@ -23,7 +23,7 @@ export const useUsersQuery = () => {
   return useQuery<User[]>({
     queryKey: ['allUsers'],
     queryFn: async () => {
-      const res = await fetch(`${API_URL}/api/user/all`, {
+      const res = await fetch(`${API_URL}/api/user/all-except-me`, {
         method: "GET",
         credentials: "include",
       });
