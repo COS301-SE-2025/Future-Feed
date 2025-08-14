@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
 import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { FaRobot } from "react-icons/fa";
@@ -78,7 +77,7 @@ interface RawComment {
 }
 
 const mockBotData: BotProfile = {
-  id: 1,
+  id: 0,
   username: "mybot",
   displayName: "My Bot",
   bio: "This is a mock bot created for demonstration purposes.",
@@ -88,15 +87,20 @@ const mockBotData: BotProfile = {
 const API_URL = "http://localhost:8080";
 
 const BotPage = () => {
+  const { botId } = useParams<{ botId: string }>();
   const [bot, setBot] = useState<BotProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const fetchUser = async (userId: number): Promise<{ id: number; username: string; displayName: string }> => {
+  const fetchUser = async (
+    userId: number
+  ): Promise<{ id: number; username: string; displayName: string }> => {
     try {
-      const res = await fetch(`${API_URL}/api/user/${userId}`, { credentials: "include" });
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
+        credentials: "include",
+      });
       if (!res.ok) throw new Error(`Failed to fetch user ${userId}`);
       const user = await res.json();
       return {
@@ -117,7 +121,9 @@ const BotPage = () => {
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
         credentials: "include",
       });
       if (!res.ok) {
@@ -125,14 +131,17 @@ const BotPage = () => {
         return [];
       }
       const topicIds: number[] = await res.json();
+
       const resTopics = await fetch(`${API_URL}/api/topics`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
         credentials: "include",
       });
       const allTopics: Topic[] = resTopics.ok ? await resTopics.json() : [];
       return topicIds
-        .map((id) => allTopics.find((topic) => topic.id === id))
-        .filter((topic): topic is Topic => !!topic);
+        .map((id) => allTopics.find((t) => t.id === id))
+        .filter((t): t is Topic => !!t);
     } catch (err) {
       console.warn(`Error fetching topics for post ${postId}:`, err);
       return [];
@@ -140,13 +149,31 @@ const BotPage = () => {
   };
 
   const fetchBotPosts = async () => {
+    if (!botId) {
+      setError("Invalid bot ID");
+      setLoading(false);
+      return;
+    }
+
+    const parsedBotId = Number.parseInt(botId, 10);
+    if (Number.isNaN(parsedBotId)) {
+      setError("Invalid bot ID");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      setBot(mockBotData);
+      setBot({ ...mockBotData, id: parsedBotId });
 
-      const botPostsResponse = await fetch(`${API_URL}/api/bot-posts/by-bot/1`, { credentials: "include" });
+      const botPostsResponse = await fetch(
+        `${API_URL}/api/bot-posts/by-bot/${parsedBotId}`,
+        { credentials: "include" }
+      );
       if (!botPostsResponse.ok) {
-        throw new Error(`Failed to fetch bot posts: ${botPostsResponse.status}`);
+        throw new Error(
+          `Failed to fetch bot posts: ${botPostsResponse.status}`
+        );
       }
       const botPosts: BotPost[] = await botPostsResponse.json();
 
@@ -154,52 +181,77 @@ const BotPage = () => {
       const limitedBotPosts = botPosts.slice(0, 10);
 
       const formattedPosts = await Promise.all(
-        limitedBotPosts.map(async (botPost) => {
+        limitedBotPosts.map(async (bp) => {
           try {
-            const postResponse = await fetch(`${API_URL}/api/posts/${botPost.postId}`, { credentials: "include" });
+            const postResponse = await fetch(
+              `${API_URL}/api/posts/${bp.postId}`,
+              { credentials: "include" }
+            );
             if (!postResponse.ok) {
-              console.warn(`Skipping post ID ${botPost.postId}: ${postResponse.status}`);
+              console.warn(
+                `Skipping post ID ${bp.postId}: ${postResponse.status}`
+              );
               return null;
             }
             const postData: SinglePostResponse = await postResponse.json();
 
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
-              fetch(`${API_URL}/api/comments/post/${postData.id}`, { credentials: "include" }),
-              fetch(`${API_URL}/api/likes/count/${postData.id}`, { credentials: "include" }),
-              fetch(`${API_URL}/api/likes/has-liked/${postData.id}`, { credentials: "include" }),
-              fetch(`${API_URL}/api/bookmarks/${mockBotData.id}/${postData.id}/exists`, { credentials: "include" }),
-              // fetch(`${API_URL}/api/reshares/has-reshared/${postData.id}`, { credentials: "include" }),
-              fetchTopicsForPost(postData.id),
-            ]);
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topics] =
+              await Promise.all([
+                fetch(`${API_URL}/api/comments/post/${postData.id}`, {
+                  credentials: "include",
+                }),
+                fetch(`${API_URL}/api/likes/count/${postData.id}`, {
+                  credentials: "include",
+                }),
+                fetch(`${API_URL}/api/likes/has-liked/${postData.id}`, {
+                  credentials: "include",
+                }),
+                fetch(
+                  `${API_URL}/api/bookmarks/${parsedBotId}/${postData.id}/exists`,
+                  { credentials: "include" }
+                ),
+                fetchTopicsForPost(postData.id),
+              ]);
 
             const comments = commentsRes.ok ? await commentsRes.json() : [];
-            const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+            const validComments = (comments as RawComment[]).filter(
+              (c) => c.userId && c.content
+            );
+
             const commentsWithUsers: CommentData[] = (
               await Promise.all(
                 validComments.map(async (comment: RawComment) => {
                   try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
+                    const cu = await fetchUser(comment.userId!);
                     return {
                       id: comment.id,
                       postId: comment.postId,
                       authorId: comment.userId!,
                       content: comment.content,
                       createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
+                      username: cu.displayName,
+                      handle: `@${cu.username}`,
                     };
                   } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                    console.warn(
+                      `Failed to fetch user for comment ID ${comment.id}:`,
+                      err
+                    );
                     return null;
                   }
                 })
               )
-            ).filter((comment): comment is CommentData => comment !== null);
+            ).filter((c): c is CommentData => c !== null);
 
-            const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
-            const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
-            const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-            // const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
+            const likeCount = likesCountRes.ok
+              ? await likesCountRes.json()
+              : 0;
+            const isLiked = hasLikedRes.ok
+              ? await hasLikedRes.json()
+              : false;
+            const isBookmarked = hasBookmarkedRes.ok
+              ? await hasBookmarkedRes.json()
+              : false;
 
             return {
               id: postData.id,
@@ -210,23 +262,25 @@ const BotPage = () => {
               ...(postData.imageUrl ? { image: postData.imageUrl } : {}),
               isLiked,
               isBookmarked,
-              // isReshared,
+              isReshared: false,
               commentCount: validComments.length,
               authorId: postData.authorId,
               likeCount,
               reshareCount: 0,
               comments: commentsWithUsers,
               showComments: false,
-              // topics: topicsRes,
+              topics: topics ?? [],
             };
           } catch (err) {
-            console.warn(`Error processing post ID ${botPost.postId}:`, err);
+            console.warn(`Error processing post ID ${bp.postId}:`, err);
             return null;
           }
         })
       );
 
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
+      const validPosts = formattedPosts.filter(
+        (p): p is PostData => p !== null
+      );
       setPosts(validPosts);
       if (validPosts.length === 0) {
         console.warn("No valid posts after processing.");
@@ -249,11 +303,18 @@ const BotPage = () => {
         setError("Please log in to like/unlike posts.");
         return;
       }
+
       const wasLiked = post.isLiked;
+
+      // optimistic update
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
-            ? { ...p, isLiked: !p.isLiked, likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1 }
+            ? {
+                ...p,
+                isLiked: !p.isLiked,
+                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+              }
             : p
         )
       );
@@ -263,32 +324,46 @@ const BotPage = () => {
         method,
         credentials: "include",
       });
+
       if (!res.ok) {
         const errorText = await res.text();
+        // revert
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId
-              ? { ...p, isLiked: wasLiked, likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1 }
+              ? {
+                  ...p,
+                  isLiked: wasLiked,
+                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+                }
               : p
           )
         );
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
-        } else {
-          throw new Error(`Failed to ${wasLiked ? "unlike" : "like"} post: ${errorText}`);
+          return;
         }
+        throw new Error(
+          `Failed to ${wasLiked ? "unlike" : "like"} post: ${errorText}`
+        );
       }
 
-      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" });
+      // sync truth
+      const hasLikedRes = await fetch(
+        `${API_URL}/api/likes/has-liked/${postId}`,
+        { credentials: "include" }
+      );
       if (hasLikedRes.ok) {
         const likeData = await hasLikedRes.json();
         setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? { ...p, isLiked: likeData === true } : p))
+          prev.map((p) =>
+            p.id === postId ? { ...p, isLiked: likeData === true } : p
+          )
         );
       }
     } catch (err) {
       console.error("Error toggling like:", err);
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
+      setError("Failed to toggle like.");
     }
   };
 
@@ -304,102 +379,55 @@ const BotPage = () => {
         return;
       }
       const wasBookmarked = post.isBookmarked;
+
+      // optimistic
       setPosts((prev) =>
-        prev.map((p) => (p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p))
+        prev.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
+        )
       );
 
       const method = wasBookmarked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/bookmarks/${bot.id}/${postId}`, {
         method,
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
+
       if (!res.ok) {
         const errorText = await res.text();
+        // revert
         setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? { ...p, isBookmarked: wasBookmarked } : p))
+          prev.map((p) =>
+            p.id === postId ? { ...p, isBookmarked: wasBookmarked } : p
+          )
         );
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
-          console.error("Session expired while bookmarking:", errorText);
-        } else {
-          setError(`Failed to ${wasBookmarked ? "unbookmark" : "bookmark"} post.`);
+          return;
         }
-        return;
+        throw new Error(
+          `Failed to ${wasBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`
+        );
       }
 
-      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/${bot.id}/${postId}/exists`, {
-        credentials: "include",
-      });
+      // sync truth
+      const hasBookmarkedRes = await fetch(
+        `${API_URL}/api/bookmarks/${bot.id}/${postId}/exists`,
+        { credentials: "include" }
+      );
       if (hasBookmarkedRes.ok) {
-        const bookmarkData = await hasBookmarkedRes.json();
+        const exists = await hasBookmarkedRes.json();
         setPosts((prev) =>
-          prev.map((p) => (p.id === postId ? { ...p, isBookmarked: bookmarkData === true } : p))
+          prev.map((p) =>
+            p.id === postId ? { ...p, isBookmarked: exists === true } : p
+          )
         );
       }
     } catch (err) {
       console.error("Error toggling bookmark:", err);
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isBookmarked ? "unbookmark" : "bookmark"} post.`);
+      setError("Failed to toggle bookmark.");
     }
   };
-
-  // const handleReshare = async (postId: number) => {
-  //   try {
-  //     const post = posts.find((p) => p.id === postId);
-  //     if (!post) {
-  //       setError("Post not found.");
-  //       return;
-  //     }
-  //     if (!bot) {
-  //       setError("Please log in to reshare/unreshare posts.");
-  //       return;
-  //     }
-  //     const wasReshared = post.isReshared;
-  //     setPosts((prev) =>
-  //       prev.map((p) =>
-  //         p.id === postId
-  //           ? { ...p, isReshared: !p.isReshared, reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1 }
-  //           : p
-  //       )
-  //     );
-
-  //     const method = wasReshared ? "DELETE" : "POST";
-  //     const url = wasReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
-  //     const body = wasReshared ? null : JSON.stringify({ postId });
-  //     const res = await fetch(url, {
-  //       method,
-  //       headers: { "Content-Type": "application/json" },
-  //       credentials: "include",
-  //       body,
-  //     });
-  //     if (!res.ok) {
-  //       const errorText = await res.text();
-  //       setPosts((prev) =>
-  //         prev.map((p) =>
-  //           p.id === postId
-  //             ? { ...p, isReshared: wasReshared, reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1 }
-  //             : p
-  //         )
-  //       );
-  //       if (res.status === 401) {
-  //         setError("Session expired. Please log in again.");
-  //       } else {
-  //         throw new Error(`Failed to ${wasReshared ? "unreshare" : "reshare"} post: ${errorText}`);
-  //       }
-  //     }
-
-  //     const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, { credentials: "include" });
-  //     if (hasResharedRes.ok) {
-  //       const reshareData = await hasResharedRes.json();
-  //       setPosts((prev) =>
-  //         prev.map((p) => (p.id === postId ? { ...p, isReshared: reshareData === true } : p))
-  //       );
-  //     }
-  //   } catch (err) {
-  //     console.error("Error toggling reshare:", err);
-  //     setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`);
-  //   }
-  // };
 
   const handleAddComment = async (postId: number, commentText: string) => {
     if (!bot) {
@@ -410,12 +438,17 @@ const BotPage = () => {
       setError("Comment cannot be empty.");
       return;
     }
+
+    const tempId = Date.now(); // <<< use one temp id consistently
+
     try {
       const post = posts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
       }
+
+      // optimistic add
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -424,7 +457,7 @@ const BotPage = () => {
                 comments: [
                   ...p.comments,
                   {
-                    id: Date.now(),
+                    id: tempId,
                     postId,
                     authorId: bot.id,
                     content: commentText,
@@ -445,34 +478,38 @@ const BotPage = () => {
         credentials: "include",
         body: commentText,
       });
+
       if (!res.ok) {
         const errorText = await res.text();
+        // revert optimistic comment (using the SAME tempId)
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId
               ? {
                   ...p,
-                  comments: p.comments.filter((c) => c.id !== Date.now()),
-                  commentCount: p.commentCount - 1,
+                  comments: p.comments.filter((c) => c.id !== tempId),
+                  commentCount: Math.max(0, p.commentCount - 1),
                 }
               : p
           )
         );
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
-        } else {
-          throw new Error(`Failed to add comment: ${errorText}`);
+          return;
         }
+        throw new Error(`Failed to add comment: ${errorText}`);
       }
 
       const newComment = await res.json();
+
+      // replace temp with real id/data
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
             ? {
                 ...p,
                 comments: p.comments.map((c) =>
-                  c.id === Date.now()
+                  c.id === tempId
                     ? {
                         id: newComment.id,
                         postId: newComment.postId,
@@ -484,13 +521,24 @@ const BotPage = () => {
                       }
                     : c
                 ),
-                commentCount: p.commentCount,
               }
             : p
         )
       );
     } catch (err) {
       console.error("Error adding comment:", err);
+      // ensure we revert if something unexpected happened after optimistic add
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postId
+            ? {
+                ...p,
+                comments: p.comments.filter((c) => c.id !== tempId),
+                commentCount: Math.max(0, p.commentCount - 1),
+              }
+            : p
+        )
+      );
       setError("Failed to add comment.");
     }
   };
@@ -518,8 +566,8 @@ const BotPage = () => {
   };
 
   const toggleComments = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
@@ -545,7 +593,8 @@ const BotPage = () => {
 
   useEffect(() => {
     fetchBotPosts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [botId]);
 
   if (loading) {
     return (
@@ -600,7 +649,10 @@ const BotPage = () => {
         <div className="relative">
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
-              <Link to="/edit-bot" className="flex items-center justify-center h-full w-full">
+              <Link
+                to="/edit-bot"
+                className="flex items-center justify-center h-full w-full"
+              >
                 <FaRobot className="w-20 h-20 text-gray-600 dark:text-gray-300" />
               </Link>
             </Avatar>
@@ -622,7 +674,10 @@ const BotPage = () => {
             </Button>
           </div>
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
-            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+            <Link
+              to="/followers?tab=followers"
+              className="flex items-center gap-3 hover:underline cursor-pointer"
+            >
               <span className="font-medium dark:text-white">0</span> Followers ·
             </Link>
             <span className="font-medium dark:text-white">{posts.length}</span> Posts
@@ -630,7 +685,10 @@ const BotPage = () => {
         </div>
         <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
         {error && (
-          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+          <div
+            className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
+            role="alert"
+          >
             <p>{error}</p>
           </div>
         )}
@@ -657,7 +715,6 @@ const BotPage = () => {
                 isUserLoaded={!!bot}
                 onLike={() => handleLike(post.id)}
                 onBookmark={() => handleBookmark(post.id)}
-                // onReshare={() => handleReshare(post.id)}
                 onReshare={() => {}}
                 onAddComment={(commentText) => handleAddComment(post.id, commentText)}
                 onDelete={() => handleDeletePost(post.id)}
