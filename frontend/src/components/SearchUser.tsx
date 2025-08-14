@@ -28,14 +28,14 @@ const SearchUser = ({ onSearch }: SearchUserProps) => {
       
     <Input
       type="text"
-      placeholder="Search users."
+      placeholder="Search users..."
       value={query}
       onChange= {(e) =>{
         setQuery(e.target.value);
         onSearch(e.target.value);
 
       }}
-      className="border-lime-600 border-3 dark:placeholder:text-lime-500 rounded-2xl px-4 py-2 dark:bg-black dark:text-slate-100 border dark:border-lime-500 focus:ring-0 focus:outline-none"
+      className="rounded-full border-lime-500 dark:bg-[#1a1a1a] dark:text-white dark:placeholder:text-lime-500"
     />
   
   );

@@ -516,10 +516,15 @@ const loadFollowingData = async (userId: number) => {
 
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
-          
-          <Link to="/settings">
+          <div className="flex items-center gap-2">
+            <SearchUser onSearch={debouncedSearch} />
+             <Link to="/settings">
             <Settings size={20} className="dark:text-lime-500" />
           </Link>
+
+          </div>
+          
+         
         </div>
 
         <Tabs
@@ -588,7 +593,7 @@ const loadFollowingData = async (userId: number) => {
 
       <aside className="gap-4 flex flex-col ">
         <div className="sticky p-3 top-4 z-10 bg-gray-200 dark:bg-black">
-         <SearchUser onSearch={debouncedSearch} /> 
+         
         </div>
         
         <RightSidebar />
