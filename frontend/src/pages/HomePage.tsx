@@ -1304,9 +1304,9 @@ const HomePage = () => {
       {isPostModalOpen && (
         <animated.div
           style={postModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -1318,7 +1318,9 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Share your thoughts</h2>
+            <div className=""> {/* align these text center */}
+              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white center">Share your thoughts</h2>
+            </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
@@ -1347,11 +1349,11 @@ const HomePage = () => {
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
+                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span>Attach Image</span>
+                  <span>Attach Image</span> {/* show that something is uploaded */}
                 </Button>
                 <input
                   type="file"
@@ -1367,7 +1369,7 @@ const HomePage = () => {
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-600"
+                  className="bg-lime-500 text-white hover:bg-lime-800"
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post
