@@ -106,6 +106,7 @@ const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [tempIdCounter, setTempIdCounter] = useState(-1); // For generating temporary IDs
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -264,7 +265,7 @@ const HomePage = () => {
           return true;
         })
         .sort((a: ApiPost, b: ApiPost) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
+        .slice(0, 20);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
@@ -392,7 +393,7 @@ const HomePage = () => {
           return true;
         })
         .sort((a: ApiPost, b: ApiPost) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
+        .slice(0, 20);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
@@ -533,15 +534,13 @@ const HomePage = () => {
 
     // Optimistic update
     const tempPostId = generateTempId();
-    const tempCreatedAt = new Date().toISOString();
-    console.debug(`Optimistic post createdAt: ${tempCreatedAt}`);
     const tempPost: PostData = {
       id: tempPostId,
       username: currentUser.displayName,
       handle: `@${currentUser.username}`,
       time: formatRelativeTime(new Date().toISOString()),
       text: postText,
-      image: undefined,
+      image: imageFile ? URL.createObjectURL(imageFile) : undefined,
       isLiked: false,
       isBookmarked: false,
       isReshared: false,
@@ -560,20 +559,24 @@ const HomePage = () => {
     setPostText("");
     const selectedTopics = selectedTopicIds.slice(); // Store for rollback
     setSelectedTopicIds([]);
+    const tempImageFile = imageFile;
+    setImageFile(null);
 
     try {
+      const formData = new FormData();
+      formData.append("post", JSON.stringify({content: postText})); // Backend expects "post" based on previous error
+      if (imageFile) {
+        formData.append("media", imageFile); // Use "image" as the part name; adjust if backend expects a different key
+      }
+
       const res = await fetch(`${API_URL}/api/posts`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "include",
-        body: JSON.stringify({ content: postText }),
-      });
+        body: formData,
+      })
 
       if (!res.ok) throw new Error("Failed to create post");
       const newPost: ApiPost = await res.json();
-      console.debug(`Backend post createdAt: ${newPost.createdAt}`);
       if (selectedTopics.length > 0) {
         const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
           method: "POST",
@@ -618,13 +621,13 @@ const HomePage = () => {
         [
           formattedPost,
           ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10)
+        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 20)
       );
       setFollowingPosts((prev) =>
         [
           formattedPost,
           ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10)
+        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 20)
       );
     } catch (err) {
       console.error("Error creating post:", err);
@@ -634,6 +637,7 @@ const HomePage = () => {
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
+      setImageFile(tempImageFile);
     }
   };
 
@@ -1067,10 +1071,10 @@ const HomePage = () => {
   };
 
   const renderSkeletonPosts = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
+    return Array.from({ length: 20 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1105,7 +1109,7 @@ const HomePage = () => {
           onReshare={() => handleReshare(post.id)}
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
-          onNavigate={() => navigate(`/post/${post.id}`)} 
+          onNavigate={() => navigate(`/post/${post.id}`)}
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
@@ -1125,6 +1129,9 @@ const HomePage = () => {
       }
     };
     loadData();
+    const intervalId = setInterval(loadData, 360000); // Refresh every 2 minutes 
+
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -1169,18 +1176,18 @@ const HomePage = () => {
         <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
           <div className="w-full max-w-xs p-4">
             <ThemeProvider >
-                      <div className="pe-9 flex mb-30 ml-30 gap-2 rounded ">
-                        <ModeToggle />
-                      </div>
+              <div className="pe-9 flex mb-30 ml-30 gap-2 rounded ">
+                <ModeToggle />
+              </div>
             </ThemeProvider>
             <button
-                onClick={handleLogout}
-                className="mb-2 w-full py-2 px-4 bg-lime-900 text-white rounded hover:bg-lime-600 transition-colors"
-              >
-                Logout
-              </button>
+              onClick={handleLogout}
+              className="mb-2 w-full py-2 px-4 bg-lime-900 text-white rounded hover:bg-lime-600 transition-colors"
+            >
+              Logout
+            </button>
             <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
-              
+
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
@@ -1297,9 +1304,9 @@ const HomePage = () => {
       {isPostModalOpen && (
         <animated.div
           style={postModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -1311,7 +1318,9 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Share your thoughts</h2>
+            <div className=""> {/* align these text center */}
+              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white center">Share your thoughts</h2>
+            </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
@@ -1340,22 +1349,27 @@ const HomePage = () => {
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
+                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span>Attach Image</span>
+                  <span>Attach Image</span> {/* show that something is uploaded */}
                 </Button>
                 <input
                   type="file"
                   accept="image/*"
                   id="image-upload"
                   className="hidden"
-                  onChange={() => alert("Image upload is not supported by the backend.")}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImageFile(file);
+                    }
+                  }}
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-600"
+                  className="bg-lime-500 text-white hover:bg-lime-800"
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post
