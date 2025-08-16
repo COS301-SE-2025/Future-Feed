@@ -30,6 +30,19 @@ public class BotController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/{botId}")
+    public ResponseEntity<BotResponseDTO> updateBot(@PathVariable Integer botId,
+                                                    @RequestBody BotRequestDTO dto) {
+        BotResponseDTO response = botService.updateBot(botId, dto);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping("/{botId}")
+    public ResponseEntity<?> deleteBot(@PathVariable Integer botId) {
+        botService.deleteBot(botId);
+        return ResponseEntity.ok(Map.of("message", "Bot deleted successfully"));
+    }
+
     @GetMapping("/my")
     public ResponseEntity<List<BotResponseDTO>> getMyBots() {
         List<BotResponseDTO> bots = botService.getMyBots();
