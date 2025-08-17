@@ -136,14 +136,16 @@ const Bots: React.FC = () => {
       if (!activeRes.ok) throw new Error(`Failed to fetch active status for bot ${botId}`);
       const currentIsActive: boolean = await activeRes.json();
 
-      // Toggle
-      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
-        method: "PATCH",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !currentIsActive }),
-      });
-      if (!res.ok) throw new Error(`Failed to toggle bot ${botId} active status`);
+      // Toggle using appropriate endpoint
+      const toggleRes = await fetch(
+        `${API_URL}/api/bots/${botId}/${currentIsActive ? "deactivate" : "activate"}`,
+        {
+          method: "PUT",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (!toggleRes.ok) throw new Error(`Failed to ${currentIsActive ? "deactivate" : "activate"} bot ${botId}`);
 
       // Update state in one pass and derive activeBots from bots
       setBots((prev) => {
@@ -339,8 +341,19 @@ const Bots: React.FC = () => {
                                       checked={bot.isActive}
                                       onCheckedChange={() => toggleBotActivation(bot.id)}
                                       disabled={loading.toggling.has(bot.id)}
-                                      className="w-14 h-7"
-                                    />
+                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleBotActivation(bot.id);
+                                      }}
+                                    >
+                                      <span
+                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+                                          bot.isActive ? "translate-x-8" : "translate-x-1"
+                                        } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
+                                      />
+                                    </Switch>
                                   </div>
                                   <Button
                                     variant="outline"
@@ -400,8 +413,19 @@ const Bots: React.FC = () => {
                                       checked={bot.isActive}
                                       onCheckedChange={() => toggleBotActivation(bot.id)}
                                       disabled={loading.toggling.has(bot.id)}
-                                      className="w-14 h-7"
-                                    />
+                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleBotActivation(bot.id);
+                                      }}
+                                    >
+                                      <span
+                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+                                          bot.isActive ? "translate-x-8" : "translate-x-1"
+                                        } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
+                                      />
+                                    </Switch>
                                   </div>
                                   <Button
                                     variant="outline"
