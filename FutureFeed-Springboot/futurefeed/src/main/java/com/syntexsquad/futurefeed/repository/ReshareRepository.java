@@ -2,7 +2,6 @@ package com.syntexsquad.futurefeed.repository;
 
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.model.ReshareId;
-import com.syntexsquad.futurefeed.model.Post;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +21,7 @@ public interface ReshareRepository extends JpaRepository<Reshare, ReshareId> {
     int deleteByUserIdAndPostId(@Param("userId") Integer userId, @Param("postId") Integer postId);
 
     List<Reshare> findByUserId(Integer userId);
+
+    @Query("SELECT COUNT(r) FROM Reshare r WHERE r.post.id = :postId")
+    long countByPostId(@Param("postId") Integer postId);
 }
