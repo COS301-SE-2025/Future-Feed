@@ -121,7 +121,7 @@ const Post: React.FC<PostProps> = ({
         "dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
         className
       )}
-      onClick={handleClick} 
+      onClick={handleClick}
     >
       <CardContent className="p-1 mt-[-15px] ml-[20px]">
         <div className="flex gap-4">
@@ -147,13 +147,15 @@ const Post: React.FC<PostProps> = ({
                     className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
-                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5 " />
+                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                 )}
               </div>
             </div>
             <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            <p className="mt-2 dark:text-white text-sm sm:text-base line-clamp-3 max-w-full mr-10">
+              {text}
+            </p>
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
@@ -196,7 +198,7 @@ const Post: React.FC<PostProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   onToggleComments();
                 }}
                 className={cn(
@@ -232,7 +234,7 @@ const Post: React.FC<PostProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
-                  e.stopPropagation(); 
+                  e.stopPropagation();
                   onBookmark();
                 }}
                 className={cn(
@@ -259,7 +261,9 @@ const Post: React.FC<PostProps> = ({
                         <div>
                           <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
                           <p className="text-xs sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
-                          <p className="text-xs sm:text-sm dark:text-white">{comment.content}</p>
+                          <p className="text-xs sm:text-sm dark:text-white line-clamp-3 max-w-full">
+                            {comment.content}
+                          </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {formatRelativeTime(comment.createdAt)}
                           </p>
