@@ -87,6 +87,8 @@ interface PostData {
   topics: Topic[];
 }
 
+const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+
 const HomePage = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
@@ -137,6 +139,34 @@ const HomePage = () => {
   const generateTempId = () => {
     setTempIdCounter((prev) => prev - 1);
     return tempIdCounter - 1;
+  };
+
+  // Cache helper functions
+  const saveToCache = (key: string, data: any) => {
+    try {
+      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+    } catch (err) {
+      console.warn(`Failed to save ${key} to localStorage:`, err);
+    }
+  };
+
+  const loadFromCache = <T,>(key: string): { data: T; timestamp: number } | null => {
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed.data && parsed.timestamp) {
+          return parsed;
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to load ${key} from localStorage:`, err);
+    }
+    return null;
+  };
+
+  const isCacheValid = (timestamp: number) => {
+    return Date.now() - timestamp < CACHE_EXPIRY_MS;
   };
 
   const fetchUser = async (userId: number, postUser?: PostUser) => {
@@ -193,6 +223,13 @@ const HomePage = () => {
   };
 
   const fetchCurrentUser = async () => {
+    const cachedUser = loadFromCache<UserProfile>('currentUser');
+    if (cachedUser && isCacheValid(cachedUser.timestamp)) {
+      setCurrentUser(cachedUser.data);
+      userCache.set(cachedUser.data.id, { username: cachedUser.data.username, displayName: cachedUser.data.displayName });
+      return cachedUser.data;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
@@ -205,14 +242,13 @@ const HomePage = () => {
       }
       setCurrentUser(data);
       userCache.set(data.id, { username: data.username, displayName: data.displayName });
+      saveToCache('currentUser', data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -238,6 +274,13 @@ const HomePage = () => {
   };
 
   const fetchAllPosts = async () => {
+    const cachedPosts = loadFromCache<PostData[]>('posts');
+    if (cachedPosts && isCacheValid(cachedPosts.timestamp)) {
+      setPosts(cachedPosts.data);
+      setLoadingForYou(false);
+      return;
+    }
+
     setLoadingForYou(true);
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
@@ -348,6 +391,7 @@ const HomePage = () => {
           };
         })
       );
+      saveToCache('posts', formattedPosts);
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
@@ -358,6 +402,13 @@ const HomePage = () => {
 
   const fetchFollowingPosts = async () => {
     if (!currentUser?.id) return;
+    const cachedFollowingPosts = loadFromCache<PostData[]>('followingPosts');
+    if (cachedFollowingPosts && isCacheValid(cachedFollowingPosts.timestamp)) {
+      setFollowingPosts(cachedFollowingPosts.data);
+      setLoadingFollowing(false);
+      return;
+    }
+
     setLoadingFollowing(true);
 
     try {
@@ -477,6 +528,7 @@ const HomePage = () => {
           };
         })
       );
+      saveToCache('followingPosts', formattedPosts);
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
@@ -486,6 +538,12 @@ const HomePage = () => {
   };
 
   const fetchTopics = async () => {
+    const cachedTopics = loadFromCache<Topic[]>('topics');
+    if (cachedTopics && isCacheValid(cachedTopics.timestamp)) {
+      setTopics(cachedTopics.data);
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -494,6 +552,7 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
       setTopics(data || []);
+      saveToCache('topics', data || []);
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
@@ -518,6 +577,7 @@ const HomePage = () => {
       if (!res.ok) throw new Error("Failed to create topic");
       const newTopic: Topic = await res.json();
       setTopics([...topics, newTopic]);
+      saveToCache('topics', [...topics, newTopic]);
       setNewTopicName("");
       setIsTopicModalOpen(false);
     } catch (err) {
@@ -555,6 +615,8 @@ const HomePage = () => {
 
     setPosts([tempPost, ...posts]);
     setFollowingPosts([tempPost, ...followingPosts]);
+    saveToCache('posts', [tempPost, ...posts]);
+    saveToCache('followingPosts', [tempPost, ...followingPosts]);
     setIsPostModalOpen(false);
     setPostText("");
     const selectedTopics = selectedTopicIds.slice(); // Store for rollback
@@ -564,9 +626,9 @@ const HomePage = () => {
 
     try {
       const formData = new FormData();
-      formData.append("post", JSON.stringify({content: postText})); // Backend expects "post" based on previous error
+      formData.append("post", JSON.stringify({content: postText}));
       if (imageFile) {
-        formData.append("media", imageFile); // Use "image" as the part name; adjust if backend expects a different key
+        formData.append("media", imageFile);
       }
 
       const res = await fetch(`${API_URL}/api/posts`, {
@@ -629,12 +691,16 @@ const HomePage = () => {
           ...prev.filter((p) => p.id !== tempPostId),
         ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 20)
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
       // Rollback
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
       setImageFile(tempImageFile);
@@ -652,6 +718,8 @@ const HomePage = () => {
     const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -674,6 +742,8 @@ const HomePage = () => {
       if (deletedFollowingPost) {
         setFollowingPosts((prev) => [...prev, deletedFollowingPost].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
       }
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     }
   };
 
@@ -714,6 +784,8 @@ const HomePage = () => {
           : p
       )
     );
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
 
     try {
       const method = originalIsLiked ? "DELETE" : "POST";
@@ -746,6 +818,8 @@ const HomePage = () => {
               : p
           )
         );
+        saveToCache('posts', posts);
+        saveToCache('followingPosts', followingPosts);
       }
     } catch (err) {
       console.error("Error toggling like:", err);
@@ -773,6 +847,8 @@ const HomePage = () => {
             : p
         )
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     }
   };
 
@@ -808,6 +884,8 @@ const HomePage = () => {
           : p
       )
     );
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -849,6 +927,8 @@ const HomePage = () => {
             : p
         )
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     }
   };
 
@@ -896,6 +976,8 @@ const HomePage = () => {
           : post
       )
     );
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -948,6 +1030,8 @@ const HomePage = () => {
             : post
         )
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
@@ -974,6 +1058,8 @@ const HomePage = () => {
             : post
         )
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     }
   };
 
@@ -1005,6 +1091,8 @@ const HomePage = () => {
           : p
       )
     );
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
@@ -1040,8 +1128,11 @@ const HomePage = () => {
             : p
         )
       );
+      saveToCache('posts', posts);
+      saveToCache('followingPosts', followingPosts);
     }
   };
+
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -1050,7 +1141,11 @@ const HomePage = () => {
         method: "GET",
         credentials: "include",
       });
-
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('posts');
+      localStorage.removeItem('followingPosts');
+      localStorage.removeItem('topics');
+      localStorage.removeItem('activeTab');
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
@@ -1068,6 +1163,8 @@ const HomePage = () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
+    saveToCache('posts', posts);
+    saveToCache('followingPosts', followingPosts);
   };
 
   const renderSkeletonPosts = () => {
@@ -1123,10 +1220,16 @@ const HomePage = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      const cachedActiveTab = loadFromCache<string>('activeTab');
+      if (cachedActiveTab && isCacheValid(cachedActiveTab.timestamp)) {
+        setActiveTab(cachedActiveTab.data);
+      }
+
       const user = await fetchCurrentUser();
       if (user) {
         await Promise.all([fetchAllPosts(), fetchTopics()]);
       }
+      setLoading(false);
     };
     loadData();
     const intervalId = setInterval(loadData, 360000); // Refresh every 2 minutes 
@@ -1145,6 +1248,10 @@ const HomePage = () => {
     }
   }, [currentUser, activeTab]);
 
+  useEffect(() => {
+    saveToCache('activeTab', activeTab);
+  }, [activeTab]);
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
@@ -1162,7 +1269,6 @@ const HomePage = () => {
           >
             View Topics
           </Button>
-
         </div>
       </aside>
 
@@ -1187,7 +1293,6 @@ const HomePage = () => {
               Logout
             </button>
             <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
-
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
@@ -1206,7 +1311,6 @@ const HomePage = () => {
               >
                 View Topics
               </button>
-
             </div>
           </div>
         </div>
@@ -1222,9 +1326,7 @@ const HomePage = () => {
             </div>
           )}
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-lg dark:text-white">Loading posts...</p>
-            </div>
+            renderSkeletonPosts()
           ) : !currentUser ? (
             <div className="flex justify-center items-center h-64">
               <p className="text-lg dark:text-white">Please log in to view posts.</p>
@@ -1318,8 +1420,8 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <div className=""> {/* align these text center */}
-              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white center">Share your thoughts</h2>
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
@@ -1353,7 +1455,7 @@ const HomePage = () => {
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span>Attach Image</span> {/* show that something is uploaded */}
+                  <span>{imageFile ? `Image: ${imageFile.name}` : "Attach Image"}</span>
                 </Button>
                 <input
                   type="file"
