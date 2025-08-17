@@ -14,10 +14,27 @@ interface Bot {
   id: number;
   name: string;
   prompt: string;
-  createdAt: string;
+  createdAt: string; // ISO or yyyy-mm-dd (we normalize to yyyy-mm-dd)
   schedule: "hourly" | "daily" | "weekly" | "monthly";
   contextSource: string;
   isActive: boolean;
+}
+
+// Server shape for /api/bots endpoints
+interface ApiBot {
+  id: number;
+  ownerId: number;
+  name: string;
+  prompt: string;
+  schedule: Bot["schedule"];
+  contextSource: string | null;
+  createdAt: string; // ISO string
+  isActive: boolean;
+}
+
+interface LoadingState {
+  allBots: boolean;
+  toggling: Set<number>;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -33,13 +50,14 @@ const Bots: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState({
+  const [loading, setLoading] = useState<LoadingState>({
     allBots: false,
+    toggling: new Set<number>(),
   });
 
   useEffect(() => {
     fetchAllBots();
-    fetchActiveBots();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAllBots = async () => {
@@ -49,6 +67,7 @@ const Bots: React.FC = () => {
         method: "GET",
         credentials: "include",
       });
+
       if (!res.ok) {
         if (res.status === 401) {
           throw new Error("Unauthorized: Please log in to view bots.");
@@ -59,28 +78,45 @@ const Bots: React.FC = () => {
           throw new Error(`Failed to fetch bots: ${res.status} ${errorText}`);
         }
       }
-      const botList: {
-        id: number;
-        ownerId: number;
-        name: string;
-        prompt: string;
-        schedule: "hourly" | "daily" | "weekly" | "monthly";
-        contextSource: string | null;
-        createdAt: string;
-        isActive: boolean;
-      }[] = await res.json();
 
-      const mappedBots: Bot[] = botList.map((bot) => ({
-        id: bot.id,
-        name: bot.name,
-        prompt: bot.prompt,
-        createdAt: bot.createdAt.split("T")[0],
-        schedule: bot.schedule,
-        contextSource: bot.contextSource || "",
-        isActive: bot.isActive,
-      }));
+      const botList: ApiBot[] = await res.json();
 
-      setBots(mappedBots);
+      const botsWithActiveStatus: Bot[] = await Promise.all(
+        botList.map(async (bot) => {
+          try {
+            const activeRes = await fetch(`${API_URL}/api/bots/${bot.id}/active`, {
+              method: "GET",
+              credentials: "include",
+            });
+            if (!activeRes.ok) throw new Error(`Failed to fetch active status for bot ${bot.id}`);
+            const isActive: boolean = await activeRes.json();
+            return {
+              id: bot.id,
+              name: bot.name,
+              prompt: bot.prompt,
+              createdAt: bot.createdAt.split("T")[0],
+              schedule: bot.schedule,
+              contextSource: bot.contextSource || "",
+              isActive,
+            } as Bot;
+          } catch (err) {
+            console.error(`Error fetching active status for bot ${bot.id}:`, err);
+            return {
+              id: bot.id,
+              name: bot.name,
+              prompt: bot.prompt,
+              createdAt: bot.createdAt.split("T")[0],
+              schedule: bot.schedule,
+              contextSource: bot.contextSource || "",
+              isActive: bot.isActive, // fallback
+            } as Bot;
+          }
+        })
+      );
+
+      setBots(botsWithActiveStatus);
+      setActiveBots(botsWithActiveStatus.filter((b) => b.isActive));
+      setError(null);
     } catch (err) {
       console.error("Error fetching bots:", err);
       setError("Failed to fetch bots. Please try again later.");
@@ -89,60 +125,43 @@ const Bots: React.FC = () => {
     }
   };
 
-  const fetchActiveBots = async () => {
-    setLoading((prev) => ({ ...prev, allBots: true }));
+  const toggleBotActivation = async (botId: number) => {
+    setLoading((prev) => ({ ...prev, toggling: new Set([...prev.toggling, botId]) }));
     try {
-      const res = await fetch(`${API_URL}/api/bots/active`, {
+      // Get current status
+      const activeRes = await fetch(`${API_URL}/api/bots/${botId}/active`, {
         method: "GET",
         credentials: "include",
       });
-      if (!res.ok) {
-        if (res.status === 401) {
-          throw new Error("Unauthorized: Please log in to view active bots.");
-        } else if (res.status === 404) {
-          throw new Error("Active bots endpoint not found. Please check the server configuration.");
-        } else {
-          const errorText = await res.text();
-          throw new Error(`Failed to fetch active bots: ${res.status} ${errorText}`);
-        }
-      }
-      const botList: {
-        id: number;
-        ownerId: number;
-        name: string;
-        prompt: string;
-        schedule: "hourly" | "daily" | "weekly" | "monthly";
-        contextSource: string | null;
-        createdAt: string;
-        isActive: boolean;
-      }[] = await res.json();
+      if (!activeRes.ok) throw new Error(`Failed to fetch active status for bot ${botId}`);
+      const currentIsActive: boolean = await activeRes.json();
 
-      const mappedBots: Bot[] = botList.map((bot) => ({
-        id: bot.id,
-        name: bot.name,
-        prompt: bot.prompt,
-        createdAt: bot.createdAt.split("T")[0],
-        schedule: bot.schedule,
-        contextSource: bot.contextSource || "",
-        isActive: bot.isActive,
-      }));
+      // Toggle
+      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !currentIsActive }),
+      });
+      if (!res.ok) throw new Error(`Failed to toggle bot ${botId} active status`);
 
-      setActiveBots(mappedBots);
+      // Update state in one pass and derive activeBots from bots
+      setBots((prev) => {
+        const next = prev.map((b) => (b.id === botId ? { ...b, isActive: !currentIsActive } : b));
+        setActiveBots(next.filter((b) => b.isActive));
+        return next;
+      });
+      setError(null);
     } catch (err) {
-      console.error("Error fetching active bots:", err);
-      setError("Failed to fetch active bots. Please try again later.");
+      console.error(`Error toggling bot ${botId}:`, err);
+      setError("Failed to toggle bot status. Please try again.");
     } finally {
-      setLoading((prev) => ({ ...prev, allBots: false }));
+      setLoading((prev) => {
+        const next = new Set(prev.toggling);
+        next.delete(botId);
+        return { ...prev, toggling: next };
+      });
     }
-  };
-
-  const toggleBotActivation = (botId: number) => {
-    setBots((prevBots) =>
-      prevBots.map((bot) =>
-        bot.id === botId ? { ...bot, isActive: !bot.isActive } : bot
-      )
-    );
-    setError(null);
   };
 
   const createBot = async (e: React.FormEvent) => {
@@ -178,29 +197,22 @@ const Bots: React.FC = () => {
         }
       }
 
-      const newBot: {
-        id: number;
-        ownerId: number;
-        name: string;
-        prompt: string;
-        schedule: "hourly" | "daily" | "weekly" | "monthly";
-        contextSource: string | null;
-        createdAt: string;
-        isActive: boolean;
-      } = await res.json();
+      const newBot: ApiBot = await res.json();
+      const mapped: Bot = {
+        id: newBot.id,
+        name: newBot.name,
+        prompt: newBot.prompt,
+        createdAt: newBot.createdAt.split("T")[0],
+        schedule: newBot.schedule,
+        contextSource: newBot.contextSource || "",
+        isActive: newBot.isActive,
+      };
 
-      setBots([
-        ...bots,
-        {
-          id: newBot.id,
-          name: newBot.name,
-          prompt: newBot.prompt,
-          createdAt: newBot.createdAt.split("T")[0],
-          schedule: newBot.schedule,
-          contextSource: newBot.contextSource || "",
-          isActive: newBot.isActive,
-        },
-      ]);
+      setBots((prev) => {
+        const next = [...prev, mapped];
+        setActiveBots(next.filter((b) => b.isActive));
+        return next;
+      });
 
       setNewBotName("");
       setNewBotDescription("");
@@ -221,19 +233,19 @@ const Bots: React.FC = () => {
       return;
     }
 
-    setBots(
-      bots.map((bot) =>
-        bot.id === editingBot.id
-          ? {
-              ...bot,
-              name: newBotName,
-              prompt: newBotDescription,
-              schedule: newBotSchedule,
-              contextSource: newBotContextSource,
-            }
-          : bot
-      )
-    );
+    const updated: Bot = {
+      ...editingBot,
+      name: newBotName,
+      prompt: newBotDescription,
+      schedule: newBotSchedule,
+      contextSource: newBotContextSource,
+    };
+
+    setBots((prev) => {
+      const next = prev.map((b) => (b.id === editingBot.id ? updated : b));
+      setActiveBots(next.filter((b) => b.isActive));
+      return next;
+    });
 
     setNewBotName("");
     setNewBotDescription("");
@@ -245,25 +257,28 @@ const Bots: React.FC = () => {
   };
 
   const deleteBot = (botId: number) => {
-    setBots(bots.filter((bot) => bot.id !== botId));
-    setActiveBots(activeBots.filter((bot) => bot.id !== botId));
+    setBots((prev) => {
+      const next = prev.filter((b) => b.id !== botId);
+      setActiveBots(next.filter((b) => b.isActive));
+      return next;
+    });
     setError(null);
   };
 
-  const SkeletonLoader = () => (
+  const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4">
       {[...Array(3)].map((_, index) => (
         <Card key={index} className="border-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500">
           <CardContent className="p-4 flex justify-between items-center animate-pulse">
             <div className="w-full">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2"></div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
             </div>
             <div className="flex gap-2 items-center">
-              <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
-              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
+              <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
             </div>
           </CardContent>
         </Card>
@@ -281,10 +296,7 @@ const Bots: React.FC = () => {
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-2xl text-lime-600 dark:text-lime-500">Bots Management</CardTitle>
-              <Button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
-              >
+              <Button onClick={() => setIsCreateModalOpen(true)} className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer">
                 <FaPlus className="mr-2" /> Create Bot
               </Button>
             </div>
@@ -319,26 +331,16 @@ const Bots: React.FC = () => {
                                   <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex gap-3 items-center">
-                                  <div className="relative flex items-center">
-                                    <span className={`text-sm font-medium mr-2 ${bot.isActive ? 'text-lime-500' : 'text-gray-400'}`}>
-                                      {bot.isActive ? 'On' : 'Off'}
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
+                                      {bot.isActive ? "On" : "Off"}
                                     </span>
                                     <Switch
                                       checked={bot.isActive}
                                       onCheckedChange={() => toggleBotActivation(bot.id)}
-                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBotActivation(bot.id);
-                                      }}
-                                    >
-                                      <span
-                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                          bot.isActive ? 'translate-x-20' : 'translate-x-1'
-                                        } ${bot.isActive ? 'bg-lime-100' : 'bg-gray-200'}`}
-                                      />
-                                    </Switch>
+                                      disabled={loading.toggling.has(bot.id)}
+                                      className="w-14 h-7"
+                                    />
                                   </div>
                                   <Button
                                     variant="outline"
@@ -390,26 +392,16 @@ const Bots: React.FC = () => {
                                   <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="flex gap-3 items-center">
-                                  <div className="relative flex items-center">
-                                    <span className={`text-sm font-medium mr-2 ${bot.isActive ? 'text-lime-500' : 'text-gray-400'}`}>
-                                      {bot.isActive ? 'On' : 'Off'}
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
+                                      {bot.isActive ? "On" : "Off"}
                                     </span>
                                     <Switch
                                       checked={bot.isActive}
                                       onCheckedChange={() => toggleBotActivation(bot.id)}
-                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBotActivation(bot.id);
-                                      }}
-                                    >
-                                      <span
-                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                          bot.isActive ? 'translate-x-20' : 'translate-x-1'
-                                        } ${bot.isActive ? 'bg-lime-100' : 'bg-gray-200'}`}
-                                      />
-                                    </Switch>
+                                      disabled={loading.toggling.has(bot.id)}
+                                      className="w-14 h-7"
+                                    />
                                   </div>
                                   <Button
                                     variant="outline"
