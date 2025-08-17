@@ -92,6 +92,14 @@ const StaticPost: React.FC<PostProps> = ({
     }
   };
 
+  const handleBack = () => {
+    if (!currentUser || window.history.length <= 2) {
+      navigate("/home");
+    } else {
+      navigate(-1);
+    }
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(postUrl).then(() => {
       setIsCopied(true);
@@ -118,7 +126,7 @@ const StaticPost: React.FC<PostProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
           aria-label="Go back"
         >
