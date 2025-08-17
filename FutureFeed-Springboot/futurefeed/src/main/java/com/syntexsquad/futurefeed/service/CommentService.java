@@ -2,6 +2,8 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
@@ -20,13 +22,15 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final AppUserRepository appUserRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
     public CommentService(CommentRepository commentRepository,
                           AppUserRepository appUserRepository,
-                          PostRepository postRepository) {
+                          PostRepository postRepository,NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.appUserRepository = appUserRepository;
         this.postRepository = postRepository;
+        this.notificationService = notificationService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -47,7 +51,7 @@ public class CommentService {
     @Transactional
     public Comment addComment(Integer postId, String content) {
         AppUser user = getAuthenticatedUser();
-
+        AppUser sender = getAuthenticatedUser();
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
         }
@@ -56,7 +60,21 @@ public class CommentService {
         comment.setPostId(postId);
         comment.setUserId(user.getId());
         comment.setContent(content);
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
 
+        if (post instanceof UserPost userPost) {
+            AppUser recipient = userPost.getUser();
+
+            if (recipient != null) {
+                notificationService.createNotification(
+                        recipient.getId(),
+                        sender.getId(),
+                        "COMMENT",
+                        postId
+                );
+            }
+        }
         return commentRepository.save(comment);
     }
 

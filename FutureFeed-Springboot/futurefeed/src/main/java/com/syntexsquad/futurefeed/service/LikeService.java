@@ -2,6 +2,8 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Like;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import jakarta.transaction.Transactional;
@@ -17,11 +19,13 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final AppUserRepository appUserRepository;
     private final PostService postService;
+    private final NotificationService notificationService;
 
-    public LikeService(LikeRepository likeRepository, AppUserRepository appUserRepository, PostService postService) {
+    public LikeService(LikeRepository likeRepository, AppUserRepository appUserRepository, PostService postService, NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.appUserRepository = appUserRepository;
         this.postService = postService;
+        this.notificationService = notificationService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -41,7 +45,7 @@ public class LikeService {
 
     public boolean likePost(Integer postId) {
         AppUser user = getAuthenticatedUser();
-
+        AppUser sender = getAuthenticatedUser();
         if (!postService.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
         }
@@ -54,6 +58,20 @@ public class LikeService {
         like.setUserId(user.getId());
         like.setPostId(postId);
         likeRepository.save(like);
+
+        // Notify only if it's a UserPost
+
+        Post post = postService.getPostById(postId);
+        if (post instanceof UserPost userPost) {
+            AppUser recipient = userPost.getUser(); // Now it's valid
+            notificationService.createNotification(
+                    recipient.getId(),
+                    sender.getId(),
+                    "LIKE",
+                    postId
+            );
+        }
+
         return true;
     }
 
