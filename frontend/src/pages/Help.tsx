@@ -18,7 +18,10 @@ import {
 
 import LoginHelp from "../assets/loginhelp.mp4";
 import PostCreationHelp from "../assets/postcreationhelp.mp4";
-import FollowHelp from "../assets/followhelp.mp4";
+import FollowHelpDesktop from "../assets/followhelpdesktop.mp4";
+import FollowHelpMobile from "../assets/followhelpmobile.mp4";
+import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
+import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
 
 const Help = () => {
   const navigate = useNavigate();
@@ -80,11 +83,21 @@ const Help = () => {
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full rounded-xl border border-lime-500">
-          <source src={FollowHelp} type="video/mp4" />
+          <source src={FollowHelpMobile} type="video/mp4" />
+        </video>
+      </AccordionContent>
+
+    </AccordionItem>
+     <AccordionItem value="mobile-theme">
+      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={HowToChangeThemeMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
   </Accordion>
+  
 
   {/* Desktop Section */}
   <h2 className="text-xl font-bold text-lime-500 mt-8">Larger Screen Devices</h2>
@@ -111,7 +124,15 @@ const Help = () => {
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full rounded-xl border border-lime-500">
-          <source src={FollowHelp} type="video/mp4" />
+          <source src={FollowHelpDesktop} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+     <AccordionItem value="-theme">
+      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={HowToChangeThemeDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
