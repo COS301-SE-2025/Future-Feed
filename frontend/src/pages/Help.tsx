@@ -53,7 +53,7 @@ const Help = () => {
       </div>
 
       {/* Videos Section */}
-      {/* split into mobile and deskotp to include more videos w a cleaner UI hopefully*/ }
+      {/* split into mobile and desktop to include more videos w a cleaner UI hopefully*/ }
       <div className="flex flex-col gap-8 mt-6 mx-auto max-w-2xl">
   {/* Mobile Section */}
   <h2 className="text-xl font-bold text-lime-500">Mobile Devices</h2>

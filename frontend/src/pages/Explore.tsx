@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
-import {Input } from "@/components/ui/input";
+
 
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
