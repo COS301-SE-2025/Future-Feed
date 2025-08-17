@@ -543,7 +543,7 @@ const Bots: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="bg-white dark:bg-[#1a1a1a] rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
             <div className="flex justify-between items-center mb-1">
-              <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Edit Bot</CardTitle>
+              <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Update Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
