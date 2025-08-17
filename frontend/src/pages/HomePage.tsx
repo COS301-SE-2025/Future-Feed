@@ -142,13 +142,13 @@ const HomePage = () => {
   };
 
   // Cache helper functions
-  const saveToCache = (key: string, data: any) => {
-    try {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-    } catch (err) {
-      console.warn(`Failed to save ${key} to localStorage:`, err);
-    }
-  };
+  const saveToCache = <T,>(key: string, data: T) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch (err) {
+    console.warn(`Failed to save ${key} to localStorage:`, err);
+  }
+};
 
   const loadFromCache = <T,>(key: string): { data: T; timestamp: number } | null => {
     try {
