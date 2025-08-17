@@ -1,6 +1,7 @@
 package com.syntexsquad.futurefeed.service;
 
-import com.syntexsquad.futurefeed.dto.ReshareRequest;
+//import com.syntexsquad.futurefeed.dto.PostReshareInfoDTO;
+//import com.syntexsquad.futurefeed.dto.*;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.repository.ReshareRepository;
@@ -60,5 +61,14 @@ public class ReshareService {
     public List<Reshare> getResharesByUser() {
         AppUser user = getAuthenticatedUser();
         return reshareRepository.findByUserId(user.getId());
+    }
+
+    public long getReshareCount(Integer postId) {
+        return reshareRepository.countByPostId(postId);
+    }
+
+    public boolean hasUserReshared(Integer postId) {
+        AppUser user = getAuthenticatedUser();
+        return reshareRepository.existsByUserIdAndPostId(user.getId(), postId);
     }
 }

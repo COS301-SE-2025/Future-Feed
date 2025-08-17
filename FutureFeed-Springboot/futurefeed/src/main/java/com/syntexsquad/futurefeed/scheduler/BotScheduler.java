@@ -4,7 +4,7 @@ import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
 import com.syntexsquad.futurefeed.service.BotService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+//import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public class BotScheduler {
     @Autowired
     private BotExecutionService botExecutionService;
 
-    @Scheduled(fixedRate = 60000)
+    //@Scheduled(fixedRate = 60000)
     public void runScheduledBots() {
         List<Bot> bots = botService.getAllBots();
 
