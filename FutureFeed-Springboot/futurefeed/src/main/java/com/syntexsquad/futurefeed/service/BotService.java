@@ -1,15 +1,12 @@
 package com.syntexsquad.futurefeed.service;
 
-import com.syntexsquad.futurefeed.dto.BotPostDTO;
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.dto.BotResponseDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import com.syntexsquad.futurefeed.repository.BotPostRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.util.PromptValidator;
-import org.springframework.data.repository.query.Param;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -17,21 +14,17 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BotService {
 
     private final BotRepository botRepository;
     private final AppUserRepository appUserRepository;
-    private final BotPostRepository botPostRepository;
-    private final PostService postService;
 
-
-    public BotService(BotRepository botRepository, AppUserRepository appUserRepository, BotPostRepository botPostRepository, PostService postService) {
+    public BotService(BotRepository botRepository, AppUserRepository appUserRepository) {
         this.botRepository = botRepository;
         this.appUserRepository = appUserRepository;
-        this.botPostRepository = botPostRepository;
-        this.postService = postService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -45,7 +38,6 @@ public class BotService {
                         .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
             }
         }
-
         throw new RuntimeException("Could not extract authenticated user from security context");
     }
 
@@ -55,7 +47,7 @@ public class BotService {
 
     public BotResponseDTO createBot(BotRequestDTO dto) {
         PromptValidator.validatePrompt(dto.getPrompt());
-        
+
         AppUser user = getAuthenticatedUser();
 
         Bot bot = new Bot();
@@ -67,6 +59,41 @@ public class BotService {
 
         Bot saved = botRepository.save(bot);
         return toResponseDTO(saved);
+    }
+
+    public BotResponseDTO updateBot(Integer botId, BotRequestDTO dto) {
+        PromptValidator.validatePrompt(dto.getPrompt()); 
+
+        AppUser user = getAuthenticatedUser();
+
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+
+        if (!bot.getOwnerId().equals(user.getId())) {
+            throw new RuntimeException("You do not have permission to update this bot");
+        }
+
+        bot.setName(dto.getName());
+        bot.setPrompt(dto.getPrompt());
+        bot.setSchedule(dto.getSchedule());
+        bot.setContextSource(dto.getContextSource());
+
+        Bot updated = botRepository.save(bot);
+        return toResponseDTO(updated);
+    }
+
+    @Transactional
+    public void deleteBot(Integer botId) {
+        AppUser user = getAuthenticatedUser();
+
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+
+        if (!bot.getOwnerId().equals(user.getId())) {
+            throw new RuntimeException("You do not have permission to delete this bot");
+        }
+
+        botRepository.delete(bot);
     }
 
     public List<BotResponseDTO> getMyBots() {
@@ -88,39 +115,4 @@ public class BotService {
         dto.setCreatedAt(bot.getCreatedAt());
         return dto;
     }
-
-    public boolean isBotActive(Integer botId) {
-        return botRepository.findById(botId)
-                .map(Bot::isActive) // use getter
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-    }
-    public Bot activateBot(Integer botId) {
-        Bot bot = botRepository.findById(botId)
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-        bot.setActive(true);
-        return botRepository.save(bot);
-    }
-
-    public Bot deactivateBot(Integer botId) {
-        Bot bot = botRepository.findById(botId)
-                .orElseThrow(() -> new RuntimeException("Bot not found"));
-        bot.setActive(false);
-        return botRepository.save(bot);
-    }
-
-    public List<Bot> getActiveBots() {
-        return botRepository.findByActiveTrue();
-    }
-    public boolean deleteBot(Integer botId) {
-        if (!botRepository.existsById(botId)) {
-            return false;
-        }
-        List<BotPostDTO> postdeleter = botPostRepository.findDtoByBotId(botId);
-        for (BotPostDTO dto : postdeleter) {
-             postService.deletePost(dto.getId());
-        }
-        botRepository.deleteById(botId);
-        return true;
-    }
-
 }

@@ -1,4 +1,6 @@
-import { create } from "zustand"
+//import { create } from "zustand"
+import { createWithEqualityFn } from 'zustand/traditional';
+//import { shallow } from 'zustand/shallow';
 
 type FollowStatus = Record<number, boolean>
 
@@ -38,9 +40,10 @@ interface FollowStore {
 setFollowers: (users: User[]) => void
 fetchFollowing: (userId: number, allUsers: User[]) => Promise<void>
 fetchFollowers: (userId: number, allUsers: User[]) => Promise<void>
+safeUpdateStatus: (userId: number, isFollowing: boolean) => void
 }
 
-export const useFollowStore = create<FollowStore>((set) => ({
+export const useFollowStore = createWithEqualityFn<FollowStore>((set) => ({
   followStatus: {},
   followingUserIds: [],
   followingUsers: [],
@@ -119,13 +122,41 @@ fetchFollowers: async (userId, allUsers) => {
         : state.followingUserIds.filter((id) => id !== userId),
     })),
 
+ // Modified bulkSetFollowStatus to merge rather than replace
   bulkSetFollowStatus: (statuses) =>
-    set(() => ({
-      followStatus: statuses,
-      followingUserIds: Object.entries(statuses)
-        .filter(([, value]) => value)
-        .map(([id]) => Number(id)),
+    set((state) => ({
+      followStatus: {
+        ...state.followStatus, // Keep existing statuses
+        ...statuses            // Add/update new ones
+      },
+      followingUserIds: [
+        ...new Set([
+          ...state.followingUserIds,
+          ...Object.entries(statuses)
+            .filter(([, value]) => value)
+            .map(([id]) => Number(id))
+        ])
+      ]
     })),
+    //safe status updayes
+   safeUpdateStatus: (userId: number, isFollowing: boolean) =>
+  set((state): Partial<FollowStore> => {
+    // Always update the status, but only update followingUserIds if needed
+    const newStatus = {
+      ...state.followStatus,
+      [userId]: isFollowing,
+    };
+    
+    const newFollowingIds = isFollowing
+      ? [...new Set([...state.followingUserIds, userId])]
+      : state.followingUserIds.filter((id) => id !== userId);
+
+    return {
+      followStatus: newStatus,
+      followingUserIds: newFollowingIds,
+    };
+  }),
+    //
 
   setFollowingUserIds: (ids) => set(() => ({ followingUserIds: ids })),
 

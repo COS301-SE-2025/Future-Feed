@@ -9,7 +9,9 @@ import java.util.List;
 public interface BotRepository extends JpaRepository<Bot, Integer> {
     List<Bot> findByOwnerId(Integer ownerId);
 
+
     @Query("SELECT b FROM Bot b WHERE b.isActive = true")
     List<Bot> findByActiveTrue();
+
 
 }
