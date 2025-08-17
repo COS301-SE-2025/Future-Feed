@@ -258,14 +258,32 @@ const Bots: React.FC = () => {
     setError(null);
   };
 
-  const deleteBot = (botId: number) => {
+  const deleteBot = async (botId: number) => {
+  if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+
+  try {
+    const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to delete bot.");
+    }
+
     setBots((prev) => {
       const next = prev.filter((b) => b.id !== botId);
       setActiveBots(next.filter((b) => b.isActive));
       return next;
     });
+
     setError(null);
-  };
+  } catch (err) {
+    console.error(`Error deleting bot ${botId}:`, err);
+    setError("Failed to delete bot. Please try again.");
+  }
+};
+
 
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4">
