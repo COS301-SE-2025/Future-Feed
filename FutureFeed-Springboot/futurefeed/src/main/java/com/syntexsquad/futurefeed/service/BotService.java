@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class BotService {
@@ -37,7 +38,6 @@ public class BotService {
                         .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
             }
         }
-
         throw new RuntimeException("Could not extract authenticated user from security context");
     }
 
@@ -47,7 +47,7 @@ public class BotService {
 
     public BotResponseDTO createBot(BotRequestDTO dto) {
         PromptValidator.validatePrompt(dto.getPrompt());
-        
+
         AppUser user = getAuthenticatedUser();
 
         Bot bot = new Bot();
@@ -59,6 +59,41 @@ public class BotService {
 
         Bot saved = botRepository.save(bot);
         return toResponseDTO(saved);
+    }
+
+    public BotResponseDTO updateBot(Integer botId, BotRequestDTO dto) {
+        PromptValidator.validatePrompt(dto.getPrompt()); 
+
+        AppUser user = getAuthenticatedUser();
+
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+
+        if (!bot.getOwnerId().equals(user.getId())) {
+            throw new RuntimeException("You do not have permission to update this bot");
+        }
+
+        bot.setName(dto.getName());
+        bot.setPrompt(dto.getPrompt());
+        bot.setSchedule(dto.getSchedule());
+        bot.setContextSource(dto.getContextSource());
+
+        Bot updated = botRepository.save(bot);
+        return toResponseDTO(updated);
+    }
+
+    @Transactional
+    public void deleteBot(Integer botId) {
+        AppUser user = getAuthenticatedUser();
+
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+
+        if (!bot.getOwnerId().equals(user.getId())) {
+            throw new RuntimeException("You do not have permission to delete this bot");
+        }
+
+        botRepository.delete(bot);
     }
 
     public List<BotResponseDTO> getMyBots() {

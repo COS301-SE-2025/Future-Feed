@@ -2,6 +2,9 @@ package com.syntexsquad.futurefeed.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
@@ -34,6 +37,9 @@ public class Bot {
     @JoinColumn(name = "owner_id", insertable = false, updatable = false)
     @JsonIgnore
     private AppUser owner;
+
+    @OneToMany(mappedBy = "bot", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BotPosts> botPosts = new ArrayList<>();
     // ======= Getters and Setters =======
 
     public Integer getId() {
