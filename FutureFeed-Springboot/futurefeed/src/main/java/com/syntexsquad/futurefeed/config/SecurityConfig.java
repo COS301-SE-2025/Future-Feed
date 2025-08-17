@@ -47,17 +47,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**")
             )
-            .oauth2Login(oauth2 -> oauth2
-                //.loginPage("/login")
-                .defaultSuccessUrl("http://localhost:5173/home", true)
-                .userInfoEndpoint(userInfo -> userInfo
-                    .userService(customOAuth2UserService)
+                .oauth2Login(oauth2 -> oauth2
+                        .defaultSuccessUrl("http://localhost:5173/home", true)
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                 )
-            ).logout(logout -> logout
-                .logoutUrl("/logout")                
-                .logoutSuccessUrl("http://localhost:5173") 
-                .permitAll()
-            );
+                .formLogin(form -> form.disable()) // disable default login page, since React handles it
+                .logout(logout -> logout
+                        .logoutUrl("/logout")
+                        .logoutSuccessUrl("http://localhost:5173")
+                        .permitAll()
+                );
+
 
 
         return http.build();
