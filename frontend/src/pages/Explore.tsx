@@ -501,18 +501,7 @@ const loadFollowingData = async (userId: number) => {
       </aside>
 
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 dark:bg-[#1a1a1a] bg-lime-600">
-          <div className="sticky top-4 z-10 bg-gray-200 dark:bg-black">
-        <Input
-          type="text"
         
-          placeholder="Search"
-        
-          className="border-lime-600 border-3 dark:placeholder:text-lime-500 rounded-2xl px-4 py-2 dark:bg-black dark:text-slate-100 border dark:border-lime-500 focus:ring-0 focus:outline-none"
-        />
-      </div>
-         
-        </div>
 
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border rounded-2xl dark:border-lime-500 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
@@ -537,7 +526,7 @@ const loadFollowingData = async (userId: number) => {
         }}
          className="w-full p-2">
           <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-black">
-            {["forYou", "accounts", "accounts following"].map((tab) => (
+            {[ "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -548,12 +537,7 @@ const loadFollowingData = async (userId: number) => {
             ))}
           </TabsList>
 
-          <TabsContent value="forYou">
-            <section className="p-4 border dark:border-lime-500">
-              <h2 className="font-bold text-lg mb-2">Today’s News</h2>
-              {/* Placeholder */}
-            </section>
-          </TabsContent>
+         
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
