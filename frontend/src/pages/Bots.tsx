@@ -69,13 +69,13 @@ const Bots: React.FC = () => {
       });
 
       if (!res.ok) {
+        const errorText = await res.text();
         if (res.status === 401) {
           throw new Error("Unauthorized: Please log in to view bots.");
         } else if (res.status === 404) {
           throw new Error("Bots endpoint not found. Please check the server configuration.");
         } else {
-          const errorText = await res.text();
-          throw new Error(`Failed to fetch bots: ${res.status} ${errorText}`);
+          throw new Error(`Failed to fetch bots: ${errorText || res.status}`);
         }
       }
 
@@ -119,7 +119,7 @@ const Bots: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching bots:", err);
-      setError("Failed to fetch bots. Please try again later.");
+      setError(err instanceof Error ? err.message : "Failed to fetch bots. Please try again later.");
     } finally {
       setLoading((prev) => ({ ...prev, allBots: false }));
     }
@@ -145,7 +145,10 @@ const Bots: React.FC = () => {
           headers: { "Content-Type": "application/json" },
         }
       );
-      if (!toggleRes.ok) throw new Error(`Failed to ${currentIsActive ? "deactivate" : "activate"} bot ${botId}`);
+      if (!toggleRes.ok) {
+        const errorText = await toggleRes.text();
+        throw new Error(`Failed to ${currentIsActive ? "deactivate" : "activate"} bot: ${errorText || toggleRes.status}`);
+      }
 
       // Update state in one pass and derive activeBots from bots
       setBots((prev) => {
@@ -156,7 +159,7 @@ const Bots: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error(`Error toggling bot ${botId}:`, err);
-      setError("Failed to toggle bot status. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to toggle bot status. Please try again.");
     } finally {
       setLoading((prev) => {
         const next = new Set(prev.toggling);
@@ -188,14 +191,13 @@ const Bots: React.FC = () => {
       });
 
       if (!res.ok) {
+        const errorText = await res.text();
         if (res.status === 401) {
           throw new Error("Unauthorized: Please log in to create a bot.");
-        } else if (res.status === 400) {
-          const errorText = await res.text();
-          throw new Error(`Invalid input: ${errorText}`);
+        } else if (res.status === 400 && errorText.includes("Prompt flagged as unsafe")) {
+          throw new Error(`${errorText} Please use a different prompt.`);
         } else {
-          const errorText = await res.text();
-          throw new Error(`Failed to create bot: ${res.status} ${errorText}`);
+          throw new Error(errorText || "Failed to create bot.");
         }
       }
 
@@ -224,66 +226,98 @@ const Bots: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error("Error creating bot:", err);
-      setError("Failed to create bot. Please try again.");
+      setError(err instanceof Error ? err.message : "Failed to create bot. Please try again.");
     }
   };
 
-  const updateBot = (e: React.FormEvent) => {
+  const updateBot = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingBot || !newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
       setError("All fields are required.");
       return;
     }
 
-    const updated: Bot = {
-      ...editingBot,
-      name: newBotName,
-      prompt: newBotDescription,
-      schedule: newBotSchedule,
-      contextSource: newBotContextSource,
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/bots/${editingBot.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newBotName,
+          prompt: newBotDescription,
+          schedule: newBotSchedule,
+          contextSource: newBotContextSource,
+          isActive: editingBot.isActive,
+        }),
+      });
 
-    setBots((prev) => {
-      const next = prev.map((b) => (b.id === editingBot.id ? updated : b));
-      setActiveBots(next.filter((b) => b.isActive));
-      return next;
-    });
+      if (!res.ok) {
+        const errorText = await res.text();
+        if (res.status === 401) {
+          throw new Error("Unauthorized: Please log in to update a bot.");
+        } else if (res.status === 400 && errorText.includes("Prompt flagged as unsafe")) {
+          throw new Error(`${errorText} Please use a different prompt.`);
+        } else {
+          throw new Error(errorText || "Failed to update bot.");
+        }
+      }
 
-    setNewBotName("");
-    setNewBotDescription("");
-    setNewBotSchedule("daily");
-    setNewBotContextSource("");
-    setIsEditModalOpen(false);
-    setEditingBot(null);
-    setError(null);
+      const updatedBot: ApiBot = await res.json();
+      const mapped: Bot = {
+        id: updatedBot.id,
+        name: updatedBot.name,
+        prompt: updatedBot.prompt,
+        createdAt: updatedBot.createdAt.split("T")[0],
+        schedule: updatedBot.schedule,
+        contextSource: updatedBot.contextSource || "",
+        isActive: updatedBot.isActive,
+      };
+
+      setBots((prev) => {
+        const next = prev.map((b) => (b.id === editingBot.id ? mapped : b));
+        setActiveBots(next.filter((b) => b.isActive));
+        return next;
+      });
+
+      setNewBotName("");
+      setNewBotDescription("");
+      setNewBotSchedule("daily");
+      setNewBotContextSource("");
+      setIsEditModalOpen(false);
+      setEditingBot(null);
+      setError(null);
+    } catch (err) {
+      console.error("Error updating bot:", err);
+      setError(err instanceof Error ? err.message : "Failed to update bot. Please try again.");
+    }
   };
 
   const deleteBot = async (botId: number) => {
-  if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
 
-  try {
-    const res = await fetch(`${API_URL}/api/bots/${botId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
 
-    if (!res.ok) {
-      throw new Error("Failed to delete bot.");
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Failed to delete bot.");
+      }
+
+      setBots((prev) => {
+        const next = prev.filter((b) => b.id !== botId);
+        setActiveBots(next.filter((b) => b.isActive));
+        return next;
+      });
+
+      setError(null);
+    } catch (err) {
+      console.error(`Error deleting bot ${botId}:`, err);
+      setError(err instanceof Error ? err.message : "Failed to delete bot. Please try again.");
     }
-
-    setBots((prev) => {
-      const next = prev.filter((b) => b.id !== botId);
-      setActiveBots(next.filter((b) => b.isActive));
-      return next;
-    });
-
-    setError(null);
-  } catch (err) {
-    console.error(`Error deleting bot ${botId}:`, err);
-    setError("Failed to delete bot. Please try again.");
-  }
-};
-
+  };
 
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4">
@@ -508,6 +542,7 @@ const Bots: React.FC = () => {
                   setNewBotDescription("");
                   setNewBotSchedule("daily");
                   setNewBotContextSource("");
+                  setError(null);
                 }}
                 className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
               >
@@ -571,6 +606,7 @@ const Bots: React.FC = () => {
                   setNewBotSchedule("daily");
                   setNewBotContextSource("");
                   setEditingBot(null);
+                  setError(null);
                 }}
                 className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
               >
