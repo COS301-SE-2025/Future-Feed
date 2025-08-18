@@ -23,6 +23,7 @@ interface Topic {
 }
 
 interface PostProps {
+  profilePicture?: string;
   username: string;
   handle: string;
   time: string;
@@ -59,6 +60,7 @@ interface PostProps {
 }
 
 const Post: React.FC<PostProps> = ({
+  profilePicture,
   username,
   handle,
   time,
@@ -126,7 +128,7 @@ const Post: React.FC<PostProps> = ({
       <CardContent className="p-1 mt-[-15px] ml-[20px]">
         <div className="flex gap-4">
           <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-            <AvatarImage src={currentUser?.profilePicture} alt={handle} />
+            <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -255,7 +257,7 @@ const Post: React.FC<PostProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-2 mb-2">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                          <AvatarImage src={currentUser?.profilePicture} alt={comment.handle} />
+                          <AvatarImage src={profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div>

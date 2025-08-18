@@ -41,6 +41,7 @@ interface RawComment {
 }
 
 interface PostData {
+  profilePicture?: string;
   id: number;
   username: string;
   handle: string;
@@ -73,7 +74,9 @@ interface RawPost {
     id: number;
     username: string;
     displayName: string;
+    profilePicture?: string;
   };
+
 }
 
 interface User {
@@ -96,6 +99,7 @@ interface UserInfo {
   id: number;
   username: string;
   displayName: string;
+  profilePicture?: string;
 }
 
 const userCache = new Map<number, UserInfo>();
@@ -152,6 +156,7 @@ const UserProfile = () => {
         id: user.id ?? userId,
         username: user.username ?? `user${userId}`,
         displayName: user.displayName ?? `User ${userId}`,
+        profilePicture: user.profilePicture ?? "",
       };
       userCache.set(userId, userInfo);
       return userInfo;
@@ -161,6 +166,7 @@ const UserProfile = () => {
         id: userId,
         username: `user${userId}`,
         displayName: `User ${userId}`,
+        profilePicture: "",
       };
       userCache.set(userId, userInfo);
       return userInfo;
@@ -183,6 +189,7 @@ const UserProfile = () => {
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
+      navigate("/login");
       setUser(null);
       return null;
     } finally {
@@ -191,30 +198,22 @@ const UserProfile = () => {
   };
 
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
-    try {
-      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-        credentials: "include",
-      });
-      if (!res.ok) {
-        console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
-        return [];
-      }
-      const topicIds: number[] = await res.json();
-      const resTopics = await fetch(`${API_URL}/api/topics`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-        credentials: "include",
-      });
-      const allTopics: Topic[] = resTopics.ok ? await resTopics.json() : [];
-      const postTopics = topicIds
-        .map((id) => allTopics.find((topic) => topic.id === id))
-        .filter((topic): topic is Topic => !!topic);
-      return postTopics;
-    } catch (err) {
-      console.warn(`Error fetching topics for post ${postId}:`, err);
+  try {
+    const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      credentials: "include",
+    });
+    if (!res.ok) {
+      console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
       return [];
     }
-  };
+    const topics: Topic[] = await res.json();
+    return topics.filter((topic): topic is Topic => !!topic && !!topic.id && !!topic.name);
+  } catch (err) {
+    console.warn(`Error fetching topics for post ${postId}:`, err);
+    return [];
+  }
+};
 
   const fetchFollowing = async (userId: number, allUsers: User[]) => {
     try {
@@ -337,8 +336,10 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-            return {
+
+            const postData: PostData = {
               id: reshare.post.id,
+              profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
               handle: `@${userInfo.username}`,
               time: formatRelativeTime(reshare.post.createdAt),
@@ -355,6 +356,7 @@ const UserProfile = () => {
               showComments: false,
               topics: topicsRes,
             };
+            return postData;
           } catch (err) {
             console.warn(`Error processing post ID ${reshare.post.id}:`, err);
             return null;
@@ -448,8 +450,9 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-            return {
+            const postData: PostData = {
               id: post.id,
+              profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
               handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -466,6 +469,7 @@ const UserProfile = () => {
               showComments: false,
               topics: topicsRes,
             };
+            return postData;
           } catch (err) {
             console.warn(`Error processing post ID ${post.id}:`, err);
             return null;
@@ -559,8 +563,9 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-            return {
+            const postData: PostData = {
               id: post.id,
+              profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
               handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -577,6 +582,7 @@ const UserProfile = () => {
               showComments: false,
               topics: topicsRes,
             };
+            return postData;
           } catch (err) {
             console.warn(`Error processing post ID ${post.id}:`, err);
             return null;
@@ -633,6 +639,7 @@ const UserProfile = () => {
                 id: post.user.id,
                 username: post.user.username,
                 displayName: post.user.displayName,
+                profilePicture: post.user.profilePicture || "",
               };
             }
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
@@ -678,8 +685,9 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-            return {
+            const postData: PostData = {
               id: post.id,
+              profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
               handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -696,6 +704,7 @@ const UserProfile = () => {
               showComments: false,
               topics: topicsRes,
             };
+            return postData;
           } catch (err) {
             console.warn(`Error processing post ID ${bookmark.postId}:`, err);
             return null;
@@ -785,8 +794,9 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-            return {
+            const postData: PostData = {
               id: post.id,
+              profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
               handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -803,6 +813,7 @@ const UserProfile = () => {
               showComments: false,
               topics: topicsRes,
             };
+            return postData;
           } catch (err) {
             console.warn(`Error processing post ID ${post.id}:`, err);
             return null;
@@ -1474,6 +1485,7 @@ const UserProfile = () => {
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
                   <Post
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1519,6 +1531,7 @@ const UserProfile = () => {
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
                   <Post
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1565,6 +1578,7 @@ const UserProfile = () => {
                 <div key={post.id} className="mb-4">
                   <Post
                     username={post.username}
+                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
@@ -1610,6 +1624,7 @@ const UserProfile = () => {
                 <div key={post.id} className="mb-4">
                   <Post
                     username={post.username}
+                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
@@ -1655,6 +1670,7 @@ const UserProfile = () => {
                 <div key={post.id} className="mb-4">
                   <Post
                     username={post.username}
+                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
