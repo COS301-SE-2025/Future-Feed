@@ -9,6 +9,8 @@ import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import GRP1 from "../assets/GRP1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
+import WhatsHappening from "@/components/WhatsHappening";
+import WhoToFollow from "@/components/WhoToFollow";
 
 interface UserProfile {
   id: number;
@@ -1395,8 +1397,10 @@ const UserProfile = () => {
 
   return (
     <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
-      <PersonalSidebar />
-      <main className="w-[1100px] mx-auto">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        <PersonalSidebar />
+      </aside>
+      <main className="w-[1100px] mx-auto mt-3">
         <div className="relative">
           <div className="mt-25 dark:bg-lime-500 w-full" />
           <div className="absolute -bottom-10 left-4">
@@ -1670,6 +1674,14 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
+      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+              <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+                <WhatsHappening />
+              </div>
+              <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+                <WhoToFollow />
+              </div>
+            </aside>
     </div>
   );
 }
