@@ -1453,12 +1453,14 @@ const HomePage = () => {
                   className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id}>
+                    <option key={topic.id} value={topic.id} className="text-center py-1">
                       {topic.name}
                     </option>
                   ))}
                 </select>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <Button
