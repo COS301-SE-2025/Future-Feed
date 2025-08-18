@@ -7,7 +7,7 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
-import { Input } from "@/components/ui/input"
+
 import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
