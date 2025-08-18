@@ -380,9 +380,9 @@ const HomePage = () => {
       setPosts((prevPosts) =>
         append
           ? [
-              ...prevPosts,
-              ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
-            ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+            ...prevPosts,
+            ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
+          ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
           : formattedPosts
       );
       saveToCache(cacheKey, formattedPosts);
@@ -503,9 +503,9 @@ const HomePage = () => {
       setFollowingPosts((prevPosts) =>
         append
           ? [
-              ...prevPosts,
-              ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
-            ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+            ...prevPosts,
+            ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
+          ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
           : formattedPosts
       );
       saveToCache(cacheKey, formattedPosts);
@@ -740,10 +740,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
           : p
       )
     );
@@ -751,10 +751,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
           : p
       )
     );
@@ -824,10 +824,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -835,10 +835,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -904,10 +904,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -915,10 +915,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -950,10 +950,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -961,10 +961,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -977,10 +977,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -988,10 +988,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -1156,10 +1156,12 @@ const HomePage = () => {
       const user = await fetchCurrentUser();
       if (user) {
         await Promise.all([fetchAllPosts(0), fetchTopics()]);
+        setHasMoreForYou(true);
       }
       setLoading(false);
     };
     loadData();
+
     const intervalId = setInterval(() => {
       if (pageForYou === 0 && activeTab === "for You") {
         fetchAllPosts(0);
@@ -1196,9 +1198,9 @@ const HomePage = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    console.debug(`Setting up IntersectionObserver, activeTab: ${activeTab}, hasMoreForYou: ${hasMoreForYou}, hasMoreFollowing: ${hasMoreFollowing}`);
-    if (!loadMoreRef.current || (!hasMoreForYou && activeTab === "for You") || (!hasMoreFollowing && activeTab === "Following")) {
-      console.debug("No observer setup: ref missing or no more posts");
+    console.debug(`Setting up IntersectionObserver, activeTab: ${activeTab}, hasMoreForYou: ${hasMoreForYou}, hasMoreFollowing: ${hasMoreFollowing}, loadMoreRef: ${!!loadMoreRef.current}`);
+    if (!loadMoreRef.current || loading || (activeTab === "for You" && !hasMoreForYou) || (activeTab === "Following" && !hasMoreFollowing)) {
+      console.debug("Skipping observer setup: ref missing, loading, or no more posts");
       return;
     }
 
@@ -1238,7 +1240,7 @@ const HomePage = () => {
         observerRef.current.unobserve(loadMoreRef.current);
       }
     };
-  }, [activeTab, hasMoreForYou, hasMoreFollowing, loadingMore]);
+  }, [activeTab, hasMoreForYou, hasMoreFollowing, loadingMore, loading, posts.length, followingPosts.length]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
@@ -1276,7 +1278,7 @@ const HomePage = () => {
             </ThemeProvider>
             <button
               onClick={handleLogout}
-              className="mb-2 w-full py-2 px-4 bg-lime-900 text-white rounded hover:bg-lime-600 transition-colors"
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
             >
               Logout
             </button>
@@ -1304,9 +1306,8 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${
-          isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""
-        }`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""
+          }`}
       >
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
@@ -1359,7 +1360,7 @@ const HomePage = () => {
                       {hasMoreForYou && (
                         <div ref={loadMoreRef} className="flex justify-center py-4 min-h-[50px]">
                           {loadingMore ? (
-                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-lime-500"></div>
+                            <div className="animate-spin mt-[-20px] rounded-full h-13 w-13 border-t-2 border-b-2 border-lime-500"></div>
                           ) : (
                             <p className="text-sm dark:text-white">Scroll to load more...</p>
                           )}
