@@ -289,8 +289,12 @@ const FollowerFollowing = () => {
           <WhatsHappening />
           <WhoToFollow />
         </div>
-      </main>
-      <RightSidebar />
+      </main >
+      <div className=" dark:bg-black px-4 mt-7 py-6 space-y-6">
+         <RightSidebar />
+
+      </div>
+     
     </div>
   )
 }
