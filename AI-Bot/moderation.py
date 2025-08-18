@@ -1,13 +1,14 @@
+#moderation.py
 import os
 from fastapi import HTTPException
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
-from langchain_together import ChatTogether  # Replace with your model wrapper
+from langchain_together import ChatTogether  
 
 # Initialize LLM
 llm = ChatTogether(
     model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    temperature=0.0  # deterministic for classification tasks
+    temperature=0.0 
 )
 
 # Moderation prompt template

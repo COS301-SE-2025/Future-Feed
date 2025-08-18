@@ -96,7 +96,7 @@ interface PaginatedResponse {
   totalElements: number;
 }
 
-const CACHE_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+const CACHE_EXPIRY_MS = 2 * 60 * 1000; // 5 minutes
 
 const HomePage = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -113,7 +113,7 @@ const HomePage = () => {
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("for You");
+  const [activeTab, setActiveTab] = useState("following");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pageForYou, setPageForYou] = useState(0);
@@ -262,6 +262,13 @@ const HomePage = () => {
   };
 
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    const cacheKey = `post_topics_${postId}`;
+    const cachedTopics = loadFromCache<Topic[]>(cacheKey);
+    if(cachedTopics && isCacheValid(cachedTopics.timestamp)){
+      console.debug(`Using cached topics for post ${postId}`);
+      return cachedTopics.data;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -269,12 +276,24 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
+      if(!topics.length){
+        await fetchTopics();
+      }
       const postTopics = topicIds
         .map((id) => topics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
+        if(!postTopics.length && topicIds.length){
+          console.warn(`No matching topics found for post ${postId}, using placeholders`);
+          return topicIds.map((id) => ({id, name:`Topic ${id}`}));
+        }
+        saveToCache(cacheKey, postTopics);
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
+      setError("Failed to load topics for post.");
+      setTimeout(()=>{
+        setError(null);
+      }, 3000);
       return [];
     }
   };
@@ -389,6 +408,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
+      setTimeout(()=> {
+        setError(null);
+      }, 3000);
     } finally {
       setLoadingForYou(false);
       setLoadingMore(false);
@@ -512,6 +534,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
+      setTimeout(()=>{
+        setError(null);
+      }, 3000);
     } finally {
       setLoadingFollowing(false);
       setLoadingMore(false);
@@ -537,6 +562,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
   };
 
@@ -728,16 +756,20 @@ const HomePage = () => {
       return;
     }
 
+    // Find the post in either posts or followingPosts
     const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
     if (!post) {
       setError("Post not found.");
       return;
     }
 
+    // Store original state for rollback in case of failure
     const originalIsLiked = post.isLiked;
     const originalLikeCount = post.likeCount;
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+
+    // Optimistic UI update: Update both arrays but ensure no duplication
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId
           ? {
             ...p,
@@ -745,23 +777,17 @@ const HomePage = () => {
             likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
           }
           : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId
-          ? {
-            ...p,
-            isLiked: !p.isLiked,
-            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-          }
-          : p
-      )
-    );
+      );
+
+    setPosts((prevPosts) => updatePostInArray(prevPosts));
+    setFollowingPosts((prevPosts) => (posts.find((p) => p.id === postId) ? prevPosts : updatePostInArray(prevPosts)));
+
+    // Save to cache
     saveToCache(`posts_page_${pageForYou}`, posts);
     saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
+      // Toggle like via API
       const method = originalIsLiked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
         method,
@@ -769,43 +795,49 @@ const HomePage = () => {
       });
 
       if (!res.ok) throw new Error(`Failed to ${originalIsLiked ? "unlike" : "like"} post`);
-      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, {
-        credentials: "include",
-      });
-      if (hasLikedRes.ok) {
-        const isLiked = await hasLikedRes.json();
-        setPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isLiked, likeCount: isLiked ? p.likeCount + 1 : p.likeCount - 1 }
-              : p
-          )
-        );
-        setFollowingPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isLiked, likeCount: isLiked ? p.likeCount + 1 : p.likeCount - 1 }
-              : p
-          )
-        );
+
+      // Fetch updated like status and count
+      const [hasLikedRes, likeCountRes] = await Promise.all([
+        fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/likes/count/${postId}`, { credentials: "include" }),
+      ]);
+
+      if (!hasLikedRes.ok || !likeCountRes.ok) {
+        throw new Error("Failed to fetch updated like status or count");
       }
+
+      const isLiked = await hasLikedRes.json();
+      const likeCount = await likeCountRes.json();
+
+      // Update state with confirmed values
+      const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
+          p.id === postId ? { ...p, isLiked, likeCount } : p
+        );
+
+      setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      setFollowingPosts((prevPosts) =>
+        posts.find((p) => p.id === postId) ? prevPosts : updatePostWithConfirmedValues(prevPosts)
+      );
+
+      // Update cache with confirmed values
+      saveToCache(`posts_page_${pageForYou}`, posts);
+      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount }
-            : p
-        )
-      );
+
+      // Revert state on error
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
+          p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
+        );
+
+      setPosts((prevPosts) => revertPostInArray(prevPosts));
       setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount }
-            : p
-        )
+        posts.find((p) => p.id === postId) ? prevPosts : revertPostInArray(prevPosts)
       );
+
       saveToCache(`posts_page_${pageForYou}`, posts);
       saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
@@ -1155,7 +1187,8 @@ const HomePage = () => {
 
       const user = await fetchCurrentUser();
       if (user) {
-        await Promise.all([fetchAllPosts(0), fetchTopics()]);
+        await fetchTopics();
+        await fetchAllPosts(0);
         setHasMoreForYou(true);
       }
       setLoading(false);

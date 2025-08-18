@@ -7,6 +7,4 @@ import java.util.List;
 
 public interface BotRepository extends JpaRepository<Bot, Integer> {
     List<Bot> findByOwnerId(Integer ownerId);
-    List<Bot> findByActiveTrue();
-
 }
