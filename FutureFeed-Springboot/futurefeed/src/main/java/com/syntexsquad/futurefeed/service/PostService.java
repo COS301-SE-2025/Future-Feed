@@ -48,7 +48,7 @@ public class PostService {
     }
 
     @Transactional
-    @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true) // clear related caches
+    @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true) 
     public Post createPost(PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = null;

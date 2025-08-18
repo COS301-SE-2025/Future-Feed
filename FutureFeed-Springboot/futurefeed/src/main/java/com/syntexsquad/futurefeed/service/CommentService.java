@@ -48,12 +48,9 @@ public class CommentService {
     }
 
     @Transactional
-    @Caching(evict = {
-        @CacheEvict(value = "commentsByPost", key = "#postId"),
-        @CacheEvict(value = "hasCommented", key = "#postId + '-' + getAuthenticatedUser().getId()")
-    })
     public Comment addComment(Integer postId, String content) {
         AppUser user = getAuthenticatedUser();
+        Integer userId = user.getId();
 
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
@@ -61,10 +58,15 @@ public class CommentService {
 
         Comment comment = new Comment();
         comment.setPostId(postId);
-        comment.setUserId(user.getId());
+        comment.setUserId(userId);
         comment.setContent(content);
 
-        return commentRepository.save(comment);
+        Comment saved = commentRepository.save(comment);
+
+        // Manually evict caches related to this post/user
+        evictCaches(postId, userId);
+
+        return saved;
     }
 
     @Cacheable(value = "commentsByPost", key = "#postId")
@@ -72,9 +74,18 @@ public class CommentService {
         return commentRepository.findByPostId(postId);
     }
 
-    @Cacheable(value = "hasCommented", key = "#postId + '-' + getAuthenticatedUser().getId()")
+    @Cacheable(value = "hasCommented", key = "'post_' + #postId + '_user_' + #userId")
     public boolean hasUserCommented(Integer postId) {
         AppUser user = getAuthenticatedUser();
-        return commentRepository.existsByUser_IdAndPost_Id(user.getId(), postId);
+        Integer userId = user.getId();
+        return commentRepository.existsByUser_IdAndPost_Id(userId, postId);
+    }
+
+    // helper to clear specific cache entries
+    @Caching(evict = {
+        @CacheEvict(value = "commentsByPost", key = "#postId"),
+        @CacheEvict(value = "hasCommented", key = "'post_' + #postId + '_user_' + #userId")
+    })
+    public void evictCaches(Integer postId, Integer userId) {
     }
 }

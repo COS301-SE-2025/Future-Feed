@@ -52,17 +52,14 @@ public class ReshareService {
     @CacheEvict(value = {"reshareCount", "hasReshared", "userReshares"}, allEntries = true)
     public void unresharePost(Integer postId) {
         AppUser user = getAuthenticatedUser();
-        try {
-            reshareRepository.deleteByUserIdAndPostId(user.getId(), postId);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to unreshare post: " + e.getMessage(), e);
-        }
+        reshareRepository.deleteByUserIdAndPostId(user.getId(), postId);
     }
 
-    @Cacheable(value = "userReshares", key = "#root.methodName + '_' + #root.target.getAuthenticatedUser().getId()")
+    @Cacheable(value = "userReshares", key = "'user_' + #userId")
     public List<Reshare> getResharesByUser() {
         AppUser user = getAuthenticatedUser();
-        return reshareRepository.findByUserId(user.getId());
+        Integer userId = user.getId();
+        return reshareRepository.findByUserId(userId);
     }
 
     @Cacheable(value = "reshareCount", key = "#postId")
@@ -70,9 +67,10 @@ public class ReshareService {
         return reshareRepository.countByPostId(postId);
     }
 
-    @Cacheable(value = "hasReshared", key = "#postId + '_' + #root.target.getAuthenticatedUser().getId()")
+    @Cacheable(value = "hasReshared", key = "'post_' + #postId + '_user_' + #userId")
     public boolean hasUserReshared(Integer postId) {
         AppUser user = getAuthenticatedUser();
-        return reshareRepository.existsByUserIdAndPostId(user.getId(), postId);
+        Integer userId = user.getId();
+        return reshareRepository.existsByUserIdAndPostId(userId, postId);
     }
 }
