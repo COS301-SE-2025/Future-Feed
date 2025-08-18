@@ -224,13 +224,7 @@ const FollowerFollowing = () => {
     <div className="flex min-h-screen dark:bg-black dark:text-white">
       <PersonalSidebar />
       <main className="h-fit p-6 dark:bg-black flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-black border dark:border-black">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="rounded-full bg-black dark:bg-black dark:text-white dark:placeholder:text-lime-600 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-          />
-        </div>
+        
 
         <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-600 z-10">
           <Avatar className=" w-24 h-24 border-4 dark:border-lime-600">
