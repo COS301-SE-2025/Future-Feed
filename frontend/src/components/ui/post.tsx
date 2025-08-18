@@ -23,6 +23,7 @@ interface Topic {
 }
 
 interface PostProps {
+  profilePicture?: string;
   username: string;
   handle: string;
   time: string;
@@ -59,6 +60,7 @@ interface PostProps {
 }
 
 const Post: React.FC<PostProps> = ({
+  profilePicture,
   username,
   handle,
   time,
@@ -126,7 +128,7 @@ const Post: React.FC<PostProps> = ({
       <CardContent className="sm:px-8 sm:py-1 ">
         <div className="flex gap-3 sm:gap-4">
           <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-            <AvatarImage src={currentUser?.profilePicture} alt={handle} />
+            <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -153,7 +155,9 @@ const Post: React.FC<PostProps> = ({
               </div>
             </div>
             <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            <p className="mt-2 dark:text-white text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
+              {text}
+            </p>
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
@@ -170,24 +174,27 @@ const Post: React.FC<PostProps> = ({
               <img
                 src={image}
                 alt="Post"
-                className="mt-4 rounded-sm border dark:border-white h-auto object-contain max-w-full"
+                className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
               />
             )}
+
             <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   onLike();
                 }}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm md:mr-[-20px",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
                   "hover:text-red-500 dark:hover:text-red-400"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
+
                 <span className="hidden xl:inline">Like</span>
                 <span className="ml-1">({likeCount})</span>
               </Button>
@@ -249,13 +256,15 @@ const Post: React.FC<PostProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-2 mb-2">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                          <AvatarImage src={currentUser?.profilePicture} alt={comment.handle} />
+                          <AvatarImage src={profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
                           <p className="text-xs sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
-                          <p className="text-xs sm:text-sm dark:text-white">{comment.content}</p>
+                          <p className="text-xs sm:text-sm dark:text-white line-clamp-3 max-w-full">
+                            {comment.content}
+                          </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                             {formatRelativeTime(comment.createdAt)}
                           </p>
