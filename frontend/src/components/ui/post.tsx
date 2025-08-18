@@ -153,10 +153,9 @@ const Post: React.FC<PostProps> = ({
               </div>
             </div>
             <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base line-clamp-3 max-w-full mr-10">
+            <p className="mt-2 dark:text-white text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
               {text}
             </p>
-
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
@@ -173,24 +172,25 @@ const Post: React.FC<PostProps> = ({
               <img
                 src={image}
                 alt="Post"
-                className="mt-4 rounded-sm border dark:border-white h-auto object-contain max-w-full"
+                className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
               />
             )}
-            <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10 md:w-10 ">
+            <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   onLike();
                 }}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3 ",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
                   "hover:text-red-500 dark:hover:text-red-400"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
-                <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5 md:w-2", isLiked && "fill-current")} />
+                <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
                 <span className="hidden sm:inline text-sm">Like</span>
                 <span className="text-xs sm:text-sm ml-1">({likeCount})</span>
               </Button>
@@ -202,7 +202,7 @@ const Post: React.FC<PostProps> = ({
                   onToggleComments();
                 }}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3 md:",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3",
                   showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
                   "hover:text-blue-500 dark:hover:text-blue-400"
                 )}
