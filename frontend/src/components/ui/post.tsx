@@ -123,7 +123,7 @@ const Post: React.FC<PostProps> = ({
       )}
       onClick={handleClick}
     >
-      <CardContent className="p-4 sm:p-6">
+      <CardContent className="sm:px-8 sm:py-1 ">
         <div className="flex gap-3 sm:gap-4">
           <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
             <AvatarImage src={currentUser?.profilePicture} alt={handle} />
