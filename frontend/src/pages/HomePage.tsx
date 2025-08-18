@@ -262,6 +262,13 @@ const HomePage = () => {
   };
 
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    const cacheKey = `post_topics_${postId}`;
+    const cachedTopics = loadFromCache<Topic[]>(cacheKey);
+    if(cachedTopics && isCacheValid(cachedTopics.timestamp)){
+      console.debug(`Using cached topics for post ${postId}`);
+      return cachedTopics.data;
+    }
+
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -269,12 +276,24 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
+      if(!topics.length){
+        await fetchTopics();
+      }
       const postTopics = topicIds
         .map((id) => topics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
+        if(!postTopics.length && topicIds.length){
+          console.warn(`No matching topics found for post ${postId}, using placeholders`);
+          return topicIds.map((id) => ({id, name:`Topic ${id}`}));
+        }
+        saveToCache(cacheKey, postTopics);
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
+      setError("Failed to load topics for post.");
+      setTimeout(()=>{
+        setError(null);
+      }, 3000);
       return [];
     }
   };
@@ -543,6 +562,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
     }
   };
 
@@ -1165,7 +1187,8 @@ const HomePage = () => {
 
       const user = await fetchCurrentUser();
       if (user) {
-        await Promise.all([fetchAllPosts(0), fetchTopics()]);
+        await fetchTopics();
+        await fetchAllPosts(0);
         setHasMoreForYou(true);
       }
       setLoading(false);
