@@ -1358,7 +1358,10 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
-        <PersonalSidebar />
+        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+          <PersonalSidebar />
+        </aside>
+        
         <main className="w-[1100px] mx-auto">
           <div className="relative">
             <Skeleton className="mt-25 h-40 w-full" />
@@ -1389,6 +1392,14 @@ const UserProfile = () => {
             ))}
           </div>
         </main>
+        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
       </div>
     );
   }
@@ -1675,13 +1686,13 @@ const UserProfile = () => {
         </Tabs>
       </main>
       <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-              <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-                <WhatsHappening />
-              </div>
-              <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-                <WhoToFollow />
-              </div>
-            </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
     </div>
   );
 }
