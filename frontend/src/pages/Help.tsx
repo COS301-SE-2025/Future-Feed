@@ -17,6 +17,7 @@ import {
 
 
 import LoginHelp from "../assets/loginhelp.mp4";
+import HowToLoginMobile from "../assets/howtologinmobile.mp4";
 import PostCreationHelp from "../assets/postcreationhelp.mp4";
 import FollowHelpDesktop from "../assets/followhelpdesktop.mp4";
 import FollowHelpMobile from "../assets/followhelpmobile.mp4";
@@ -65,7 +66,7 @@ const Help = () => {
       <AccordionTrigger>How to Log In</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full rounded-xl border border-lime-500">
-          <source src={LoginHelp} type="video/mp4" />
+          <source src={HowToLoginMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -89,7 +90,7 @@ const Help = () => {
 
     </AccordionItem>
      <AccordionItem value="mobile-theme">
-      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionTrigger>How to Change Theme </AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full rounded-xl border border-lime-500">
           <source src={HowToChangeThemeMobile} type="video/mp4" />
@@ -129,7 +130,7 @@ const Help = () => {
       </AccordionContent>
     </AccordionItem>
      <AccordionItem value="-theme">
-      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionTrigger>How to Change Theme</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full rounded-xl border border-lime-500">
           <source src={HowToChangeThemeDesktop} type="video/mp4" />
