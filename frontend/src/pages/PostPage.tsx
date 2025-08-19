@@ -45,6 +45,7 @@ interface PostData {
   commentCount: number;
   authorId: number;
   likeCount: number;
+  reshareCount: number;
   comments: CommentData[];
   showComments: boolean;
 }
@@ -134,16 +135,20 @@ const PostPage = () => {
       }
       const post: RawPost = await postRes.json();
       const userInfo: UserInfo = post.user ?? (await fetchUser(currentUserId));
-      const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes] = await Promise.all([
+      const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
         fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/has-liked/${id}`, { credentials: "include" }),
         fetch(`${API_URL}/api/bookmarks/${currentUserId}/${id}/exists`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares/${id}/count`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares/${id}/has-reshared`, { credentials: "include" }),
       ]);
       if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${id}: ${commentsRes.status}`);
       if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${id}: ${likesCountRes.status}`);
       if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${id}: ${hasLikedRes.status}`);
       if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${id}: ${hasBookmarkedRes.status}`);
+      if (!reshareCountRes.ok) console.warn(`Failed to fetch reshare count for post ID ${id}: ${reshareCountRes.status}`);
+      if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${id}: ${hasResharedRes.status}`);
       const comments = commentsRes.ok ? await commentsRes.json() : [];
       const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
       const commentsWithUsers: CommentData[] = (
@@ -170,6 +175,8 @@ const PostPage = () => {
       const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
       const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
       const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
+      const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+      const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
       setPost({
         id: post.id,
         username: userInfo.displayName,
@@ -179,10 +186,11 @@ const PostPage = () => {
         image: post.imageUrl || undefined,
         isLiked,
         isBookmarked,
-        isReshared: false, // Assuming resharing is not implemented yet
+        isReshared,
         commentCount: validComments.length,
         authorId: userInfo.id,
         likeCount,
+        reshareCount,
         comments: commentsWithUsers,
         showComments: true,
       });
@@ -316,7 +324,11 @@ const PostPage = () => {
       const wasReshared = post.isReshared;
       setPost((prev) => {
         if (!prev || prev.id !== postId) return prev;
-        return { ...prev, isReshared: !wasReshared };
+        return {
+          ...prev,
+          isReshared: !wasReshared,
+          reshareCount: wasReshared ? prev.reshareCount - 1 : prev.reshareCount + 1,
+        };
       });
       const method = wasReshared ? "DELETE" : "POST";
       const url = wasReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
@@ -332,7 +344,11 @@ const PostPage = () => {
         console.error(`Failed to ${wasReshared ? "unreshare" : "reshare"} post ${postId}: ${res.status} ${errorText}`);
         setPost((prev) => {
           if (!prev || prev.id !== postId) return prev;
-          return { ...prev, isReshared: wasReshared };
+          return {
+            ...prev,
+            isReshared: wasReshared,
+            reshareCount: wasReshared ? prev.reshareCount + 1 : prev.reshareCount - 1,
+          };
         });
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
@@ -340,15 +356,19 @@ const PostPage = () => {
           throw new Error(`Failed to ${wasReshared ? "unreshare" : "reshare"} post: ${errorText}`);
         }
       }
-      const hasResharedRes = await fetch(`${API_URL}/api/reshares/has-reshared/${postId}`, {
-        credentials: "include",
-      });
-      if (hasResharedRes.ok) {
+      const [hasResharedRes, reshareCountRes] = await Promise.all([
+        fetch(`${API_URL}/api/reshares/${postId}/has-reshared`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares/${postId}/count`, { credentials: "include" }),
+      ]);
+      if (hasResharedRes.ok && reshareCountRes.ok) {
         const reshareData = await hasResharedRes.json();
+        const reshareCount = await reshareCountRes.json();
         setPost((prev) => {
           if (!prev || prev.id !== postId) return prev;
-          return { ...prev, isReshared: reshareData === true };
+          return { ...prev, isReshared: reshareData === true, reshareCount };
         });
+      } else {
+        console.warn(`Failed to fetch reshare status or count for post ${postId}`);
       }
     } catch (err) {
       console.error("Error toggling reshare:", err);
@@ -357,84 +377,84 @@ const PostPage = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-  if (!currentUser) {
-    setError("Please log in to comment.");
-    return;
-  }
-  if (!post) {
-    setError("Post not found.");
-    return;
-  }
-  if (!commentText.trim()) {
-    setError("Comment cannot be empty.");
-    return;
-  }
-  try {
-    setPost((prev) => {
-      if (!prev || prev.id !== postId) return prev;
-      return {
-        ...prev,
-        comments: [
-          ...prev.comments,
-          {
-            id: Date.now(),
-            postId,
-            authorId: currentUser.id,
-            content: commentText,
-            createdAt: new Date().toISOString(),
-            username: currentUser.displayName,
-            handle: `@${currentUser.username}`,
-          },
-        ],
-        commentCount: prev.commentCount + 1,
-      };
-    });
-    const res = await fetch(`${API_URL}/api/comments/${postId}`, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain" },
-      credentials: "include",
-      body: commentText,
-    });
-    if (!res.ok) {
-      const errorText = await res.text();
-      console.error(`Failed to add comment to post ${postId}: ${res.status} ${errorText}`);
+    if (!currentUser) {
+      setError("Please log in to comment.");
+      return;
+    }
+    if (!post) {
+      setError("Post not found.");
+      return;
+    }
+    if (!commentText.trim()) {
+      setError("Comment cannot be empty.");
+      return;
+    }
+    try {
       setPost((prev) => {
         if (!prev || prev.id !== postId) return prev;
         return {
           ...prev,
-          comments: prev.comments.filter((c) => c.id !== Date.now()),
-          commentCount: prev.commentCount - 1,
+          comments: [
+            ...prev.comments,
+            {
+              id: Date.now(),
+              postId,
+              authorId: currentUser.id,
+              content: commentText,
+              createdAt: new Date().toISOString(),
+              username: currentUser.displayName,
+              handle: `@${currentUser.username}`,
+            },
+          ],
+          commentCount: prev.commentCount + 1,
         };
       });
-      if (res.status === 401) {
-        setError("Session expired. Please log in again.");
-      } else {
-        throw new Error(`Failed to add comment: ${errorText}`);
+      const res = await fetch(`${API_URL}/api/comments/${postId}`, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        credentials: "include",
+        body: commentText,
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Failed to add comment to post ${postId}: ${res.status} ${errorText}`);
+        setPost((prev) => {
+          if (!prev || prev.id !== postId) return prev;
+          return {
+            ...prev,
+            comments: prev.comments.filter((c) => c.id !== Date.now()),
+            commentCount: prev.commentCount - 1,
+          };
+        });
+        if (res.status === 401) {
+          setError("Session expired. Please log in again.");
+        } else {
+          throw new Error(`Failed to add comment: ${errorText}`);
+        }
       }
-    }
-    const newComment = await res.json();
-    const formattedComment: CommentData = {
-      id: newComment.id,
-      postId: newComment.postId,
-      authorId: newComment.userId || currentUser.id,
-      content: newComment.content,
-      createdAt: newComment.createdAt,
-      username: currentUser.displayName,
-      handle: `@${currentUser.username}`,
-    };
-    setPost((prev) => {
-      if (!prev || prev.id !== postId) return prev;
-      return {
-        ...prev,
-        comments: prev.comments.map((c) => (c.id === Date.now() ? formattedComment : c)),
-        commentCount: prev.commentCount,
+      const newComment = await res.json();
+      const formattedComment: CommentData = {
+        id: newComment.id,
+        postId: newComment.postId,
+        authorId: newComment.userId || currentUser.id,
+        content: newComment.content,
+        createdAt: newComment.createdAt,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
-    });
-  } catch (err) {
-    console.error("Error adding comment:", err);
-    setError("Failed to add comment.");
-  }
-};
+      setPost((prev) => {
+        if (!prev || prev.id !== postId) return prev;
+        return {
+          ...prev,
+          comments: prev.comments.map((c) => (c.id === Date.now() ? formattedComment : c)),
+          commentCount: prev.commentCount,
+        };
+      });
+    } catch (err) {
+      console.error("Error adding comment:", err);
+      setError("Failed to add comment.");
+    }
+  };
 
   const handleDeletePost = async (postId: number) => {
     if (!currentUser) {
@@ -564,12 +584,12 @@ const PostPage = () => {
           likeCount={post.likeCount}
           isBookmarked={post.isBookmarked}
           isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
           commentCount={post.commentCount}
           onLike={() => handleLike(post.id)}
           onBookmark={() => handleBookmark(post.id)}
           onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
           onReshare={() => handleReshare(post.id)}
-          reshareCount={post.isReshared ? 1 : 0}
           onDelete={() => handleDeletePost(post.id)}
           showComments={post.showComments}
           comments={post.comments}
