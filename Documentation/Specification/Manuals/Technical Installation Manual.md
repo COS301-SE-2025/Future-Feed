@@ -51,7 +51,12 @@ cd FutureFeed
 ```
 
 #### Set Up Backend
-
+```
+cd FutureFeed-Springboot
+cd futurefeed
+mvn clean install
+mvn spring-boot:run
+```
 
 #### Set Up Frontend
 ```
