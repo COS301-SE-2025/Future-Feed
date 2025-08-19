@@ -5,9 +5,18 @@ import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.repository.BookmarkRepository;
+import com.syntexsquad.futurefeed.repository.BotPostRepository;
+import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
+import com.syntexsquad.futurefeed.repository.FeedPresetRepository;
+import com.syntexsquad.futurefeed.repository.FollowerRepository;
+import com.syntexsquad.futurefeed.repository.LikeRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.repository.PostTopicRepository;
+import com.syntexsquad.futurefeed.repository.PresetRuleRepository;
+import com.syntexsquad.futurefeed.repository.ReshareRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +28,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -32,22 +42,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+//@Transactional
 public class CommentIT {
 
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private AppUserRepository userRepo;
-
-    @Autowired
-    private PostRepository postRepo;
-
-    @Autowired
-    private PostTopicRepository postTopicRepo;
-
-    @Autowired
-    private CommentRepository commentRepo;
+    @Autowired private AppUserRepository userRepo;
+    @Autowired private FollowerRepository followerRepo;
+    @Autowired private PostRepository postRepo;
+    @Autowired private PostTopicRepository postTopicRepo;
+    @Autowired private CommentRepository commentRepo;
+    @Autowired private ReshareRepository reshareRepo;
+    @Autowired private LikeRepository likeRepo;
+    @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotPostRepository botPostRepo;
+    @Autowired private BotRepository botRepo;
+    @Autowired private FeedPresetRepository presetRepo;
+    @Autowired private PresetRuleRepository ruleRepo;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -59,20 +71,31 @@ public class CommentIT {
     @BeforeEach
     public void setup() {
         // Clean dependencies respecting FK constraints
+        ruleRepo.deleteAll();
+        presetRepo.deleteAll();
+        reshareRepo.deleteAll();
         commentRepo.deleteAll();
+        likeRepo.deleteAll();
+        bookmarkRepo.deleteAll();
+        botPostRepo.deleteAll();
         postTopicRepo.deleteAll();
         postRepo.deleteAll();
-        userRepo.deleteAll();
+        followerRepo.deleteAll();
+        botRepo.deleteAll();
+        //userRepo.deleteAll();
 
         // Create test user
-        AppUser user = new AppUser();
-        user.setUsername(TEST_USERNAME);
-        user.setEmail("testuser@example.com");
-        user.setPassword("test123");
-        user.setDisplayName("Test User");
-        user.setDateOfBirth(LocalDate.of(2000, 1, 1));
-        userRepo.save(user);
-
+        AppUser user = userRepo.findByUsername("testuser")
+            .orElseGet(() -> {
+                AppUser u = new AppUser();
+                u.setUsername("testuser");
+                u.setEmail("testuser@example.com");
+                u.setPassword("test123");
+                u.setDisplayName("Test User");
+                u.setBio("Test bio");
+                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                return userRepo.save(u);
+            });
         // Create test post
         UserPost post = new UserPost();
         post.setContent("Post for comment tests");

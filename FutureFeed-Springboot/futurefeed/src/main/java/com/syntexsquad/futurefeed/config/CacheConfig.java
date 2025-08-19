@@ -31,6 +31,7 @@ public class CacheConfig {
                 "userByUsername",
                 "userByEmail",
                 "post", 
+                "searchPosts",
                 "userPosts",
                 "paginatedPosts"
         );

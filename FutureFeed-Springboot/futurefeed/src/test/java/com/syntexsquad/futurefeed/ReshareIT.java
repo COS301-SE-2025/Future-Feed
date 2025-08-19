@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.authentication.OAuth2Authentic
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -28,25 +29,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+//@Transactional
 public class ReshareIT {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private AppUserRepository userRepo;
-
-    @Autowired
-    private PostRepository postRepo;
-
-    @Autowired
-    private PostTopicRepository postTopicRepo;
-
-    @Autowired
-    private ReshareRepository reshareRepo;
-
-    @Autowired
-    private CommentRepository commentRepo;
+    @Autowired private TopicRepository topicRepo;
+    @Autowired private AppUserRepository userRepo;
+    @Autowired private FollowerRepository followerRepo;
+    @Autowired private FeedPresetRepository presetRepo;
+    @Autowired private PresetRuleRepository ruleRepo;
+    @Autowired private PostRepository postRepo;
+    @Autowired private PostTopicRepository postTopicRepo;
+    @Autowired private CommentRepository commentRepo;
+    @Autowired private ReshareRepository reshareRepo;
+    @Autowired private LikeRepository likeRepo;
+    @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotPostRepository botPostRepo;
+    @Autowired private BotRepository botRepo;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -56,19 +56,30 @@ public class ReshareIT {
 
     @BeforeEach
     public void setup() {
+        ruleRepo.deleteAll();
+        presetRepo.deleteAll();
         reshareRepo.deleteAll();
         commentRepo.deleteAll();
+        likeRepo.deleteAll();
+        bookmarkRepo.deleteAll();
+        botPostRepo.deleteAll();
         postTopicRepo.deleteAll();
         postRepo.deleteAll();
-        userRepo.deleteAll();
+        followerRepo.deleteAll();
+        botRepo.deleteAll();
+        //userRepo.deleteAll();
 
-        AppUser user = new AppUser();
-        user.setUsername(TEST_USERNAME);
-        user.setEmail("testuser@example.com");
-        user.setPassword("test123");
-        user.setDisplayName("Test User");
-        user.setDateOfBirth(LocalDate.of(2000, 1, 1));
-        userRepo.save(user);
+        AppUser user = userRepo.findByUsername("testuser")
+            .orElseGet(() -> {
+                AppUser u = new AppUser();
+                u.setUsername("testuser");
+                u.setEmail("testuser@example.com");
+                u.setPassword("test123");
+                u.setDisplayName("Test User");
+                u.setBio("Test bio");
+                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                return userRepo.save(u);
+            });
 
         UserPost post = new UserPost();
         post.setContent("Post for reshare tests");

@@ -39,13 +39,13 @@ public class PostController {
         }
     }
 
-    // ✅ Raw JSON post (no media)
+    // Raw JSON post (no media)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createPostJson(@RequestBody PostRequest postRequest) {
         return createPostInternal(postRequest, null);
     }
 
-    // ✅ Multipart post (media + JSON string)
+    // Multipart post (media + JSON string)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createPostMultipart(
             @RequestPart("post") String postJson,
