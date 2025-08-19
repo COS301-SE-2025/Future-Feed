@@ -341,7 +341,7 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
