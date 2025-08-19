@@ -1302,13 +1302,8 @@ const HomePage = () => {
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
+        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center mt-[-60px]">
           <div className="w-full max-w-xs p-4">
-            <ThemeProvider>
-              <div className="pe-9 flex mb-30 ml-30 gap-2 rounded">
-                <ModeToggle />
-              </div>
-            </ThemeProvider>
             <button
               onClick={handleLogout}
               className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
@@ -1356,13 +1351,16 @@ const HomePage = () => {
             </div>
           ) : (
             <>
+            {/* condditionally render "Whats on your mind ?" */}
               <div
-                className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                  isMobileMenuOpen ? "lg:flex hidden" : "flex"
+                }`}
                 onClick={() => setIsPostModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`}  onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
