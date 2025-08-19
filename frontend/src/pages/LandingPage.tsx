@@ -8,7 +8,7 @@ import Help_mobile from "../assets/helpmobilenew.png"
 import Settingsmobile from "../assets/settingsmobile.png"
 import Editprofilemobile from "../assets/home14.png"
 import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
+// import { ModeToggle } from "@/components/mode-toggle"
 import { Link } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -79,14 +79,11 @@ const LandingPage = () => {
         <div className="overscroll-none min-h-screen w-auto dark:bg-black dark:text-white   bg-gray-200 text-white-800 overflow-hidden ">
 
             <ThemeProvider>
-                <div className="pe-9 flex items-center gap-2">
-                    <ModeToggle />
-
-                </div>
-            </ThemeProvider>
+            
+            
             <div className="  ">
                 <Sheet >
-                    <SheetTrigger className="  " asChild>
+                    <SheetTrigger className="mt-2 ml-2" asChild>
                         <AlignJustify className="w-6 h-6"></AlignJustify>
                     </SheetTrigger>
                     <SheetContent side="left">
@@ -253,6 +250,7 @@ const LandingPage = () => {
                     </motion.div>
                 </div>
             </div>
+            </ThemeProvider>
         </div>
     )
 }
