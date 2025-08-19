@@ -20,6 +20,8 @@ public class CacheConfig {
                 "topics", 
                 "bots",
                 "reshareCount",
+                "likedPosts",
+                "commentedPosts",
                 "hasReshared",
                 "userReshares",
                 "hasCommented",
