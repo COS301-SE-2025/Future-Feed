@@ -27,7 +27,13 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @AutoConfigureMockMvc
 //@Transactional
 public class ReshareIT {
@@ -150,10 +156,9 @@ public class ReshareIT {
     public void testUnresharePostNotExists() throws Exception {
         int nonExistentPostId = 999999;
 
-        // The controller does not return 400 for nonexistent reshare
         mockMvc.perform(delete("/api/reshares/{postId}", nonExistentPostId))
-                .andExpect(status().isOk())  // ✅ Match actual controller behavior
-                .andExpect(content().string("Post unreshared."));  // ✅ Match actual response text
+                .andExpect(status().isOk())  
+                .andExpect(content().string("Post unreshared."));  
     }
 
     @Test

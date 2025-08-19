@@ -95,7 +95,7 @@ public class FollowControllerTest {
 
         mockMvc.perform(get("/api/follow/status/123"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.following").value(true));
+            .andExpect(jsonPath("$.isFollowing").value(true));
     }
 
     @Test
