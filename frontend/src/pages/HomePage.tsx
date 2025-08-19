@@ -11,8 +11,8 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
+// import { ThemeProvider } from "@/components/theme-provider";
+// import { ModeToggle } from "@/components/mode-toggle";
 
 interface ApiFollow {
   followedId: number;
