@@ -21,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
         "spring.datasource.driverClassName=org.h2.Driver",
@@ -28,15 +29,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop"
     },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = FuturefeedApplication.class
 )
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@EnableAutoConfiguration(exclude = {
-        org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class
-})
+@AutoConfigureMockMvc
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 //@Transactional
 public class UserIT {
 
