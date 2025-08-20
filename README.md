@@ -30,8 +30,9 @@
   <a href="Documentation/Specification/Design Specifications">Design Specifications</a> | 
   <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
   <br>
-  <a href="Documentation/Specification/Manuals">Manuals</a> |
-  <a href="Documentation/Specification/Coding Standards">Coding Standards/quality</a>
+  <a href="#">User Manual</a> |
+  <a href="#">Technical Installation Manual</a> |
+  <a href="#">Coding Standards/quality</a>
 
 ### Demo links:
 <table>
@@ -345,5 +346,4 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 COS 301, University of Pretoria, 2025
 
 </div>
-
 

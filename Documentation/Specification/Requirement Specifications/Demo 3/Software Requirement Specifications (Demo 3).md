@@ -347,8 +347,8 @@
 - **NFR9.2** An admin dashboard must provide real-time monitoring of system health and usage metrics.  
 - **NFR9.3** Alerts must be generated for abnormal activity (e.g., suspicious bot behavior, traffic spikes).  
 
-## Architectural Specifications
-View <a href="../../Architectural Specifications">Architecture</a>
+## Architectural Strategies
 
-## Design Specifications
-View <a href="../../Design Specifications">Design Specification</a>
+## Architectural Patterns
+
+## Design
