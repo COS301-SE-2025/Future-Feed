@@ -31,14 +31,29 @@ jobs:
       - name: Restore required config files
         run: |
           mkdir -p src/main/resources
+          cat <<EOT >> src/main/resources/application-test.properties
+          aws.accessKeyId=test
+          aws.secretKey=test
+          aws.s3.bucket-name=test-bucket
+          aws.s3.region=us-east-1
+          aws.s3.url=https://test-bucket.s3.amazonaws.com
 
-          echo "aws.accessKeyId=test" >> src/main/resources/application-test.properties
-          echo "aws.secretKey=test" >> src/main/resources/application-test.properties
-          echo "aws.s3.bucket-name=test-bucket" >> src/main/resources/application-test.properties
-          echo "aws.s3.region=us-east-1" >> src/main/resources/application-test.properties
-          echo "aws.s3.url=https://test-bucket.s3.amazonaws.com" >> src/main/resources/application-test.properties
+          spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+          spring.datasource.driverClassName=org.h2.Driver
+          spring.datasource.username=sa
+          spring.datasource.password=
+          spring.jpa.hibernate.ddl-auto=create-drop
+          spring.jpa.show-sql=true
+          spring.jpa.properties.hibernate.format_sql=true
+
+          # Disable OAuth2 for tests
+          spring.security.oauth2.client.registration.google.client-id=test
+          spring.security.oauth2.client.registration.google.client-secret=test
+          spring.security.oauth2.client.registration.google.scope=openid,email,profile
+          spring.main.allow-bean-definition-overriding=true
+          EOT
 
       - name: Run Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn -Dspring.profiles.active=default -Dtest=* test
+          mvn -Dspring.profiles.active=test -Dtest=* test
