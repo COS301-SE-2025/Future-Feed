@@ -40,11 +40,11 @@ Comments facilitate understanding and maintenance
 - Branches should be created from issues and issues should be closed after feature completion
 
 ### Test-Driven Development (TDD)
-- How Java Melody was used
-- Define branch coverage.
-- How tests are written
-- Implement features incrementally, running tests after each change.
-- Refactor code and tests to maintain readability and performance.
+- Java Melody was used for monitoring our backend during testing and development. With it wwe could monitor response times, sql query executions and overall performance of the backend and any changes in performance when there is modifications made.
+- Branch coverage is the testing of the different branches or paths in a program such as in conditional statements. We have made efforts in our testing to test possible paths in our code such as success and failure tests
+- Tests were written using JUnit 5 with SpringbootTest and MockMvc. We did unit tests that were mocked to test different functions in isolation as well as integration tests simulate and test the system as it would be used in real world environment
+- As we would implement new features such as Topics, Bookmarks and Reshare we would also perform tests with every new implementation in order to catch any potential bugs and issues with the implementation and thus correcting them.
+- Through out development and testing we have ensured to refactor our code and even our test code to improve the internal structure our system and improve performance and readability. With java melody we could also monitor how our refactored code may impact response times and memory.
 
 ### Code Review Checklist
 1. The program correctly implements the functionality and conforms to the design specification
