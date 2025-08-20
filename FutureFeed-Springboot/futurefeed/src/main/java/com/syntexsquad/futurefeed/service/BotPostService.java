@@ -8,7 +8,6 @@ import com.syntexsquad.futurefeed.repository.BotPostRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,7 +24,6 @@ public class BotPostService {
     @Autowired
     private PostRepository postRepository;
 
-    @CacheEvict(value = "botPosts", key = "#botId")
     public BotPostDTO linkBotToPost(Integer botId, Integer postId) {
         Bot bot = botRepository.findById(botId)
                 .orElseThrow(() -> new RuntimeException("Bot not found"));
@@ -47,7 +45,6 @@ public class BotPostService {
         );
     }
 
-    @CacheEvict(value = "botPosts", key = "#botId")
     public List<BotPostDTO> getPostsByBot(Integer botId) {
         return botPostRepository.findDtoByBotId(botId);
     }

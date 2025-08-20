@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-pydantic
-requests
-beautifulsoup4
-langchain
-langchain-together
-python-dotenv

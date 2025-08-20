@@ -15,8 +15,6 @@ import RegisterPage from "./pages/RegisterPage";
 import Forgot from "./pages/Forgot";
 import EditProfilePage from "./pages/EditProfile";
 import PostPage from "./pages/PostPage";
-import BotPage from "./pages/BotPage";
-import EditBotPage from "./pages/EditBot";
 
 
 function App() {
@@ -41,8 +39,6 @@ function App() {
       <Route path="/edit-profile" element={<EditProfilePage />} />
       <Route path="/bots" element={<Bots />} />
       <Route path="/post/:postId" element={<PostPage />} />
-      <Route path="/bot/:botId" element={<BotPage />} />
-      <Route path="/edit-bot" element={<EditBotPage />} />
     </Routes>
     </>
 

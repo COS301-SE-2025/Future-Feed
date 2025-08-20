@@ -26,13 +26,9 @@
 ![Last Commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Future-Feed)
 
 ## Links:
-  <a href="Documentation/Specification/Requirement Specifications">Requirement Specifications</a> | 
-  <a href="Documentation/Specification/Design Specifications">Design Specifications</a> | 
+  <a href="Documentation/Specification/Requirement Specification.md">Requirement Specifications</a> | 
+  <a href="Documentation/Specification/Design Specification.md">Design Specifications</a> | 
   <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
-  <br>
-  <a href="#">User Manual</a> |
-  <a href="#">Technical Installation Manual</a> |
-  <a href="#">Coding Standards/quality</a>
 
 ### Demo links:
 <table>
@@ -75,32 +71,59 @@
         </a>
       </td>
     </tr>
-	<tr>
-      <td><strong>Demo 3 Video</strong></td>
-      <td>
-        <a href="#" target="_blank">
-          Watch Video
-        </a>
-      </td>
-    </tr>
-	<tr>
-      <td><strong>Demo 3 Presentation</strong></td>
-      <td>
-        <a href="#" target="_blank">
-          View Slides
-        </a>
-      </td>
-    </tr>
   </tbody>
 </table>
 
 ## Deliverables:
-80% completion of the working prototype <br>
-Architectural Requirements & Design Documentation <br>
-Coding Standards Document <br>
-User Manual <br>
-Technical Installation Manual <br>
-Requirements and Design Specifications <br>
+### Demo 2 use cases:
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Features</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>User Management</strong></td>
+      <td>
+        <ul>
+	  <li>Login and Logout</li>
+          <li>Edit profile (Demo 1)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Feed Management</strong></td>
+      <td>
+        <ul>
+          <li>View Feed (Demo 2)</li>
+          <li>Filter Feed (Demo 2)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Post Management</strong></td>
+      <td>
+        <ul>
+          <li>Create Post (Demo 1)</li>
+          <li>Delete Post (Demo 1)</li>
+	  <li>Like Post (Demo 1)</li>
+          <li>Reshare Post (Demo 2)</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>User Interaction</strong></td>
+      <td>
+        <ul>
+	  <li>Follow users (Demo 2)</li>
+	  <li>Unfollow users (Demo 2)</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <h2> Technologies Used</h2>
 
@@ -115,7 +138,7 @@ Requirements and Design Specifications <br>
   <tbody>
     <tr>
       <td rowspan="4"><strong>Frontend</strong></td>
-      <td>React (TSX) + Vite</td>
+      <td>React (TSX)</td>
       <td><img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB&style=flat" /></td>
     </tr>
     <tr>
@@ -161,7 +184,7 @@ Requirements and Design Specifications <br>
 	  	<td align="center">
 			Project Manager 
 			<br>
-			Frontend Developer
+			Frontend Engineer
 			<br>
 			Integration Engineer
 	  	</td>
@@ -189,7 +212,7 @@ Requirements and Design Specifications <br>
 	  	<td align="center">
 			Frontend Developer 
 			<br>
-			Integration Engineer
+			Testing Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -213,9 +236,9 @@ Requirements and Design Specifications <br>
 			<br>
 	  	</td>
 	  	<td align="center">
-			Front-End Developer
+			Front-End 
 			<br>
-			Integration Engineer
+			Developer 
 			<br>
 			DevOps Engineer
 	  	</td>
@@ -242,6 +265,8 @@ Requirements and Design Specifications <br>
 	  	</td>
 	  	<td align="center">
 			Backend Developer
+			<br>
+			Integration Tester
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -299,27 +324,12 @@ npm install
 ```
 
 ### Get Started:
-#### To run frontend:
 ```
-cd frontend
 npm run dev
 ```
-#### To run backend:
-Make sure you have mvn installed and then:
-```
-cd FutureFeed-Springboot/futurefeed
-mvn spring-boot:run
-```
-#### To run ai bot moderator:
-```
-cd AI-Bot
-docker build -t my-ai-bot .
-docker run -d -p 8000:8000 --name ai-bot-container my-ai-bot
-```
 
-## Running Tests
+### Running Tests
 Unit Testing <br>
-Integration Testing <br>
 
 ## GitHub Repository
 ### Structure
@@ -329,11 +339,10 @@ The entire codebase is stored in one repository.
 We use Gitflow as our branching model/strategy
 ```
 main: Production-ready code <br>
-dev: Integration branch for features <br>
+develop: Integration branch for features <br>
 feature: Feature branches <br>
 Some branches are created from issues so they will have the issue number there
 ```
-
 PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
@@ -346,4 +355,3 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 COS 301, University of Pretoria, 2025
 
 </div>
-
