@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class UserIT {
 
-    @MockBean  private MockMvc mockMvc;
+    @Autowired  private MockMvc mockMvc;
     @MockBean  private FeedPresetRepository presetRepo;
     @MockBean  private PresetRuleRepository ruleRepo;
     @MockBean  private AppUserRepository userRepo;
