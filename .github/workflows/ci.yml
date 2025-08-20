@@ -42,4 +42,4 @@ jobs:
       - name: Run Integration Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn -Dspring.profiles.active=test -Dtest=* test
+          mvn -Dspring.profiles.active=test -Dtest=*IT test
