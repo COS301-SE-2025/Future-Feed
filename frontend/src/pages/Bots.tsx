@@ -341,11 +341,11 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6">
+      <main className="flex-1 p-4 lg:p-6 lg:mt-7">
         <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-lime-500 bg-white dark:bg-[#1a1a1a] dark:text-white shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">

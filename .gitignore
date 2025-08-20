@@ -14,6 +14,8 @@ build/
 __pycache__/
 *.pyc
 
+myenv/
+
 # VSCode
 .vscode/
 
@@ -43,3 +45,6 @@ replay_pid*
 # Others
 package-lock.json
 Future-Feed/
+
+# Environment
+myenv/

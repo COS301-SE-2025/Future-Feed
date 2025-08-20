@@ -36,21 +36,24 @@ public class PromptValidator {
 
     private static boolean isSafeWithAI(String prompt) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonBody = mapper.writeValueAsString(Map.of("prompt", prompt));
+            if (prompt == null || prompt.trim().isEmpty()) {
+                HttpClient client = HttpClient.newHttpClient();
+                ObjectMapper mapper = new ObjectMapper();
+                String jsonBody = mapper.writeValueAsString(Map.of("prompt", prompt));
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(MODERATION_API_URL))
-                    .header("Content-Type", "application/json")
-                    .POST(BodyPublishers.ofString(jsonBody))
-                    .build();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(MODERATION_API_URL))
+                        .header("Content-Type", "application/json")
+                        .POST(BodyPublishers.ofString(jsonBody))
+                        .build();
 
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            Map<String, Object> result = mapper.readValue(response.body(), Map.class);
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+                Map<String, Object> result = mapper.readValue(response.body(), Map.class);
 
-            // Expect result contains "safe": true/false
-            return Boolean.TRUE.equals(result.get("safe"));
+                // Expect result contains "safe": true/false
+                return Boolean.TRUE.equals(result.get("safe"));
+            }
+            return true; 
         } catch (Exception e) {
             // Fail safe: block prompt on error or allow based on your policy
             e.printStackTrace();

@@ -41,6 +41,25 @@ install these by `cd frontend` then `npm install`
 - zustand: "^5.0.7"
 
 #### Backend
+Dependencies and installed with `mvn clean install`
+- jaxb-api
+- caffeine
+- s3
+- spring-dotenv
+- software.amazon.awssdk
+- com.h2database
+- org.postgresql
+- spring-boot-starter-oauth2-client
+- spring-boot-devtools
+- spring-boot-starter-test
+- spring-security-test
+- spring-boot-maven-plugin
+- spring-boot-starter-cache
+- lombok
+- spring-boot-starter-web
+- spring-boot-starter-data-jpa
+- jaxb-api
+- bom
 
 ## Installation
 Follow these steps to clone and set up Future Feed
@@ -51,7 +70,11 @@ cd FutureFeed
 ```
 
 #### Set Up Backend
-
+```
+cd FutureFeed-Springboot
+cd futurefeed
+mvn clean install
+```
 
 #### Set Up Frontend
 ```
@@ -69,6 +92,12 @@ docker run -d -p 8000:8000 --name ai-bot-container my-ai-bot
 
 ## Deployment/Running
 #### Run the Backend
+```
+cd FutureFeed-Springboot
+cd futurefeed
+mvn clean install
+mvn spring-boot:run
+```
 
 #### Run the Frontend
 ```
