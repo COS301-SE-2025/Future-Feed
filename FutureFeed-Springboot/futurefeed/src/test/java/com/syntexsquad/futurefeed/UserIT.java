@@ -3,50 +3,56 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
+//@Transactional
 public class UserIT {
 
-    @Autowired  private MockMvc mockMvc;
-    @MockBean  private FeedPresetRepository presetRepo;
-    @MockBean  private PresetRuleRepository ruleRepo;
-    @Autowired   private AppUserRepository userRepo;
-    @MockBean  private FollowerRepository followerRepo;
-    @Autowired  private PostRepository postRepo;
-    @MockBean  private PostTopicRepository postTopicRepo;
-    @MockBean  private CommentRepository commentRepo;
-    @MockBean  private ReshareRepository reshareRepo;
-    @MockBean  private LikeRepository likeRepo;
-    @MockBean  private BookmarkRepository bookmarkRepo;
-    @MockBean  private BotPostRepository botPostRepo;
-    @MockBean  private BotRepository botRepo;
-    @MockBean  private ObjectMapper objectMapper;
+    @Autowired private MockMvc mockMvc;
+    @Autowired private FeedPresetRepository presetRepo;
+    @Autowired private PresetRuleRepository ruleRepo;
+    @Autowired private AppUserRepository userRepo;
+    @Autowired private FollowerRepository followerRepo;
+    @Autowired private PostRepository postRepo;
+    @Autowired private PostTopicRepository postTopicRepo;
+    @Autowired private CommentRepository commentRepo;
+    @Autowired private ReshareRepository reshareRepo;
+    @Autowired private LikeRepository likeRepo;
+    @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotPostRepository botPostRepo;
+    @Autowired private BotRepository botRepo;
+    @Autowired private ObjectMapper objectMapper;
 
     private AppUser testUser;
 
     @BeforeEach
     public void setup() {
-        // Clean database in strict foreign key order
+        // Clean up in strict foreign key order
+
+        // Child records first
         ruleRepo.deleteAll();
         presetRepo.deleteAll();
         reshareRepo.deleteAll();
@@ -59,18 +65,19 @@ public class UserIT {
         followerRepo.deleteAll();
         botRepo.deleteAll();
 
-        // Create a test user
-        testUser = userRepo.findByUsername("testuser")
-                .orElseGet(() -> {
-                    AppUser u = new AppUser();
-                    u.setUsername("testuser");
-                    u.setEmail("testuser@example.com");
-                    u.setPassword("test123");
-                    u.setDisplayName("Test User");
-                    u.setBio("Test bio");
-                    u.setDateOfBirth(LocalDate.of(2000, 1, 1));
-                    return userRepo.save(u);
-                });
+
+        // Recreate a test user
+    testUser = userRepo.findByUsername("testuser")
+            .orElseGet(() -> {
+                AppUser u = new AppUser();
+                u.setUsername("testuser");
+                u.setEmail("testuser@example.com");
+                u.setPassword("test123");
+                u.setDisplayName("Test User");
+                u.setBio("Test bio");
+                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                return userRepo.save(u);
+            });
     }
 
     @Test
@@ -103,6 +110,7 @@ public class UserIT {
     @Test
     @WithMockUser(username = "deleteuser")
     public void testDeleteUser() throws Exception {
+        // create a unique user for this test
         AppUser delUser = new AppUser();
         delUser.setUsername("deleteuser");
         delUser.setEmail("deleteuser@example.com");
@@ -111,8 +119,8 @@ public class UserIT {
         delUser = userRepo.save(delUser);
 
         mockMvc.perform(delete("/api/user/delete"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("User 'deleteuser' deleted and session invalidated."));
+            .andExpect(status().isOk())
+            .andExpect(content().string("User 'deleteuser' deleted and session invalidated."));
     }
 
     @Test
@@ -129,17 +137,5 @@ public class UserIT {
         mockMvc.perform(get("/api/user/search?q=test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("testuser"));
-    }
-
-    // --- Test security config to avoid OAuth2 context errors ---
-    @Configuration
-    @EnableWebSecurity
-    static class TestSecurityConfig {
-        @Bean
-        public org.springframework.security.web.SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-            http.csrf().disable()
-                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            return http.build();
-        }
     }
 }
