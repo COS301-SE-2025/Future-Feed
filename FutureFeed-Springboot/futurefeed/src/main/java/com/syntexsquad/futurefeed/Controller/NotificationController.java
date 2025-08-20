@@ -22,7 +22,7 @@ public class NotificationController {
     private final AppUserRepository appUserRepository;
 
     public NotificationController(NotificationService notificationService, NotificationRepository notificationRepository, AppUserRepository appUserRepository) {
-        this.notificationService = notificationService;
+         this.notificationService = notificationService;
         this.notificationRepository = notificationRepository;
         this.appUserRepository = appUserRepository;
     }
