@@ -102,7 +102,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -324,8 +324,8 @@ const HomePage = () => {
       setPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (err) {
       console.error("Error fetching posts:", err);
-      setError("Failed to load posts.");
-      setTimeout(() => setError(null), 3000);
+      // setError("Failed to load posts.");
+      // setTimeout(() => setError(null), 3);
     } finally {
       setLoadingForYou(false);
     }
@@ -651,10 +651,10 @@ const HomePage = () => {
       postsArray.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
           : p
       );
 
@@ -724,10 +724,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -735,10 +735,10 @@ const HomePage = () => {
       prevPosts.map((p) =>
         p.id === postId
           ? {
-              ...p,
-              isReshared: !p.isReshared,
-              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-            }
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
           : p
       )
     );
@@ -801,10 +801,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -812,10 +812,10 @@ const HomePage = () => {
       prevPosts.map((post) =>
         post.id === postId
           ? {
-              ...post,
-              comments: [...post.comments, tempComment],
-              commentCount: post.commentCount + 1,
-            }
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
           : post
       )
     );
@@ -845,10 +845,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -856,10 +856,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-                commentCount: post.commentCount,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -871,10 +871,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -882,10 +882,10 @@ const HomePage = () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: post.comments.filter((c) => c.id !== tempCommentId),
-                commentCount: post.commentCount - 1,
-              }
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
             : post
         )
       );
@@ -1059,32 +1059,27 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
+    const init = async () => {
       setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
         await fetchTopics();
-        await fetchAllPosts();
-        if (activeTab === "Following") {
-          await fetchFollowingPosts();
-        }
       }
       setLoading(false);
     };
-    loadData();
+    init();
+  }, []);
+  useEffect(() => {
+    if (!currentUser) return;
 
-    const intervalId = setInterval(() => {
-      if (currentUser) {
-        if (activeTab === "for You") {
-          fetchAllPosts();
-        } else if (activeTab === "Following") {
-          fetchFollowingPosts();
-        }
-      }
-    }, 360000);
+    if (activeTab === "for You") {
+      fetchAllPosts();
+    } else if (activeTab === "Following") {
+      fetchFollowingPosts();
+    }
+  }, [activeTab, currentUser]);
 
-    return () => clearInterval(intervalId);
-  }, [activeTab]);
+
 
   useEffect(() => {
     if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
