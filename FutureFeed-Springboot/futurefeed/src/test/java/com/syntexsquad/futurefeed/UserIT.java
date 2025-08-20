@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -21,25 +22,25 @@ import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(classes = {UserIT.TestSecurityConfig.class, FuturefeedApplication.class})
+@SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class UserIT {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private FeedPresetRepository presetRepo;
-    @Autowired private PresetRuleRepository ruleRepo;
-    @Autowired private AppUserRepository userRepo;
-    @Autowired private FollowerRepository followerRepo;
-    @Autowired private PostRepository postRepo;
-    @Autowired private PostTopicRepository postTopicRepo;
-    @Autowired private CommentRepository commentRepo;
-    @Autowired private ReshareRepository reshareRepo;
-    @Autowired private LikeRepository likeRepo;
-    @Autowired private BookmarkRepository bookmarkRepo;
-    @Autowired private BotPostRepository botPostRepo;
-    @Autowired private BotRepository botRepo;
-    @Autowired private ObjectMapper objectMapper;
+    @MockBean  private MockMvc mockMvc;
+    @MockBean  private FeedPresetRepository presetRepo;
+    @MockBean  private PresetRuleRepository ruleRepo;
+    @MockBean  private AppUserRepository userRepo;
+    @MockBean  private FollowerRepository followerRepo;
+    @MockBean  private PostRepository postRepo;
+    @MockBean  private PostTopicRepository postTopicRepo;
+    @MockBean  private CommentRepository commentRepo;
+    @MockBean  private ReshareRepository reshareRepo;
+    @MockBean  private LikeRepository likeRepo;
+    @MockBean  private BookmarkRepository bookmarkRepo;
+    @MockBean  private BotPostRepository botPostRepo;
+    @MockBean  private BotRepository botRepo;
+    @MockBean  private ObjectMapper objectMapper;
 
     private AppUser testUser;
 
