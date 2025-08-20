@@ -7,10 +7,22 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+//extend with accordions
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+
 
 import LoginHelp from "../assets/loginhelp.mp4";
+import HowToLoginMobile from "../assets/howtologinmobile.mp4";
 import PostCreationHelp from "../assets/postcreationhelp.mp4";
-import FollowHelp from "../assets/followhelp.mp4";
+import FollowHelpDesktop from "../assets/followhelpdesktop.mp4";
+import FollowHelpMobile from "../assets/followhelpmobile.mp4";
+import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
+import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
 
 const Help = () => {
   const navigate = useNavigate();
@@ -45,31 +57,89 @@ const Help = () => {
       </div>
 
       {/* Videos Section */}
-      <div className="flex flex-col gap-6 mt-6 mx-auto items-center">
-  <div className="rounded-xl overflow-hidden border border-lime-500 w-[400px]">
-    <video controls className="w-full h-auto rounded-xl">
-      <source src={LoginHelp} type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    <p className="text-center mt-2 font-semibold text-lime-400">How to Log In</p>
-  </div>
+      {/* split into mobile and desktop to include more videos w a cleaner UI hopefully*/ }
+      <div className="flex flex-col gap-8 mt-6 mx-auto max-w-2xl">
+  {/* Mobile Section */}
+  <h2 className="text-xl font-bold text-lime-500">Mobile Devices</h2>
+  <Accordion type="single" collapsible className="w-full">
+    <AccordionItem value="mobile-login">
+      <AccordionTrigger>How to Log In</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={HowToLoginMobile} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
 
-  <div className="rounded-xl overflow-hidden border border-lime-500 w-[400px]">
-    <video controls className="w-full h-auto rounded-xl">
-      <source src={PostCreationHelp} type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    <p className="text-center mt-2 font-semibold text-lime-400">How to Create a Post</p>
-  </div>
+    <AccordionItem value="mobile-post">
+      <AccordionTrigger>How to Create a Post</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={PostCreationHelp} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
 
-  <div className="rounded-xl overflow-hidden border border-lime-500 w-[400px]">
-    <video controls className="w-full h-auto rounded-xl">
-      <source src={FollowHelp} type="video/mp4" />
-      Your browser does not support the video tag.
-    </video>
-    <p className="text-center mt-2 font-semibold text-lime-400">How to Follow Users</p>
-  </div>
+    <AccordionItem value="mobile-follow">
+      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={FollowHelpMobile} type="video/mp4" />
+        </video>
+      </AccordionContent>
+
+    </AccordionItem>
+     <AccordionItem value="mobile-theme">
+      <AccordionTrigger>How to Change Theme </AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={HowToChangeThemeMobile} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>
+  
+
+  {/* Desktop Section */}
+  <h2 className="text-xl font-bold text-lime-500 mt-8">Larger Screen Devices</h2>
+  <Accordion type="single" collapsible className="w-full">
+    <AccordionItem value="desktop-login">
+      <AccordionTrigger>How to Log In</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={LoginHelp} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+
+    <AccordionItem value="desktop-post">
+      <AccordionTrigger>How to Create a Post</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={PostCreationHelp} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+
+    <AccordionItem value="desktop-follow">
+      <AccordionTrigger>How to Follow Users</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={FollowHelpDesktop} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+     <AccordionItem value="-theme">
+      <AccordionTrigger>How to Change Theme</AccordionTrigger>
+      <AccordionContent>
+        <video controls className="w-full rounded-xl border border-lime-500">
+          <source src={HowToChangeThemeDesktop} type="video/mp4" />
+        </video>
+      </AccordionContent>
+    </AccordionItem>
+  </Accordion>
 </div>
+
     </div>
   );
 };
