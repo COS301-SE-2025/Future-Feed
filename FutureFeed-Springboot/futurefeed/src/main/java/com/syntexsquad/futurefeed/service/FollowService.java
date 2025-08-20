@@ -67,6 +67,7 @@ public class FollowService {
                     follower.getId(),
                     "FOLLOW",
                      follower.getUsername() +" started following you",
+                     follower.getUsername() + "",
                     null  // No postId needed for follow notification
             );
         }
@@ -85,6 +86,7 @@ public class FollowService {
                 follower.getId(),
                 "UNFOLLOW",
                    follower.getUsername() +"  unfollowed you",
+                   follower.getUsername() + "",
                 null  // No postId needed for follow notification
         );
     }

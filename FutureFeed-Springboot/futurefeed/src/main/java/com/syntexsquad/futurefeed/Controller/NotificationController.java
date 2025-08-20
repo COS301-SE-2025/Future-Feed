@@ -47,5 +47,26 @@ public ResponseEntity<List<Notification>> getMentionNotifications(@PathVariable 
     public ResponseEntity<List<NotificationDto>> getNotifications(@PathVariable Integer userId) {
         return ResponseEntity.ok(notificationService.getNotificationDtosForUser(userId));
     }
+    @GetMapping
+    public ResponseEntity<List<Notification>> getAllNotifications() {
+        return ResponseEntity.ok(notificationRepository.findAll());
+    }
 
+    // ✅ Delete a single notification
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
+        return notificationRepository.findById(id)
+                .map(notification -> {
+                    notificationRepository.delete(notification);
+                    return ResponseEntity.ok("Notification deleted successfully");
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ✅ Delete ALL notifications
+//    @DeleteMapping
+//    public ResponseEntity<?> deleteAllNotifications() {
+//        notificationRepository.deleteAll();
+//        return ResponseEntity.ok("All notifications deleted successfully");
+//    }
 }

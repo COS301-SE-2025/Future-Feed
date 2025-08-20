@@ -20,15 +20,16 @@ public class NotificationService {
         this.appUserRepo = appUserRepo;
     }
 
-    public void createNotification(Integer recipientId, Integer senderId, String type,String Massage, Integer postId) {
+    public void createNotification(Integer recipientId, Integer senderId, String type,String Massage,String SenderUsername, Integer postId) {
         if (recipientId.equals(senderId)) return; // don't notify yourself
 
         Notification notification = new Notification();
         notification.setRecipientUserId(recipientId);
         notification.setSenderUserId(senderId);
         notification.setType(type);
+        notification.setSenderUsername(Massage);
         notification.setPostId(postId);
-        notification.setMassage(Massage);
+        notification.setMassage( SenderUsername);
         notificationRepo.save(notification);
     }
 
@@ -49,7 +50,7 @@ public class NotificationService {
                     notification.getId(),
                     notification.getType(),
                     notification.getSenderUserId(),
-                    senderUsername,
+                    notification.getSenderUsername(),
                     notification.getMassage(),
                     notification.getPostId(),
                     notification.getIsRead(),
