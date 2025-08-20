@@ -16,7 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
-import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
@@ -43,7 +42,6 @@ public class AuthControllerTest {
     private AppUserService appUserService;
 
     @Test
-    @WithAnonymousUser
     public void testMeReturns401IfNotAuthenticated() throws Exception {
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized())

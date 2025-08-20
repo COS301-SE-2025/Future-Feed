@@ -2,7 +2,6 @@
 node_modules/
 .env
 .env.*
-myenv/
 dist/
 build/
 *.css.txt

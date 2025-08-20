@@ -6,7 +6,6 @@ import com.syntexsquad.futurefeed.model.Follower;
 import com.syntexsquad.futurefeed.service.FollowService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.syntexsquad.futurefeed.dto.FollowerDto;
 
 import java.util.List;
 
@@ -22,12 +21,8 @@ public class FollowController {
 
     @PostMapping
     public ResponseEntity<?> follow(@RequestBody FollowRequest request) {
-        try {
-            followService.follow(request.getFollowedId());
-            return ResponseEntity.ok("Followed successfully.");
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
-        }
+        followService.follow(request.getFollowedId());
+        return ResponseEntity.ok("Followed successfully.");
     }
 
     @DeleteMapping("/{followedId}")
@@ -35,8 +30,8 @@ public class FollowController {
         try {
             followService.unfollow(followedId);
             return ResponseEntity.ok("Unfollowed successfully.");
-        } catch (IllegalStateException ex) {
-            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.badRequest().body("Error: " + ex.getMessage());
         }
     }
 
@@ -46,20 +41,12 @@ public class FollowController {
     }
 
     @GetMapping("/followers/{userId}")
-    public ResponseEntity<List<FollowerDto>> getFollowers(@PathVariable Integer userId) {
-        List<FollowerDto> followers = followService.getFollowersOf(userId)
-            .stream()
-            .map(f -> new FollowerDto(f.getFollowerId(), f.getFollowedId()))
-            .toList();
-        return ResponseEntity.ok(followers);
+    public ResponseEntity<List<Follower>> getFollowers(@PathVariable Integer userId) {
+        return ResponseEntity.ok(followService.getFollowersOf(userId));
     }
 
     @GetMapping("/following/{userId}")
-    public ResponseEntity<List<FollowerDto>> getFollowing(@PathVariable Integer userId) {
-        List<FollowerDto> following = followService.getFollowingOf(userId)
-            .stream()
-            .map(f -> new FollowerDto(f.getFollowerId(), f.getFollowedId()))
-            .toList();
-        return ResponseEntity.ok(following);
+    public ResponseEntity<List<Follower>> getFollowing(@PathVariable Integer userId) {
+        return ResponseEntity.ok(followService.getFollowingOf(userId));
     }
 }

@@ -1,100 +1,53 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.dto.PostTopicDTO;
 import com.syntexsquad.futurefeed.dto.TopicDTO;
 import com.syntexsquad.futurefeed.model.Topic;
-import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.PostTopic;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.*;
-import com.syntexsquad.futurefeed.service.MediaService;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {
-        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
-        "spring.datasource.driverClassName=org.h2.Driver",
-        "spring.datasource.username=sa",
-        "spring.datasource.password=",
-        "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@ActiveProfiles("test")
+@SpringBootTest
 @AutoConfigureMockMvc
-//@Transactional
 public class TopicIT {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TopicRepository topicRepo;
-    @Autowired private AppUserRepository userRepo;
-    @Autowired private FollowerRepository followerRepo;
     @Autowired private PostRepository postRepo;
     @Autowired private PostTopicRepository postTopicRepo;
-    @Autowired private CommentRepository commentRepo;
     @Autowired private ReshareRepository reshareRepo;
     @Autowired private LikeRepository likeRepo;
-    @Autowired private BookmarkRepository bookmarkRepo;
-    @Autowired private BotPostRepository botPostRepo;
-    @Autowired private BotRepository botRepo;
-    @Autowired private FeedPresetRepository presetRepo;
-    @Autowired private PresetRuleRepository ruleRepo;
+    @Autowired private CommentRepository commentRepo;
     @Autowired private ObjectMapper objectMapper;
-    @MockBean private S3Config s3Config;
-    @MockBean private MediaService mediaService;
-
 
     private UserPost post;
 
     @BeforeEach
     public void setup() {
-        ruleRepo.deleteAll();
-        presetRepo.deleteAll();
-        reshareRepo.deleteAll();
-        commentRepo.deleteAll();
         likeRepo.deleteAll();
-        bookmarkRepo.deleteAll();
-        botPostRepo.deleteAll();
+        commentRepo.deleteAll();
         postTopicRepo.deleteAll();
-        topicRepo.deleteAll();
+        reshareRepo.deleteAll();
         postRepo.deleteAll();
-        followerRepo.deleteAll();
-        botRepo.deleteAll();
-        //userRepo.deleteAll();
-
-        // Create a test user
-        var user = userRepo.findByUsername("testuser")
-            .orElseGet(() -> {
-                AppUser u = new AppUser();
-                u.setUsername("testuser");
-                u.setEmail("testuser@example.com");
-                u.setPassword("test123");
-                u.setDisplayName("Test User");
-                u.setBio("Test bio");
-                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
-                return userRepo.save(u);
-            });
+        topicRepo.deleteAll();
 
         post = new UserPost();
         post.setContent("Testing topic links");
-        post.setUser(user);
         post = postRepo.save(post);
     }
 

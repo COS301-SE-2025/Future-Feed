@@ -93,11 +93,7 @@ public class PostService {
 
     @Cacheable(value = "searchPosts", key = "#keyword")
     public List<Post> searchPosts(String keyword) {
-        if (keyword == null || keyword.trim().isEmpty()) {
-            return List.of();
-        }
-        List<Post> results = postRepository.searchByKeyword(keyword);
-        return results != null ? results : List.of();
+        return postRepository.searchByKeyword(keyword);
     }
 
     @Cacheable(value = "posts")
