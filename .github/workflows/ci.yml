@@ -11,15 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------- Step 0: Checkout ----------
       - name: Checkout Code
         uses: actions/checkout@v3
 
+      # ---------- Step 1: Set up JDK ----------
       - name: Set up JDK 21
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 21
 
+      # ---------- Step 2: Cache Maven Dependencies ----------
       - name: Cache Maven Dependencies
         uses: actions/cache@v3
         with:
@@ -28,31 +31,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # ---------- Step 1: Run unit tests ----------
+      # ---------- Step 3: Run Tests ----------
       - name: Run Unit Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn clean test -Dtest=*Test
-
-      # ---------- Step 2: Run Integration Tests (*IT.java) ----------
-      - name: Run Integration Tests
-        run: |
-          cd FutureFeed-Springboot/futurefeed
-          mvn verify -Dtest=*IT \
-            -Dspring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1 \
-            -Dspring.datasource.driverClassName=org.h2.Driver \
-            -Dspring.datasource.username=sa \
-            -Dspring.datasource.password= \
-            -Dspring.jpa.hibernate.ddl-auto=create-drop \
-            -Dspring.cache.type=NONE \
-            -Dspring.h2.console.enabled=true \
-            -Dspring.security.oauth2.client.registration.google.client-id=dummy \
-            -Dspring.security.oauth2.client.registration.google.client-secret=dummy \
-            -Dspring.security.oauth2.client.registration.google.scope=email,profile \
-            -Dspring.security.oauth2.client.registration.google.redirect-uri=http://localhost/login/oauth2/code/google \
-            -Dspring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/v2/auth \
-            -Dspring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token \
-            -Dspring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo \
-            -Dspring.security.oauth2.client.provider.google.user-name-attribute=sub \
-            -Dspring.profiles.active=test
+          mvn clean test -Dspring.profiles.active=test -Dtest=*
 
