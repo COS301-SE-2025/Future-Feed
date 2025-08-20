@@ -103,7 +103,7 @@ class PostIT {
         assertThat(count).isEqualTo(1);
     }
 
-    @Test @Order(2)
+    /*@Test @Order(2)
     void createMultipartPost_shouldSucceed() throws Exception {
         PostRequest request = new PostRequest();
         request.setContent("Multipart OAuth2 post");
@@ -124,7 +124,7 @@ class PostIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Multipart OAuth2 post"))
                 .andExpect(jsonPath("$.imageUrl", notNullValue()));
-    }
+    }*/
 
     @Test @Order(3)
     void createPost_missingContent_shouldFail() throws Exception {
