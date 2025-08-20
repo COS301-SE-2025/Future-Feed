@@ -2,9 +2,9 @@ name: FutureFeed CI
 
 on:
   push:
-    branches: [ '*' ]
+    branches: [ '**' ]
   pull_request:
-    branches: [ '*' ]
+    branches: [ 'main','dev' ]
 
 jobs:
   build-test:
@@ -43,7 +43,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # ⬇️ Add step to restore gitignored files if required
       - name: Restore required config files
         run: |
           mkdir -p src/main/resources
@@ -58,4 +57,6 @@ jobs:
           echo "aws.s3.url=https://test-bucket.s3.amazonaws.com" >> src/main/resources/application-test.properties
 
       - name: Run Tests
-        run: mvn clean verify -Dspring.profiles.active=test
+        run: |
+          cd FutureFeed-Springboot/futurefeed
+          mvn -Dspring.profiles.active=test -Dtest=* test
