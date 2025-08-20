@@ -1,18 +1,22 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BookmarkRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
+import com.syntexsquad.futurefeed.service.MediaService;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -49,6 +53,8 @@ public class BookmarkIT {
     @Autowired private PostRepository postRepo;
     @Autowired private BookmarkRepository bookmarkRepo;
     @Autowired private ObjectMapper objectMapper;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     private AppUser testUser;
     private AppUser otherUser;

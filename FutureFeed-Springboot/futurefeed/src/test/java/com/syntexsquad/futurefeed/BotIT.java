@@ -1,12 +1,14 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
+import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.util.PromptValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +65,8 @@ public class BotIT {
     @Autowired private AppUserRepository userRepo;
     @Autowired private BotRepository botRepo;
     @Autowired private ObjectMapper objectMapper;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     // Avoid calling the external service
     @MockBean private BotExecutionService botExecutionService;

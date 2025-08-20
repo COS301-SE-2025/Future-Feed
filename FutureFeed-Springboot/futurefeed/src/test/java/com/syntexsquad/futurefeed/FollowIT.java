@@ -1,14 +1,18 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Follower;
 import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.service.MediaService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -53,6 +57,8 @@ public class FollowIT {
     @Autowired private FeedPresetRepository presetRepo;
     @Autowired private PresetRuleRepository ruleRepo;
     @Autowired private ObjectMapper objectMapper;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     private AppUser user;
     private AppUser target;
