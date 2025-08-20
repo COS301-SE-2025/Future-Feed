@@ -38,14 +38,9 @@ public class Bot {
     @JsonIgnore
     private AppUser owner;
 
-
-    @Column(nullable = false, columnDefinition = "boolean default false")
-    private boolean isActive;
-
     @OneToMany(mappedBy = "bot", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BotPosts> botPosts = new ArrayList<>();
-
-    // ======= Gters and Setters =======
+    // ======= Getters and Setters =======
 
     public Integer getId() {
         return id;
@@ -110,13 +105,4 @@ public class Bot {
     public void setOwner(AppUser owner) {
         this.owner = owner;
     }
-
-
-    public boolean isActive() {
-        return isActive;
-    }
-    public void setActive(boolean isActive) {
-        this.isActive = isActive;
-    }
-
 }
