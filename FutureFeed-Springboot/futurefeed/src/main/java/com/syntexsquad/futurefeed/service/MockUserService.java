@@ -23,10 +23,10 @@ public class MockUserService {
             throw new IllegalArgumentException("Valid email is required.");
         }
 
-        LocalDate dob = request.getDateOfBirth();
-        if (dob == null || dob.isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("Date of birth cannot be in the future.");
-        }
+//        LocalDate dob = request.getDateOfBirth();
+//        if (dob == null || dob.isAfter(LocalDate.now())) {
+//            throw new IllegalArgumentException("Date of birth cannot be in the future.");
+//        }
 
         if (users.containsKey(request.getUsername())) {
             throw new IllegalArgumentException("Username already taken.");
@@ -38,8 +38,8 @@ public class MockUserService {
         user.setRole("USER");
         user.setEmail(request.getEmail());
         user.setDisplayName(request.getDisplayName());
-        user.setProfilePicture(request.getProfilePicture());
-        user.setDateOfBirth(dob);
+//        user.setProfilePicture(request.getProfilePicture());
+//        user.setDateOfBirth(dob);
 
         users.put(user.getUsername(), user);
     }

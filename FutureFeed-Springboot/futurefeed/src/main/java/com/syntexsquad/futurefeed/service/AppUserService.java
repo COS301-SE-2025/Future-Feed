@@ -3,8 +3,15 @@ package com.syntexsquad.futurefeed.service;
 import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
+
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +21,7 @@ import java.util.Optional;
 import java.util.List;
 
 @Service
-public class AppUserService {
+public class AppUserService implements UserDetailsService {
 
     private final AppUserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
@@ -25,6 +32,10 @@ public class AppUserService {
     }
 
     @CacheEvict(value = {"users", "userByUsername", "userByEmail", "userById"}, allEntries = true)
+
+
+
+
     public void registerUser(RegisterRequest request) {
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             throw new IllegalArgumentException("Username is required.");
@@ -35,9 +46,9 @@ public class AppUserService {
         if (request.getEmail() == null || !request.getEmail().contains("@")) {
             throw new IllegalArgumentException("Valid email is required.");
         }
-        if (request.getDateOfBirth() == null || request.getDateOfBirth().isAfter(LocalDate.now())) {
-            throw new IllegalArgumentException("Date of birth cannot be in the future.");
-        }
+//        if (request.getDateOfBirth() == null || request.getDateOfBirth().isAfter(LocalDate.now())) {
+//            throw new IllegalArgumentException("Date of birth cannot be in the future.");
+//        }
 
         if (userRepo.findByUsername(request.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already taken.");
@@ -48,8 +59,8 @@ public class AppUserService {
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmail(request.getEmail());
         user.setDisplayName(request.getDisplayName());
-        user.setProfilePicture(request.getProfilePicture());
-        user.setDateOfBirth(request.getDateOfBirth());
+//        user.setProfilePicture(request.getProfilePicture());
+//        user.setDateOfBirth(request.getDateOfBirth());
         user.setRole("USER");
 
         userRepo.save(user);
@@ -68,6 +79,18 @@ public class AppUserService {
             throw new IllegalArgumentException("Invalid username or password.");
         }
         return user;
+    }
+//    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        AppUser user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        // Wrap AppUser into a Spring Security UserDetails
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()))
+        );
     }
 
     @Cacheable(value = "userByUsername", key = "#username")

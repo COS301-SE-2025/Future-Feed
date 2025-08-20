@@ -1,5 +1,6 @@
 package com.syntexsquad.futurefeed.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 
@@ -13,6 +14,7 @@ public class Bookmark {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private AppUser user;
 
     @ManyToOne

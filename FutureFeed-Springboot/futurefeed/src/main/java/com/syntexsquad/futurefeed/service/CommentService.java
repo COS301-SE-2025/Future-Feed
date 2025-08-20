@@ -2,6 +2,8 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
@@ -16,6 +18,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class CommentService {
@@ -23,13 +27,16 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final AppUserRepository appUserRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
 
     public CommentService(CommentRepository commentRepository,
                           AppUserRepository appUserRepository,
-                          PostRepository postRepository) {
+                          PostRepository postRepository,
+                          NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.appUserRepository = appUserRepository;
         this.postRepository = postRepository;
+        this.notificationService = notificationService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -49,8 +56,11 @@ public class CommentService {
 
     @Transactional
     public Comment addComment(Integer postId, String content) {
+
         AppUser user = getAuthenticatedUser();
         Integer userId = user.getId();
+
+        AppUser sender = getAuthenticatedUser();
 
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
@@ -58,6 +68,7 @@ public class CommentService {
 
         Comment comment = new Comment();
         comment.setPostId(postId);
+
         comment.setUserId(userId);
         comment.setContent(content);
 
@@ -70,6 +81,54 @@ public class CommentService {
     }
 
     @Cacheable(value = "commentsByPost", key = "#postId")
+
+        comment.setUserId(sender.getId());
+        comment.setContent(content);
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+        // 🔔 Notify post owner (COMMENT notification)
+        if (post instanceof UserPost userPost) {
+            AppUser recipient = userPost.getUser();
+            if (recipient != null && !recipient.getId().equals(sender.getId())) {
+                notificationService.createNotification(
+                        recipient.getId(),
+                        sender.getId(),
+                        "COMMENT",
+                        postId
+                );
+            }
+        }
+
+        // 🔔 Notify mentioned users (MENTION notification)
+        handleMentions(content, sender, postId);
+
+        return commentRepository.save(comment);
+    }
+
+    private void handleMentions(String content, AppUser sender, Integer postId) {
+        // Regex for @username (alphanumeric + underscore)
+        Pattern mentionPattern = Pattern.compile("@([A-Za-z0-9_]+)");
+        Matcher matcher = mentionPattern.matcher(content);
+
+        while (matcher.find()) {
+            String mentionedUsername = matcher.group(1);
+
+            appUserRepository.findByUsername(mentionedUsername).ifPresent(mentionedUser -> {
+                if (!mentionedUser.getId().equals(sender.getId())) { // avoid self-notifications
+                    notificationService.createNotification(
+                            mentionedUser.getId(),
+                            sender.getId(),
+                            "MENTION",
+                            postId
+                    );
+                }
+            });
+        }
+    }
+
+
     public List<Comment> getCommentsForPost(Integer postId) {
         return commentRepository.findByPostId(postId);
     }
@@ -81,6 +140,7 @@ public class CommentService {
         return commentRepository.existsByUser_IdAndPost_Id(userId, postId);
     }
 
+
     // helper to clear specific cache entries
     @Caching(evict = {
         @CacheEvict(value = "commentsByPost", key = "#postId"),
@@ -89,3 +149,6 @@ public class CommentService {
     public void evictCaches(Integer postId, Integer userId) {
     }
 }
+
+}
+
