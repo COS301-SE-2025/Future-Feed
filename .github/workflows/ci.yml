@@ -10,21 +10,6 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        ports:
-          - 5432:5432
-        env:
-          POSTGRES_DB: futurefeed
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd="pg_isready -U postgres -d futurefeed"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -46,6 +31,7 @@ jobs:
       - name: Restore required config files
         run: |
           mkdir -p src/main/resources
+
           echo "aws.accessKeyId=test" >> src/main/resources/application-test.properties
           echo "aws.secretKey=test" >> src/main/resources/application-test.properties
           echo "aws.s3.bucket-name=test-bucket" >> src/main/resources/application-test.properties
