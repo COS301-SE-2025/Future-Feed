@@ -1,6 +1,7 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.model.UserPost;
@@ -16,17 +17,20 @@ import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.repository.PostTopicRepository;
 import com.syntexsquad.futurefeed.repository.PresetRuleRepository;
 import com.syntexsquad.futurefeed.repository.ReshareRepository;
+import com.syntexsquad.futurefeed.service.MediaService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 //@Transactional
 public class CommentIT {
@@ -66,6 +71,8 @@ public class CommentIT {
     @Autowired private BotRepository botRepo;
     @Autowired private FeedPresetRepository presetRepo;
     @Autowired private PresetRuleRepository ruleRepo;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     @Autowired
     private ObjectMapper objectMapper;

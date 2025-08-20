@@ -1,12 +1,14 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.dto.BotRequestDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.service.BotExecutionService;
+import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.util.PromptValidator;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -55,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class BotIT {
 
@@ -62,6 +65,8 @@ public class BotIT {
     @Autowired private AppUserRepository userRepo;
     @Autowired private BotRepository botRepo;
     @Autowired private ObjectMapper objectMapper;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     // Avoid calling the external service
     @MockBean private BotExecutionService botExecutionService;
