@@ -28,11 +28,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      # ---------- Step 1: Initialize Spring Context for ITs ----------
-      - name: Setup Spring Context for ITs
+      # ---------- Step 1: Run unit tests ----------
+      - name: Run Unit Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn clean test \
+          mvn clean test -Dtest=*Test
+
+      # ---------- Step 2: Run Integration Tests (*IT.java) ----------
+      - name: Run Integration Tests
+        run: |
+          cd FutureFeed-Springboot/futurefeed
+          mvn verify -Dtest=*IT \
             -Dspring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1 \
             -Dspring.datasource.driverClassName=org.h2.Driver \
             -Dspring.datasource.username=sa \
@@ -50,8 +56,3 @@ jobs:
             -Dspring.security.oauth2.client.provider.google.user-name-attribute=sub \
             -Dspring.profiles.active=test
 
-      # ---------- Step 2: Run ITs ----------
-      - name: Run Integration Tests (*IT.java)
-        run: |
-          cd FutureFeed-Springboot/futurefeed
-          mvn -Dspring.profiles.active=test -Dtest=* test
