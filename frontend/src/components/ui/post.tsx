@@ -52,6 +52,7 @@ interface PostProps {
     createdAt: string;
     username: string;
     handle: string;
+    profilePicture?: string;
   }[];
   isUserLoaded: boolean;
   currentUser: UserProfile | null;
@@ -256,7 +257,7 @@ const Post: React.FC<PostProps> = ({
                     {comments.map((comment) => (
                       <div key={comment.id} className="flex gap-2 mb-2">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
-                          <AvatarImage src={profilePicture} alt={comment.handle} />
+                          <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div>

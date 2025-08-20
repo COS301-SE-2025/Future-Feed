@@ -62,6 +62,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?: string;
 }
 interface Topic {
   id: number;
@@ -141,7 +142,7 @@ const HomePage = () => {
   };
 
   const fetchUser = async (userId: number, postUser?: PostUser) => {
-    if (postUser && postUser.id === userId) {
+    if (postUser && postUser.id === userId && postUser.username && postUser.displayName) {
       const validUser = {
         username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
@@ -160,10 +161,29 @@ const HomePage = () => {
       console.debug(`Using currentUser for user ${userId}:`, user);
       return user;
     }
-
-    console.warn(`No user data available for user ${userId}.`);
-    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}`, profilePicture: undefined };
-    return fallback;
+    try {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user ${userId}: ${res.status}`);
+      const userData: ApiUser = await res.json();
+      const validUser = {
+        username: userData.username || `unknown${userId}`,
+        displayName: userData.displayName || `Unknown User ${userId}`,
+        profilePicture: userData.profilePicture,
+      };
+      console.debug(`Fetched user data for user ${userId}:`, validUser);
+      return validUser;
+    } catch (err) {
+      console.warn(`Failed to fetch user ${userId}:`, err);
+      const fallback = {
+        username: `unknown${userId}`,
+        displayName: `Unknown User ${userId}`,
+        profilePicture: undefined,
+      };
+      return fallback;
+    }
   };
 
   const fetchCurrentUser = async () => {
@@ -795,6 +815,7 @@ const HomePage = () => {
       createdAt: new Date().toISOString(),
       username: currentUser.displayName,
       handle: `@${currentUser.username}`,
+      profilePicture: currentUser.profilePicture
     };
 
     setPosts((prevPosts) =>
@@ -839,6 +860,7 @@ const HomePage = () => {
         createdAt: newComment.createdAt,
         username: currentUser.displayName,
         handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
       };
 
       setPosts((prevPosts) =>
