@@ -85,26 +85,27 @@ public class CommentService {
         return commentRepository.save(comment);
     }
 
-    private void handleMentions(String content, AppUser sender, Integer postId) {
-        // Regex for @username (alphanumeric + underscore)
-        Pattern mentionPattern = Pattern.compile("@([A-Za-z0-9_]+)");
-        Matcher matcher = mentionPattern.matcher(content);
+        private void handleMentions(String content, AppUser sender, Integer postId) {
+            // Regex: @ followed by one or more words (letters, numbers, underscores, spaces allowed)
+            Pattern mentionPattern = Pattern.compile("@([A-Za-z0-9_]+(?: [A-Za-z0-9_]+)*)");
+            Matcher matcher = mentionPattern.matcher(content);
 
-        while (matcher.find()) {
-            String mentionedUsername = matcher.group(1);
+            while (matcher.find()) {
+                String mentionedUsername = matcher.group(1).trim(); // e.g. "Rethabile Mokoena"
 
-            appUserRepository.findByUsername(mentionedUsername).ifPresent(mentionedUser -> {
-                if (!mentionedUser.getId().equals(sender.getId())) { // avoid self-notifications
-                    notificationService.createNotification(
-                            mentionedUser.getId(),
-                            sender.getId(),
-                            "MENTION",
-                            postId
-                    );
-                }
-            });
+                appUserRepository.findByUsername(mentionedUsername).ifPresent(mentionedUser -> {
+                    if (!mentionedUser.getId().equals(sender.getId())) { // avoid self-mentions
+                        notificationService.createNotification(
+                                mentionedUser.getId(),
+                                sender.getId(),
+                                "MENTION",
+                                postId
+                        );
+                    }
+                });
+            }
         }
-    }
+
 
     public List<Comment> getCommentsForPost(Integer postId) {
         return commentRepository.findByPostId(postId);
