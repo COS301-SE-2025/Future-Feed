@@ -19,7 +19,7 @@ public class Notification {
     private Integer senderUserId;      // who triggered the notification (e.g., the liker/follower)
 
     private String type; // LIKE, COMMENT, BOOKMARK, FOLLOW
-
+    private String massage;
     private Integer postId;   // optional — only for LIKE, COMMENT, BOOKMARK
     private Boolean isRead = false;
 

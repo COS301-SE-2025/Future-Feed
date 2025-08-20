@@ -71,6 +71,7 @@ public class LikeService {
                     recipient.getId(),
                     sender.getId(),
                     "LIKE",
+                    user.getUsername() + " liked your post",
                     postId
             );
         }

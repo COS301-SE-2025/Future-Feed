@@ -46,6 +46,7 @@ public class BookmarkService {
                         recipientId,
                         user.getId(),
                         "BOOKMARK",
+                        user.getUsername() + " added the your post to bookmark",
                         postId
                 );
             }
@@ -63,6 +64,7 @@ public class BookmarkService {
                         recipientId,
                         user.getId(),
                         "BOOKMARK REMOVED",
+                        user.getUsername() + " removed the your post from bookmark",
                         postId
                 );
             }
