@@ -1,10 +1,12 @@
 package com.syntexsquad.futurefeed.Controller;
 
+import com.syntexsquad.futurefeed.dto.FollowedUserDto;
 import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.dto.UserUpdateRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.service.AppUserService;
 
+import com.syntexsquad.futurefeed.service.FollowService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -22,16 +24,22 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final AppUserService userService;
+    private final FollowService followService;
 
-    public UserController(AppUserService userService) {
+
+    public UserController(AppUserService userService, FollowService followService ) {
         this.userService = userService;
+        this.followService = followService;
     }
 
     private String getCurrentUsername() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return (authentication != null) ? authentication.getName() : null;
     }
-
+    @GetMapping("/top-followed")
+    public ResponseEntity<List<FollowedUserDto>> getTopFollowedUsers() {
+        return ResponseEntity.ok(followService.getTopFollowedUsers(3));
+    }
     @GetMapping("/myInfo")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -58,6 +66,38 @@ public class UserController {
 
         return ResponseEntity.ok(UserProfileResponse.fromUser(user));
     }
+
+    @GetMapping("/all-except-me")
+    public ResponseEntity<?> getAllUsersExceptMe(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        AppUser currentUser;
+
+        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+            String email = oauthToken.getPrincipal().getAttribute("email");
+            if (email == null) {
+                return ResponseEntity.status(400).body("Email not found in OAuth2 token");
+            }
+            currentUser = userService.getUserByEmail(email);
+        } else {
+            String username = authentication.getName();
+            currentUser = userService.getUserByUsername(username);
+        }
+
+        if (currentUser == null) {
+            return ResponseEntity.status(404).body("Current user not found");
+        }
+
+        List<AppUser> otherUsers = userService.getAllUsersExceptCurrent(currentUser);
+        List<UserProfileResponse> response = otherUsers.stream()
+                .map(UserProfileResponse::fromUser)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
+    }
+
 
     // Search users by keyword
     @GetMapping("/search")

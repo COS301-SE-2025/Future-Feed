@@ -10,16 +10,17 @@ import { Input } from "@/components/ui/input";
 import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
+import { useNavigate } from "react-router-dom";
 
-interface ApiFollow{
+interface ApiFollow {
   followedId: number;
 }
 interface ApiUser {
   id: number;
   username: string;
   displayName: string;
+  profilePicture?: string;
 }
-
 interface ApiPost {
   id: number;
   content: string;
@@ -27,7 +28,6 @@ interface ApiPost {
   imageUrl?: string;
   user: ApiUser;
 }
-
 interface ApiComment {
   id: number;
   postId: number;
@@ -36,11 +36,15 @@ interface ApiComment {
   createdAt: string;
   user: ApiUser;
 }
-
 interface ApiReshare {
   postId: number;
 }
-
+interface ApiBookmark {
+  postId: number;
+  content: string;
+  authorId: number;
+  createdAt: string;
+}
 interface UserProfile {
   id: number;
   username: string;
@@ -50,7 +54,6 @@ interface UserProfile {
   bio?: string | null;
   dateOfBirth?: string | null;
 }
-
 interface CommentData {
   id: number;
   postId: number;
@@ -59,13 +62,19 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?: string;
 }
-
+interface Topic {
+  id: number;
+  name: string;
+}
 interface PostData {
   id: number;
   username: string;
   handle: string;
+  profilePicture?: string;
   time: string;
+  createdAt: string;
   text: string;
   image?: string;
   isLiked: boolean;
@@ -77,13 +86,8 @@ interface PostData {
   reshareCount: number;
   comments: CommentData[];
   showComments: boolean;
+  topics: Topic[];
 }
-
-interface Topic {
-  id: number;
-  name: string;
-}
-
 
 const HomePage = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -96,29 +100,29 @@ const HomePage = () => {
   const [followingPosts, setFollowingPosts] = useState<PostData[]>([]);
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingForYou, setLoadingForYou] = useState(true);
+  const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("for You");
+  const [activeTab, setActiveTab] = useState("Following");
   const [topics, setTopics] = useState<Topic[]>([]);
-  const userCache = new Map<number, { username: string; displayName: string }>();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [tempIdCounter, setTempIdCounter] = useState(-1);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  // Animation for post modal
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 220, friction: 30 },
   });
 
-  // Animation for topic creation modal
   const topicModalProps = useSpring({
     opacity: isTopicModalOpen ? 1 : 0,
     transform: isTopicModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 220, friction: 30 },
   });
 
-  // Animation for view topics modal
   const viewTopicsModalProps = useSpring({
     opacity: isViewTopicsModalOpen ? 1 : 0,
     transform: isViewTopicsModalOpen ? "translateY(0px)" : "translateY(50px)",
@@ -129,59 +133,57 @@ const HomePage = () => {
     id: number;
     username?: string;
     displayName?: string;
+    profilePicture?: string;
   }
 
+  const generateTempId = () => {
+    setTempIdCounter((prev) => prev - 1);
+    return tempIdCounter - 1;
+  };
+
   const fetchUser = async (userId: number, postUser?: PostUser) => {
-    if (userCache.has(userId)) {
-      const cachedUser = userCache.get(userId)!;
-      console.debug(`Cache hit for user ${userId}:`, cachedUser);
-      return cachedUser;
-    }
-
-    const storedUser = localStorage.getItem(`user_${userId}`);
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        if (user.username && user.displayName) {
-          console.debug(`localStorage hit for user ${userId}:`, user);
-          userCache.set(userId, user);
-          return user;
-        }
-      } catch (err) {
-        console.warn(`Failed to parse localStorage for user ${userId}:`, err);
-      }
-    }
-
-    if (postUser && postUser.id === userId) {
-      if (!postUser.username || !postUser.displayName) {
-        console.warn(`Invalid postUser data for user ${userId}:`, postUser);
-      }
+    if (postUser && postUser.id === userId && postUser.username && postUser.displayName) {
       const validUser = {
         username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
+        profilePicture: postUser.profilePicture,
       };
       console.debug(`Using postUser for user ${userId}:`, validUser);
-      userCache.set(userId, validUser);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(validUser));
       return validUser;
     }
 
     if (currentUser && userId === currentUser.id) {
       const user = {
-        username: currentUser.username && typeof currentUser.username === "string" ? currentUser.username : `unknown${userId}`,
-        displayName: currentUser.displayName && typeof currentUser.displayName === "string" ? currentUser.displayName : `Unknown User ${userId}`,
+        username: currentUser.username,
+        displayName: currentUser.displayName,
+        profilePicture: currentUser.profilePicture,
       };
       console.debug(`Using currentUser for user ${userId}:`, user);
-      userCache.set(userId, user);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(user));
       return user;
     }
-
-    console.warn(`No user data available for user ${userId}. No postUser provided and not current user.`);
-    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}` };
-    userCache.set(userId, fallback);
-    localStorage.setItem(`user_${userId}`, JSON.stringify(fallback));
-    return fallback;
+    try {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user ${userId}: ${res.status}`);
+      const userData: ApiUser = await res.json();
+      const validUser = {
+        username: userData.username || `unknown${userId}`,
+        displayName: userData.displayName || `Unknown User ${userId}`,
+        profilePicture: userData.profilePicture,
+      };
+      console.debug(`Fetched user data for user ${userId}:`, validUser);
+      return validUser;
+    } catch (err) {
+      console.warn(`Failed to fetch user ${userId}:`, err);
+      const fallback = {
+        username: `unknown${userId}`,
+        displayName: `Unknown User ${userId}`,
+        profilePicture: undefined,
+      };
+      return fallback;
+    }
   };
 
   const fetchCurrentUser = async () => {
@@ -191,250 +193,274 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
       const data: UserProfile = await res.json();
-      if (!data.username || !data.displayName) {
-        console.warn("Invalid current user data:", data);
-        throw new Error("User info missing username or displayName");
-      }
       setCurrentUser(data);
-      userCache.set(data.id, { username: data.username, displayName: data.displayName });
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
-const fetchAllPosts = async () => {
-  try {
-    const [postsRes, myResharesRes] = await Promise.all([
-      fetch(`${API_URL}/api/posts`, { credentials: "include" }),
-      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-    ]);
-    if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
-    const apiPosts: ApiPost[] = await postsRes.json();
-    const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+  const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
+      const topicIds: number[] = await res.json();
 
-    const validPosts = apiPosts
-      .filter((post: ApiPost) => {
+      if (!topics.length) {
+        await fetchTopics();
+      }
+
+      const postTopics = topicIds
+        .map((id) => topics.find((topic) => topic.id === id))
+        .filter((topic): topic is Topic => !!topic);
+
+      if (postTopics.length < topicIds.length) {
+        const missingIds = topicIds.filter(id => !topics.some(t => t.id === id));
+        for (const id of missingIds) {
+          try {
+            const topicRes = await fetch(`${API_URL}/api/topics/${id}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+              credentials: "include",
+            });
+            if (topicRes.ok) {
+              const topicData: Topic = await topicRes.json();
+              setTopics(prev => [...prev, topicData]);
+              postTopics.push(topicData);
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch topic ${id}:`, err);
+          }
+        }
+      }
+
+      return postTopics;
+    } catch (err) {
+      console.error(`Error fetching topics for post ${postId}:`, err);
+      setError("Failed to load topics for post.");
+      setTimeout(() => setError(null), 3000);
+      return [];
+    }
+  };
+
+  const fetchAllPosts = async () => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch posts: currentUser is not loaded");
+      return;
+    }
+    console.debug("Fetching all posts");
+    setLoadingForYou(true);
+    try {
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
+      ]);
+      if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+      const apiPosts: ApiPost[] = await postsRes.json();
+      console.debug("API response for posts:", apiPosts);
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+
+      const validPosts = apiPosts.filter((post: ApiPost) => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post);
           return false;
         }
-        if (!post.user?.username || !post.user?.displayName) {
-          console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
-        }
         return true;
-      })
-      .sort((a: ApiPost, b: ApiPost) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10);
+      });
 
-    const formattedPosts = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
-          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-        ]);
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
 
-        const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
-        const validComments = comments.filter((comment: ApiComment) => {
-          if (!comment.userId) {
-            console.warn("Skipping comment with undefined userId:", comment);
-            return false;
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
           }
-          return true;
-        });
 
-        const commentsWithUsers = await Promise.all(
-          validComments.map(async (comment: ApiComment) => {
-            const user = await fetchUser(comment.userId, comment.user);
-            return {
-              ...comment,
-              authorId: comment.userId,
-              username: user.displayName,
-              handle: `@${user.username}`,
-            };
-          })
-        );
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: posts.find((p) => p.id === post.id)?.showComments || false,
+            topics: topicsRes,
+          };
+        })
+      );
 
-        const postUser = await fetchUser(post.user.id, post.user);
-        const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-        const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+      setPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+      // setError("Failed to load posts.");
+      // setTimeout(() => setError(null), 3);
+    } finally {
+      setLoadingForYou(false);
+    }
+  };
 
-        let isLiked = false;
-        if (hasLikedRes.ok) {
-          try {
-            const likeData = await hasLikedRes.json();
-            isLiked = likeData === true;
-          } catch (err) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, err);
+  const fetchFollowingPosts = async () => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch following posts: currentUser is not loaded");
+      return;
+    }
+    console.debug("Fetching following posts");
+    setLoadingFollowing(true);
+    try {
+      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
+      ]);
+      if (!followRes.ok) throw new Error("Failed to fetch followed users");
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+      const followedUsers: ApiFollow[] = await followRes.json();
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+      const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
+
+      const allFollowingPosts = await Promise.all(
+        followedIds.map(async (userId: number) => {
+          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, {
+            credentials: "include",
+          });
+          if (!res.ok) return [];
+          return await res.json();
+        })
+      );
+
+      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+      const uniquePosts = Array.from(
+        new Map(flattenedPosts.map(post => [post.id, post])).values()
+      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
+
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
           }
-        } else if (hasLikedRes.status === 401) {
-          console.warn(`Unauthorized to check like status for post ${post.id}`);
-        }
 
-        return {
-          id: post.id,
-          username: postUser.displayName,
-          handle: `@${postUser.username}`,
-          time: formatRelativeTime(post.createdAt),
-          text: post.content,
-          image: post.imageUrl,
-          isLiked,
-          isBookmarked: false,
-          isReshared,
-          commentCount: validComments.length,
-          authorId: post.user.id,
-          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-          reshareCount,
-          comments: commentsWithUsers,
-          showComments: posts.find((p) => p.id === post.id)?.showComments || false,
-        };
-      })
-    );
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+            topics: topicsRes,
+          };
+        })
+      );
 
-    setPosts((prevPosts) =>
-      formattedPosts.map((newPost) => {
-        const existingPost = prevPosts.find((p) => p.id === newPost.id);
-        return {
-          ...newPost,
-          comments: existingPost
-            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
-            : newPost.comments,
-          showComments: existingPost?.showComments || newPost.showComments,
-        };
-      })
-    );
-  } catch (err) {
-    console.error("Error fetching posts:", err);
-    setError("Failed to load posts.");
-  }
-};
-
-const fetchFollowingPosts = async () => {
-  if (!currentUser?.id) return;
-
-  try {
-    const [followRes, myResharesRes] = await Promise.all([
-      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-    ]);
-    if (!followRes.ok) throw new Error("Failed to fetch followed users");
-    const followedUsers: ApiFollow[] = await followRes.json();
-    const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-    const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
-
-    const allFollowingPosts = await Promise.all(
-      followedIds.map(async (userId: number) => {
-        const res = await fetch(`${API_URL}/api/posts/user/${userId}`, { credentials: "include" });
-        return res.ok ? await res.json() : [];
-      })
-    );
-
-    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-    const validPosts = flattenedPosts
-      .filter((post: ApiPost) => {
-        if (!post.user?.id) {
-          console.warn("Skipping post with undefined user.id:", post);
-          return false;
-        }
-        if (!post.user?.username || !post.user?.displayName) {
-          console.warn(`Missing user data in post for user ${post.user?.id}:`, post.user);
-        }
-        return true;
-      })
-      .sort((a: ApiPost, b: ApiPost) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10);
-
-    const formattedPosts = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        const [commentsRes, likesCountRes, hasLikedRes] = await Promise.all([
-          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-        ]);
-
-        const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
-        const validComments = comments.filter((comment: ApiComment) => {
-          if (!comment.userId) {
-            console.warn("Skipping comment with undefined userId:", comment);
-            return false;
-          }
-          if (!comment.user?.username || !comment.user?.displayName) {
-            console.warn(`Missing user data in comment for user ${comment.userId}:`, comment.user);
-          }
-          return true;
-        });
-
-        const commentsWithUsers = await Promise.all(
-          validComments.map(async (comment: ApiComment) => {
-            const user = await fetchUser(comment.userId, comment.user);
-            return {
-              ...comment,
-              authorId: comment.userId,
-              username: user.displayName,
-              handle: `@${user.username}`,
-            };
-          })
-        );
-
-        const postUser = await fetchUser(post.user.id, post.user);
-        const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-        const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
-
-        let isLiked = false;
-        if (hasLikedRes.ok) {
-          try {
-            const likeData = await hasLikedRes.json();
-            isLiked = likeData === true;
-          } catch (err) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, err);
-          }
-        } else if (hasLikedRes.status === 401) {
-          console.warn(`Unauthorized to check like status for post ${post.id}`);
-        }
-
-        return {
-          id: post.id,
-          username: postUser.displayName,
-          handle: `@${postUser.username}`,
-          time: formatRelativeTime(post.createdAt),
-          text: post.content,
-          image: post.imageUrl,
-          isLiked,
-          isBookmarked: false,
-          isReshared,
-          commentCount: validComments.length,
-          authorId: post.user.id,
-          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-          reshareCount,
-          comments: commentsWithUsers,
-          showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-        };
-      })
-    );
-
-    setFollowingPosts((prevPosts) =>
-      formattedPosts.map((newPost) => {
-        const existingPost = prevPosts.find((p) => p.id === newPost.id);
-        return {
-          ...newPost,
-          comments: existingPost
-            ? [...existingPost.comments, ...newPost.comments.filter((nc) => !existingPost.comments.some((ec) => ec.id === nc.id))]
-            : newPost.comments,
-          showComments: existingPost?.showComments || newPost.showComments,
-        };
-      })
-    );
-  } catch (err) {
-    console.error("Error fetching following posts:", err);
-    setError("Failed to load posts from followed users.");
-  }
-};
+      setFollowingPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    } catch (err) {
+      console.error("Error fetching following posts:", err);
+      setError("Failed to load posts from followed users.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingFollowing(false);
+    }
+  };
 
   const fetchTopics = async () => {
     try {
@@ -444,10 +470,11 @@ const fetchFollowingPosts = async () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
-      setTopics(data);
+      setTopics(data || []);
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -474,28 +501,9 @@ const fetchFollowingPosts = async () => {
     } catch (err) {
       console.error("Error creating topic:", err);
       setError("Failed to create topic.");
+      setTimeout(() => setError(null), 3000);
     }
   };
-
-  useEffect(() => {
-    const loadData = async () => {
-      const user = await fetchCurrentUser();
-      if (user) {
-        await Promise.all([fetchAllPosts(),fetchTopics()]);
-      }
-    };
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (currentUser?.id) {
-      if (activeTab === "Following") {
-        fetchFollowingPosts();
-      } else {
-        fetchAllPosts();
-      }
-    }
-  }, [currentUser, activeTab]);
 
   const handlePost = async () => {
     if (!postText.trim() || !currentUser) {
@@ -503,21 +511,53 @@ const fetchFollowingPosts = async () => {
       return;
     }
 
+    const tempPostId = generateTempId();
+    const createdAt = new Date().toISOString();
+    const tempPost: PostData = {
+      id: tempPostId,
+      username: currentUser.displayName,
+      handle: `@${currentUser.username}`,
+      profilePicture: currentUser.profilePicture,
+      time: formatRelativeTime(createdAt),
+      createdAt,
+      text: postText,
+      image: imageFile ? URL.createObjectURL(imageFile) : undefined,
+      isLiked: false,
+      isBookmarked: false,
+      isReshared: false,
+      commentCount: 0,
+      authorId: currentUser.id,
+      likeCount: 0,
+      reshareCount: 0,
+      comments: [],
+      showComments: false,
+      topics: selectedTopicIds.map((id) => topics.find((t) => t.id === id)!).filter((t) => t),
+    };
+
+    setPosts([tempPost, ...posts]);
+    setIsPostModalOpen(false);
+    setPostText("");
+    const selectedTopics = selectedTopicIds.slice();
+    setSelectedTopicIds([]);
+    const tempImageFile = imageFile;
+    setImageFile(null);
+
     try {
+      const formData = new FormData();
+      formData.append("post", JSON.stringify({ content: postText }));
+      if (imageFile) {
+        formData.append("media", imageFile);
+      }
+
       const res = await fetch(`${API_URL}/api/posts`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         credentials: "include",
-        body: JSON.stringify({ content: postText }),
+        body: formData,
       });
 
       if (!res.ok) throw new Error("Failed to create post");
-      const newPost = await res.json();
-
-      // Assign topics to the new post
-      if (selectedTopicIds.length > 0) {
+      const newPost: ApiPost = await res.json();
+      if (selectedTopics.length > 0) {
         const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
           method: "POST",
           headers: {
@@ -527,20 +567,25 @@ const fetchFollowingPosts = async () => {
           credentials: "include",
           body: JSON.stringify({
             postId: newPost.id,
-            topicIds: selectedTopicIds,
+            topicIds: selectedTopics,
           }),
         });
         if (!assignRes.ok) {
           console.warn("Failed to assign topics to post:", await assignRes.text());
           setError("Post created, but failed to assign topics.");
+          setTimeout(() => setError(null), 3000);
         }
       }
+
+      const postTopics = await fetchTopicsForPost(newPost.id);
 
       const formattedPost: PostData = {
         id: newPost.id,
         username: currentUser.displayName,
         handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
         time: formatRelativeTime(newPost.createdAt),
+        createdAt: newPost.createdAt,
         text: newPost.content,
         image: newPost.imageUrl,
         isLiked: false,
@@ -552,16 +597,24 @@ const fetchFollowingPosts = async () => {
         reshareCount: 0,
         comments: [],
         showComments: false,
+        topics: postTopics,
       };
 
-      setPosts([formattedPost, ...posts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
-      setFollowingPosts([formattedPost, ...followingPosts].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 10));
-      setIsPostModalOpen(false);
-      setPostText("");
-      setSelectedTopicIds([]);
+      setPosts((prev) =>
+        [
+          formattedPost,
+          ...prev.filter((p) => p.id !== tempPostId),
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
     } catch (err) {
       console.error("Error creating post:", err);
-      setError("Failed to create post.");
+      setError("Failed to create post. Reverting...");
+      setTimeout(() => setError(null), 3000);
+      setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      setSelectedTopicIds(selectedTopics);
+      setPostText(postText);
+      setImageFile(tempImageFile);
     }
   };
 
@@ -571,6 +624,11 @@ const fetchFollowingPosts = async () => {
       return;
     }
 
+    const deletedPost = posts.find((p) => p.id === postId);
+    const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
         method: "DELETE",
@@ -578,161 +636,163 @@ const fetchFollowingPosts = async () => {
       });
 
       if (!res.ok) throw new Error("Failed to delete post");
-      const responseText = await res.text();
-      if (responseText !== "Post deleted successfully") {
-        throw new Error("Unexpected delete response");
-      }
-
-      setPosts(posts.filter((post) => post.id !== postId));
-      setFollowingPosts(followingPosts.filter((post) => post.id !== postId));
     } catch (err) {
       console.error("Error deleting post:", err);
-      setError("Failed to delete post.");
+      setError("Failed to delete post. Reverting...");
+      setTimeout(() => setError(null), 3000);
+      if (deletedPost) {
+        setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      }
+      if (deletedFollowingPost) {
+        setFollowingPosts((prev) =>
+          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
+      }
     }
   };
 
   const handleLike = async (postId: number) => {
+    if (!currentUser) {
+      setError("Please log in to like/unlike posts.");
+      return;
+    }
+
+    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    if (!post) {
+      setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    const originalIsLiked = post.isLiked;
+    const originalLikeCount = post.likeCount;
+
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
+        p.id === postId
+          ? {
+            ...p,
+            isLiked: !p.isLiked,
+            likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+          }
+          : p
+      );
+
+    setPosts((prevPosts) => updatePostInArray(prevPosts));
+    setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+
     try {
-      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) {
-        setError("Post not found.");
-        return;
-      }
-      if (!currentUser) {
-        setError("Please log in to like/unlike posts.");
-        return;
-      }
-
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
-            : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
-            : p
-        )
-      );
-
-      const method = post.isLiked ? "DELETE" : "POST";
+      const method = originalIsLiked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
         method,
         credentials: "include",
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error(`Failed to ${post.isLiked ? "unlike" : "like"} post ${postId}: ${res.status} ${errorText}`);
-        setPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? {
-                  ...p,
-                  isLiked: post.isLiked,
-                  likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
-              : p
-          )
-        );
-        setFollowingPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? {
-                  ...p,
-                  isLiked: post.isLiked,
-                  likeCount: post.isLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
-              : p
-          )
-        );
-        if (res.status === 401) {
-          setError("Session expired. Please log in again.");
-        } else {
-          throw new Error(`Failed to ${post.isLiked ? "unlike" : "like"} post: ${errorText}`);
-        }
+      if (!res.ok) throw new Error(`Failed to ${originalIsLiked ? "unlike" : "like"} post`);
+
+      const [hasLikedRes, likeCountRes] = await Promise.all([
+        fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/likes/count/${postId}`, { credentials: "include" }),
+      ]);
+
+      if (!hasLikedRes.ok || !likeCountRes.ok) {
+        throw new Error("Failed to fetch updated like status or count");
       }
 
-      const hasLikedRes = await fetch(`${API_URL}/api/likes/has-liked/${postId}`, {
-        credentials: "include",
-      });
-      if (hasLikedRes.ok) {
-        const likeData = await hasLikedRes.json();
-        setPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isLiked: likeData === true }
-              : p
-          )
+      const isLiked = await hasLikedRes.json();
+      const likeCount = await likeCountRes.json();
+
+      const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
+          p.id === postId ? { ...p, isLiked, likeCount } : p
         );
-        setFollowingPosts((prevPosts) =>
-          prevPosts.map((p) =>
-            p.id === postId
-              ? { ...p, isLiked: likeData === true }
-              : p
-          )
-        );
-      }
+
+      setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
     } catch (err) {
       console.error("Error toggling like:", err);
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isLiked ? "unlike" : "like"} post.`);
+      setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
+          p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
+        );
+
+      setPosts((prevPosts) => revertPostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
     }
   };
 
   const handleReshare = async (postId: number) => {
-    try {
-      const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
-      if (!post) return;
+    if (!currentUser) {
+      setError("Please log in to reshare posts.");
+      return;
+    }
 
-      const method = post.isReshared ? "DELETE" : "POST";
-      const url = post.isReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
-      const body = post.isReshared ? null : JSON.stringify({ postId });
+    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    if (!post) {
+      setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    const originalIsReshared = post.isReshared;
+    const originalReshareCount = post.reshareCount;
+
+    setPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId
+          ? {
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
+          : p
+      )
+    );
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((p) =>
+        p.id === postId
+          ? {
+            ...p,
+            isReshared: !p.isReshared,
+            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+          }
+          : p
+      )
+    );
+
+    try {
+      const method = originalIsReshared ? "DELETE" : "POST";
+      const url = originalIsReshared ? `${API_URL}/api/reshares/${postId}` : `${API_URL}/api/reshares`;
+      const body = originalIsReshared ? null : JSON.stringify({ postId });
       const res = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body,
       });
 
-      if (!res.ok) throw new Error(`Failed to ${post.isReshared ? "unreshare" : "reshare"} post`);
+      if (!res.ok) throw new Error(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post`);
+    } catch (err) {
+      console.error("Error toggling reshare:", err);
+      setError(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
-            ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
+            ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
             : p
         )
       );
       setFollowingPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
-            ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
+            ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
             : p
         )
       );
-    } catch (err) {
-      console.error("Error toggling reshare:", err);
-      setError(`Failed to ${posts.find((p) => p.id === postId)?.isReshared ? "unreshare" : "reshare"} post.`);
     }
   };
 
@@ -746,12 +806,45 @@ const fetchFollowingPosts = async () => {
       return;
     }
 
+    const tempCommentId = generateTempId();
+    const tempComment: CommentData = {
+      id: tempCommentId,
+      postId,
+      authorId: currentUser.id,
+      content: commentText,
+      createdAt: new Date().toISOString(),
+      username: currentUser.displayName,
+      handle: `@${currentUser.username}`,
+      profilePicture: currentUser.profilePicture
+    };
+
+    setPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
+          : post
+      )
+    );
+    setFollowingPosts((prevPosts) =>
+      prevPosts.map((post) =>
+        post.id === postId
+          ? {
+            ...post,
+            comments: [...post.comments, tempComment],
+            commentCount: post.commentCount + 1,
+          }
+          : post
+      )
+    );
+
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain",
-        },
+        headers: { "Content-Type": "text/plain" },
         credentials: "include",
         body: commentText,
       });
@@ -759,30 +852,25 @@ const fetchFollowingPosts = async () => {
       if (!res.ok) throw new Error(`Failed to add comment: ${res.status}`);
       const newComment = await res.json();
 
-      const user = {
-        username: currentUser.username,
-        displayName: currentUser.displayName,
-      };
-      userCache.set(currentUser.id, user);
-      localStorage.setItem(`user_${currentUser.id}`, JSON.stringify(user));
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
         authorId: currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        username: user.displayName,
-        handle: `@${user.username}`,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
       };
 
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
@@ -790,30 +878,142 @@ const fetchFollowingPosts = async () => {
         prevPosts.map((post) =>
           post.id === postId
             ? {
-                ...post,
-                comments: [...post.comments, formattedComment],
-                commentCount: post.commentCount + 1,
-              }
+              ...post,
+              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+              commentCount: post.commentCount,
+            }
             : post
         )
       );
     } catch (err) {
       console.error("Error adding comment:", err);
-      setError("Failed to add comment.");
+      setError("Failed to add comment. Reverting...");
+      setTimeout(() => setError(null), 3000);
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
+            : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: post.comments.filter((c) => c.id !== tempCommentId),
+              commentCount: post.commentCount - 1,
+            }
+            : post
+        )
+      );
     }
   };
 
-  const handleBookmark = (postId: number) => {
+  const handleBookmark = async (postId: number) => {
+    if (!currentUser) {
+      setError("Please log in to bookmark/unbookmark posts.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    if (!post) {
+      setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+
+    const originalIsBookmarked = post.isBookmarked;
+
+    // Optimistic update
     setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      prevPosts.map((p) =>
+        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
       )
     );
     setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
+      prevPosts.map((p) =>
+        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
       )
     );
+
+    try {
+      const method = originalIsBookmarked ? "DELETE" : "POST";
+      const res = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}/${postId}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`);
+      }
+
+      // Fetch updated bookmark status to confirm
+      const bookmarksRes = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!bookmarksRes.ok) throw new Error("Failed to fetch updated bookmarks");
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+      const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
+
+      // Update both posts and followingPosts with confirmed bookmark status
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
+        )
+      );
+    } catch (err) {
+      console.error("Error toggling bookmark:", err);
+      setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
+      // Revert optimistic update
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
+        )
+      );
+    }
+  };
+
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_URL}/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
+      setCurrentUser(null);
+      setPosts([]);
+      setFollowingPosts([]);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed", err);
+      setError("Failed to log out. Please try again.");
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const toggleComments = (postId: number) => {
@@ -829,12 +1029,31 @@ const fetchFollowingPosts = async () => {
     );
   };
 
+  const renderSkeletonPosts = () => {
+    return Array.from({ length: 10 }).map((_, index) => (
+      <div
+        key={index}
+        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+          </div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
+    ));
+  };
+
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
         <Post
           username={post.username}
           handle={post.handle}
+          profilePicture={post.profilePicture}
           time={post.time}
           text={post.text}
           image={post.image}
@@ -850,15 +1069,46 @@ const fetchFollowingPosts = async () => {
           onReshare={() => handleReshare(post.id)}
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
+          onNavigate={() => navigate(`/post/${post.id}`)}
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
           currentUser={currentUser}
           authorId={post.authorId}
+          topics={post.topics || []}
         />
       </div>
     ));
   };
+
+  useEffect(() => {
+    const init = async () => {
+      setLoading(true);
+      const user = await fetchCurrentUser();
+      if (user) {
+        await fetchTopics();
+      }
+      setLoading(false);
+    };
+    init();
+  }, []);
+  useEffect(() => {
+    if (!currentUser) return;
+
+    if (activeTab === "for You") {
+      fetchAllPosts();
+    } else if (activeTab === "Following") {
+      fetchFollowingPosts();
+    }
+  }, [activeTab, currentUser]);
+
+
+
+  useEffect(() => {
+    if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
+      fetchFollowingPosts();
+    }
+  }, [currentUser, activeTab]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
@@ -873,31 +1123,54 @@ const fetchFollowingPosts = async () => {
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-lime-600 border-3 border-lime-500 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a] "
+            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-lime-600 border-3 border-lime-500 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
           >
             View Topics
           </Button>
         </div>
       </aside>
 
-      <button className="lg:hidden fixed top-5 right-5  bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
-        onClick={()=> setIsMobileMenuOpen(!isMobileMenuOpen)}>
+      <button
+        className="lg:hidden fixed top-5 right-5 bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
+        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center mt-[-60px]">
           <div className="w-full max-w-xs p-4">
+            <button
+              onClick={handleLogout}
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
+            >
+              Logout
+            </button>
             <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
-              <button onClick={()=>{setIsTopicModalOpen(true); setIsMobileMenuOpen(false);}}
-            className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"> Create Topic</button>
-              <button onClick={()=>{setIsViewTopicsModalOpen(true); setIsMobileMenuOpen(false);}} className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3">
+              <button
+                onClick={() => {
+                  setIsTopicModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"
+              >
+                Create Topic
+              </button>
+              <button
+                onClick={() => {
+                  setIsViewTopicsModalOpen(true);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3"
+              >
                 View Topics
               </button>
-              </div>
             </div>
           </div>
+        </div>
       )}
-      <div className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}>
+      <div
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
+      >
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
@@ -905,9 +1178,7 @@ const fetchFollowingPosts = async () => {
             </div>
           )}
           {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <p className="text-lg dark:text-white">Loading posts...</p>
-            </div>
+            renderSkeletonPosts()
           ) : !currentUser ? (
             <div className="flex justify-center items-center h-64">
               <p className="text-lg dark:text-white">Please log in to view posts.</p>
@@ -915,12 +1186,12 @@ const fetchFollowingPosts = async () => {
           ) : (
             <>
               <div
-                className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
                 onClick={() => setIsPostModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
+              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -933,14 +1204,16 @@ const fetchFollowingPosts = async () => {
                   ))}
                 </TabsList>
                 <TabsContent value="for You" className="p-0">
-                  {posts.length === 0 ? (
+                  {loadingForYou ? (
+                    renderSkeletonPosts()
+                  ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => setIsPostModalOpen(true)}
+                        onClick={() => fetchAllPosts()}
                       >
-                        Create your first post
+                        Refresh
                       </Button>
                     </div>
                   ) : (
@@ -948,7 +1221,9 @@ const fetchFollowingPosts = async () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Following">
-                  {followingPosts.length === 0 ? (
+                  {loadingFollowing ? (
+                    renderSkeletonPosts()
+                  ) : followingPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
                       <Button
@@ -964,8 +1239,8 @@ const fetchFollowingPosts = async () => {
                 </TabsContent>
                 <TabsContent value="Presets">
                   <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">
-                          Presets to be implemented
-                        </p>
+                    Presets to be implemented
+                  </p>
                 </TabsContent>
               </Tabs>
             </>
@@ -976,16 +1251,16 @@ const fetchFollowingPosts = async () => {
             <WhatsHappening />
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhoToFollow  />
+            <WhoToFollow />
           </div>
         </aside>
       </div>
       {isPostModalOpen && (
         <animated.div
           style={postModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-2xl min-h-[300px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -997,7 +1272,9 @@ const fetchFollowingPosts = async () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Share your thoughts</h2>
+            <div className="text-center">
+              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white">Share your thoughts</h2>
+            </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
@@ -1016,28 +1293,35 @@ const fetchFollowingPosts = async () => {
                   className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id}>
+                    <option key={topic.id} value={topic.id} className="text-center py-1">
                       {topic.name}
                     </option>
                   ))}
                 </select>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500"
+                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
-                  <span>Attach Image</span>
+                  <span>{imageFile ? `Image: ${imageFile.name}` : "Attach Image"}</span>
                 </Button>
                 <input
                   type="file"
                   accept="image/*"
                   id="image-upload"
                   className="hidden"
-                  onChange={() => alert("Image upload is not supported by the backend.")}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setImageFile(file);
+                    }
+                  }}
                 />
                 <Button
                   onClick={handlePost}
