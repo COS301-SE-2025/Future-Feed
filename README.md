@@ -77,7 +77,7 @@
 	<tr>
       <td><strong>Demo 3 Video</strong></td>
       <td>
-        <a href="#" target="_blank">
+        <a href="https://drive.google.com/file/d/1TlCD8l6rxV5CcXSDp1veNi0ssPPdSwMh/view?usp=drive_link" target="_blank">
           Watch Video
         </a>
       </td>
@@ -85,7 +85,7 @@
 	<tr>
       <td><strong>Demo 3 Presentation</strong></td>
       <td>
-        <a href="#" target="_blank">
+        <a href="https://docs.google.com/presentation/d/1KFXWtTETXgIkEAOJwkiu6rBdjxhQHtbF/edit?usp=drive_link&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
           View Slides
         </a>
       </td>
@@ -345,5 +345,6 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 COS 301, University of Pretoria, 2025
 
 </div>
+
 
 
