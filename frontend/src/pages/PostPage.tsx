@@ -22,6 +22,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?:string;
 }
 
 interface RawComment {
@@ -30,12 +31,14 @@ interface RawComment {
   userId?: number;
   content: string;
   createdAt: string;
+  profilePicture?:string;
 }
 
 interface PostData {
   id: number;
   username: string;
   handle: string;
+  profilePicture?:string;
   time: string;
   text: string;
   image?: string;
@@ -66,6 +69,7 @@ interface UserInfo {
   id: number;
   username: string;
   displayName: string;
+  profilePicture?: string;
 }
 
 const PostPage = () => {
@@ -84,13 +88,14 @@ const PostPage = () => {
       return userCache.get(userId)!;
     }
     try {
-      const res = await fetch(`${API_URL}/api/users/${userId}`, { credentials: "include" });
+      const res = await fetch(`${API_URL}/api/user/${userId}`, { credentials: "include" });
       if (!res.ok) throw new Error(`Failed to fetch user ${userId}`);
       const user = await res.json();
       const userInfo: UserInfo = {
         id: user.id ?? userId,
         username: user.username ?? `user${userId}`,
         displayName: user.displayName ?? `User ${userId}`,
+        profilePicture: user.profilePicture
       };
       userCache.set(userId, userInfo);
       return userInfo;
@@ -126,81 +131,80 @@ const PostPage = () => {
     }
   };
 
-  const fetchPost = async (id: number, currentUserId: number) => {
-    setLoading(true);
-    try {
-      const postRes = await fetch(`${API_URL}/api/posts/${id}`, { credentials: "include" });
-      if (!postRes.ok) {
-        throw new Error(`Failed to fetch post ${id}: ${postRes.status}`);
-      }
-      const post: RawPost = await postRes.json();
-      const userInfo: UserInfo = post.user ?? (await fetchUser(currentUserId));
-      const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
-        fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/likes/has-liked/${id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/bookmarks/${currentUserId}/${id}/exists`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares/${id}/count`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares/${id}/has-reshared`, { credentials: "include" }),
-      ]);
-      if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${id}: ${commentsRes.status}`);
-      if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${id}: ${likesCountRes.status}`);
-      if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${id}: ${hasLikedRes.status}`);
-      if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${id}: ${hasBookmarkedRes.status}`);
-      if (!reshareCountRes.ok) console.warn(`Failed to fetch reshare count for post ID ${id}: ${reshareCountRes.status}`);
-      if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${id}: ${hasResharedRes.status}`);
-      const comments = commentsRes.ok ? await commentsRes.json() : [];
-      const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-      const commentsWithUsers: CommentData[] = (
-        await Promise.all(
-          validComments.map(async (comment: RawComment) => {
-            try {
-              const commentUserInfo = await fetchUser(comment.userId!);
-              return {
-                id: comment.id,
-                postId: comment.postId,
-                authorId: comment.userId!,
-                content: comment.content,
-                createdAt: comment.createdAt,
-                username: commentUserInfo.displayName,
-                handle: `@${commentUserInfo.username}`,
-              };
-            } catch (err) {
-              console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-              return null;
-            }
-          })
-        )
-      ).filter((comment): comment is CommentData => comment !== null);
-      const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
-      const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
-      const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-      const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
-      const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-      setPost({
-        id: post.id,
-        username: userInfo.displayName,
-        handle: `@${userInfo.username}`,
-        time: formatRelativeTime(post.createdAt),
-        text: post.content,
-        image: post.imageUrl || undefined,
-        isLiked,
-        isBookmarked,
-        isReshared,
-        commentCount: validComments.length,
-        authorId: userInfo.id,
-        likeCount,
-        reshareCount,
-        comments: commentsWithUsers,
-        showComments: true,
-      });
-    } catch (err) {
-      console.error(`Error fetching post ${id}:`, err);
-      setError(`Failed to load post: ${err instanceof Error ? err.message : "Unknown error"}`);
-    } finally {
-      setLoading(false);
+const fetchPost = async (id: number, currentUserId: number) => {
+  setLoading(true);
+  try {
+    const postRes = await fetch(`${API_URL}/api/posts/${id}`, { credentials: "include" });
+    if (!postRes.ok) {
+      throw new Error(`Failed to fetch post ${id}: ${postRes.status}`);
     }
-  };
+    const post: RawPost = await postRes.json();
+    const userInfo: UserInfo = post.user ?? (await fetchUser(currentUserId));
+    const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
+      fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
+      fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
+      fetch(`${API_URL}/api/likes/has-liked/${id}`, { credentials: "include" }),
+      fetch(`${API_URL}/api/bookmarks/${currentUserId}/${id}/exists`, { credentials: "include" }),
+      fetch(`${API_URL}/api/reshares/${id}/count`, { credentials: "include" }),
+      fetch(`${API_URL}/api/reshares/${id}/has-reshared`, { credentials: "include" }),
+    ]);
+    if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${id}: ${commentsRes.status}`);
+    if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${id}: ${likesCountRes.status}`);
+    if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${id}: ${hasLikedRes.status}`);
+    if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${id}: ${hasBookmarkedRes.status}`);
+    if (!reshareCountRes.ok) console.warn(`Failed to fetch reshare count for post ID ${id}: ${reshareCountRes.status}`);
+    if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${id}: ${hasResharedRes.status}`);
+    const comments = commentsRes.ok ? await commentsRes.json() : [];
+    const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+    const commentsWithUsers: CommentData[] = [];
+    for (const comment of validComments) {
+      try {
+        const commentUserInfo = await fetchUser(comment.userId!);
+        commentsWithUsers.push({
+          id: comment.id,
+          postId: comment.postId,
+          authorId: comment.userId!,
+          content: comment.content,
+          createdAt: comment.createdAt,
+          username: commentUserInfo.displayName,
+          handle: `@${commentUserInfo.username}`,
+          profilePicture: comment.profilePicture || "/default-profile.png", // Provide default
+        });
+      } catch (err) {
+        console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+        // Skip invalid comments instead of adding null
+      }
+    }
+    const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+    const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+    const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
+    const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+    const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
+    setPost({
+      id: post.id,
+      username: userInfo.displayName,
+      handle: `@${userInfo.username}`,
+      profilePicture: userInfo.profilePicture || "/default-profile.png", // Provide default
+      time: formatRelativeTime(post.createdAt),
+      text: post.content,
+      image: post.imageUrl || undefined,
+      isLiked,
+      isBookmarked,
+      isReshared,
+      commentCount: validComments.length,
+      authorId: userInfo.id,
+      likeCount,
+      reshareCount,
+      comments: commentsWithUsers,
+      showComments: true,
+    });
+  } catch (err) {
+    console.error(`Error fetching post ${id}:`, err);
+    setError(`Failed to load post: ${err instanceof Error ? err.message : "Unknown error"}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleLike = async (postId: number) => {
     if (!currentUser) {
