@@ -59,4 +59,4 @@ jobs:
       - name: Run Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn -Dspring.profiles.active=test -Dtest=* test
+          mvn -Dspring.profiles.active=default -Dtest=* test
