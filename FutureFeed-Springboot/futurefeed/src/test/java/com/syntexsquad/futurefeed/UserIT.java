@@ -15,19 +15,28 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {
+@SpringBootTest(
+    properties = {
         "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
         "spring.datasource.driverClassName=org.h2.Driver",
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         "spring.jpa.hibernate.ddl-auto=create-drop"
-})
-@ActiveProfiles("test")
+    },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    classes = FuturefeedApplication.class
+)
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@EnableAutoConfiguration(exclude = {
+        org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration.class
+})
 //@Transactional
 public class UserIT {
 
