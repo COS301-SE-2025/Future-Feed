@@ -1031,6 +1031,7 @@ const HomePage = () => {
         <Post
           username={post.username}
           handle={post.handle}
+          profilePicture={post.profilePicture}
           time={post.time}
           text={post.text}
           image={post.image}
