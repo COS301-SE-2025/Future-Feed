@@ -2,9 +2,9 @@ name: FutureFeed CI
 
 on:
   push:
-    branches: [ '**' ]
+    branches: [ '*' ]
   pull_request:
-    branches: [ 'main','dev' ]
+    branches: [ '*' ]
 
 jobs:
   build-test:
