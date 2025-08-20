@@ -11,6 +11,16 @@ import { formatRelativeTime } from "@/lib/timeUtils";
 import { FaRobot } from "react-icons/fa";
 import { Skeleton } from "@/components/ui/skeleton";
 
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+  email: string;
+}
+
 interface CommentData {
   id: number;
   postId: number;
@@ -87,6 +97,7 @@ const mockBotData: BotProfile = {
 const API_URL = "http://localhost:8080";
 
 const BotPage = () => {
+  const [user, setUser] = useState<UserProfile | null>(null);
   const { botId } = useParams<{ botId: string }>();
   const [bot, setBot] = useState<BotProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -292,6 +303,30 @@ const BotPage = () => {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setUser(data);
+      // userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      setError("Failed to load user info. Please log in again.");
+      navigate("/login");
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId);
@@ -374,6 +409,10 @@ const BotPage = () => {
         setError("Post not found.");
         return;
       }
+      if (!user) {
+        setError("Please log in to bookmark/unbookmark posts.");
+        return;
+      }
       if (!bot) {
         setError("Please log in to bookmark/unbookmark posts.");
         return;
@@ -411,10 +450,9 @@ const BotPage = () => {
       }
 
       // sync truth
-      const hasBookmarkedRes = await fetch(
-        `${API_URL}/api/bookmarks/${bot.id}/${postId}/exists`,
-        { credentials: "include" }
-      );
+      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/${user.id}/${postId}/exists`, {
+        credentials: "include",
+      });
       if (hasBookmarkedRes.ok) {
         const exists = await hasBookmarkedRes.json();
         setPosts((prev) =>
@@ -565,6 +603,30 @@ const BotPage = () => {
     }
   };
 
+  const handleExecuteBot = async () => {
+    if (!bot) {
+      setError("Please log in to execute the bot.");
+      return;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/bots/${botId}/execute`, {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to execute bot: ${errorText}`);
+      }
+      const result = await res.json();
+      console.log("Bot executed successfully:", result);
+      location.reload(); // Reload to reflect changes
+    } catch (err) {
+      console.error("Error executing bot:", err);
+      setError("Failed to execute bot.");
+    }
+  }
+
   const toggleComments = (postId: number) => {
     setPosts((prev) =>
       prev.map((post) =>
@@ -593,6 +655,7 @@ const BotPage = () => {
 
   useEffect(() => {
     fetchBotPosts();
+    fetchCurrentUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [botId]);
 
@@ -665,6 +728,14 @@ const BotPage = () => {
               <p className="dark:text-gray-400">@{bot.username}</p>
               <p className="mt-2 text-sm">{bot.bio || "This is my bot's bio"}</p>
             </div>
+            <div className="mt-[-50px] gap-4 flex items-center">
+              <Button
+              variant="outline"
+              className="-mt-30 text-white bg-lime-600 dark:hover:text-white dark:text-black dark:bg-lime-500 dark:border-lime-500 dark:hover:bg-lime-800 hover:cursor-pointer"
+              onClick={handleExecuteBot}
+            >
+              Execute Bot
+            </Button>
             <Button
               variant="outline"
               className="-mt-30 text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
@@ -672,6 +743,7 @@ const BotPage = () => {
             >
               Edit Bot
             </Button>
+            </div>
           </div>
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
             <Link

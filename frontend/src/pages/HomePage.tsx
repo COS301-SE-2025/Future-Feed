@@ -103,7 +103,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("Following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -1191,7 +1191,7 @@ const HomePage = () => {
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
