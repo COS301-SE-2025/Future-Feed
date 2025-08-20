@@ -737,6 +737,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error deleting post:", err);
       setError("Failed to delete post. Reverting...");
+      setTimeout(() => {
+        setError(null);
+      }, 3000);
       if (deletedPost) {
         setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
       }
