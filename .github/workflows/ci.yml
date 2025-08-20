@@ -2,9 +2,9 @@ name: FutureFeed CI
 
 on:
   push:
-    branches: [ '*' ]
+    branches: ['*']
   pull_request:
-    branches: [ '*' ]
+    branches: ['*']
 
 jobs:
   build-test:
@@ -28,32 +28,30 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-
 
-      - name: Restore required config files
-        run: |
-          mkdir -p src/main/resources
-          cat <<EOT >> src/main/resources/application-test.properties
-          aws.accessKeyId=test
-          aws.secretKey=test
-          aws.s3.bucket-name=test-bucket
-          aws.s3.region=us-east-1
-          aws.s3.url=https://test-bucket.s3.amazonaws.com
-
-          spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-          spring.datasource.driverClassName=org.h2.Driver
-          spring.datasource.username=sa
-          spring.datasource.password=
-          spring.jpa.hibernate.ddl-auto=create-drop
-          spring.jpa.show-sql=true
-          spring.jpa.properties.hibernate.format_sql=true
-
-          # Disable OAuth2 for tests
-          spring.security.oauth2.client.registration.google.client-id=test
-          spring.security.oauth2.client.registration.google.client-secret=test
-          spring.security.oauth2.client.registration.google.scope=openid,email,profile
-          spring.main.allow-bean-definition-overriding=true
-          EOT
-
-      - name: Run Tests
+      # ---------- Step 1: Initialize Spring Context for ITs ----------
+      - name: Setup Spring Context for ITs
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn -Dspring.profiles.active=test -Dtest=* test
+          mvn clean test \
+            -Dspring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1 \
+            -Dspring.datasource.driverClassName=org.h2.Driver \
+            -Dspring.datasource.username=sa \
+            -Dspring.datasource.password= \
+            -Dspring.jpa.hibernate.ddl-auto=create-drop \
+            -Dspring.cache.type=NONE \
+            -Dspring.h2.console.enabled=true \
+            -Dspring.security.oauth2.client.registration.google.client-id=dummy \
+            -Dspring.security.oauth2.client.registration.google.client-secret=dummy \
+            -Dspring.security.oauth2.client.registration.google.scope=email,profile \
+            -Dspring.security.oauth2.client.registration.google.redirect-uri=http://localhost/login/oauth2/code/google \
+            -Dspring.security.oauth2.client.provider.google.authorization-uri=https://accounts.google.com/o/oauth2/v2/auth \
+            -Dspring.security.oauth2.client.provider.google.token-uri=https://oauth2.googleapis.com/token \
+            -Dspring.security.oauth2.client.provider.google.user-info-uri=https://www.googleapis.com/oauth2/v3/userinfo \
+            -Dspring.security.oauth2.client.provider.google.user-name-attribute=sub \
+            -Dspring.profiles.active=test
+
+      # ---------- Step 2: Run ITs ----------
+      - name: Run Integration Tests (*IT.java)
+        run: |
+          cd FutureFeed-Springboot/futurefeed
+          mvn -Dspring.profiles.active=test -Dtest=*IT test
