@@ -11,8 +11,6 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
-// import { ThemeProvider } from "@/components/theme-provider";
-// import { ModeToggle } from "@/components/mode-toggle";
 
 interface ApiFollow {
   followedId: number;
@@ -21,6 +19,7 @@ interface ApiUser {
   id: number;
   username: string;
   displayName: string;
+  profilePicture?: string;
 }
 interface ApiPost {
   id: number;
@@ -72,6 +71,7 @@ interface PostData {
   id: number;
   username: string;
   handle: string;
+  profilePicture?: string;
   time: string;
   text: string;
   image?: string;
@@ -96,8 +96,6 @@ interface PaginatedResponse {
   totalElements: number;
 }
 
-const CACHE_EXPIRY_MS = 2 * 60 * 1000; // 5 minutes
-
 const HomePage = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
@@ -120,7 +118,6 @@ const HomePage = () => {
   const [pageFollowing, setPageFollowing] = useState(0);
   const [hasMoreForYou, setHasMoreForYou] = useState(true);
   const [hasMoreFollowing, setHasMoreFollowing] = useState(true);
-  const userCache = new Map<number, { username: string; displayName: string }>();
   const [tempIdCounter, setTempIdCounter] = useState(-1);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -151,6 +148,7 @@ const HomePage = () => {
     id: number;
     username?: string;
     displayName?: string;
+    profilePicture?: string;
   }
 
   const generateTempId = () => {
@@ -158,62 +156,14 @@ const HomePage = () => {
     return tempIdCounter - 1;
   };
 
-  const saveToCache = <T,>(key: string, data: T) => {
-    try {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-    } catch (err) {
-      console.warn(`Failed to save ${key} to localStorage:`, err);
-    }
-  };
-
-  const loadFromCache = <T,>(key: string): { data: T; timestamp: number } | null => {
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.data && parsed.timestamp) {
-          return parsed;
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to load ${key} from localStorage:`, err);
-    }
-    return null;
-  };
-
-  const isCacheValid = (timestamp: number) => {
-    return Date.now() - timestamp < CACHE_EXPIRY_MS;
-  };
-
   const fetchUser = async (userId: number, postUser?: PostUser) => {
-    if (userCache.has(userId)) {
-      const cachedUser = userCache.get(userId)!;
-      console.debug(`Cache hit for user ${userId}:`, cachedUser);
-      return cachedUser;
-    }
-
-    const storedUser = localStorage.getItem(`user_${userId}`);
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        if (user.username && user.displayName) {
-          console.debug(`localStorage hit for user ${userId}:`, user);
-          userCache.set(userId, user);
-          return user;
-        }
-      } catch (err) {
-        console.warn(`Failed to parse localStorage for user ${userId}:`, err);
-      }
-    }
-
     if (postUser && postUser.id === userId) {
       const validUser = {
         username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
+        profilePicture: postUser.profilePicture,
       };
       console.debug(`Using postUser for user ${userId}:`, validUser);
-      userCache.set(userId, validUser);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(validUser));
       return validUser;
     }
 
@@ -221,28 +171,18 @@ const HomePage = () => {
       const user = {
         username: currentUser.username,
         displayName: currentUser.displayName,
+        profilePicture: currentUser.profilePicture,
       };
       console.debug(`Using currentUser for user ${userId}:`, user);
-      userCache.set(userId, user);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(user));
       return user;
     }
 
     console.warn(`No user data available for user ${userId}.`);
-    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}` };
-    userCache.set(userId, fallback);
-    localStorage.setItem(`user_${userId}`, JSON.stringify(fallback));
+    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}`, profilePicture: undefined };
     return fallback;
   };
 
   const fetchCurrentUser = async () => {
-    const cachedUser = loadFromCache<UserProfile>('currentUser');
-    if (cachedUser && isCacheValid(cachedUser.timestamp)) {
-      setCurrentUser(cachedUser.data);
-      userCache.set(cachedUser.data.id, { username: cachedUser.data.username, displayName: cachedUser.data.displayName });
-      return cachedUser.data;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
@@ -250,8 +190,6 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
       const data: UserProfile = await res.json();
       setCurrentUser(data);
-      userCache.set(data.id, { username: data.username, displayName: data.displayName });
-      saveToCache('currentUser', data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -262,13 +200,6 @@ const HomePage = () => {
   };
 
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
-    const cacheKey = `post_topics_${postId}`;
-    const cachedTopics = loadFromCache<Topic[]>(cacheKey);
-    if(cachedTopics && isCacheValid(cachedTopics.timestamp)){
-      console.debug(`Using cached topics for post ${postId}`);
-      return cachedTopics.data;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -276,22 +207,21 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
-      if(!topics.length){
+      if (!topics.length) {
         await fetchTopics();
       }
       const postTopics = topicIds
         .map((id) => topics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-        if(!postTopics.length && topicIds.length){
-          console.warn(`No matching topics found for post ${postId}, using placeholders`);
-          return topicIds.map((id) => ({id, name:`Topic ${id}`}));
-        }
-        saveToCache(cacheKey, postTopics);
+      if (!postTopics.length && topicIds.length) {
+        console.warn(`No matching topics found for post ${postId}, using placeholders`);
+        return topicIds.map((id) => ({ id, name: `Topic ${id}` }));
+      }
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
       setError("Failed to load topics for post.");
-      setTimeout(()=>{
+      setTimeout(() => {
         setError(null);
       }, 3000);
       return [];
@@ -300,15 +230,6 @@ const HomePage = () => {
 
   const fetchAllPosts = async (page: number = 0, append: boolean = false) => {
     console.debug(`Fetching posts for page ${page}, append: ${append}`);
-    const cacheKey = `posts_page_${page}`;
-    const cachedPosts = loadFromCache<PostData[]>(cacheKey);
-    if (cachedPosts && isCacheValid(cachedPosts.timestamp) && !append) {
-      console.debug(`Using cached posts for page ${page}`);
-      setPosts(cachedPosts.data);
-      setLoadingForYou(false);
-      return;
-    }
-
     setLoadingForYou(!append);
     setLoadingMore(append);
     try {
@@ -358,6 +279,7 @@ const HomePage = () => {
                 createdAt: comment.createdAt,
                 username: user.displayName,
                 handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
               };
             })
           );
@@ -379,6 +301,7 @@ const HomePage = () => {
             id: post.id,
             username: postUser.displayName,
             handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
@@ -404,11 +327,10 @@ const HomePage = () => {
           ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
           : formattedPosts
       );
-      saveToCache(cacheKey, formattedPosts);
     } catch (err) {
       console.error("Error fetching posts:", err);
       setError("Failed to load posts.");
-      setTimeout(()=> {
+      setTimeout(() => {
         setError(null);
       }, 3000);
     } finally {
@@ -420,15 +342,6 @@ const HomePage = () => {
   const fetchFollowingPosts = async (page: number = 0, append: boolean = false) => {
     if (!currentUser?.id) return;
     console.debug(`Fetching following posts for page ${page}, append: ${append}`);
-    const cacheKey = `followingPosts_page_${page}`;
-    const cachedFollowingPosts = loadFromCache<PostData[]>(cacheKey);
-    if (cachedFollowingPosts && isCacheValid(cachedFollowingPosts.timestamp) && !append) {
-      console.debug(`Using cached following posts for page ${page}`);
-      setFollowingPosts(cachedFollowingPosts.data);
-      setLoadingFollowing(false);
-      return;
-    }
-
     setLoadingFollowing(!append);
     setLoadingMore(append);
     try {
@@ -484,6 +397,7 @@ const HomePage = () => {
                 createdAt: comment.createdAt,
                 username: user.displayName,
                 handle: `@${user.username}`,
+                profilePicture: user.profilePicture
               };
             })
           );
@@ -505,6 +419,7 @@ const HomePage = () => {
             id: post.id,
             username: postUser.displayName,
             handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             text: post.content,
             image: post.imageUrl,
@@ -530,11 +445,10 @@ const HomePage = () => {
           ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
           : formattedPosts
       );
-      saveToCache(cacheKey, formattedPosts);
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
-      setTimeout(()=>{
+      setTimeout(() => {
         setError(null);
       }, 3000);
     } finally {
@@ -544,12 +458,6 @@ const HomePage = () => {
   };
 
   const fetchTopics = async () => {
-    const cachedTopics = loadFromCache<Topic[]>('topics');
-    if (cachedTopics && isCacheValid(cachedTopics.timestamp)) {
-      setTopics(cachedTopics.data);
-      return;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -558,7 +466,6 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
       setTopics(data || []);
-      saveToCache('topics', data || []);
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
@@ -586,7 +493,6 @@ const HomePage = () => {
       if (!res.ok) throw new Error("Failed to create topic");
       const newTopic: Topic = await res.json();
       setTopics([...topics, newTopic]);
-      saveToCache('topics', [...topics, newTopic]);
       setNewTopicName("");
       setIsTopicModalOpen(false);
     } catch (err) {
@@ -606,6 +512,7 @@ const HomePage = () => {
       id: tempPostId,
       username: currentUser.displayName,
       handle: `@${currentUser.username}`,
+      profilePicture: currentUser.profilePicture,
       time: formatRelativeTime(new Date().toISOString()),
       text: postText,
       image: imageFile ? URL.createObjectURL(imageFile) : undefined,
@@ -623,8 +530,6 @@ const HomePage = () => {
 
     setPosts([tempPost, ...posts]);
     setFollowingPosts([tempPost, ...followingPosts]);
-    saveToCache(`posts_page_${pageForYou}`, [tempPost, ...posts]);
-    saveToCache(`followingPosts_page_${pageFollowing}`, [tempPost, ...followingPosts]);
     setIsPostModalOpen(false);
     setPostText("");
     const selectedTopics = selectedTopicIds.slice();
@@ -672,6 +577,7 @@ const HomePage = () => {
         id: newPost.id,
         username: currentUser.displayName,
         handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
         time: formatRelativeTime(newPost.createdAt),
         text: newPost.content,
         image: newPost.imageUrl,
@@ -699,15 +605,11 @@ const HomePage = () => {
           ...prev.filter((p) => p.id !== tempPostId),
         ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
       setImageFile(tempImageFile);
@@ -724,8 +626,6 @@ const HomePage = () => {
     const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -745,8 +645,6 @@ const HomePage = () => {
           [...prev, deletedFollowingPost].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
         );
       }
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -756,18 +654,15 @@ const HomePage = () => {
       return;
     }
 
-    // Find the post in either posts or followingPosts
     const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
     if (!post) {
       setError("Post not found.");
       return;
     }
 
-    // Store original state for rollback in case of failure
     const originalIsLiked = post.isLiked;
     const originalLikeCount = post.likeCount;
 
-    // Optimistic UI update: Update both arrays but ensure no duplication
     const updatePostInArray = (postsArray: PostData[]) =>
       postsArray.map((p) =>
         p.id === postId
@@ -782,12 +677,7 @@ const HomePage = () => {
     setPosts((prevPosts) => updatePostInArray(prevPosts));
     setFollowingPosts((prevPosts) => (posts.find((p) => p.id === postId) ? prevPosts : updatePostInArray(prevPosts)));
 
-    // Save to cache
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
-
     try {
-      // Toggle like via API
       const method = originalIsLiked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
         method,
@@ -796,7 +686,6 @@ const HomePage = () => {
 
       if (!res.ok) throw new Error(`Failed to ${originalIsLiked ? "unlike" : "like"} post`);
 
-      // Fetch updated like status and count
       const [hasLikedRes, likeCountRes] = await Promise.all([
         fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/count/${postId}`, { credentials: "include" }),
@@ -809,7 +698,6 @@ const HomePage = () => {
       const isLiked = await hasLikedRes.json();
       const likeCount = await likeCountRes.json();
 
-      // Update state with confirmed values
       const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
         postsArray.map((p) =>
           p.id === postId ? { ...p, isLiked, likeCount } : p
@@ -819,15 +707,10 @@ const HomePage = () => {
       setFollowingPosts((prevPosts) =>
         posts.find((p) => p.id === postId) ? prevPosts : updatePostWithConfirmedValues(prevPosts)
       );
-
-      // Update cache with confirmed values
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
 
-      // Revert state on error
       const revertPostInArray = (postsArray: PostData[]) =>
         postsArray.map((p) =>
           p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
@@ -837,9 +720,6 @@ const HomePage = () => {
       setFollowingPosts((prevPosts) =>
         posts.find((p) => p.id === postId) ? prevPosts : revertPostInArray(prevPosts)
       );
-
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -874,8 +754,6 @@ const HomePage = () => {
           : p
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -906,8 +784,6 @@ const HomePage = () => {
             : p
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -954,8 +830,6 @@ const HomePage = () => {
           : post
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1000,8 +874,6 @@ const HomePage = () => {
             : post
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
@@ -1027,8 +899,6 @@ const HomePage = () => {
             : post
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -1059,8 +929,6 @@ const HomePage = () => {
           : p
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
@@ -1073,6 +941,9 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
+      setTimeout(() => {
+        setError(null)
+      }, 3000);
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
@@ -1087,8 +958,6 @@ const HomePage = () => {
             : p
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -1100,15 +969,17 @@ const HomePage = () => {
         method: "GET",
         credentials: "include",
       });
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('topics');
-      localStorage.removeItem('activeTab');
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith('posts_page_') || key.startsWith('followingPosts_page_'))
-        .forEach((key) => localStorage.removeItem(key));
+      setCurrentUser(null);
+      setPosts([]);
+      setFollowingPosts([]);
+      setPageForYou(0);
+      setPageFollowing(0);
+      setHasMoreForYou(true);
+      setHasMoreFollowing(true);
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
+      setError("Failed to log out. Please try again.")
     }
   };
 
@@ -1123,8 +994,6 @@ const HomePage = () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
   };
 
   const renderSkeletonPosts = () => {
@@ -1180,11 +1049,6 @@ const HomePage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      const cachedActiveTab = loadFromCache<string>('activeTab');
-      if (cachedActiveTab && isCacheValid(cachedActiveTab.timestamp)) {
-        setActiveTab(cachedActiveTab.data);
-      }
-
       const user = await fetchCurrentUser();
       if (user) {
         await fetchTopics();
@@ -1213,8 +1077,6 @@ const HomePage = () => {
   }, [currentUser, activeTab]);
 
   useEffect(() => {
-    saveToCache('activeTab', activeTab);
-    // Reset pagination when switching tabs
     if (activeTab === "for You") {
       setPageForYou(0);
       setHasMoreForYou(true);
@@ -1351,16 +1213,14 @@ const HomePage = () => {
             </div>
           ) : (
             <>
-            {/* condditionally render "Whats on your mind ?" */}
               <div
-                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                  isMobileMenuOpen ? "lg:flex hidden" : "flex"
-                }`}
+                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"
+                  }`}
                 onClick={() => setIsPostModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="for You" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`}  onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
