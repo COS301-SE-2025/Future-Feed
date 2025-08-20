@@ -3,36 +3,27 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.*;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK,
-    properties = {
-        // Disable OAuth2 autoconfiguration in test
-        "spring.autoconfigure.exclude=" +
-        "org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration," +
-        "org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration"
-    }
-)
-
+@SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-//@Transactional
 public class UserIT {
 
     @Autowired private MockMvc mockMvc;
@@ -54,9 +45,7 @@ public class UserIT {
 
     @BeforeEach
     public void setup() {
-        // Clean up in strict foreign key order
-
-        // Child records first
+        // Clean database in strict foreign key order
         ruleRepo.deleteAll();
         presetRepo.deleteAll();
         reshareRepo.deleteAll();
@@ -69,19 +58,18 @@ public class UserIT {
         followerRepo.deleteAll();
         botRepo.deleteAll();
 
-
-        // Recreate a test user
-    testUser = userRepo.findByUsername("testuser")
-            .orElseGet(() -> {
-                AppUser u = new AppUser();
-                u.setUsername("testuser");
-                u.setEmail("testuser@example.com");
-                u.setPassword("test123");
-                u.setDisplayName("Test User");
-                u.setBio("Test bio");
-                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
-                return userRepo.save(u);
-            });
+        // Create a test user
+        testUser = userRepo.findByUsername("testuser")
+                .orElseGet(() -> {
+                    AppUser u = new AppUser();
+                    u.setUsername("testuser");
+                    u.setEmail("testuser@example.com");
+                    u.setPassword("test123");
+                    u.setDisplayName("Test User");
+                    u.setBio("Test bio");
+                    u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                    return userRepo.save(u);
+                });
     }
 
     @Test
@@ -114,7 +102,6 @@ public class UserIT {
     @Test
     @WithMockUser(username = "deleteuser")
     public void testDeleteUser() throws Exception {
-        // create a unique user for this test
         AppUser delUser = new AppUser();
         delUser.setUsername("deleteuser");
         delUser.setEmail("deleteuser@example.com");
@@ -123,8 +110,8 @@ public class UserIT {
         delUser = userRepo.save(delUser);
 
         mockMvc.perform(delete("/api/user/delete"))
-            .andExpect(status().isOk())
-            .andExpect(content().string("User 'deleteuser' deleted and session invalidated."));
+                .andExpect(status().isOk())
+                .andExpect(content().string("User 'deleteuser' deleted and session invalidated."));
     }
 
     @Test
@@ -141,5 +128,17 @@ public class UserIT {
         mockMvc.perform(get("/api/user/search?q=test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].username").value("testuser"));
+    }
+
+    // --- Test security config to avoid OAuth2 context errors ---
+    @Configuration
+    @EnableWebSecurity
+    static class TestSecurityConfig {
+        @Bean
+        public org.springframework.security.web.SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+            http.csrf().disable()
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            return http.build();
+        }
     }
 }
