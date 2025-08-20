@@ -2,11 +2,11 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FF from "../assets/FF cropped.png"
-import Exploremobile from "../assets/explorenew.png"
-import Notificationsmobile from "../assets/notificationsnewpng.png"
+import Exploremobile from "../assets/profilemobile.png"
+import Notificationsmobile from "../assets/home12.png"
 import Help_mobile from "../assets/helpmobilenew.png"
-import Settingsmobile from "../assets/settingsnew.png"
-import Editprofilemobile from "../assets/profilenew.png"
+import Settingsmobile from "../assets/settingsmobile.png"
+import Editprofilemobile from "../assets/home14.png"
 import { ThemeProvider } from "@/components/theme-provider"
 // import { ModeToggle } from "@/components/mode-toggle"
 import { Link } from "react-router-dom";
@@ -114,7 +114,7 @@ const LandingPage = () => {
             </div>
             <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="w-1/2  flex justify-center items-start pt-8 sticky top-0 h-screen">
+                <div className="hidden w-1/2   md:flex justify-center items-start pt-8 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
                         <motion.img
                             key={currentImage}
@@ -130,13 +130,13 @@ const LandingPage = () => {
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-1/2 overflow-y-auto  h-screen px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-full md:w-1/2  overflow-y-auto  h-screen px-6 md:px-12 pt-20 space-y-90 scroll-smooth">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
-                        className="flex justify-end items-center gap-3"
+                        className="flex justify-end items-center md:justify-end gap-3"
                     >
                         <span className="text-lg font-semibold">@syntexsquad</span>
                         <Avatar className="w-auto h-auto border-4 dark:border-lime-500 dark:bg-black">
@@ -147,6 +147,7 @@ const LandingPage = () => {
 
                     {/* Section 1 */}
                     <motion.div
+                    className="text-center md:text-left"
                         id="scroll-indicator"
                         initial={{ opacity: 0, y: 0 }}
                         whileInView={{ opacity: 1, y: -300 }}
@@ -240,7 +241,8 @@ const LandingPage = () => {
                         animate={{
                             y: "-100%",
                         }}
-                        className="pt-10"
+                        className="pt-10 text-center "
+                        
                     >
                         <Link to="/login">
                             <Button variant="outline" className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 dark:text-black dark:hover:text-white dark:hover:border-lime-500 dark:bg-lime-500 dark:hover:bg-black hover:cursor-pointer">Join the Future Feed Family</Button>

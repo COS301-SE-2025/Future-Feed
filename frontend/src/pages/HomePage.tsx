@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Post from "@/components/ui/post";
 import PersonalSidebar from "@/components/PersonalSidebar";
@@ -11,8 +11,6 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
-import { ThemeProvider } from "@/components/theme-provider";
-import { ModeToggle } from "@/components/mode-toggle";
 
 interface ApiFollow {
   followedId: number;
@@ -21,6 +19,7 @@ interface ApiUser {
   id: number;
   username: string;
   displayName: string;
+  profilePicture?: string;
 }
 interface ApiPost {
   id: number;
@@ -63,6 +62,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?: string;
 }
 interface Topic {
   id: number;
@@ -72,7 +72,9 @@ interface PostData {
   id: number;
   username: string;
   handle: string;
+  profilePicture?: string;
   time: string;
+  createdAt: string;
   text: string;
   image?: string;
   isLiked: boolean;
@@ -86,17 +88,6 @@ interface PostData {
   showComments: boolean;
   topics: Topic[];
 }
-interface PaginatedResponse {
-  content: ApiPost[];
-  pageable: {
-    pageNumber: number;
-    pageSize: number;
-  };
-  totalPages: number;
-  totalElements: number;
-}
-
-const CACHE_EXPIRY_MS = 2 * 60 * 1000; // 5 minutes
 
 const HomePage = () => {
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -111,23 +102,14 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [pageForYou, setPageForYou] = useState(0);
-  const [pageFollowing, setPageFollowing] = useState(0);
-  const [hasMoreForYou, setHasMoreForYou] = useState(true);
-  const [hasMoreFollowing, setHasMoreFollowing] = useState(true);
-  const userCache = new Map<number, { username: string; displayName: string }>();
   const [tempIdCounter, setTempIdCounter] = useState(-1);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-  const PAGE_SIZE = 10;
 
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
@@ -151,6 +133,7 @@ const HomePage = () => {
     id: number;
     username?: string;
     displayName?: string;
+    profilePicture?: string;
   }
 
   const generateTempId = () => {
@@ -158,62 +141,14 @@ const HomePage = () => {
     return tempIdCounter - 1;
   };
 
-  const saveToCache = <T,>(key: string, data: T) => {
-    try {
-      localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-    } catch (err) {
-      console.warn(`Failed to save ${key} to localStorage:`, err);
-    }
-  };
-
-  const loadFromCache = <T,>(key: string): { data: T; timestamp: number } | null => {
-    try {
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.data && parsed.timestamp) {
-          return parsed;
-        }
-      }
-    } catch (err) {
-      console.warn(`Failed to load ${key} from localStorage:`, err);
-    }
-    return null;
-  };
-
-  const isCacheValid = (timestamp: number) => {
-    return Date.now() - timestamp < CACHE_EXPIRY_MS;
-  };
-
   const fetchUser = async (userId: number, postUser?: PostUser) => {
-    if (userCache.has(userId)) {
-      const cachedUser = userCache.get(userId)!;
-      console.debug(`Cache hit for user ${userId}:`, cachedUser);
-      return cachedUser;
-    }
-
-    const storedUser = localStorage.getItem(`user_${userId}`);
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        if (user.username && user.displayName) {
-          console.debug(`localStorage hit for user ${userId}:`, user);
-          userCache.set(userId, user);
-          return user;
-        }
-      } catch (err) {
-        console.warn(`Failed to parse localStorage for user ${userId}:`, err);
-      }
-    }
-
-    if (postUser && postUser.id === userId) {
+    if (postUser && postUser.id === userId && postUser.username && postUser.displayName) {
       const validUser = {
         username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
+        profilePicture: postUser.profilePicture,
       };
       console.debug(`Using postUser for user ${userId}:`, validUser);
-      userCache.set(userId, validUser);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(validUser));
       return validUser;
     }
 
@@ -221,28 +156,37 @@ const HomePage = () => {
       const user = {
         username: currentUser.username,
         displayName: currentUser.displayName,
+        profilePicture: currentUser.profilePicture,
       };
       console.debug(`Using currentUser for user ${userId}:`, user);
-      userCache.set(userId, user);
-      localStorage.setItem(`user_${userId}`, JSON.stringify(user));
       return user;
     }
-
-    console.warn(`No user data available for user ${userId}.`);
-    const fallback = { username: `unknown${userId}`, displayName: `Unknown User ${userId}` };
-    userCache.set(userId, fallback);
-    localStorage.setItem(`user_${userId}`, JSON.stringify(fallback));
-    return fallback;
+    try {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user ${userId}: ${res.status}`);
+      const userData: ApiUser = await res.json();
+      const validUser = {
+        username: userData.username || `unknown${userId}`,
+        displayName: userData.displayName || `Unknown User ${userId}`,
+        profilePicture: userData.profilePicture,
+      };
+      console.debug(`Fetched user data for user ${userId}:`, validUser);
+      return validUser;
+    } catch (err) {
+      console.warn(`Failed to fetch user ${userId}:`, err);
+      const fallback = {
+        username: `unknown${userId}`,
+        displayName: `Unknown User ${userId}`,
+        profilePicture: undefined,
+      };
+      return fallback;
+    }
   };
 
   const fetchCurrentUser = async () => {
-    const cachedUser = loadFromCache<UserProfile>('currentUser');
-    if (cachedUser && isCacheValid(cachedUser.timestamp)) {
-      setCurrentUser(cachedUser.data);
-      userCache.set(cachedUser.data.id, { username: cachedUser.data.username, displayName: cachedUser.data.displayName });
-      return cachedUser.data;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
@@ -250,8 +194,6 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
       const data: UserProfile = await res.json();
       setCurrentUser(data);
-      userCache.set(data.id, { username: data.username, displayName: data.displayName });
-      saveToCache('currentUser', data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -262,13 +204,6 @@ const HomePage = () => {
   };
 
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
-    const cacheKey = `post_topics_${postId}`;
-    const cachedTopics = loadFromCache<Topic[]>(cacheKey);
-    if(cachedTopics && isCacheValid(cachedTopics.timestamp)){
-      console.debug(`Using cached topics for post ${postId}`);
-      return cachedTopics.data;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -276,55 +211,62 @@ const HomePage = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
-      if(!topics.length){
+
+      if (!topics.length) {
         await fetchTopics();
       }
+
       const postTopics = topicIds
         .map((id) => topics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-        if(!postTopics.length && topicIds.length){
-          console.warn(`No matching topics found for post ${postId}, using placeholders`);
-          return topicIds.map((id) => ({id, name:`Topic ${id}`}));
+
+      if (postTopics.length < topicIds.length) {
+        const missingIds = topicIds.filter(id => !topics.some(t => t.id === id));
+        for (const id of missingIds) {
+          try {
+            const topicRes = await fetch(`${API_URL}/api/topics/${id}`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+              credentials: "include",
+            });
+            if (topicRes.ok) {
+              const topicData: Topic = await topicRes.json();
+              setTopics(prev => [...prev, topicData]);
+              postTopics.push(topicData);
+            }
+          } catch (err) {
+            console.warn(`Failed to fetch topic ${id}:`, err);
+          }
         }
-        saveToCache(cacheKey, postTopics);
+      }
+
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
       setError("Failed to load topics for post.");
-      setTimeout(()=>{
-        setError(null);
-      }, 3000);
+      setTimeout(() => setError(null), 3000);
       return [];
     }
   };
 
-  const fetchAllPosts = async (page: number = 0, append: boolean = false) => {
-    console.debug(`Fetching posts for page ${page}, append: ${append}`);
-    const cacheKey = `posts_page_${page}`;
-    const cachedPosts = loadFromCache<PostData[]>(cacheKey);
-    if (cachedPosts && isCacheValid(cachedPosts.timestamp) && !append) {
-      console.debug(`Using cached posts for page ${page}`);
-      setPosts(cachedPosts.data);
-      setLoadingForYou(false);
+  const fetchAllPosts = async () => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch posts: currentUser is not loaded");
       return;
     }
-
-    setLoadingForYou(!append);
-    setLoadingMore(append);
+    console.debug("Fetching all posts");
+    setLoadingForYou(true);
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts/paginated?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
         fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-        currentUser ? fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }) : Promise.resolve({ ok: false, json: () => [] }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
       if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
-      const paginatedResponse: PaginatedResponse = await postsRes.json();
-      console.debug(`API response for page ${page}:`, paginatedResponse);
-      const apiPosts: ApiPost[] = paginatedResponse.content;
-      setHasMoreForYou(page < paginatedResponse.totalPages - 1);
-      console.debug(`hasMoreForYou set to ${page < paginatedResponse.totalPages - 1} for page ${page}, totalPages: ${paginatedResponse.totalPages}`);
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+      const apiPosts: ApiPost[] = await postsRes.json();
+      console.debug("API response for posts:", apiPosts);
       const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-      const bookmarks: ApiBookmark[] = bookmarksRes.ok ? await bookmarksRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
 
       const validPosts = apiPosts.filter((post: ApiPost) => {
@@ -358,6 +300,7 @@ const HomePage = () => {
                 createdAt: comment.createdAt,
                 username: user.displayName,
                 handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
               };
             })
           );
@@ -379,7 +322,9 @@ const HomePage = () => {
             id: post.id,
             username: postUser.displayName,
             handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
             text: post.content,
             image: post.imageUrl,
             isLiked,
@@ -396,41 +341,23 @@ const HomePage = () => {
         })
       );
 
-      setPosts((prevPosts) =>
-        append
-          ? [
-            ...prevPosts,
-            ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
-          ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-          : formattedPosts
-      );
-      saveToCache(cacheKey, formattedPosts);
+      setPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (err) {
       console.error("Error fetching posts:", err);
-      setError("Failed to load posts.");
-      setTimeout(()=> {
-        setError(null);
-      }, 3000);
+      // setError("Failed to load posts.");
+      // setTimeout(() => setError(null), 3);
     } finally {
       setLoadingForYou(false);
-      setLoadingMore(false);
     }
   };
 
-  const fetchFollowingPosts = async (page: number = 0, append: boolean = false) => {
-    if (!currentUser?.id) return;
-    console.debug(`Fetching following posts for page ${page}, append: ${append}`);
-    const cacheKey = `followingPosts_page_${page}`;
-    const cachedFollowingPosts = loadFromCache<PostData[]>(cacheKey);
-    if (cachedFollowingPosts && isCacheValid(cachedFollowingPosts.timestamp) && !append) {
-      console.debug(`Using cached following posts for page ${page}`);
-      setFollowingPosts(cachedFollowingPosts.data);
-      setLoadingFollowing(false);
+  const fetchFollowingPosts = async () => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch following posts: currentUser is not loaded");
       return;
     }
-
-    setLoadingFollowing(!append);
-    setLoadingMore(append);
+    console.debug("Fetching following posts");
+    setLoadingFollowing(true);
     try {
       const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
         fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
@@ -438,28 +365,28 @@ const HomePage = () => {
         fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
       if (!followRes.ok) throw new Error("Failed to fetch followed users");
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
       const followedUsers: ApiFollow[] = await followRes.json();
       const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-      const bookmarks: ApiBookmark[] = bookmarksRes.ok ? await bookmarksRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
 
       const allFollowingPosts = await Promise.all(
         followedIds.map(async (userId: number) => {
-          const res = await fetch(`${API_URL}/api/posts/paginated?page=${page}&size=${PAGE_SIZE}&userId=${userId}`, {
+          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, {
             credentials: "include",
           });
           if (!res.ok) return [];
-          const paginatedResponse: PaginatedResponse = await res.json();
-          console.debug(`API response for following posts, user ${userId}, page ${page}:`, paginatedResponse);
-          setHasMoreFollowing(page < paginatedResponse.totalPages - 1);
-          console.debug(`hasMoreFollowing set to ${page < paginatedResponse.totalPages - 1} for page ${page}, totalPages: ${paginatedResponse.totalPages}`);
-          return paginatedResponse.content;
+          return await res.json();
         })
       );
 
       const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const validPosts = flattenedPosts.filter((post: ApiPost) => post.user?.id);
+      const uniquePosts = Array.from(
+        new Map(flattenedPosts.map(post => [post.id, post])).values()
+      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
@@ -484,6 +411,7 @@ const HomePage = () => {
                 createdAt: comment.createdAt,
                 username: user.displayName,
                 handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
               };
             })
           );
@@ -505,7 +433,9 @@ const HomePage = () => {
             id: post.id,
             username: postUser.displayName,
             handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
             text: post.content,
             image: post.imageUrl,
             isLiked,
@@ -522,34 +452,17 @@ const HomePage = () => {
         })
       );
 
-      setFollowingPosts((prevPosts) =>
-        append
-          ? [
-            ...prevPosts,
-            ...formattedPosts.filter((newPost) => !prevPosts.some((p) => p.id === newPost.id)),
-          ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-          : formattedPosts
-      );
-      saveToCache(cacheKey, formattedPosts);
+      setFollowingPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
-      setTimeout(()=>{
-        setError(null);
-      }, 3000);
+      setTimeout(() => setError(null), 3000);
     } finally {
       setLoadingFollowing(false);
-      setLoadingMore(false);
     }
   };
 
   const fetchTopics = async () => {
-    const cachedTopics = loadFromCache<Topic[]>('topics');
-    if (cachedTopics && isCacheValid(cachedTopics.timestamp)) {
-      setTopics(cachedTopics.data);
-      return;
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -558,13 +471,10 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
       setTopics(data || []);
-      saveToCache('topics', data || []);
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -586,12 +496,12 @@ const HomePage = () => {
       if (!res.ok) throw new Error("Failed to create topic");
       const newTopic: Topic = await res.json();
       setTopics([...topics, newTopic]);
-      saveToCache('topics', [...topics, newTopic]);
       setNewTopicName("");
       setIsTopicModalOpen(false);
     } catch (err) {
       console.error("Error creating topic:", err);
       setError("Failed to create topic.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -602,11 +512,14 @@ const HomePage = () => {
     }
 
     const tempPostId = generateTempId();
+    const createdAt = new Date().toISOString();
     const tempPost: PostData = {
       id: tempPostId,
       username: currentUser.displayName,
       handle: `@${currentUser.username}`,
-      time: formatRelativeTime(new Date().toISOString()),
+      profilePicture: currentUser.profilePicture,
+      time: formatRelativeTime(createdAt),
+      createdAt,
       text: postText,
       image: imageFile ? URL.createObjectURL(imageFile) : undefined,
       isLiked: false,
@@ -622,9 +535,6 @@ const HomePage = () => {
     };
 
     setPosts([tempPost, ...posts]);
-    setFollowingPosts([tempPost, ...followingPosts]);
-    saveToCache(`posts_page_${pageForYou}`, [tempPost, ...posts]);
-    saveToCache(`followingPosts_page_${pageFollowing}`, [tempPost, ...followingPosts]);
     setIsPostModalOpen(false);
     setPostText("");
     const selectedTopics = selectedTopicIds.slice();
@@ -663,6 +573,7 @@ const HomePage = () => {
         if (!assignRes.ok) {
           console.warn("Failed to assign topics to post:", await assignRes.text());
           setError("Post created, but failed to assign topics.");
+          setTimeout(() => setError(null), 3000);
         }
       }
 
@@ -672,7 +583,9 @@ const HomePage = () => {
         id: newPost.id,
         username: currentUser.displayName,
         handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
         time: formatRelativeTime(newPost.createdAt),
+        createdAt: newPost.createdAt,
         text: newPost.content,
         image: newPost.imageUrl,
         isLiked: false,
@@ -691,23 +604,14 @@ const HomePage = () => {
         [
           formattedPost,
           ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       );
-      setFollowingPosts((prev) =>
-        [
-          formattedPost,
-          ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-      );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
+      setTimeout(() => setError(null), 3000);
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
       setImageFile(tempImageFile);
@@ -724,8 +628,6 @@ const HomePage = () => {
     const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
     setPosts((prev) => prev.filter((p) => p.id !== postId));
     setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -737,19 +639,15 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error deleting post:", err);
       setError("Failed to delete post. Reverting...");
-      setTimeout(() => {
-        setError(null);
-      }, 3000);
+      setTimeout(() => setError(null), 3000);
       if (deletedPost) {
-        setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
+        setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       }
       if (deletedFollowingPost) {
         setFollowingPosts((prev) =>
-          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         );
       }
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -759,18 +657,16 @@ const HomePage = () => {
       return;
     }
 
-    // Find the post in either posts or followingPosts
     const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
     if (!post) {
       setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
-    // Store original state for rollback in case of failure
     const originalIsLiked = post.isLiked;
     const originalLikeCount = post.likeCount;
 
-    // Optimistic UI update: Update both arrays but ensure no duplication
     const updatePostInArray = (postsArray: PostData[]) =>
       postsArray.map((p) =>
         p.id === postId
@@ -783,14 +679,9 @@ const HomePage = () => {
       );
 
     setPosts((prevPosts) => updatePostInArray(prevPosts));
-    setFollowingPosts((prevPosts) => (posts.find((p) => p.id === postId) ? prevPosts : updatePostInArray(prevPosts)));
-
-    // Save to cache
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
+    setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
 
     try {
-      // Toggle like via API
       const method = originalIsLiked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/likes/${postId}`, {
         method,
@@ -799,7 +690,6 @@ const HomePage = () => {
 
       if (!res.ok) throw new Error(`Failed to ${originalIsLiked ? "unlike" : "like"} post`);
 
-      // Fetch updated like status and count
       const [hasLikedRes, likeCountRes] = await Promise.all([
         fetch(`${API_URL}/api/likes/has-liked/${postId}`, { credentials: "include" }),
         fetch(`${API_URL}/api/likes/count/${postId}`, { credentials: "include" }),
@@ -812,49 +702,44 @@ const HomePage = () => {
       const isLiked = await hasLikedRes.json();
       const likeCount = await likeCountRes.json();
 
-      // Update state with confirmed values
       const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
         postsArray.map((p) =>
           p.id === postId ? { ...p, isLiked, likeCount } : p
         );
 
       setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
-      setFollowingPosts((prevPosts) =>
-        posts.find((p) => p.id === postId) ? prevPosts : updatePostWithConfirmedValues(prevPosts)
-      );
-
-      // Update cache with confirmed values
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
+      setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
 
-      // Revert state on error
       const revertPostInArray = (postsArray: PostData[]) =>
         postsArray.map((p) =>
           p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
         );
 
       setPosts((prevPosts) => revertPostInArray(prevPosts));
-      setFollowingPosts((prevPosts) =>
-        posts.find((p) => p.id === postId) ? prevPosts : revertPostInArray(prevPosts)
-      );
-
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
+      setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
     }
   };
 
   const handleReshare = async (postId: number) => {
+    if (!currentUser) {
+      setError("Please log in to reshare posts.");
+      return;
+    }
+
     const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
     if (!post) {
       setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
     const originalIsReshared = post.isReshared;
     const originalReshareCount = post.reshareCount;
+
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
         p.id === postId
@@ -877,8 +762,6 @@ const HomePage = () => {
           : p
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -895,6 +778,7 @@ const HomePage = () => {
     } catch (err) {
       console.error("Error toggling reshare:", err);
       setError(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId
@@ -909,8 +793,6 @@ const HomePage = () => {
             : p
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
@@ -933,6 +815,7 @@ const HomePage = () => {
       createdAt: new Date().toISOString(),
       username: currentUser.displayName,
       handle: `@${currentUser.username}`,
+      profilePicture: currentUser.profilePicture
     };
 
     setPosts((prevPosts) =>
@@ -957,8 +840,6 @@ const HomePage = () => {
           : post
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -979,6 +860,7 @@ const HomePage = () => {
         createdAt: newComment.createdAt,
         username: currentUser.displayName,
         handle: `@${currentUser.username}`,
+        profilePicture: currentUser.profilePicture,
       };
 
       setPosts((prevPosts) =>
@@ -1003,11 +885,10 @@ const HomePage = () => {
             : post
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
+      setTimeout(() => setError(null), 3000);
       setPosts((prevPosts) =>
         prevPosts.map((post) =>
           post.id === postId
@@ -1030,68 +911,89 @@ const HomePage = () => {
             : post
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
     }
   };
 
   const handleBookmark = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to bookmark/unbookmark posts.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
     const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
     if (!post) {
       setError("Post not found.");
+      setTimeout(() => setError(null), 3000);
       return;
     }
 
     const originalIsBookmarked = post.isBookmarked;
+
+    // Optimistic update
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
-        p.id === postId
-          ? { ...p, isBookmarked: !p.isBookmarked }
-          : p
+        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
       )
     );
     setFollowingPosts((prevPosts) =>
       prevPosts.map((p) =>
-        p.id === postId
-          ? { ...p, isBookmarked: !p.isBookmarked }
-          : p
+        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
       const res = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}/${postId}`, {
         method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
         credentials: "include",
       });
 
-      if (!res.ok) throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post`);
-    } catch (err) {
-      console.error("Error toggling bookmark:", err);
-      setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`);
+      }
+
+      // Fetch updated bookmark status to confirm
+      const bookmarksRes = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!bookmarksRes.ok) throw new Error("Failed to fetch updated bookmarks");
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+      const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
+
+      // Update both posts and followingPosts with confirmed bookmark status
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isBookmarked: originalIsBookmarked }
-            : p
+          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
         )
       );
       setFollowingPosts((prevPosts) =>
         prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isBookmarked: originalIsBookmarked }
-            : p
+          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
         )
       );
-      saveToCache(`posts_page_${pageForYou}`, posts);
-      saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
+    } catch (err) {
+      console.error("Error toggling bookmark:", err);
+      setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
+      setTimeout(() => setError(null), 3000);
+      // Revert optimistic update
+      setPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((p) =>
+          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
+        )
+      );
     }
   };
 
@@ -1103,15 +1005,14 @@ const HomePage = () => {
         method: "GET",
         credentials: "include",
       });
-      localStorage.removeItem('currentUser');
-      localStorage.removeItem('topics');
-      localStorage.removeItem('activeTab');
-      Object.keys(localStorage)
-        .filter((key) => key.startsWith('posts_page_') || key.startsWith('followingPosts_page_'))
-        .forEach((key) => localStorage.removeItem(key));
+      setCurrentUser(null);
+      setPosts([]);
+      setFollowingPosts([]);
       navigate("/");
     } catch (err) {
       console.error("Logout failed", err);
+      setError("Failed to log out. Please try again.");
+      setTimeout(() => setError(null), 3000);
     }
   };
 
@@ -1126,12 +1027,10 @@ const HomePage = () => {
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
-    saveToCache(`posts_page_${pageForYou}`, posts);
-    saveToCache(`followingPosts_page_${pageFollowing}`, followingPosts);
   };
 
   const renderSkeletonPosts = () => {
-    return Array.from({ length: PAGE_SIZE }).map((_, index) => (
+    return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
         className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
@@ -1154,6 +1053,7 @@ const HomePage = () => {
         <Post
           username={post.username}
           handle={post.handle}
+          profilePicture={post.profilePicture}
           time={post.time}
           text={post.text}
           image={post.image}
@@ -1182,101 +1082,33 @@ const HomePage = () => {
   };
 
   useEffect(() => {
-    const loadData = async () => {
-      const cachedActiveTab = loadFromCache<string>('activeTab');
-      if (cachedActiveTab && isCacheValid(cachedActiveTab.timestamp)) {
-        setActiveTab(cachedActiveTab.data);
-      }
-
+    const init = async () => {
+      setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
         await fetchTopics();
-        await fetchAllPosts(0);
-        setHasMoreForYou(true);
       }
       setLoading(false);
     };
-    loadData();
-
-    const intervalId = setInterval(() => {
-      if (pageForYou === 0 && activeTab === "for You") {
-        fetchAllPosts(0);
-      } else if (pageFollowing === 0 && activeTab === "Following") {
-        fetchFollowingPosts(0);
-      }
-    }, 360000);
-
-    return () => clearInterval(intervalId);
+    init();
   }, []);
+  useEffect(() => {
+    if (!currentUser) return;
+
+    if (activeTab === "for You") {
+      fetchAllPosts();
+    } else if (activeTab === "Following") {
+      fetchFollowingPosts();
+    }
+  }, [activeTab, currentUser]);
+
+
 
   useEffect(() => {
     if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
-      fetchFollowingPosts(0);
+      fetchFollowingPosts();
     }
   }, [currentUser, activeTab]);
-
-  useEffect(() => {
-    saveToCache('activeTab', activeTab);
-    // Reset pagination when switching tabs
-    if (activeTab === "for You") {
-      setPageForYou(0);
-      setHasMoreForYou(true);
-      if (posts.length === 0) {
-        fetchAllPosts(0);
-      }
-    } else if (activeTab === "Following") {
-      setPageFollowing(0);
-      setHasMoreFollowing(true);
-      if (followingPosts.length === 0) {
-        fetchFollowingPosts(0);
-      }
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    console.debug(`Setting up IntersectionObserver, activeTab: ${activeTab}, hasMoreForYou: ${hasMoreForYou}, hasMoreFollowing: ${hasMoreFollowing}, loadMoreRef: ${!!loadMoreRef.current}`);
-    if (!loadMoreRef.current || loading || (activeTab === "for You" && !hasMoreForYou) || (activeTab === "Following" && !hasMoreFollowing)) {
-      console.debug("Skipping observer setup: ref missing, loading, or no more posts");
-      return;
-    }
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        console.debug("IntersectionObserver triggered", entries);
-        if (entries[0].isIntersecting && !loadingMore) {
-          console.debug(`Loading more posts for ${activeTab}, current page: ${activeTab === "for You" ? pageForYou : pageFollowing}`);
-          if (activeTab === "for You" && hasMoreForYou) {
-            setPageForYou((prev) => {
-              const nextPage = prev + 1;
-              console.debug(`Fetching next page for For You: ${nextPage}`);
-              fetchAllPosts(nextPage, true);
-              return nextPage;
-            });
-          } else if (activeTab === "Following" && hasMoreFollowing) {
-            setPageFollowing((prev) => {
-              const nextPage = prev + 1;
-              console.debug(`Fetching next page for Following: ${nextPage}`);
-              fetchFollowingPosts(nextPage, true);
-              return nextPage;
-            });
-          }
-        }
-      },
-      { threshold: 0.5, rootMargin: "100px" }
-    );
-
-    if (loadMoreRef.current) {
-      console.debug("Observing loadMoreRef");
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => {
-      if (observerRef.current && loadMoreRef.current) {
-        console.debug("Cleaning up observer");
-        observerRef.current.unobserve(loadMoreRef.current);
-      }
-    };
-  }, [activeTab, hasMoreForYou, hasMoreFollowing, loadingMore, loading, posts.length, followingPosts.length]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
@@ -1305,13 +1137,8 @@ const HomePage = () => {
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
       </button>
       {isMobileMenuOpen && (
-        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center">
+        <div className="lg:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center mt-[-60px]">
           <div className="w-full max-w-xs p-4">
-            <ThemeProvider>
-              <div className="pe-9 flex mb-30 ml-30 gap-2 rounded">
-                <ModeToggle />
-              </div>
-            </ThemeProvider>
             <button
               onClick={handleLogout}
               className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
@@ -1342,8 +1169,7 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""
-          }`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
@@ -1360,12 +1186,12 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
                 onClick={() => setIsPostModalOpen(true)}
               >
                 <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="for You" className="w-full p-2" onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -1385,24 +1211,13 @@ const HomePage = () => {
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => setIsPostModalOpen(true)}
+                        onClick={() => fetchAllPosts()}
                       >
-                        Create your first post
+                        Refresh
                       </Button>
                     </div>
                   ) : (
-                    <>
-                      {renderPosts(posts)}
-                      {hasMoreForYou && (
-                        <div ref={loadMoreRef} className="flex justify-center py-4 min-h-[50px]">
-                          {loadingMore ? (
-                            <div className="animate-spin mt-[-20px] rounded-full h-13 w-13 border-t-2 border-b-2 border-lime-500"></div>
-                          ) : (
-                            <p className="text-sm dark:text-white">Scroll to load more...</p>
-                          )}
-                        </div>
-                      )}
-                    </>
+                    renderPosts(posts)
                   )}
                 </TabsContent>
                 <TabsContent value="Following">
@@ -1413,24 +1228,13 @@ const HomePage = () => {
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
                       <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchFollowingPosts(0)}
+                        onClick={() => fetchFollowingPosts()}
                       >
                         Refresh
                       </Button>
                     </div>
                   ) : (
-                    <>
-                      {renderPosts(followingPosts)}
-                      {hasMoreFollowing && (
-                        <div ref={loadMoreRef} className="flex justify-center py-4 min-h-[50px]">
-                          {loadingMore ? (
-                            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-lime-500"></div>
-                          ) : (
-                            <p className="text-sm dark:text-white">Scroll to load more...</p>
-                          )}
-                        </div>
-                      )}
-                    </>
+                    renderPosts(followingPosts)
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
@@ -1489,12 +1293,14 @@ const HomePage = () => {
                   className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id}>
+                    <option key={topic.id} value={topic.id} className="text-center py-1">
                       {topic.name}
                     </option>
                   ))}
                 </select>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                </div>
               </div>
               <div className="flex justify-between items-center">
                 <Button
@@ -1519,7 +1325,7 @@ const HomePage = () => {
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-800"
+                  className="bg-lime-500 text-white hover:bg-lime-600"
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post

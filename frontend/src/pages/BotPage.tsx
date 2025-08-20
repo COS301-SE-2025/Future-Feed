@@ -80,7 +80,7 @@ const mockBotData: BotProfile = {
   id: 0,
   username: "mybot",
   displayName: "My Bot",
-  bio: "This is a mock bot created for demonstration purposes.",
+  bio: "This is where the bot's prompt will be.",
   email: "no email for bot",
 };
 
