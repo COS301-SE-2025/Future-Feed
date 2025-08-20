@@ -3,6 +3,15 @@ package com.syntexsquad.futurefeed.service;
 import com.syntexsquad.futurefeed.dto.BookmarkDto;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.*;
+
+import model.AppUser;
+import model.Bookmark;
+import model.Post;
+import model.UserPost;
+import repository.AppUserRepository;
+import repository.BookmarkRepository;
+import repository.PostRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,13 +36,35 @@ public class BookmarkService {
         if (bookmarkRepo.findByUserAndPost(user, post).isPresent()) return false;
 
         bookmarkRepo.save(new Bookmark(user, post));
+
+         if (post instanceof UserPost userPost) {
+            Integer recipientId = userPost.getUser().getId();
+            if (!recipientId.equals(user.getId())) {
+                notificationService.createNotification(
+                        recipientId,
+                        user.getId(),
+                        "BOOKMARK",
+                        postId
+                );
+            }
+        }
         return true;
     }
 
     public boolean removeBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
-
+          if (post instanceof UserPost userPost) {
+            Integer recipientId = userPost.getUser().getId();
+            if (!recipientId.equals(user.getId())) {
+                notificationService.createNotification(
+                        recipientId,
+                        user.getId(),
+                        "BOOKMARK REMOVED",
+                        postId
+                );
+            }
+        }
         return bookmarkRepo.findByUserAndPost(user, post)
                 .map(b -> {
                     bookmarkRepo.delete(b);

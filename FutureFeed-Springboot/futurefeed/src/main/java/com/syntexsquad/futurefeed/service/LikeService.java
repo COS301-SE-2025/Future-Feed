@@ -5,6 +5,9 @@ import com.syntexsquad.futurefeed.model.Like;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import jakarta.transaction.Transactional;
+import model.Post;
+import model.UserPost;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -54,6 +57,19 @@ public class LikeService {
         like.setUserId(user.getId());
         like.setPostId(postId);
         likeRepository.save(like);
+
+          // Notify only if it's a UserPost
+
+        Post post = postService.getPostById(postId);
+        if (post instanceof UserPost userPost) {
+            AppUser recipient = userPost.getUser(); // Now it's valid
+            notificationService.createNotification(
+                    recipient.getId(),
+                    sender.getId(),
+                    "LIKE",
+                    postId
+            );
+        }
         return true;
     }
 

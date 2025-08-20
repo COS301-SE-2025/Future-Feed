@@ -6,6 +6,9 @@ import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import jakarta.transaction.Transactional;
+import model.Post;
+import model.UserPost;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -16,6 +19,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class CommentService {
@@ -64,6 +69,25 @@ public class CommentService {
         Comment saved = commentRepository.save(comment);
 
         // Manually evict caches related to this post/user
+ Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post not found"));
+
+         // 🔔 Notify post owner (COMMENT notification)
+        if (post instanceof UserPost userPost) {
+            AppUser recipient = userPost.getUser();
+            if (recipient != null && !recipient.getId().equals(sender.getId())) {
+                notificationService.createNotification(
+                        recipient.getId(),
+                        sender.getId(),
+                        "COMMENT",
+                        postId
+                );
+            }
+        }
+
+        // 🔔 Notify mentioned users (MENTION notification)
+        handleMentions(content, sender, postId);
+
         evictCaches(postId, userId);
 
         return saved;
@@ -88,4 +112,26 @@ public class CommentService {
     })
     public void evictCaches(Integer postId, Integer userId) {
     }
+
+     private void handleMentions(String content, AppUser sender, Integer postId) {
+        // Regex: @ followed by one or more words (letters, numbers, underscores, spaces allowed)
+        Pattern mentionPattern = Pattern.compile("@([A-Za-z0-9_]+(?: [A-Za-z0-9_]+)*)");
+        Matcher matcher = mentionPattern.matcher(content);
+
+        while (matcher.find()) {
+            String mentionedUsername = matcher.group(1).trim(); // e.g. "Rethabile Mokoena"
+
+            appUserRepository.findByUsername(mentionedUsername).ifPresent(mentionedUser -> {
+                if (!mentionedUser.getId().equals(sender.getId())) { // avoid self-mentions
+                    notificationService.createNotification(
+                            mentionedUser.getId(),
+                            sender.getId(),
+                            "MENTION",
+                            postId
+                    );
+                }
+            });
+        }
+    }
+
 }
