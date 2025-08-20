@@ -42,3 +42,6 @@ replay_pid*
 # Others
 package-lock.json
 Future-Feed/
+
+# Environment
+myenv/
