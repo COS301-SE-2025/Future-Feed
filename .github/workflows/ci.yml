@@ -46,10 +46,6 @@ jobs:
       - name: Restore required config files
         run: |
           mkdir -p src/main/resources
-          echo "spring.datasource.url=jdbc:postgresql://localhost:5432/futurefeed" >> src/main/resources/application-test.properties
-          echo "spring.datasource.username=postgres" >> src/main/resources/application-test.properties
-          echo "spring.datasource.password=postgres" >> src/main/resources/application-test.properties
-          echo "spring.jpa.hibernate.ddl-auto=update" >> src/main/resources/application-test.properties
           echo "aws.accessKeyId=test" >> src/main/resources/application-test.properties
           echo "aws.secretKey=test" >> src/main/resources/application-test.properties
           echo "aws.s3.bucket-name=test-bucket" >> src/main/resources/application-test.properties
