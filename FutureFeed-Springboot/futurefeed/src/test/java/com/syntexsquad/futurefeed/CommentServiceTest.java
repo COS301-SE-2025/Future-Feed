@@ -6,7 +6,6 @@ import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.CommentService;
-import com.syntexsquad.futurefeed.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
@@ -27,7 +26,6 @@ public class CommentServiceTest {
     private CommentRepository commentRepository;
     private AppUserRepository appUserRepository;
     private PostRepository postRepository;
-    private NotificationService notificationService;
     private CommentService commentService;
 
     @BeforeEach
@@ -35,8 +33,7 @@ public class CommentServiceTest {
         commentRepository = mock(CommentRepository.class);
         appUserRepository = mock(AppUserRepository.class);
         postRepository = mock(PostRepository.class);
-         notificationService = mock(NotificationService.class);
-        commentService = new CommentService(commentRepository, appUserRepository, postRepository, notificationService);
+        commentService = new CommentService(commentRepository, appUserRepository, postRepository);
     }
 
     @Test

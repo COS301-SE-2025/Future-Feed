@@ -1,11 +1,9 @@
 package com.syntexsquad.futurefeed.config;
 
-import com.syntexsquad.futurefeed.service.AppUserService;
 import com.syntexsquad.futurefeed.service.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -49,17 +47,17 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .ignoringRequestMatchers("/api/**")
             )
-                .oauth2Login(oauth2 -> oauth2
-                        .defaultSuccessUrl("http://localhost:5173/home", true)
-                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+            .oauth2Login(oauth2 -> oauth2
+                //.loginPage("/login")
+                .defaultSuccessUrl("http://localhost:5173/home", true)
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
                 )
-                .formLogin(form -> form.disable()) // disable default login page, since React handles it
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("http://localhost:5173")
-                        .permitAll()
-                );
-
+            ).logout(logout -> logout
+                .logoutUrl("/logout")                
+                .logoutSuccessUrl("http://localhost:5173") 
+                .permitAll()
+            );
 
 
         return http.build();
@@ -78,23 +76,10 @@ public class SecurityConfig {
         return new CorsFilter(source);
     }
 
-//    @Bean
-//    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-//        return config.getAuthenticationManager();
-//    }
-
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http,
-                                                       AppUserService appUserService,
-                                                       PasswordEncoder passwordEncoder) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .userDetailsService(appUserService)
-                .passwordEncoder(passwordEncoder)
-                .and()
-                .build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
-
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
