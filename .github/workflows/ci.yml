@@ -32,10 +32,15 @@ jobs:
       - name: Run Unit Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn clean test -Dspring.profiles.active=test -Dtest=*Test
+          mvn clean test \
+            -Dspring.profiles.active=test \
+            -Dtest=*Test
 
       # ---------- Run Integration Tests (Failsafe -> *IT.java) ----------
       - name: Run Integration Tests
         run: |
           cd FutureFeed-Springboot/futurefeed
-          mvn verify -Dspring.profiles.active=test -DfailIfNoTests=false
+          mvn verify \
+            -Dspring.profiles.active=test \
+            -DfailIfNoTests=false \
+            -Dit.test=*IT
