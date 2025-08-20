@@ -15,6 +15,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class CommentService {
@@ -26,7 +28,8 @@ public class CommentService {
 
     public CommentService(CommentRepository commentRepository,
                           AppUserRepository appUserRepository,
-                          PostRepository postRepository,NotificationService notificationService) {
+                          PostRepository postRepository,
+                          NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.appUserRepository = appUserRepository;
         this.postRepository = postRepository;
@@ -50,7 +53,6 @@ public class CommentService {
 
     @Transactional
     public Comment addComment(Integer postId, String content) {
-        AppUser user = getAuthenticatedUser();
         AppUser sender = getAuthenticatedUser();
         if (!postRepository.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
@@ -58,15 +60,16 @@ public class CommentService {
 
         Comment comment = new Comment();
         comment.setPostId(postId);
-        comment.setUserId(user.getId());
+        comment.setUserId(sender.getId());
         comment.setContent(content);
+
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
 
+        // 🔔 Notify post owner (COMMENT notification)
         if (post instanceof UserPost userPost) {
             AppUser recipient = userPost.getUser();
-
-            if (recipient != null) {
+            if (recipient != null && !recipient.getId().equals(sender.getId())) {
                 notificationService.createNotification(
                         recipient.getId(),
                         sender.getId(),
@@ -75,7 +78,32 @@ public class CommentService {
                 );
             }
         }
+
+        // 🔔 Notify mentioned users (MENTION notification)
+        handleMentions(content, sender, postId);
+
         return commentRepository.save(comment);
+    }
+
+    private void handleMentions(String content, AppUser sender, Integer postId) {
+        // Regex for @username (alphanumeric + underscore)
+        Pattern mentionPattern = Pattern.compile("@([A-Za-z0-9_]+)");
+        Matcher matcher = mentionPattern.matcher(content);
+
+        while (matcher.find()) {
+            String mentionedUsername = matcher.group(1);
+
+            appUserRepository.findByUsername(mentionedUsername).ifPresent(mentionedUser -> {
+                if (!mentionedUser.getId().equals(sender.getId())) { // avoid self-notifications
+                    notificationService.createNotification(
+                            mentionedUser.getId(),
+                            sender.getId(),
+                            "MENTION",
+                            postId
+                    );
+                }
+            });
+        }
     }
 
     public List<Comment> getCommentsForPost(Integer postId) {
@@ -87,4 +115,3 @@ public class CommentService {
         return commentRepository.existsByUser_IdAndPost_Id(user.getId(), postId);
     }
 }
-

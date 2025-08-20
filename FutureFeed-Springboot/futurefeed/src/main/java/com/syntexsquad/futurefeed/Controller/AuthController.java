@@ -77,8 +77,8 @@ public class AuthController {
 
             // This creates the JSESSIONID
             request.getSession(true);
-
-            return ResponseEntity.ok("Login successful");
+            AppUser user = userService.getUserByEmail(req.getEmail());
+            return ResponseEntity.ok("Login successful " + user.getId() + " " + user.getUsername());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
