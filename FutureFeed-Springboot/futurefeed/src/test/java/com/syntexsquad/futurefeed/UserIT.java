@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(classes = {UserIT.TestSecurityConfig.class, FuturefeedApplication.class})
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 public class UserIT {
