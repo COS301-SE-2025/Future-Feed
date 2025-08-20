@@ -22,10 +22,12 @@ public class FollowService {
 
     private final FollowerRepository followerRepository;
     private final AppUserRepository appUserRepository;
+    private final NotificationService notificationService;
 
-    public FollowService(FollowerRepository followerRepository, AppUserRepository appUserRepository) {
+    public FollowService(FollowerRepository followerRepository, AppUserRepository appUserRepository, NotificationService notificationService) {
         this.followerRepository = followerRepository;
         this.appUserRepository = appUserRepository;
+        this.notificationService = notificationService;
     }
     public List<FollowedUserDto> getTopFollowedUsers(int limit) {
         Pageable pageable = PageRequest.of(0, limit);

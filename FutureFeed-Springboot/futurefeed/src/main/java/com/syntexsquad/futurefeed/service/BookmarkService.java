@@ -4,13 +4,13 @@ import com.syntexsquad.futurefeed.dto.BookmarkDto;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.*;
 
-import model.AppUser;
-import model.Bookmark;
-import model.Post;
-import model.UserPost;
-import repository.AppUserRepository;
-import repository.BookmarkRepository;
-import repository.PostRepository;
+import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.Bookmark;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.repository.BookmarkRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
 
 import org.springframework.stereotype.Service;
 
@@ -22,11 +22,13 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepo;
     private final AppUserRepository userRepo;
     private final PostRepository postRepo;
+    private final NotificationService notificationService;
 
-    public BookmarkService(BookmarkRepository bookmarkRepo, AppUserRepository userRepo, PostRepository postRepo) {
+    public BookmarkService(BookmarkRepository bookmarkRepo, AppUserRepository userRepo, PostRepository postRepo, NotificationService notificationService) {
         this.bookmarkRepo = bookmarkRepo;
         this.userRepo = userRepo;
         this.postRepo = postRepo;
+        this.notificationService = notificationService;
     }
 
     public boolean addBookmark(Integer userId, Integer postId) {

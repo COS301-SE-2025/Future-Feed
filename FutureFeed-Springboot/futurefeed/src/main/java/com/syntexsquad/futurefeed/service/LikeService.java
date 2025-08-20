@@ -2,11 +2,13 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Like;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import jakarta.transaction.Transactional;
-import model.Post;
-import model.UserPost;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +22,13 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final AppUserRepository appUserRepository;
     private final PostService postService;
+    private final NotificationService notificationService;
 
-    public LikeService(LikeRepository likeRepository, AppUserRepository appUserRepository, PostService postService) {
+    public LikeService(LikeRepository likeRepository, AppUserRepository appUserRepository, PostService postService, NotificationService notificationService) {
         this.likeRepository = likeRepository;
         this.appUserRepository = appUserRepository;
         this.postService = postService;
+        this.notificationService = notificationService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -44,7 +48,7 @@ public class LikeService {
 
     public boolean likePost(Integer postId) {
         AppUser user = getAuthenticatedUser();
-
+        AppUser sender = getAuthenticatedUser();
         if (!postService.existsById(postId)) {
             throw new IllegalArgumentException("Post not found");
         }

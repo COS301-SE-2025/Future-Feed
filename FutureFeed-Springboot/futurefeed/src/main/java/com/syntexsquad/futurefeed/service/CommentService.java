@@ -2,13 +2,12 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import jakarta.transaction.Transactional;
-import model.Post;
-import model.UserPost;
-
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -28,13 +27,14 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final AppUserRepository appUserRepository;
     private final PostRepository postRepository;
-
+    private  final NotificationService notificationService;
     public CommentService(CommentRepository commentRepository,
                           AppUserRepository appUserRepository,
-                          PostRepository postRepository) {
+                          PostRepository postRepository,NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.appUserRepository = appUserRepository;
         this.postRepository = postRepository;
+        this.notificationService = notificationService;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -55,6 +55,7 @@ public class CommentService {
     @Transactional
     public Comment addComment(Integer postId, String content) {
         AppUser user = getAuthenticatedUser();
+        AppUser sender = getAuthenticatedUser();
         Integer userId = user.getId();
 
         if (!postRepository.existsById(postId)) {
