@@ -3,10 +3,15 @@ package com.syntexsquad.futurefeed.service;
 import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +30,9 @@ public class AppUserService implements UserDetailsService {
         this.userRepo = userRepo;
         this.passwordEncoder = passwordEncoder;
     }
+
+    @CacheEvict(value = {"users", "userByUsername", "userByEmail", "userById"}, allEntries = true)
+
 
 
 
@@ -85,14 +93,17 @@ public class AppUserService implements UserDetailsService {
         );
     }
 
+    @Cacheable(value = "userByUsername", key = "#username")
     public AppUser getUserByUsername(String username) {
         return userRepo.findByUsername(username).orElse(null);
     }
 
+    @Cacheable(value = "userByEmail", key = "#email")
     public AppUser getUserByEmail(String email) {
         return userRepo.findByEmail(email).orElse(null);
     }
 
+    @CacheEvict(value = {"users", "userByUsername", "userByEmail", "userById"}, allEntries = true)
     public boolean deleteUserByUsername(String username) {
         Optional<AppUser> optionalUser = userRepo.findByUsername(username);
         if (optionalUser.isPresent()) {
@@ -102,13 +113,12 @@ public class AppUserService implements UserDetailsService {
         return false;
     }
 
+    @CacheEvict(value = {"users", "userByUsername", "userByEmail", "userById"}, allEntries = true)
     public AppUser saveUser(AppUser user) {
         return userRepo.save(user);
     }
 
-    /**
-     * Used by OAuth2UserService to find or create a user based on email.
-     */
+    @CacheEvict(value = {"users", "userByUsername", "userByEmail", "userById"}, allEntries = true)
     public AppUser findOrCreateUserByEmail(String email, Map<String, Object> attributes) {
         return userRepo.findByEmail(email).orElseGet(() -> {
             AppUser newUser = new AppUser();
@@ -123,20 +133,22 @@ public class AppUserService implements UserDetailsService {
         });
     }
 
+    @Cacheable(value = "users")
     public List<AppUser> getAllUsers() {
-    return userRepo.findAll();
+        return userRepo.findAll();
     }
 
+    @Cacheable(value = "searchUsers", key = "#keyword")
     public List<AppUser> searchUsers(String keyword) {
-    return userRepo.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(keyword, keyword);  
+        return userRepo.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(keyword, keyword);
     }
 
     private String generateUsernameFromEmail(String email) {
         return email.split("@")[0] + "_" + System.currentTimeMillis(); // ensures uniqueness
     }
 
+    @Cacheable(value = "userById", key = "#id")
     public AppUser getUserById(Integer id) {
-    return userRepo.findById(id).orElse(null);
+        return userRepo.findById(id).orElse(null);
     }
-
 }
