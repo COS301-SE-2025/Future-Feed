@@ -30,9 +30,9 @@ public class UserIT {
     @Autowired  private MockMvc mockMvc;
     @MockBean  private FeedPresetRepository presetRepo;
     @MockBean  private PresetRuleRepository ruleRepo;
-    @MockBean  private AppUserRepository userRepo;
+    @Autowired   private AppUserRepository userRepo;
     @MockBean  private FollowerRepository followerRepo;
-    @MockBean  private PostRepository postRepo;
+    @Autowired  private PostRepository postRepo;
     @MockBean  private PostTopicRepository postTopicRepo;
     @MockBean  private CommentRepository commentRepo;
     @MockBean  private ReshareRepository reshareRepo;
