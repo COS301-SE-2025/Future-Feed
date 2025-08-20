@@ -74,6 +74,7 @@ public class UserIT {
         postRepo.deleteAll();
         followerRepo.deleteAll();
         botRepo.deleteAll();
+        userRepo.deleteAll();
 
 
         // Recreate a test user
