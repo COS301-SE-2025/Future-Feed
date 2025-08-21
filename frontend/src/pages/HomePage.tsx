@@ -424,7 +424,7 @@ const HomePage = () => {
 
 
 
-  const fetchAllPosts = async () => {
+  /*const fetchAllPosts = async () => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
       return;
@@ -525,7 +525,7 @@ const HomePage = () => {
     } finally {
       setLoadingForYou(false);
     }
-  };
+  };*/
 
   const fetchFollowingPosts = async () => {
     if (!currentUser?.id) {
