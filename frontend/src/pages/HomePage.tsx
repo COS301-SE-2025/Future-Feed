@@ -203,7 +203,36 @@ const HomePage = () => {
     }
   };
 
+  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
+      const topicIds: number[] = await res.json();
+
+      let currentTopics = topics;
+      if (!currentTopics.length) {
+        currentTopics = await fetchTopics(); 
+      }
+
+      const postTopics = topicIds
+        .map((id) => currentTopics.find((topic) => topic.id === id))
+        .filter((topic): topic is Topic => !!topic);
+
+      return postTopics;
+    } catch (err) {
+      console.error(`Error fetching topics for post ${postId}:`, err);
+      setError("Failed to load topics for post.");
+      setTimeout(() => setError(null), 3000);
+      return [];
+    }
+  };
+
+
+  /*const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -246,7 +275,154 @@ const HomePage = () => {
       setTimeout(() => setError(null), 3000);
       return [];
     }
+  };*/
+
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingForYou &&
+        hasMore
+      ) {
+        const nextPage = currentPage + 1;
+        fetchPaginatedPosts(nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setHasMore(false);
+          } else {
+            setCurrentPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [currentPage, loadingForYou, hasMore]);
+
+  // added fetchPaginated
+  const fetchPaginatedPosts = async (page: number) => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch posts: currentUser is not loaded");
+      return 0;
+    }
+    console.debug(`Fetching posts page ${page}`);
+    setLoadingForYou(true);
+
+    try {
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/posts/paginated?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
+      ]);
+
+      if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+
+      const pageData = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content; 
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+
+      const validPosts = apiPosts.filter(post => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
+
+      const formattedPosts: PostData[] = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
+
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          const existingPost = posts.find(p => p.id === post.id);
+          const showComments = existingPost ? existingPost.showComments : false;
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments,
+            topics: topicsRes,
+          };
+        })
+      );
+
+      setPosts(prev => {
+        const postsMap = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (postsMap.has(p.id)) {
+            postsMap.set(p.id, { ...p, showComments: postsMap.get(p.id)!.showComments });
+          } else {
+            postsMap.set(p.id, p);
+          }
+        });
+        return Array.from(postsMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      });
+    } catch (err) {
+      console.error("Error fetching paginated posts:", err);
+    } finally {
+      setLoadingForYou(false);
+    }
   };
+
+
 
   const fetchAllPosts = async () => {
     if (!currentUser?.id) {
@@ -462,7 +638,26 @@ const HomePage = () => {
     }
   };
 
-  const fetchTopics = async () => {
+  //modified
+  const fetchTopics = async (): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
+      const data: Topic[] = await res.json();
+      setTopics(data || []);
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+      setError("Failed to load topics.");
+      setTimeout(() => setError(null), 3000);
+      return [];
+    }
+  };
+
+  /*const fetchTopics = async () => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -476,7 +671,7 @@ const HomePage = () => {
       setError("Failed to load topics.");
       setTimeout(() => setError(null), 3000);
     }
-  };
+  };*/
 
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1096,7 +1291,7 @@ const HomePage = () => {
     if (!currentUser) return;
 
     if (activeTab === "for You") {
-      fetchAllPosts();
+      fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
     }
@@ -1211,7 +1406,7 @@ const HomePage = () => {
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchAllPosts()}
+                        onClick={() => fetchPaginatedPosts(0)}
                       >
                         Refresh
                       </Button>
