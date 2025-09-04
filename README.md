@@ -1,36 +1,151 @@
-# Future Feed by Syntex Squad for our COS 301 Capstone Project
+<div align="center">
 
-<div class="display: flex; justify-content: center; align-items: center;">
-<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="500"/>
+# Future Feed by Syntex Squad
+
+<div>
+<img src="Documentation/Logos/Future Feed Main Logo.png" alt="Logo" width="300"/>
 </div>
 <br>
 
+## Project Description:
+  <b> Future Feed (FF) </b> is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots. 
+  <br><br>
+  This project is developed by <b> Syntex Squad </b> for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
+
+## Code Quality Badges
+### Issue Tracking
+[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
+[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
+[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
+
+### GitHub
+[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
+[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
+[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
+![Last Commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Future-Feed)
+
 ## Links:
- - <a href="Documentation/Specification/Requirement Specification.md">Requirement Specification</a>
- - <a href="Documentation/Specification/Design Specification.md">Design Specification</a>
- - <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
+  <a href="Documentation/Specification/Requirement Specifications">Requirement Specifications</a> | 
+  <a href="Documentation/Specification/Design Specifications">Design Specifications</a> | 
+  <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
+  <br>
+  <a href="Documentation/Specification/Manuals">Manuals</a> |
+  <a href="Documentation/Specification/Coding Standards">Coding Standards/quality</a>
 
 ### Demo links:
- - <a href="https://drive.google.com/uc?id=1U68PozQtl9v3ZFldNBVAkvNygU09yDlu&export=download"> Demo 1 video </a>
- - <a href="https://docs.google.com/presentation/d/1WR348H6W3zR0sJQGFtURWZBOQn1MhI0D/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true"> Demo 1 presentation </a>
-
-## Project Description:
- - Future Feed (FF) is a social media platform that lets users take direct control of their content feeds through customizable feed presets and, in future iterations, AI-powered bots.
- - This project is developed by Syntex Squad for the COS 301 Capstone Project, in collaboration with EPI-USE Labs.
+<table>
+  <thead>
+    <tr>
+      <th>Demo</th>
+      <th>Link</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Demo 1 Video</strong></td>
+      <td>
+        <a href="https://drive.google.com/uc?id=1U68PozQtl9v3ZFldNBVAkvNygU09yDlu&export=download" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 1 Presentation</strong></td>
+      <td>
+        <a href="https://docs.google.com/presentation/d/1WR348H6W3zR0sJQGFtURWZBOQn1MhI0D/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 2 Video</strong></td>
+      <td>
+        <a href="https://drive.google.com/file/d/1xwmgU_PGgQFe_5PyJvnriXfUUS-HuvCu/view?usp=drive_link" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Demo 2 Presentation</strong></td>
+      <td>
+        <a href="https://docs.google.com/presentation/d/1vkvTeodjbLmFlRf9lci6GSyVWoAMxiIs/edit?usp=drive_link&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
+	<tr>
+      <td><strong>Demo 3 Video</strong></td>
+      <td>
+        <a href="https://drive.google.com/file/d/1TlCD8l6rxV5CcXSDp1veNi0ssPPdSwMh/view?usp=drive_link" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+	<tr>
+      <td><strong>Demo 3 Presentation</strong></td>
+      <td>
+        <a href="https://docs.google.com/presentation/d/1KFXWtTETXgIkEAOJwkiu6rBdjxhQHtbF/edit?usp=drive_link&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 ## Deliverables:
-### Demo 1 use cases:
- - User management
-	* Upload profile
-	* Display pictures
+80% completion of the working prototype <br>
+Architectural Requirements & Design Documentation <br>
+Coding Standards Document <br>
+User Manual <br>
+Technical Installation Manual <br>
+Requirements and Design Specifications <br>
 
- - Post Creation
- 	* Create Post
- 	* Delete Post
+<h2> Technologies Used</h2>
 
- - User interaction
-	* User comment
-	* User likes
+<table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Technology</th>
+      <th>Logo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td rowspan="4"><strong>Frontend</strong></td>
+      <td>React (TSX) + Vite</td>
+      <td><img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>Tailwind CSS</td>
+      <td><img src="https://img.shields.io/badge/Tailwind_CSS-06B6D4?logo=tailwind-css&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>JavaScript</td>
+      <td><img src="https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=black&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>ShadCN/UI</td>
+      <td><img src="https://img.shields.io/badge/ShadCN_UI-%23000000?logo=shadcn&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td rowspan="3"><strong>Backend</strong></td>
+      <td>OAuth 2.0</td>
+      <td><img src="https://img.shields.io/badge/OAuth2-000000?logo=oauth&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>Spring Boot</td>
+      <td><img src="https://img.shields.io/badge/Spring_Boot-6DB33F?logo=spring-boot&logoColor=white&style=flat" /></td>
+    </tr>
+    <tr>
+      <td>PostgreSQL</td>
+      <td><img src="https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=flat" /></td>
+    </tr>
+  </tbody>
+</table>
+
+
 
 ## Team Members:
 <table>
@@ -45,7 +160,7 @@
 	  	<td align="center">
 			Project Manager 
 			<br>
-			Frontend Engineer
+			Frontend Developer
 			<br>
 			Integration Engineer
 	  	</td>
@@ -73,7 +188,7 @@
 	  	<td align="center">
 			Frontend Developer 
 			<br>
-			Testing Engineer
+			Integration Engineer
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -97,9 +212,9 @@
 			<br>
 	  	</td>
 	  	<td align="center">
-			Front-End 
+			Front-End Developer
 			<br>
-			Developer 
+			Integration Engineer
 			<br>
 			DevOps Engineer
 	  	</td>
@@ -126,8 +241,6 @@
 	  	</td>
 	  	<td align="center">
 			Backend Developer
-			<br>
-			Integration Tester
 	  	</td>
 	    	<td align="center">
 			Java, Python, C++, HTML/CSS/JS, NodeJS
@@ -171,56 +284,56 @@
 	</tr>
 </table>
 
-## Code Quality Badges
-### Code Coverage
-[![Coverage Status](https://coveralls.io/repos/github/COS301-SE-2025/Future-Feed/badge.svg?branch=main)](https://coveralls.io/github/COS301-SE-2025/Future-Feed?branch=main)
-
-### Build
-[![Build status](https://ci.appveyor.com/api/projects/status/yourappveyorid?svg=true)](https://ci.appveyor.com/project/yourorg/yourrepo)
-
-### Requirements
-[![npm version](https://img.shields.io/npm/v/yourpackage)](https://www.npmjs.com/package/yourpackage)
-
-### Issue Tracking
-[![GitHub issues](https://img.shields.io/github/issues/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues)
-[![GitHub closed issues](https://img.shields.io/github/issues-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/issues?q=is%3Aissue+is%3Aclosed)
-[![GitHub PRs](https://img.shields.io/github/issues-pr/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls)
-[![GitHub closed PRs](https://img.shields.io/github/issues-pr-closed/COS301-SE-2025/Future-Feed)](https://github.com/COS301-SE-2025/Future-Feed/pulls?q=is%3Apr+is%3Aclosed)
-
-### Monitoring Badges
-[![UptimeRobot Status](https://img.shields.io/uptimerobot/status/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
-[![UptimeRobot Ratio](https://img.shields.io/uptimerobot/ratio/m781149956-bcd2f7c1b31b3d2eab26fe30)](https://stats.uptimerobot.com/mG7Px2CY4k)
-
-[![NodePing status](https://img.shields.io/nodeping/status/201205050153W2Q4C-0J2HSIRF)](https://nodeping.com/reports/checks/201205050153W2Q4C-0J2HSIRF)
-
-
-### GitHub
-[![GitFlow](https://img.shields.io/badge/Branching%20Strategy-GitFlow-blue)](https://nvie.com/posts/a-successful-git-branching-model/)
-[![GitHub repo size](https://img.shields.io/github/repo-size/COS301-SE-2025/Future-Feed)]([https://github.com/yourorg/yourrepo](https://github.com/COS301-SE-2025/Future-Feed/edit/main/README.md))
-[![GitHub contributors](https://img.shields.io/github/contributors/COS301-SE-2025/Future-Feed)](https://github.com/yourorg/yourrepo/graphs/contributors)
-
-
 ## Getting Started
-
 ### Clone the Repository:
 ```
 git clone https://github.com/SyntexSquad/FutureFeed.git
 cd FutureFeed
 ```
 
-### Running Tests
- - Unit Testing
+### Install Dependencies:
+```
+cd frontend
+npm install
+```
+
+### Get Started:
+#### To run frontend:
+```
+cd frontend
+npm run dev
+```
+#### To run backend:
+Make sure you have mvn installed and then:
+```
+cd FutureFeed-Springboot/futurefeed
+mvn spring-boot:run
+```
+#### To run ai bot moderator:
+```
+cd AI-Bot
+docker build -t my-ai-bot .
+docker run -d -p 8000:8000 --name ai-bot-container my-ai-bot
+```
+
+## Running Tests
+Unit Testing <br>
+Integration Testing <br>
 
 ## GitHub Repository
 ### Structure
-The entire codebase will be stored in one repository. 
+The entire codebase is stored in one repository. 
 
 ### Branching Strategy
 We use Gitflow as our branching model/strategy
- - main: Production-ready code
- - develop: Integration branch for features
- - feature: Feature branches
- - PRs require at least one review (one more person should review the PR) before merging.
+```
+main: Production-ready code <br>
+dev: Integration branch for features <br>
+feature: Feature branches <br>
+Some branches are created from issues so they will have the issue number there
+```
+
+PRs require at least one review (one more person should review the PR) before merging.
 
 ## Contact
 Team Email: syntaxsquad@gmail.com
@@ -230,3 +343,8 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 
 ## Course: 
 COS 301, University of Pretoria, 2025
+
+</div>
+
+
+

@@ -1,40 +1,40 @@
 package com.syntexsquad.futurefeed.Controller;
 
-import com.syntexsquad.futurefeed.dto.LoginRequest;
-import com.syntexsquad.futurefeed.dto.RegisterRequest;
-import com.syntexsquad.futurefeed.dto.UserProfileResponse;
 import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.service.MockUserService;
+import com.syntexsquad.futurefeed.service.AppUserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final MockUserService userService;
+    private final AppUserService userService;
 
-    public AuthController(MockUserService userService) {
+    public AuthController(AppUserService userService) {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        try {
-            userService.registerUser(request);
-            return ResponseEntity.ok("Registration successful for: " + request.getUsername());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    @GetMapping("/me")
+    public ResponseEntity<?> oauth2Login(@AuthenticationPrincipal OAuth2User principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Not authenticated");
         }
+
+        
+        String email = (String) principal.getAttribute("email");
+        if (email == null) {
+            return ResponseEntity.badRequest().body("Email not found in OAuth2 user attributes");
+        }
+
+        
+        AppUser user = userService.findOrCreateUserByEmail(email, principal.getAttributes());
+
+        return ResponseEntity.ok(user);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            AppUser user = userService.authenticateUser(request.getUsername(), request.getPassword());
-            return ResponseEntity.ok(UserProfileResponse.fromUser(user));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
-    }
 }

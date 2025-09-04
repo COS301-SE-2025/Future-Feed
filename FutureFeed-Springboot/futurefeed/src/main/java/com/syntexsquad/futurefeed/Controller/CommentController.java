@@ -1,10 +1,10 @@
 package com.syntexsquad.futurefeed.Controller;
 
-import com.syntexsquad.futurefeed.dto.CommentRequest;
 import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 import java.util.List;
 
@@ -18,19 +18,35 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    @PostMapping
-    public ResponseEntity<Comment> addComment(@RequestBody CommentRequest request) {
-        if (request.getContent() == null || request.getContent().trim().isEmpty()) {
-            return ResponseEntity.badRequest().build();
+    @PostMapping("/{postId}")
+    public ResponseEntity<?> addComment(
+            @PathVariable Integer postId,
+            @RequestBody String content
+    ) {
+        if (content == null || content.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Content cannot be empty");
         }
 
-        Comment savedComment = commentService.addComment(request);
-        return ResponseEntity.ok(savedComment);
+        try {
+            Comment saved = commentService.addComment(postId, content.trim());
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<Comment>> getCommentsByPost(@PathVariable Integer postId) {
-        List<Comment> comments = commentService.getCommentsForPost(postId);
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok(commentService.getCommentsForPost(postId));
+    }
+
+    @GetMapping("/has-commented/{postId}")
+    public ResponseEntity<?> hasUserCommented(@PathVariable Integer postId) {
+        try {
+            boolean hasCommented = commentService.hasUserCommented(postId);
+            return ResponseEntity.ok(hasCommented);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).body("Unauthorized or user not found");
+        }
     }
 }

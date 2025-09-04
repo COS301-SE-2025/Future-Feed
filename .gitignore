@@ -13,6 +13,8 @@ build/
 __pycache__/
 *.pyc
 
+myenv/
+
 # VSCode
 .vscode/
 
@@ -21,8 +23,6 @@ __pycache__/
 npm-debug.log*
 
 # Java
-*.class
-*.jar
 *.war
 *.nar
 *.ear
@@ -44,3 +44,6 @@ replay_pid*
 # Others
 package-lock.json
 Future-Feed/
+
+# Environment
+myenv/

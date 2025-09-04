@@ -14,6 +14,18 @@ public class Like {
     private Integer userId;
 
     @Id
-    @Column(name = "post_id")
-    private Integer postId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_id", nullable = false)
+    private Post post;
+
+    // Optional helper for DTOs
+    @Transient
+    public Integer getPostId() {
+        return post != null ? post.getId() : null;
+    }
+
+    public void setPostId(Integer postId) {
+        if (post == null) post = new UserPost(); // Or `new Post()` if you want abstract reference
+        post.setId(postId);
+    }
 }

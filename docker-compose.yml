@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: FutureFeed-postgres-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Stxsqd@2025
+      POSTGRES_DB: Future_Feed
+      POSTGRES_LOGGING: "on"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db:/docker-entrypoint-initdb.d
+    command: >
+      postgres -c log_statement=all -c log_duration=on -c log_connections=on -c log_disconnections=on
+
+  api:
+    build:
+      context: ./FutureFeed-Springboot/futurefeed
+      dockerfile: Dockerfile
+    container_name: FutureFeed-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pgdata:

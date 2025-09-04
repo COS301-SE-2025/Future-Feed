@@ -1,145 +1,110 @@
 package com.syntexsquad.futurefeed;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.syntexsquad.futurefeed.Controller.AuthController;
-import com.syntexsquad.futurefeed.config.SecurityConfig;
-import com.syntexsquad.futurefeed.dto.LoginRequest;
-import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.service.MockUserService;
+import com.syntexsquad.futurefeed.service.AppUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
+import static java.util.Map.of;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@Import(AuthControllerTest.TestSecurityConfig.class)
 public class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
-    private MockUserService userService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule())
-            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    private AppUserService appUserService;
 
     @Test
-    void testSuccessfulRegistration() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setUsername("user1");
-        request.setPassword("pass123");
-        request.setEmail("user1@example.com");
-        request.setDateOfBirth(LocalDate.of(1990, 1, 1));
-
-        doNothing().when(userService).registerUser(any());
-
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Registration successful")));
+    public void testMeReturns401IfNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string("Not authenticated"));
     }
 
     @Test
-    void testRegistrationFailsOnMissingUsername() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setPassword("pass123");
-        request.setEmail("user1@example.com");
+    public void testMeReturnsUserIfAuthenticated() throws Exception {
+        Map<String, Object> attributes = of(
+                "email", "test@example.com",
+                "name", "Test User"
+        );
 
-        doThrow(new IllegalArgumentException("Username is required."))
-                .when(userService).registerUser(any());
+        OAuth2User principal = new DefaultOAuth2User(
+                Set.of(new OAuth2UserAuthority(attributes)),
+                attributes,
+                "email"
+        );
 
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Username is required."));
-    }
-
-    @Test
-    void testRegistrationFailsOnInvalidEmail() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setUsername("user1");
-        request.setPassword("pass123");
-        request.setEmail("invalid-email");
-
-        doThrow(new IllegalArgumentException("Valid email is required."))
-                .when(userService).registerUser(any());
-
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Valid email is required."));
-    }
-
-    @Test
-    void testRegistrationFailsOnDuplicateUsername() throws Exception {
-        RegisterRequest request = new RegisterRequest();
-        request.setUsername("user1");
-        request.setPassword("pass123");
-        request.setEmail("user1@example.com");
-
-        doThrow(new IllegalArgumentException("Username already taken."))
-                .when(userService).registerUser(any());
-
-        mockMvc.perform(post("/api/auth/register")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Username already taken."));
-    }
-
-    @Test
-    void testSuccessfulLogin() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setUsername("user1");
-        request.setPassword("pass123");
+        TestingAuthenticationToken auth = new TestingAuthenticationToken(principal, null);
+        auth.setAuthenticated(true);
+        SecurityContextHolder.getContext().setAuthentication(auth);
 
         AppUser mockUser = new AppUser();
-        mockUser.setUsername("user1");
-        mockUser.setEmail("user1@example.com");
+        mockUser.setEmail("test@example.com");
+        mockUser.setUsername("TestUser");
 
-        when(userService.authenticateUser("user1", "pass123")).thenReturn(mockUser);
+        when(appUserService.findOrCreateUserByEmail("test@example.com", attributes)).thenReturn(mockUser);
 
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("user1"));
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.username").value("TestUser"));
+
+        SecurityContextHolder.clearContext();
     }
 
-    @Test
-    void testLoginFailsOnWrongPassword() throws Exception {
-        LoginRequest request = new LoginRequest();
-        request.setUsername("user1");
-        request.setPassword("wrongpass");
+    @TestConfiguration
+    static class TestSecurityConfig implements WebMvcConfigurer {
 
-        when(userService.authenticateUser("user1", "wrongpass"))
-                .thenThrow(new IllegalArgumentException("Invalid username or password."));
+        @Bean
+        public AuthenticationPrincipalArgumentResolver authenticationPrincipalArgumentResolver() {
+            return new AuthenticationPrincipalArgumentResolver();
+        }
 
-        mockMvc.perform(post("/api/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid credentials"));
+        @Override
+        public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+            resolvers.add(authenticationPrincipalArgumentResolver());
+        }
+
+        @Bean
+        public SecurityFilterChain testSecurityFilterChain(HttpSecurity http) throws Exception {
+            http
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/auth/me").permitAll() // ✅ Allow unauthenticated access
+                    .anyRequest().authenticated()
+                )
+                .csrf().disable()
+                .oauth2Login().disable()
+                .formLogin().disable()
+                .httpBasic().disable(); // Prevents redirects
+
+            return http.build();
+        }
     }
 }

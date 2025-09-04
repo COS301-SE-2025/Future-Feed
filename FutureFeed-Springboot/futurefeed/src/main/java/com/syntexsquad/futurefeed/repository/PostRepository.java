@@ -10,5 +10,11 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
 
     @Query("SELECT p FROM Post p WHERE LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<Post> searchByKeyword(@Param("keyword") String keyword);
+
+    @Query("SELECT p FROM UserPost p WHERE p.user.id = :userId")
+    List<Post> findAllByUserId(@Param("userId") Integer userId);
+    
+     @Query("SELECT p FROM Post p WHERE p.id IN :ids")
+    List<Post> findAllById(@Param("ids") List<Integer> ids);
 }
 
