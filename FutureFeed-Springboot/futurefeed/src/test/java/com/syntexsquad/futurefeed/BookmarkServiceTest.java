@@ -4,6 +4,7 @@ import com.syntexsquad.futurefeed.dto.BookmarkDto;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.*;
 import com.syntexsquad.futurefeed.service.BookmarkService;
+import com.syntexsquad.futurefeed.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,7 +22,10 @@ public class BookmarkServiceTest {
     private BookmarkRepository bookmarkRepo;
     private AppUserRepository userRepo;
     private PostRepository postRepo;
+    private NotificationService notificationService;
+
     private BookmarkService bookmarkService;
+
 
     private final Integer userId = 1;
     private final Integer postId = 10;
@@ -33,7 +37,8 @@ public class BookmarkServiceTest {
         bookmarkRepo = mock(BookmarkRepository.class);
         userRepo = mock(AppUserRepository.class);
         postRepo = mock(PostRepository.class);
-        bookmarkService = new BookmarkService(bookmarkRepo, userRepo, postRepo);
+        notificationService = mock(NotificationService.class);
+        bookmarkService = new BookmarkService(bookmarkRepo, userRepo, postRepo, notificationService);
 
         testUser = new AppUser();
         testUser.setId(userId);
