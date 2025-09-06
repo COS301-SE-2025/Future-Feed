@@ -141,7 +141,7 @@ const WhoToFollow = () => {
   const stableStatuses = useStableFollowStatus(userIds);
 
   return (
-    <Card className="bg-green dark:bg-stone-400 dark:border-stone-700 dark:text-stone-700 rounded-3xl border-5 border-stone-700 bg-lime-600 text-white ">
+    <Card className="bg-green dark:bg-teal-950 dark:border-stone-700 dark:text-stone-400 rounded-3xl border-5 border-stone-700 bg-lime-600 text-white ">
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 
@@ -172,7 +172,7 @@ const WhoToFollow = () => {
                     </Avatar>
                     <div>
                       <p className="font-semibold">{user.username}</p>
-                      <p className="dark:text-stone-700">@{user.name}</p>
+                      <p className="dark:text-stone-400">@{user.name}</p>
                     </div>
                   </div>
 
@@ -199,7 +199,7 @@ const WhoToFollow = () => {
 
             <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
-        <p className="dark:text-stone-700 hover:underline cursor-pointer">Show more</p>
+        <p className="dark:text-stone-400 hover:underline cursor-pointer">Show more</p>
       </div>
       </Link>
             
