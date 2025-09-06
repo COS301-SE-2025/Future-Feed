@@ -17,6 +17,7 @@ import EditProfilePage from "./pages/EditProfile";
 import PostPage from "./pages/PostPage";
 import BotPage from "./pages/BotPage";
 import EditBotPage from "./pages/EditBot";
+import Profile from "./pages/Profile";
 
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
       <Route path="/post/:postId" element={<PostPage />} />
       <Route path="/bot/:botId" element={<BotPage />} />
       <Route path="/edit-bot" element={<EditBotPage />} />
+      <Route path="/profile/:profileId" element={<Profile />} />
     </Routes>
     </>
 
