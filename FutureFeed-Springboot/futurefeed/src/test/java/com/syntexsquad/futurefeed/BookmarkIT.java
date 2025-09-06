@@ -7,6 +7,7 @@ import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BookmarkRepository;
+import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.MediaService;
 
@@ -52,6 +53,7 @@ public class BookmarkIT {
     @Autowired private AppUserRepository userRepo;
     @Autowired private PostRepository postRepo;
     @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotRepository botRepo;
     @Autowired private ObjectMapper objectMapper;
     @MockBean private S3Config s3Config;
     @MockBean private MediaService mediaService;
@@ -103,6 +105,7 @@ public class BookmarkIT {
     void setup() {
         bookmarkRepo.deleteAll();
         postRepo.deleteAll();
+        botRepo.deleteAll();
         userRepo.deleteAll();
 
         testUser = ensureUser("bookmarkuser", "bookmark@example.com");
