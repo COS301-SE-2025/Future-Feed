@@ -503,7 +503,7 @@ const loadFollowingData = async (userId: number) => {
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
         
 
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-stone-400 border rounded-2xl dark:border-stone-700 z-10">
+        <div className="flex border-5 justify-between items-center px-4 py-3 sticky top-0 dark:bg-stone-400 border rounded-2xl dark:border-stone-700 z-10">
           <h1 className="text-xl dark:text-stone-700 font-bold">Explore</h1>
           <div className="flex items-center gap-2">
             <SearchUser onSearch={debouncedSearch} />
@@ -569,14 +569,14 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
         </Tabs>
 
-        <div className="w-full dark:bg-stone-400 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full  px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
       </main>
 
       <aside className="gap-4 flex flex-col ">
-        <div className="sticky p-3 top-4 z-10 bg-gray-200 dark:bg-blue-">
+        <div className="sticky p-3 top-4 z-10  ">
          
         </div>
         
