@@ -24,9 +24,9 @@ const PersonalSidebar = () => {
 
   return (
     <>
-    <aside className="h-fit dark:bg-black dark:border-lime-500 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-3 border-lime-500 shadow-md hidden lg:block bg-lime-600">
-      <div className="text-2xl font-bold mb-6 text-white dark:text-lime-500">Future Feed</div>
-      <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-lime-500 text-white ">
+    <aside className="h-fit dark:bg-stone-400 dark:border-stone-700 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-5 border-lime-500 shadow-md hidden lg:block bg-lime-600">
+      <div className="text-2xl font-bold mb-6 text-white dark:text-stone-700">Future Feed</div>
+      <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-stone-700 text-white ">
          <Link to="/home" className="flex items-center gap-3 dark:hover:text-white ">
           <Home size={20} /> Home
         </Link>
@@ -47,7 +47,7 @@ const PersonalSidebar = () => {
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 text-white dark:text-lime-500 hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
+          className="flex items-center gap-3 text-white dark:text-stone-700 hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
         >
           <LogOut size={20} /> Logout
         </button>
@@ -66,7 +66,7 @@ const PersonalSidebar = () => {
 
     </aside>
        {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 lg:hidden dark:slate-100 z-50 bg-white">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-stone-400 border text-lime-500  dark:border-stone-700 p-2 lg:hidden dark:slate-100 z-50 bg-white">
         <Link to="/home" className="flex flex-col items-center">
           <Home strokeWidth={3} className="w-5 h-5 " />
 

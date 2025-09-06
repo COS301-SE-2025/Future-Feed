@@ -425,8 +425,8 @@ const loadFollowingData = async (userId: number) => {
     
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="dark:bg-indigo-950 dark:border-lime-500 rounded-2xl">
-          <CardContent className="flex gap-3 items-start p-4">
+        <Card key={user.id} className="dark:bg-stone-400 border-5 border dark:border-stone-700 rounded-2xl">
+          <CardContent className="flex border border-5 gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/2" />
@@ -440,7 +440,7 @@ const loadFollowingData = async (userId: number) => {
     }
 
     return (
-      <Card key={user.id} className="w-full dark:bg-indigo-950 dark:text-white border dark:border-lime-500 rounded-2xl">
+      <Card key={user.id} className="w-full border border-5 dark:bg-stone-400 dark:text-white border dark:border-stone-700 rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -454,14 +454,14 @@ const loadFollowingData = async (userId: number) => {
           {followStatus[user.id] ? (
             <Button
               onClick={() => handleUnfollow(user.id)}
-              className="min-w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-blue- hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
+              className="min-w-[90px] px-4 py-1  rounded-full  border border-gray-400 font-semibold dark:text-stone-400 dark:bg-teal-950 hover:bg-lime-500 hover:cursor-pointer transition-colors duration-200"
             >
               Unfollow
             </Button>
           ) : (
             <Button
               onClick={() => handleFollow(user.id)}
-              className="min-w-[90px] px-4 py-1   rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
+              className="min-w-[90px] px-4 py-1 dark:bg-teal-950  rounded-full bg-lime-500 text-stone-400  font-semibold hover:bg-lime-600 hover:cursor-pointer transition-colors duration-200"
             >
               Follow
             </Button>
@@ -473,7 +473,7 @@ const loadFollowingData = async (userId: number) => {
 
   const renderSkeleton = () =>
     Array.from({ length: 4 }).map((_, idx) => (
-      <Card key={idx} className="dark:bg-indigo-950 dark:border-lime-500 rounded-2xl">
+      <Card key={idx} className="dark:bg-stone-400 dark:border-stone-700 rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -495,7 +495,7 @@ const loadFollowingData = async (userId: number) => {
   //
 
   return (
-    <div className="flex min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
+    <div className="flex min-h-screen bg-gray-200 dark:bg-teal-950 dark:text-white">
       <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -503,12 +503,12 @@ const loadFollowingData = async (userId: number) => {
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
         
 
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-lime-500 z-10">
-          <h1 className="text-xl dark:text-lime-500 font-bold">Explore</h1>
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-stone-400 border rounded-2xl dark:border-stone-700 z-10">
+          <h1 className="text-xl dark:text-stone-700 font-bold">Explore</h1>
           <div className="flex items-center gap-2">
             <SearchUser onSearch={debouncedSearch} />
              <Link to="/settings">
-            <Settings size={20} className="dark:text-lime-500" />
+            <Settings size={20} className="dark:text-stone-700" />
           </Link>
 
           </div>
@@ -525,12 +525,12 @@ const loadFollowingData = async (userId: number) => {
           }
         }}
          className="w-full p-2">
-          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-lime-500  dark:bg-blue-">
+          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-stone-700  dark:bg-teal-950">
             {[ "accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 rounded-2xl dark:lime-500 text-green capitalize dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500"
+                className="flex-1 rounded-2xl dark:teal-950 text-green capitalize dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-stone-700"
               >
                 {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
@@ -569,7 +569,7 @@ const loadFollowingData = async (userId: number) => {
           </TabsContent>
         </Tabs>
 
-        <div className="w-full dark:bg-indigo-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full dark:bg-stone-400 px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>

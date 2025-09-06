@@ -141,7 +141,7 @@ const WhoToFollow = () => {
   const stableStatuses = useStableFollowStatus(userIds);
 
   return (
-    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white ">
+    <Card className="bg-green dark:bg-stone-400 dark:border-stone-700 dark:text-stone-700 rounded-3xl border-5 border-stone-700 bg-lime-600 text-white ">
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 
@@ -172,7 +172,7 @@ const WhoToFollow = () => {
                     </Avatar>
                     <div>
                       <p className="font-semibold">{user.username}</p>
-                      <p className="dark:text-lime-500">@{user.name}</p>
+                      <p className="dark:text-stone-700">@{user.name}</p>
                     </div>
                   </div>
 
@@ -180,14 +180,14 @@ const WhoToFollow = () => {
                     <Skeleton className="h-8 w-16 rounded-2xl" />
                   ) : isFollowing ? (
                     <Button
-                      className="w-[90px] rounded-full border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+                      className="w-[90px] rounded-full border border-gray-400 font-semibold dark:text-stone-400 dark:bg-teal-950 hover:bg-lime-500 hover:cursor-pointer"
                       onClick={() => handleUnfollow(user.id)}
                     >
                       Unfollow
                     </Button>
                   ) : (
                     <Button
-                      className="w-[90px] rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+                      className="w-[90px] dark:bg-teal-950 rounded-full bg-lime-500 text-stone-400 font-semibold hover:bg-lime-600 hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
@@ -199,7 +199,7 @@ const WhoToFollow = () => {
 
             <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
-        <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+        <p className="dark:text-stone-700 hover:underline cursor-pointer">Show more</p>
       </div>
       </Link>
             

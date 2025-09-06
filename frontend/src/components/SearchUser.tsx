@@ -35,7 +35,7 @@ const SearchUser = ({ onSearch }: SearchUserProps) => {
         onSearch(e.target.value);
 
       }}
-      className="rounded-full border-lime-500 dark:bg-[#1a1a1a] dark:text-white dark:placeholder:text-lime-500"
+      className="rounded-full border-stone-700 dark:bg-teal-950 dark:text-white dark:placeholder:text-stone-400"
     />
   
   );
