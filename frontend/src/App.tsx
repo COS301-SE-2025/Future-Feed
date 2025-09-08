@@ -23,7 +23,6 @@ import Profile from "./pages/Profile";
 function App() {
   return (
     <>
-    
     <Routes>
       {/* Future routes: <Route path="/" element={<Landing />} /> */}
       <Route path="/profile" element={<UserProfile />} />
@@ -47,7 +46,6 @@ function App() {
       <Route path="/profile/:profileId" element={<Profile />} />
     </Routes>
     </>
-
   )
 }
 

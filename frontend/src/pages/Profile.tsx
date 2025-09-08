@@ -2,115 +2,11 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
-import Post from "@/components/ui/post";
 import GRP1 from "../assets/GRP1.jpg";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
-
-interface UserProfile {
-  id: number;
-  username: string;
-  displayName: string;
-  profilePicture?: string;
-  bio?: string | null;
-  dateOfBirth?: string | null;
-  email: string;
-}
-
-interface CommentData {
-  id: number;
-  postId: number;
-  authorId: number;
-  content: string;
-  createdAt: string;
-  username: string;
-  handle: string;
-}
-
-interface RawComment {
-  id: number;
-  postId: number;
-  userId?: number;
-  content: string;
-  createdAt: string;
-}
-
-interface PostData {
-  profilePicture?: string;
-  id: number;
-  username: string;
-  handle: string;
-  time: string;
-  text: string;
-  image?: string;
-  isLiked: boolean;
-  isBookmarked: boolean;
-  isReshared: boolean;
-  commentCount: number;
-  authorId: number;
-  likeCount: number;
-  reshareCount: number;
-  comments: CommentData[];
-  showComments: boolean;
-  topics: Topic[];
-}
-
-interface Topic {
-  id: number;
-  name: string;
-}
-
-interface RawPost {
-  id: number;
-  content: string;
-  createdAt: string;
-  imageUrl?: string;
-  user: {
-    id: number;
-    username: string;
-    displayName: string;
-    profilePicture?: string;
-  };
-
-}
-
-interface User {
-  id: number;
-  username: string;
-  displayName: string;
-  email: string;
-  profilePicture: string;
-  bio: string;
-}
-
-interface FollowRelation {
-  id: number;
-  followerId: number;
-  followedId: number;
-  followedAt: string;
-}
-
-interface UserInfo {
-  id: number;
-  username: string;
-  displayName: string;
-  profilePicture?: string;
-}
-
-const userCache = new Map<number, UserInfo>();
-
-const profileDataCache = {
-  user: null as UserProfile | null,
-  followers: [] as User[],
-  followingUsers: [] as User[],
-  posts: [] as PostData[],
-  reshares: [] as PostData[],
-  commented: [] as PostData[],
-  likedPosts: [] as PostData[],
-  bookmarkedPosts: [] as PostData[],
-};
 
 const Profile = () => {
   return (
@@ -137,22 +33,14 @@ const Profile = () => {
               <p className="dark:text-gray-400">User Name</p>
               <p className="mt-2 text-sm"> This is my bio</p>
             </div>
-            <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">
-                Edit Profile
+              <Button variant="outline" className="mt-[-120px] text-white bg-lime-600 dark:hover:text-black dark:text-black dark:bg-lime-500 dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">
+                Follow
               </Button>
-            </Link>
           </div>
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
-            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Following ·
-            </Link>
-            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Followers ·
-            </Link>
-            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-white">0</span> Bots ·
-            </Link>
             <span className="font-medium dark:text-white">0</span> Posts
           </div>
         </div>
