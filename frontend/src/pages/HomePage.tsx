@@ -1548,8 +1548,8 @@ const HomePage = () => {
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
-                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md">
-                                            <div className="flex items-center">
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                            <div className="flex items-center ">
                                               <Filter size={14} className="mr-2 text-lime-500" />
                                               <Badge variant="outline" className="mr-2">
                                                 {rule.type}
