@@ -223,7 +223,7 @@ R10 Analytics and Insights
 </a>
 
 ## Architectural Requirements
-<a href="Architectural Specifications/Architectural Requirements (Demo 2).md">
+<a href="https://github.com/COS301-SE-2025/Future-Feed/tree/main/Documentation/Specification/Architectural%20Specifications">
   Architectural Requirements Link
 </a>
 
