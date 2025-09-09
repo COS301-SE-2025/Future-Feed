@@ -53,6 +53,7 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  profilePicture?: string;
 }
 
 interface BotProfile {
@@ -779,7 +780,6 @@ const BotPage = () => {
           posts.map((post) => (
             <div key={post.id} className="mb-4">
               <Post
-                profilePicture={FaRobot.toString()}
                 username={bot.name}
                 handle={bot.schedule}
                 time={post.time}
