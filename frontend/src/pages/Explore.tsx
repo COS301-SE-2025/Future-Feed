@@ -530,7 +530,7 @@ const Explore = () => {
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 rounded-2xl text-green capitalize dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-slate-200"
+                className="flex-1 rounded-2xl text-green capitalize  "
               >
                 {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>

@@ -1313,7 +1313,7 @@ const UserProfile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border border-lime-300 dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1368,7 +1368,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -1418,15 +1418,15 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+    <div className="flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="w-[1100px] mx-auto mt-3">
         <div className="relative">
-          <div className="mt-25 dark:bg-lime-500 w-full" />
+          <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
+            <Avatar className="w-27 h-27 border-3 border-lime-500 ">
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                 <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -1438,36 +1438,36 @@ const UserProfile = () => {
           <div className="flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
               <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
-              <p className="dark:text-gray-400">@{user.username}</p>
+              <p className="dark:text-slate-500">@{user.username}</p>
               <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="outline" className="mt-[-220px] text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer">
+              <Button variant="secondary" className="mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
                 Edit Profile
               </Button>
             </Link>
           </div>
-          <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
+          <div className="mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">{followingUsers ? followingUsers.length : 0}</span> Following ·
+              <span className="font-medium dark:text-slate-200">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">{followers ? followers.length : 0}</span> Followers ·
+              <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
             </Link>
             <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-white">0</span> Bots ·
+              <span className="font-medium dark:text-slate-200">0</span> Bots ·
             </Link>
-            <span className="font-medium dark:text-white">{posts.length}</span> Posts
+            <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
+        <Separator className="my-4 bg-lime-500 dark:bg-slate-200" />
         <Tabs defaultValue="posts" className="w-full" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="grid w-full dark:bg-black grid-cols-5 dark:border-lime-500">
-            <TabsTrigger className="dark:text-lime-500" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="re-feeds">Re-Feeds</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="comments">Comments</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="dark:text-lime-500" value="bookmarks">Bookmarks</TabsTrigger>
+          <TabsList className="grid w-full dark:bg-blue-950 grid-cols-5 ">
+            <TabsTrigger className="" value="posts">Posts</TabsTrigger>
+            <TabsTrigger className="" value="re-feeds">Re-Feeds</TabsTrigger>
+            <TabsTrigger className="" value="comments">Comments</TabsTrigger>
+            <TabsTrigger className="" value="likes">Likes</TabsTrigger>
+            <TabsTrigger className="" value="bookmarks">Bookmarks</TabsTrigger>
           </TabsList>
           <TabsContent value="posts" className="p-0">
             {error && (
@@ -1480,7 +1480,7 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : posts.length === 0 ? (
-              <div className="p-4 text-gray-400">No posts yet.</div>
+              <div className="p-4 dark:text-slate-500 text-gray-400">No posts yet.</div>
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1526,7 +1526,7 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : reshares.length === 0 ? (
-              <div className="p-4 text-gray-400">No re-feeds yet.</div>
+              <div className="p-4 dark:text-slate-500 text-gray-400">No re-feeds yet.</div>
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1572,7 +1572,7 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : commentedPosts.length === 0 ? (
-              <div className="p-4 text-gray-400">No commented posts yet.</div>
+              <div className="p-4 dark:text-slate-500 text-gray-400">No commented posts yet.</div>
             ) : (
               commentedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1618,7 +1618,7 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : likedPosts.length === 0 ? (
-              <div className="p-4 text-gray-400">No likes yet.</div>
+              <div className="p-4 dark:text-slate-500 text-gray-400">No likes yet.</div>
             ) : (
               likedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1664,7 +1664,7 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : bookmarkedPosts.length === 0 ? (
-              <div className="p-4 text-gray-400">No bookmarks yet.</div>
+              <div className="p-4 dark:text-slate-500 text-gray-400">No bookmarks yet.</div>
             ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
