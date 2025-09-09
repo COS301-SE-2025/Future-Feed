@@ -55,10 +55,10 @@ const Settings = () => {
   }, [navigate])
 
   return (
-    <div className="min-h-screen dark:bg-black bg-gray-200 dark:text-white p-4 sm:p-8">
+    <div className="min-h-screen dark:bg-blue-950 bg-gray-200 dark:slate-200 p-4 sm:p-8">
       {/* Breadcrumb wrapper */}
       <div className="w-full mb-6 ">
-        <div className="dark:bg-black bg-white border-lime-500 border p-4 rounded-xl w-full">
+        <div className="dark:bg-indigo-950 bg-white dark:border-slate-200 border p-4 rounded-xl w-full">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -101,7 +101,7 @@ const Settings = () => {
       </div>
 
       {/* Command Box */}
-      <Command className="dark:text-white rounded-2xl border border-lime-500 dark:bg-black shadow-md w-full">
+      <Command className=" rounded-2xl border dark:border-slate-200  shadow-md w-full">
         <CommandInput placeholder=" Search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
@@ -173,7 +173,7 @@ const Settings = () => {
              
               
                <ThemeProvider >
-                        <div className="p-4 rounded-md  border lime-500 bg-transparent hover:bg-lime-500/20
+                        <div className="p-4 rounded-md  border bg-transparent hover:bg-slate-200/20
                transition-colors duration-200
                w-10 h-4 flex items-center justify-center">
                           <ModeToggle  />

@@ -461,7 +461,7 @@ const Explore = () => {
           ) : (
             <Button
               onClick={() => handleFollow(user.id)}
-              className="min-w-[90px] px-4 py-1   rounded-full   font-semibold hhover:cursor-pointer transition-colors duration-200"
+              className="min-w-[90px] px-4 py-1   rounded-full   font-semibold hover:cursor-pointer transition-colors duration-200"
             >
               Follow
             </Button>
