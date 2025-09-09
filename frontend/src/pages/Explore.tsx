@@ -525,7 +525,7 @@ const Explore = () => {
             }
           }}
           className="w-full p-2">
-          <TabsList className="w-full flex justify-around rounded-2xl border dark:border-slate-200   dark:bg-blue-950">
+          <TabsList className="w-full flex justify-around ">
             {["accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
