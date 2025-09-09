@@ -21,7 +21,7 @@ const Notifications = () => {
       {/* Center Notification Feed */}
       <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto mt-11">
         {/*search for mbiles*/ }
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-blue-950  dark:border-lime-500">
+        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10  bg-black dark:bg-blue-950  dark:border-slate-200">
         <Input
           type="text"
           placeholder="Search"
@@ -30,14 +30,14 @@ const Notifications = () => {
       </div>
 
         {/* Header */}
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-lime-500 z-10">
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Notifications</h1>
           <Settings size={20} className="dark:text-lime-500" />
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="all" className="w-full p-3 ">
-          <TabsList className="w-full  flex justify-around dark:bg-blue-950 border dark:border-lime-500 rounded-2xl">
+          <TabsList className="w-full  flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
             <TabsTrigger
               value="all"
               
@@ -60,7 +60,7 @@ const Notifications = () => {
 
           {/* Example Notification */}
           <TabsContent value="all">
-            <Card className="dark:bg-blue-950 dark:text-white border dark:border-lime-500 rounded-2xl">
+            <Card className="dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl">
               <CardContent className="flex gap-3 items-start p-4">
                  <Avatar className="w-14 h-14 border-4 border-slate-300">
               <AvatarImage src={GRP2} alt="@syntexsquad" />
