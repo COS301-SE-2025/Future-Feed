@@ -425,7 +425,7 @@ const Explore = () => {
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="dark:bg-indigo-950 border-3 border dark:border-slate-200  rounded-2xl">
+        <Card key={user.id} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border-3 border dark:border-slate-200  rounded-2xl">
           <CardContent className="flex border border-3 gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -440,7 +440,7 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="w-full border border-3 dark:bg-indigo-950 dark:text-white border dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full border border-3 dark:bg-indigo-950 dark:text-white border dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -473,7 +473,7 @@ const Explore = () => {
 
   const renderSkeleton = () =>
     Array.from({ length: 4 }).map((_, idx) => (
-      <Card key={idx} className="dark:bg-indigo-950 dark:border-slate-200  rounded-2xl">
+      <Card key={idx} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -495,7 +495,7 @@ const Explore = () => {
   //
 
   return (
-    <div className="flex min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
+    <div className="flex future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
       <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -503,7 +503,7 @@ const Explore = () => {
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
 
 
-        <div className="flex border-3 justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
+        <div className="future-feed:border-lime future-feed:bg-card flex border-3 justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-2">
             <SearchUser onSearch={debouncedSearch} />

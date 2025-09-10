@@ -7,7 +7,7 @@ const WhatsHappening = () => {
     const location = useLocation();
     const isHomePage = location.pathname === '/home';
     return(
-        <Card className="dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 border-lime-500  bg-lime-600 text-white">
+        <Card className="future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 border-lime-500  bg-lime-600 text-white">
                 <CardContent className="p-4">
                     <h2 className="font-bold text-lg mb-4">Latest Feeds</h2>
                     <div className="space-y-3 text-sm">
