@@ -19,9 +19,9 @@ import {
 const FAQS = () => {
     const navigate = useNavigate();
     return (
-        <div className="p-6   min-h-screen  dark:bg-blue-950 ">
-            <h1 className="font-bold text-2xl text-right">FAQS Centre</h1>
-            <div className="flex border dark:border-slate-200 dark:bg-indigo-950 rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0  ">
+        <div className="p-6 future-feed:bg-black   min-h-screen  dark:bg-blue-950 ">
+            <h1 className="font-bold future-feed:text-lime text-2xl text-right">FAQS Centre</h1>
+            <div className="flex future-feed:border-lime  border dark:border-slate-200 dark:bg-indigo-950 rounded-2xl  justify-between items-center my-3 px-4 py-3 sticky top-0  ">
                 {/*breedcrumb to go back */}
                 <Breadcrumb>
                     <BreadcrumbList>
