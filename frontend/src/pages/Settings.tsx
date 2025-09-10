@@ -55,10 +55,10 @@ const Settings = () => {
   }, [navigate])
 
   return (
-    <div className="min-h-screen dark:bg-blue-950 bg-gray-200 dark:slate-200 p-4 sm:p-8">
+    <div className="min-h-screen future-feed:bg-black dark:bg-blue-950 bg-gray-200 dark:slate-200 p-4 sm:p-8">
       {/* Breadcrumb wrapper */}
       <div className="w-full mb-6 ">
-        <div className="dark:bg-indigo-950 bg-white dark:border-slate-200 border p-4 rounded-xl w-full">
+        <div className=" future-feed:bg-black dark:bg-indigo-950 bg-white future-feed:border-lime dark:border-slate-200 border p-4 rounded-xl w-full">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -101,9 +101,9 @@ const Settings = () => {
       </div>
 
       {/* Command Box */}
-      <Command className=" rounded-2xl border dark:border-slate-200  shadow-md w-full">
+      <Command className=" future-feed:border-lime rounded-2xl border dark:border-slate-200  shadow-md w-full">
         <CommandInput placeholder=" Search..." />
-        <CommandList>
+        <CommandList >
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Suggestions">
             <CommandItem>

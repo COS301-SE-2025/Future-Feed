@@ -111,6 +111,71 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Future Feed Theme Styles */
+.future-feed .future-feed\:bg-black {
+  background-color: #000000 !important; /* black */
+}
+
+.future-feed .future-feed\:bg-card {
+  background-color: #1a1a1a !important; /* bg-[#1a1a1a] */
+}
+.future-feed .future-feed\:bg-lime {
+  background-color:  #84cc16 !important; /* bg-[#1a1a1a] */
+}
+
+
+.future-feed .future-feed\:border-lime {
+  border-color: #84cc16 !important; /* border-lime-500 */
+}
+
+.future-feed .future-feed\:text-lime {
+  color: #84cc16 !important; /* text-lime-500 */
+}
+
+/* Additional utility classes you might need */
+.future-feed .future-feed\:bg-white {
+  background-color: #ffffff !important;
+}
+
+.future-feed .future-feed\:text-white {
+  color: #ffffff !important;
+}
+
+.future-feed .future-feed\:text-black {
+  color: #000000 !important;
+}
+
+.future-feed .future-feed\:border {
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+.future-feed .future-feed\:border-2 {
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+/* Hover states */
+.future-feed .future-feed\:hover\:bg-lime:hover {
+  background-color: #84cc16 !important;
+}
+
+.future-feed .future-feed\:hover\:text-lime:hover {
+  color: #84cc16 !important;
+}
+/*plaeholder*/
+/* Future Feed placeholder styles */
+.future-feed .future-feed\:placeholder-lime::placeholder {
+  color: #84cc16 !important; /* lime-500 */
+}
+
+
+/* Focus states */
+.future-feed .future-feed\:focus\:border-lime:focus {
+  border-color: #84cc16 !important;
+}
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
