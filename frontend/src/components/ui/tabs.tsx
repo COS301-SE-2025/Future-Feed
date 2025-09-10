@@ -41,7 +41,7 @@ function TabsTrigger({
       data-slot="tabs-trigger"
       className={cn(
 
-        "future-feed:data-[state=active]:bg-black dark:data-[state=active]:bg-slate-200 data-[state=active]:bg-lime-600 data-[state=active]:text-white dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-slate-200 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 text-lime-500 dark:text-slate-200 hover:cursor-pointer",
+        "future-feed:data-[state=active]:bg-black dark:data-[state=active]:bg-slate-200 data-[state=active]:bg-lime-600 data-[state=active]:text-white future-feed:data-[state=active]:text-black dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-slate-200 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 text-lime-500 dark:text-slate-200 hover:cursor-pointer",
 
         className
       )}

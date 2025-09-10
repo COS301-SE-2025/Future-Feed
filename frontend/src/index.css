@@ -135,6 +135,10 @@
 .future-feed .future-feed\:text-lime {
   color: #84cc16 !important; /* text-lime-500 */
 }
+.future-feed .future-feed\:text-card {
+  color: #1a1a1a !important; /* text-lime-500 */
+}
+
 
 .future-feed .future-feed\:text-black {
   color: #84cc16 !important; /* text-lime-500 */

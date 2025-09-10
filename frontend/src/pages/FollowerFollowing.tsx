@@ -171,7 +171,7 @@ const FollowerFollowing = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>
 
   const renderUserCard = (user: User) => (
-    <Card key={user.id} className=" border  rounded-2xl">
+    <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white  rounded-2xl">
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -223,12 +223,12 @@ const FollowerFollowing = () => {
   );
 
   return (
-    <div className="flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
+    <div className="future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
       <PersonalSidebar />
       <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         
 
-        <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
+        <div className="future-feed:border-black  text-gray-400 flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
           <Avatar className=" w-24 h-24 border-4 ">
              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -236,7 +236,7 @@ const FollowerFollowing = () => {
               
             </Link>
           </Avatar>
-          <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
+          <h1 className="text-xl future-feed:text-white  font-bold">{user.displayName || user.username}</h1>
           <p className="dark:text-gray-400">@{user.username}</p>
         </div>
 

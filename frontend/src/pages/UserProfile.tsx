@@ -1368,7 +1368,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+      <div className="flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -1418,7 +1418,7 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+    <div className="future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -1435,9 +1435,9 @@ const UserProfile = () => {
           </div>
         </div>
         <div className="pt-16 px-4">
-          <div className="flex justify-between items-start">
+          <div className="text-gray-400 flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
+              <h1 className="text-xl future-feed:text-white  font-bold">{user.displayName || user.username}</h1>
               <p className="dark:text-slate-500">@{user.username}</p>
               <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
             </div>
@@ -1447,7 +1447,7 @@ const UserProfile = () => {
               </Button>
             </Link>
           </div>
-          <div className="mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+          <div className=" text-gray-400 mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-slate-200">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
