@@ -136,6 +136,10 @@
   color: #84cc16 !important; /* text-lime-500 */
 }
 
+.future-feed .future-feed\:text-black {
+  color: #84cc16 !important; /* text-lime-500 */
+}
+
 
 /* Additional utility classes you might need */
 .future-feed .future-feed\:bg-white {
