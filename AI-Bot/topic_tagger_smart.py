@@ -1,157 +1,178 @@
 # topic_tagger_smart.py
 import json
+import os
 import re
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from fastapi import HTTPException
 from langchain.prompts import PromptTemplate
 from langchain_together import ChatTogether
 
-# Use a smaller model for classification to avoid free-tier rate limits.
-TAGGER_MODEL = "meta-llama/Llama-3.2-3B-Instruct"  # change if unavailable
+# Embeddings (free, local)
+from sentence_transformers import SentenceTransformer, util
+import numpy as np
 
-tagger_llm = ChatTogether(
-    model=TAGGER_MODEL,
-    temperature=0.2
+# -------------------------
+# Config (override via env)
+# -------------------------
+EMB_MODEL_NAME = os.getenv("TAGGER_EMB_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+HIGH_THRESHOLD = float(os.getenv("TAGGER_HIGH_THRESHOLD", "0.45"))   # pick definites
+LOW_THRESHOLD  = float(os.getenv("TAGGER_LOW_THRESHOLD", "0.22"))    # nearest-neighbor fallback
+MAX_ENRICHED_PHRASES = int(os.getenv("TAGGER_MAX_ENRICHED", "4"))
+
+# Load once
+_EMB_MODEL = SentenceTransformer(EMB_MODEL_NAME)
+
+# LLM only for new topic (rare)
+_LLM = ChatTogether(
+    model=os.getenv("TAGGER_LLM_MODEL", "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"),
+    temperature=0.0
 )
 
-SMART_TAG_PROMPT = """
-You are a topic assigner. You are given:
-1) a post's text
-2) a list of existing topics (controlled vocabulary)
+NEW_TOPIC_PROMPT = """
+You are creating ONE short, human-meaningful topic for this post because none of the existing topics fit.
 
-Your job:
-- Return up to {max_topics} topics for this post.
-- Prefer choosing from the existing topics list when a good match exists.
-- Only include "new" topics if no existing topic fits well.
-- All topics lowercased, single or double-word strings.
+Rules:
+- Output JSON ONLY: {{"new": "short_topic"}}
+- 1–3 words, lowercase, no punctuation, no hashtags/emojis.
+- Avoid generic adjectives like "amazing", "interesting", "today".
+- It must be a real subject/category a user would follow, not a random adjective.
 
-Output ONLY a JSON object, nothing else, with exactly:
-{{
-  "selected": ["topic_from_existing", ...],
-  "new": ["new_topic_if_needed", ...]
-}}
-
-existing_topics = {existing_topics}
-
-text = \"\"\"{text}\"\"\"
+Post:
+\"\"\"{text}\"\"\" 
 """
+_new_topic_tmpl = PromptTemplate.from_template(NEW_TOPIC_PROMPT)
 
-prompt = PromptTemplate.from_template(SMART_TAG_PROMPT)
-chain = prompt | tagger_llm
+# -------------------------
+# Helpers
+# -------------------------
 
+def _sanitize_new_topic(s: str) -> str:
+    if not s:
+        return ""
+    s = s.strip().lower()
+    s = re.sub(r"[^a-z0-9 ]+", "", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    if len(s) < 3:
+        return ""
+    BAD = {
+        "amazing", "interesting", "cool", "today", "breaking",
+        "the", "this", "that", "these", "those", "news"
+    }
+    if s in BAD:
+        return ""
+    if s in {"update", "story", "post", "random"}:
+        return ""
+    return s
 
-def _extract_json_object(s: str) -> str:
+def _enrich_topic_phrases(t: str) -> List[str]:
     """
-    Try to pull the first top-level JSON object from a messy LLM string.
+    Create generic paraphrases for each topic *without* hardcoding domain keywords.
+    This improves semantic matching while staying topic-agnostic.
     """
-    # Quick-path: if it already parses, use it.
-    try:
-        json.loads(s)
-        return s
-    except Exception:
-        pass
+    t = (t or "").strip()
+    out = [t]
+    # Generic enrichments that work for any topic
+    out.append(f"this post is about {t}")
+    out.append(f"{t} discussion")
+    out.append(f"{t} topic")
+    # Trim to keep emb batch small
+    return out[:MAX_ENRICHED_PHRASES]
 
-    # Look for a {...} block with a basic regex (non-greedy).
-    # This won't handle nested braces perfectly but works well for flat payloads.
-    m = re.search(r"\{.*\}", s, flags=re.DOTALL)
-    if m:
-        candidate = m.group(0)
-        # Try tightening by removing trailing junk after last closing brace
-        last_brace = candidate.rfind("}")
-        if last_brace != -1:
-            candidate = candidate[:last_brace+1]
-        # Validate
-        try:
-            json.loads(candidate)
-            return candidate
-        except Exception:
-            pass
+def _topic_best_similarity(text_emb: np.ndarray, topic: str) -> float:
+    phrases = _enrich_topic_phrases(topic)
+    emb = _EMB_MODEL.encode(phrases, normalize_embeddings=True)
+    sims = util.cos_sim(text_emb, emb).cpu().numpy()[0]  # (n_phrases,)
+    return float(np.max(sims)) if sims.size else 0.0
 
-    raise ValueError("No valid JSON object found in model output")
-
-
-def _fallback_keyword_match(text: str, existing_topics: List[str], max_topics: int) -> List[str]:
+def _pick_existing_by_embeddings(
+    text: str,
+    existing_topics: List[str],
+    max_topics: int,
+    hi: float,
+    lo: float
+) -> Tuple[List[str], List[float]]:
     """
-    Very simple fallback: choose topics that appear as whole words in the text
-    (or whose tokens intersect strongly).
+    1) compute best sim for each topic using enriched phrases
+    2) select all >= hi
+    3) if none >= hi, pick top1 if >= lo
     """
-    if not text:
-        return []
+    existing_topics = [t for t in existing_topics if t and str(t).strip()]
+    if not existing_topics:
+        return [], []
 
+    text_emb = _EMB_MODEL.encode([text], normalize_embeddings=True)  # (1, d)
+
+    scores = []
+    for t in existing_topics:
+        s = _topic_best_similarity(text_emb, t)
+        scores.append(s)
+
+    # Rank topics by similarity
+    idxs = np.argsort(-np.array(scores))
+    ranked = [(existing_topics[i], float(scores[i])) for i in idxs]
+
+    # 1) strong matches
+    strong = [(t, s) for (t, s) in ranked if s >= hi]
+    if strong:
+        return [t.strip().lower() for (t, _) in strong[:max_topics]], [s for (_, s) in strong[:max_topics]]
+
+    # 2) nearest-neighbor fallback
+    top_t, top_s = ranked[0]
+    if top_s >= lo:
+        return [top_t.strip().lower()], [top_s]
+
+    return [], scores
+
+def _fallback_compact_subject(text: str) -> str:
     t = text.lower()
-    tokens = set(re.findall(r"[a-z0-9]+", t))
-    scored = []
-    for topic in existing_topics:
-        topic_l = topic.lower().strip()
-        ttoks = set(re.findall(r"[a-z0-9]+", topic_l))
-        # score = overlap ratio
-        overlap = len(tokens.intersection(ttoks))
-        if overlap > 0:
-            scored.append((overlap, topic_l))
-    # sort by overlap desc, then topic name asc for determinism
-    scored.sort(key=lambda x: (-x[0], x[1]))
-    return [name for _, name in scored[:max_topics]]
+    m = re.search(r"\b([a-z0-9]+(?: [a-z0-9]+)?)\b", t)
+    if not m:
+        return ""
+    candidate = m.group(1)
+    candidate = _sanitize_new_topic(candidate)
+    return candidate
 
+def _llm_new_topic(text: str) -> Dict[str, List[str]]:
+    try:
+        out = (_new_topic_tmpl | _LLM).invoke({"text": text}).content
+        m = re.search(r"\{.*\}", out, re.DOTALL)
+        if not m:
+            raise ValueError("LLM did not return a JSON object")
+        data = json.loads(m.group(0))
+        cand = str(data.get("new", "")).strip()
+        clean = _sanitize_new_topic(cand)
+        if not clean:
+            clean = _fallback_compact_subject(text)
+        return {"selected": [], "new": [clean] if clean else []}
+    except Exception as e:
+        clean = _fallback_compact_subject(text)
+        if clean:
+            return {"selected": [], "new": [clean]}
+        raise HTTPException(status_code=500, detail=f"new-topic LLM failed: {e}")
+
+# -------------------------
+# Public API
+# -------------------------
 
 def smart_tag_topics(text: str, existing_topics: List[str], max_topics: int = 3) -> Dict[str, List[str]]:
     """
-    Return {"selected": [...], "new": [...]} with robust JSON handling and a fallback.
+    1) Semantic match to enriched topic phrases.
+    2) If none are strong, still choose the nearest if it's reasonably close (LOW_THRESHOLD).
+    3) Only if nothing is close, create a new topic via LLM (filtered).
     """
     if not text or not text.strip():
         return {"selected": [], "new": []}
 
-    # Normalize existing topics
-    existing_norm = sorted({t.strip().lower() for t in existing_topics if t and t.strip()})
+    # Try semantic pick
+    selected, _scores = _pick_existing_by_embeddings(
+        text=text,
+        existing_topics=existing_topics,
+        max_topics=max_topics,
+        hi=HIGH_THRESHOLD,
+        lo=LOW_THRESHOLD
+    )
+    if selected:
+        return {"selected": selected[:max_topics], "new": []}
 
-    # 1) Try LLM route
-    try:
-        raw = chain.invoke({
-            "text": text,
-            "existing_topics": existing_norm,
-            "max_topics": max_topics
-        }).content
-
-        cleaned = _extract_json_object(raw.strip())
-        data = json.loads(cleaned)
-
-        selected = [str(t).strip().lower() for t in data.get("selected", []) if str(t).strip()]
-        new = [str(t).strip().lower() for t in data.get("new", []) if str(t).strip()]
-
-        # Move any non-existing from selected -> new
-        selected_final, new_final = [], []
-        for s in selected:
-            if s in existing_norm:
-                selected_final.append(s)
-            else:
-                new_final.append(s)
-
-        # Filter 'new' if they actually exist
-        for n in new:
-            if n not in existing_norm:
-                new_final.append(n)
-
-        # De-dup and enforce limits
-        def dedup_keep_order(seq): 
-            seen = set(); out = []
-            for x in seq:
-                if x not in seen:
-                    out.append(x); seen.add(x)
-            return out
-
-        selected_final = dedup_keep_order(selected_final)[:max_topics]
-        remaining = max(0, max_topics - len(selected_final))
-        new_final = dedup_keep_order(new_final)[:remaining]
-
-        return {"selected": selected_final, "new": new_final}
-
-    except Exception as e:
-        # 2) Fallback to keyword match
-        try:
-            sel = _fallback_keyword_match(text, existing_norm, max_topics)
-            return {"selected": sel, "new": []}
-        except Exception as inner:
-            # If even fallback fails, surface a clean 500 with a hint
-            raise HTTPException(
-                status_code=500, 
-                detail=f"Topic tagging failed. Model error: {str(e)}; Fallback error: {str(inner)}"
-            )
+    # Otherwise propose exactly one new topic
+    return _llm_new_topic(text)

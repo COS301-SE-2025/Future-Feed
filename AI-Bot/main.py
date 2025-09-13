@@ -1,15 +1,19 @@
 # main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
+from typing import List, Optional
+
 from bot_agent import create_bot_agent
 from moderation import is_prompt_safe
-from topic_tagger_smart import smart_tag_topics  # <-- hardened tagger
+from topic_tagger_smart import smart_tag_topics
 
 app = FastAPI()
 
+# ---------- Models ----------
+
 class BotRequest(BaseModel):
     prompt: str
-    context_url: str | None = None
+    context_url: Optional[str] = None
 
 class ModerationResponse(BaseModel):
     safe: bool
@@ -17,12 +21,14 @@ class ModerationResponse(BaseModel):
 
 class SmartTagRequest(BaseModel):
     text: str
-    existing_topics: list[str]
+    existing_topics: List[str]
     max_topics: int = 3
 
 class SmartTagResponse(BaseModel):
-    selected: list[str]
-    new: list[str]
+    selected: List[str]
+    new: List[str]
+
+# ---------- Endpoints ----------
 
 @app.post("/execute-bot")
 def run_bot(req: BotRequest):
