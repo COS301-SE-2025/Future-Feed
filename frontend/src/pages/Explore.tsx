@@ -425,7 +425,7 @@ const Explore = () => {
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border-3 border dark:border-slate-200  rounded-2xl">
+        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border-3 border dark:border-slate-200  rounded-2xl">
           <CardContent className="flex border border-3 gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -440,7 +440,7 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="bg-blue-500  text-rose-200 font-bold  border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -525,7 +525,7 @@ const Explore = () => {
             }
           }}
           className="w-full p-2">
-          <TabsList className="w-full flex justify-around ">
+          <TabsList className="w-full  flex justify-around ">
             {["accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
