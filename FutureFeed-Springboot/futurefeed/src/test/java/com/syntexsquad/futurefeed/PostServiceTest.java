@@ -7,6 +7,7 @@ import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.PostService;
+import com.syntexsquad.futurefeed.service.TopicService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +31,7 @@ public class PostServiceTest {
     private AppUserRepository appUserRepository;
     private LikeRepository likeRepository;
     private CommentRepository commentRepository;
+    private TopicService topicService;
     private PostService postService;
 
     private final String testEmail = "user@example.com";
@@ -41,7 +43,9 @@ public class PostServiceTest {
         appUserRepository = mock(AppUserRepository.class);
         likeRepository = mock(LikeRepository.class);
         commentRepository = mock(CommentRepository.class);
-        postService = new PostService(postRepository, appUserRepository, likeRepository, commentRepository);
+        topicService = mock(TopicService.class);
+
+        postService = new PostService(postRepository, appUserRepository, likeRepository, commentRepository, topicService);
 
         // Mock OAuth2User with email attribute
         OAuth2User mockOAuth2User = mock(OAuth2User.class);
@@ -64,7 +68,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void testCreatePost_shouldSaveAndReturnUserPost() {
+    void testCreatePost_shouldSaveAndReturnUserPost_andAutoTag() {
         PostRequest request = new PostRequest();
         request.setContent("Test content");
         request.setImageUrl("https://example.com/image.jpg");
@@ -90,10 +94,13 @@ public class PostServiceTest {
         assertEquals(request.getContent(), captured.getContent());
         assertEquals(request.getImageUrl(), captured.getImageUrl());
         assertEquals(userId, captured.getUser().getId());
+
+        // verify auto-tag called
+        verify(topicService, times(1)).autoTagIfMissing(savedPost.getId());
     }
 
     @Test
-    void testCreatePost_shouldSaveAndReturnBotPost() {
+    void testCreatePost_shouldSaveAndReturnBotPost_andAutoTag() {
         PostRequest request = new PostRequest();
         request.setContent("Bot post content");
         request.setImageUrl("https://example.com/bot-image.jpg");
@@ -118,6 +125,9 @@ public class PostServiceTest {
         BotPost captured = captor.getValue();
         assertEquals(request.getContent(), captured.getContent());
         assertEquals(request.getImageUrl(), captured.getImageUrl());
+
+        // verify auto-tag called
+        verify(topicService, times(1)).autoTagIfMissing(savedPost.getId());
     }
 
     @Test
