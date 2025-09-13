@@ -56,7 +56,7 @@ function BreadcrumbPage({ className, ...props }: React.ComponentProps<"span">) {
       role="link"
       aria-disabled="true"
       aria-current="page"
-      className={cn("future-feed:text-lime dark:text-slate-500 text-lime-600 font-normal", className)}
+      className={cn("future-feed:text-lime dark:text-slate-500 text-blue-500 font-normal", className)}
       {...props}
     />
   )
@@ -72,7 +72,7 @@ function BreadcrumbSeparator({
       data-slot="breadcrumb-separator"
       role="presentation"
       aria-hidden="true"
-      className={cn("future-feed:text-lime dark:text-slate-200 text-black [&>svg]:size-3.5", className)}
+      className={cn("future-feed:text-lime dark:text-slate-200 text-blue-500  [&>svg]:size-3.5", className)}
       {...props}
     >
       {children ?? <ChevronRight />}

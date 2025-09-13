@@ -1,4 +1,4 @@
-import { Moon, Sun, Rocket } from "lucide-react"
+import { Moon, Sun, CreativeCommons } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -19,8 +19,9 @@ export function ModeToggle() {
       className="dark:border-slate-200">
         <Button className="dark:bg-blue-950 dark:border-slate-200 hover:cursor-pointer"  size="icon">
           <Sun className="h-[1.2rem] w-[1.2rem] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+          <CreativeCommons className="text-slate-200 absolute h-[1.2rem] w-[1.2rem] scale-0 transition-all future-feed:scale-100" />
           <Moon className="dark:text-slate-200 dark:border-slate-200 absolute h-[1.2rem] w-[1.2rem] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-           <Rocket className="text-slate-200 absolute h-[1.2rem] w-[1.2rem] scale-0 transition-all future-feed:scale-100" />
+          
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>

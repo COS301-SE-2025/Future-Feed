@@ -661,7 +661,7 @@ const BotPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="bg-gray-200 flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -704,7 +704,7 @@ const BotPage = () => {
   if (!bot) return <div className="p-4 text-black">Bot not found.</div>;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
+    <div className="bg-gray-200 flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto ">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>

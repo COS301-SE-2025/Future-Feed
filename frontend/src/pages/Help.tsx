@@ -28,10 +28,10 @@ const Help = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="future-feed:bg-black p-6 dark:text-slate-300 min-h-screen dark:bg-blue-950">
+    <div className="bg-gray-200 future-feed:bg-black p-6 dark:text-slate-300 min-h-screen dark:bg-blue-950">
       <h1 className="font-bold text-2xl future-feed:text-lime  dark:text-slate-200 dark:text-slate-200 text-right">Help Centre</h1>
 
-      <div className="future-feed:border-lime future-feed:bg-black flex border dark:border-slate-200 rounded-2xl justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-blue-950 ">
+      <div className=" bg-white border-rose-gold-accent-border future-feed:border-lime future-feed:bg-black flex border dark:border-slate-200 rounded-2xl justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-blue-950 ">
         {/* Breadcrumb */}
         <Breadcrumb>
           <BreadcrumbList>

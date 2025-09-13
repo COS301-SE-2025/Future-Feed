@@ -1313,7 +1313,7 @@ const UserProfile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border border-lime-300 dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1368,7 +1368,7 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+      <div className=" flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -1418,7 +1418,7 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+    <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -1426,7 +1426,7 @@ const UserProfile = () => {
         <div className="relative">
           <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3 border-lime-500 ">
+            <Avatar className="w-27 h-27 border-3  ">
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                 <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -1442,7 +1442,7 @@ const UserProfile = () => {
               <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
             </div>
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="secondary" className="mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
+              <Button variant="secondary" className="bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
                 Edit Profile
               </Button>
             </Link>
@@ -1460,14 +1460,14 @@ const UserProfile = () => {
             <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 bg-lime-500 dark:bg-slate-200" />
+        <Separator className="my-4 bg-blue-500 dark:bg-slate-200" />
         <Tabs defaultValue="posts" className="w-full" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="grid w-full dark:bg-blue-950 grid-cols-5 ">
-            <TabsTrigger className="" value="posts">Posts</TabsTrigger>
-            <TabsTrigger className="" value="re-feeds">Re-Feeds</TabsTrigger>
-            <TabsTrigger className="" value="comments">Comments</TabsTrigger>
-            <TabsTrigger className="" value="likes">Likes</TabsTrigger>
-            <TabsTrigger className="" value="bookmarks">Bookmarks</TabsTrigger>
+          <TabsList className="grid w-full  dark:bg-blue-950 grid-cols-5 ">
+            <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
+            <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
+            <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>
+            <TabsTrigger className="text-black" value="likes">Likes</TabsTrigger>
+            <TabsTrigger className="text-black" value="bookmarks">Bookmarks</TabsTrigger>
           </TabsList>
           <TabsContent value="posts" className="p-0">
             {error && (

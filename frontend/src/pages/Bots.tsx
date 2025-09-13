@@ -341,12 +341,12 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col future-feed:bg-black lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="bg-gray-200 flex flex-col future-feed:bg-black lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto ">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="flex-1 p-4 lg:p-6 lg:mt-7">
-        <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-lime-500 bg-white   shadow-none">
+        <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-rose-gold-accent-border bg-white   shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">
               <CardTitle className="text-2xl text-lime-600 dark:text-slate-200">Bots Management</CardTitle>
@@ -645,7 +645,8 @@ const Bots: React.FC = () => {
                 />
                 <Button
                   type="submit"
-                  className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
+                  variant={"secondary"}
+                  className=" text-white hover:bg-lime-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Update Bot

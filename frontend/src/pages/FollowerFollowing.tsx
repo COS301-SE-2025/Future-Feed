@@ -223,7 +223,7 @@ const FollowerFollowing = () => {
   );
 
   return (
-    <div className="future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
+    <div className="bg-gray-200 future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
       <PersonalSidebar />
       <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         

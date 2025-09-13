@@ -440,7 +440,7 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="bg-blue-500  text-rose-200 font-bold  border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
@@ -503,7 +503,7 @@ const Explore = () => {
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
 
 
-        <div className="future-feed:border-lime future-feed:bg-card flex border-3 justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
+        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border-3 justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-2">
             <SearchUser onSearch={debouncedSearch} />
@@ -530,7 +530,7 @@ const Explore = () => {
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 rounded-2xl text-green capitalize  "
+                className="flex-1 rounded-2xl  capitalize  "
               >
                 {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
