@@ -187,6 +187,70 @@
 .future-feed .future-feed\:focus\:border-lime:focus {
   border-color: #84cc16 !important;
 }
+/*ligt mode rose gold herer*/
+.rose-gold-light-bg {
+  background-color: #fff5f7 !important;
+}
+
+.rose-gold-gradient {
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%) !important;
+}
+
+.rose-gold-subtle-gradient {
+  background: linear-gradient(135deg, #fff0f6 0%, #ffeef5 100%) !important;
+}
+
+.rose-gold-border {
+  border-color: #f9a8d4 !important;
+}
+
+.rose-gold-border-light {
+  border-color: #fbcfe8 !important;
+}
+
+.rose-gold-border-dark {
+  border-color: #f472b6 !important;
+}
+
+.rose-gold-custom {
+  color: #831843 !important;
+}
+
+.rose-gold-text-light {
+  color: #be185d !important;
+}
+
+.rose-gold-text-dark {
+  color: #701a75 !important;
+}
+
+.rose-gold-shadow {
+  box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.1), 0 2px 4px -1px rgba(236, 72, 153, 0.06) !important;
+}
+
+.rose-gold-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.1), 0 4px 6px -2px rgba(236, 72, 153, 0.05) !important;
+}
+
+.rose-gold-accent {
+  background-color: #fdf2f8 !important;
+}
+
+.rose-gold-accent-border {
+  border-color: #fbcfe8 !important;
+}
+
+.rose-gold-button {
+  background: linear-gradient(to right, #fdf2f8, #fce7f3);
+  border: 1px solid #f9a8d4;
+  color: #831843 !important;
+}
+
+.rose-gold-button:hover {
+  background: linear-gradient(to right, #fce7f3, #fbcfe8);
+  border-color: #f472b6 !important;
+}
+
 
 
 @layer base {

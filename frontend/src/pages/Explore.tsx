@@ -440,7 +440,7 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full border border-3 dark:bg-indigo-950 dark:text-white border dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
             <AvatarImage src={user.profilePicture} alt={user.username} />
