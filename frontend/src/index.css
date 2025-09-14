@@ -111,6 +111,148 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* Future Feed Theme Styles */
+.future-feed .future-feed\:bg-black {
+  background-color: #000000 !important; /* black */
+}
+
+.future-feed .future-feed\:bg-card {
+  background-color: #1a1a1a !important; /* bg-[#1a1a1a] */
+}
+.future-feed .future-feed\:bg-lime {
+  background-color:  #84cc16 !important; /* bg-[#1a1a1a] */
+}
+
+
+.future-feed .future-feed\:border-lime {
+  border-color: #84cc16 !important; /* border-lime-500 */
+}
+.future-feed .future-feed\:border-black {
+  border-color: black !important; /* border-lime-500 */
+}
+
+
+.future-feed .future-feed\:text-lime {
+  color: #84cc16 !important; /* text-lime-500 */
+}
+.future-feed .future-feed\:text-card {
+  color: #1a1a1a !important; /* text-lime-500 */
+}
+
+
+.future-feed .future-feed\:text-black {
+  color: #84cc16 !important; /* text-lime-500 */
+}
+
+
+/* Additional utility classes you might need */
+.future-feed .future-feed\:bg-white {
+  background-color: #ffffff !important;
+}
+
+.future-feed .future-feed\:text-white {
+  color: #ffffff !important;
+}
+
+.future-feed .future-feed\:text-black {
+  color: #000000 !important;
+}
+
+.future-feed .future-feed\:border {
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
+.future-feed .future-feed\:border-2 {
+  border-width: 2px !important;
+  border-style: solid !important;
+}
+
+/* Hover states */
+.future-feed .future-feed\:hover\:bg-lime:hover {
+  background-color: #84cc16 !important;
+}
+
+.future-feed .future-feed\:hover\:text-lime:hover {
+  color: #84cc16 !important;
+}
+/*plaeholder*/
+/* Future Feed placeholder styles */
+.future-feed .future-feed\:placeholder-lime::placeholder {
+  color: #84cc16 !important; /* lime-500 */
+}
+
+
+/* Focus states */
+.future-feed .future-feed\:focus\:border-lime:focus {
+  border-color: #84cc16 !important;
+}
+/*ligt mode rose gold herer*/
+.rose-gold-light-bg {
+  background-color: #fff5f7 !important;
+}
+
+.rose-gold-gradient {
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%) !important;
+}
+
+.rose-gold-subtle-gradient {
+  background: linear-gradient(135deg, #fff0f6 0%, #ffeef5 100%) !important;
+}
+
+.rose-gold-border {
+  border-color: #f9a8d4 !important;
+}
+
+.rose-gold-border-light {
+  border-color: #fbcfe8 !important;
+}
+
+.rose-gold-border-dark {
+  border-color: #f472b6 !important;
+}
+
+.rose-gold-custom {
+  color: #831843 !important;
+}
+
+.rose-gold-text-light {
+  color: #be185d !important;
+}
+
+.rose-gold-text-dark {
+  color: #701a75 !important;
+}
+
+.rose-gold-shadow {
+  box-shadow: 0 4px 6px -1px rgba(236, 72, 153, 0.1), 0 2px 4px -1px rgba(236, 72, 153, 0.06) !important;
+}
+
+.rose-gold-shadow-lg {
+  box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.1), 0 4px 6px -2px rgba(236, 72, 153, 0.05) !important;
+}
+
+.rose-gold-accent {
+  background-color: #fdf2f8 !important;
+}
+
+.rose-gold-accent-border {
+  border-color: #fbcfe8 !important;
+}
+
+.rose-gold-button {
+  background: linear-gradient(to right, #fdf2f8, #fce7f3);
+  border: 1px solid #f9a8d4;
+  color: #831843 !important;
+}
+
+.rose-gold-button:hover {
+  background: linear-gradient(to right, #fce7f3, #fbcfe8);
+  border-color: #f472b6 !important;
+}
+
+
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

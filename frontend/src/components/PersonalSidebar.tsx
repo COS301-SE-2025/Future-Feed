@@ -24,9 +24,9 @@ const PersonalSidebar = () => {
 
   return (
     <>
-    <aside className="h-fit dark:bg-black dark:border-lime-500 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-2 border-lime-400 shadow-md hidden lg:block bg-gray-400">
-      <div className="text-2xl font-bold mb-6 text-white dark:text-lime-500">Future Feed</div>
-      <nav className="font-bold flex flex-col space-y-4 text-lg dark:text-lime-500 text-white ">
+    <aside className="bg-blue-500 text-white  border-rose-gold-accent-border   border h-fit future-feed:bg-black future-feed:border-lime future-feed:text-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-100 w-[200px] p-6 mt-16 ml-4 rounded-2xl  border-2  shadow-md hidden lg:block  ">
+      <div className="text-2xl  future-feed:text-lime font-bold mb-6  dark:text-slate-200">Future Feed</div>
+      <nav className="future-feed:text-lime font-bold flex flex-col space-y-4 text-lg dark:text-slate-200  ">
          <Link to="/home" className="flex items-center gap-3 dark:hover:text-white ">
           <Home size={20} /> Home
         </Link>
@@ -47,7 +47,7 @@ const PersonalSidebar = () => {
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 text-white dark:text-lime-500 hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
+          className="future-feed:text-lime flex items-center gap-3 text-white dark:text-slate-200 hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
         >
           <LogOut size={20} /> Logout
         </button>
@@ -66,7 +66,7 @@ const PersonalSidebar = () => {
 
     </aside>
        {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center dark:bg-black border text-lime-500  dark:border-lime-500 p-2 lg:hidden dark:slate-100 z-50 bg-white">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime dark:bg-indigo-960  border text-lime-500  dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 bg-white">
         <Link to="/home" className="flex flex-col items-center">
           <Home strokeWidth={3} className="w-5 h-5 " />
 
