@@ -1,9 +1,15 @@
 package com.syntexsquad.futurefeed;
 
 import com.syntexsquad.futurefeed.dto.BookmarkDto;
-import com.syntexsquad.futurefeed.model.*;
-import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.Bookmark;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.repository.BookmarkRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.BookmarkService;
+import com.syntexsquad.futurefeed.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -21,6 +27,7 @@ public class BookmarkServiceTest {
     private BookmarkRepository bookmarkRepo;
     private AppUserRepository userRepo;
     private PostRepository postRepo;
+    private NotificationService notificationService; // NEW
     private BookmarkService bookmarkService;
 
     private final Integer userId = 1;
@@ -33,16 +40,23 @@ public class BookmarkServiceTest {
         bookmarkRepo = mock(BookmarkRepository.class);
         userRepo = mock(AppUserRepository.class);
         postRepo = mock(PostRepository.class);
-        bookmarkService = new BookmarkService(bookmarkRepo, userRepo, postRepo);
+        notificationService = mock(NotificationService.class); // NEW
+
+        // Updated ctor: 4 args including NotificationService
+        bookmarkService = new BookmarkService(bookmarkRepo, userRepo, postRepo, notificationService);
 
         testUser = new AppUser();
         testUser.setId(userId);
         testUser.setEmail("user@example.com");
+        testUser.setUsername("tester");
 
-        testPost = new UserPost();
-        testPost.setId(postId);
-        testPost.setContent("Test content");
-        testPost.setCreatedAt(LocalDateTime.now());
+        UserPost userPost = new UserPost();
+        userPost.setId(postId);
+        userPost.setContent("Test content");
+        userPost.setCreatedAt(LocalDateTime.now());
+        // IMPORTANT: set owner so service doesn't NPE when building notification
+        userPost.setUser(testUser);
+        testPost = userPost;
 
         when(userRepo.findById(userId)).thenReturn(Optional.of(testUser));
         when(postRepo.findById(postId)).thenReturn(Optional.of(testPost));
@@ -61,6 +75,9 @@ public class BookmarkServiceTest {
         Bookmark saved = captor.getValue();
         assertEquals(testUser, saved.getUser());
         assertEquals(testPost, saved.getPost());
+
+        // since owner == actor, no notification should be sent
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -72,6 +89,7 @@ public class BookmarkServiceTest {
 
         assertFalse(result);
         verify(bookmarkRepo, never()).save(any());
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -96,6 +114,8 @@ public class BookmarkServiceTest {
 
         assertTrue(result);
         verify(bookmarkRepo).delete(existing);
+        // owner == actor -> no notification
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -106,6 +126,7 @@ public class BookmarkServiceTest {
 
         assertFalse(result);
         verify(bookmarkRepo, never()).delete(any());
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
