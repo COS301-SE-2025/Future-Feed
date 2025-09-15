@@ -7,22 +7,17 @@ from fastapi import HTTPException
 from langchain.prompts import PromptTemplate
 from langchain_together import ChatTogether
 
-# Embeddings (free, local)
 from sentence_transformers import SentenceTransformer, util
 import numpy as np
 
-# -------------------------
-# Config (override via env)
-# -------------------------
+
 EMB_MODEL_NAME = os.getenv("TAGGER_EMB_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-HIGH_THRESHOLD = float(os.getenv("TAGGER_HIGH_THRESHOLD", "0.45"))   # pick definites
-LOW_THRESHOLD  = float(os.getenv("TAGGER_LOW_THRESHOLD", "0.22"))    # nearest-neighbor fallback
+HIGH_THRESHOLD = float(os.getenv("TAGGER_HIGH_THRESHOLD", "0.45"))   
+LOW_THRESHOLD  = float(os.getenv("TAGGER_LOW_THRESHOLD", "0.22"))   
 MAX_ENRICHED_PHRASES = int(os.getenv("TAGGER_MAX_ENRICHED", "4"))
 
-# Load once
 _EMB_MODEL = SentenceTransformer(EMB_MODEL_NAME)
 
-# LLM only for new topic (rare)
 _LLM = ChatTogether(
     model=os.getenv("TAGGER_LLM_MODEL", "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"),
     temperature=0.0
@@ -41,10 +36,6 @@ Post:
 \"\"\"{text}\"\"\" 
 """
 _new_topic_tmpl = PromptTemplate.from_template(NEW_TOPIC_PROMPT)
-
-# -------------------------
-# Helpers
-# -------------------------
 
 def _sanitize_new_topic(s: str) -> str:
     if not s:
@@ -71,17 +62,16 @@ def _enrich_topic_phrases(t: str) -> List[str]:
     """
     t = (t or "").strip()
     out = [t]
-    # Generic enrichments that work for any topic
+
     out.append(f"this post is about {t}")
     out.append(f"{t} discussion")
     out.append(f"{t} topic")
-    # Trim to keep emb batch small
     return out[:MAX_ENRICHED_PHRASES]
 
 def _topic_best_similarity(text_emb: np.ndarray, topic: str) -> float:
     phrases = _enrich_topic_phrases(topic)
     emb = _EMB_MODEL.encode(phrases, normalize_embeddings=True)
-    sims = util.cos_sim(text_emb, emb).cpu().numpy()[0]  # (n_phrases,)
+    sims = util.cos_sim(text_emb, emb).cpu().numpy()[0]  
     return float(np.max(sims)) if sims.size else 0.0
 
 def _pick_existing_by_embeddings(
