@@ -141,7 +141,7 @@ const WhoToFollow = () => {
   const stableStatuses = useStableFollowStatus(userIds);
 
   return (
-    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white ">
+    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-gray-500 text-white ">
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
 

@@ -1,22 +1,32 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.dto.ReshareRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.service.MediaService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.oauth2.resource.servlet.OAuth2ResourceServerAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -26,27 +36,35 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
+//@Transactional
 public class ReshareIT {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private AppUserRepository userRepo;
-
-    @Autowired
-    private PostRepository postRepo;
-
-    @Autowired
-    private PostTopicRepository postTopicRepo;
-
-    @Autowired
-    private ReshareRepository reshareRepo;
-
-    @Autowired
-    private CommentRepository commentRepo;
+    @Autowired private TopicRepository topicRepo;
+    @Autowired private AppUserRepository userRepo;
+    @Autowired private FollowerRepository followerRepo;
+    @Autowired private FeedPresetRepository presetRepo;
+    @Autowired private PresetRuleRepository ruleRepo;
+    @Autowired private PostRepository postRepo;
+    @Autowired private PostTopicRepository postTopicRepo;
+    @Autowired private CommentRepository commentRepo;
+    @Autowired private ReshareRepository reshareRepo;
+    @Autowired private LikeRepository likeRepo;
+    @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotPostRepository botPostRepo;
+    @Autowired private BotRepository botRepo;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -56,19 +74,30 @@ public class ReshareIT {
 
     @BeforeEach
     public void setup() {
+        ruleRepo.deleteAll();
+        presetRepo.deleteAll();
         reshareRepo.deleteAll();
         commentRepo.deleteAll();
+        likeRepo.deleteAll();
+        bookmarkRepo.deleteAll();
+        botPostRepo.deleteAll();
         postTopicRepo.deleteAll();
         postRepo.deleteAll();
-        userRepo.deleteAll();
+        followerRepo.deleteAll();
+        botRepo.deleteAll();
+        //userRepo.deleteAll();
 
-        AppUser user = new AppUser();
-        user.setUsername(TEST_USERNAME);
-        user.setEmail("testuser@example.com");
-        user.setPassword("test123");
-        user.setDisplayName("Test User");
-        user.setDateOfBirth(LocalDate.of(2000, 1, 1));
-        userRepo.save(user);
+        AppUser user = userRepo.findByUsername("testuser")
+            .orElseGet(() -> {
+                AppUser u = new AppUser();
+                u.setUsername("testuser");
+                u.setEmail("testuser@example.com");
+                u.setPassword("test123");
+                u.setDisplayName("Test User");
+                u.setBio("Test bio");
+                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                return userRepo.save(u);
+            });
 
         UserPost post = new UserPost();
         post.setContent("Post for reshare tests");
@@ -139,10 +168,9 @@ public class ReshareIT {
     public void testUnresharePostNotExists() throws Exception {
         int nonExistentPostId = 999999;
 
-        // The controller does not return 400 for nonexistent reshare
         mockMvc.perform(delete("/api/reshares/{postId}", nonExistentPostId))
-                .andExpect(status().isOk())  // ✅ Match actual controller behavior
-                .andExpect(content().string("Post unreshared."));  // ✅ Match actual response text
+                .andExpect(status().isOk())  
+                .andExpect(content().string("Post unreshared."));  
     }
 
     @Test

@@ -1,5 +1,5 @@
 package com.syntexsquad.futurefeed.repository;
-
+import java.util.Optional;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Topic;
 import org.springframework.data.domain.Pageable;
@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface TopicRepository extends JpaRepository<Topic, Integer> {
     boolean existsByName(String name);
@@ -32,4 +34,7 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
         ORDER BY p.createdAt DESC
     """)
     List<Post> findPostsByTopicId(@Param("topicId") Integer topicId);
+    Optional<Topic> findByName(String name);
+    @Query("SELECT t FROM Topic t WHERE LOWER(t.name) = LOWER(:name)")
+    Optional<Topic> findByNameIgnoreCase(@Param("name") String name);
 }
