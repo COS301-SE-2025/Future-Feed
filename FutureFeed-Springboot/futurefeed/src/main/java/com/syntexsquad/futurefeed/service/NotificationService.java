@@ -1,4 +1,5 @@
 package com.syntexsquad.futurefeed.service;
+
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.dto.NotificationDto;
 import com.syntexsquad.futurefeed.model.Notification;
@@ -14,20 +15,28 @@ public class NotificationService {
     private final NotificationRepository notificationRepo;
     private final AppUserRepository appUserRepo;
 
-
-    public NotificationService(NotificationRepository notificationRepo , AppUserRepository appUserRepo) {
+    public NotificationService(NotificationRepository notificationRepo, AppUserRepository appUserRepo) {
         this.notificationRepo = notificationRepo;
         this.appUserRepo = appUserRepo;
     }
 
-    public void createNotification(Integer recipientId, Integer senderId, String type, Integer postId) {
+    // Expanded to support message + senderName
+    public void createNotification(Integer recipientId,
+                                   Integer senderId,
+                                   String type,
+                                   String message,
+                                   String senderName,
+                                   Integer postId) {
         if (recipientId.equals(senderId)) return; // don't notify yourself
 
         Notification notification = new Notification();
         notification.setRecipientUserId(recipientId);
         notification.setSenderUserId(senderId);
         notification.setType(type);
+        notification.setMessage(message);
+        notification.setSenderName(senderName);
         notification.setPostId(postId);
+
         notificationRepo.save(notification);
     }
 
@@ -51,9 +60,10 @@ public class NotificationService {
                     senderUsername,
                     notification.getPostId(),
                     notification.getIsRead(),
-                    notification.getCreatedAt()
+                    notification.getCreatedAt(),
+                    notification.getMessage(),
+                    notification.getSenderName()
             );
         }).toList();
     }
-
 }

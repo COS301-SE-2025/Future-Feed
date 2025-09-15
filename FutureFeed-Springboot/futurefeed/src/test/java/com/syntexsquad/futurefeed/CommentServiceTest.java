@@ -2,14 +2,15 @@ package com.syntexsquad.futurefeed;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.service.CommentService;
+import com.syntexsquad.futurefeed.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -26,6 +27,7 @@ public class CommentServiceTest {
     private CommentRepository commentRepository;
     private AppUserRepository appUserRepository;
     private PostRepository postRepository;
+    private NotificationService notificationService;   // NEW mock
     private CommentService commentService;
 
     @BeforeEach
@@ -33,7 +35,15 @@ public class CommentServiceTest {
         commentRepository = mock(CommentRepository.class);
         appUserRepository = mock(AppUserRepository.class);
         postRepository = mock(PostRepository.class);
-        commentService = new CommentService(commentRepository, appUserRepository, postRepository);
+        notificationService = mock(NotificationService.class); // NEW
+
+        // Updated constructor (4 deps)
+        commentService = new CommentService(
+                commentRepository,
+                appUserRepository,
+                postRepository,
+                notificationService
+        );
     }
 
     @Test
@@ -45,6 +55,17 @@ public class CommentServiceTest {
         AppUser mockUser = new AppUser();
         mockUser.setId(42);
         mockUser.setEmail("user@example.com");
+        mockUser.setUsername("tester");
+
+        // recipient user (owner of the post)
+        AppUser recipient = new AppUser();
+        recipient.setId(99);
+        recipient.setUsername("owner");
+
+        // Make the post a UserPost so notification path can run
+        UserPost userPost = new UserPost();
+        userPost.setId(postId);
+        userPost.setUser(recipient);
 
         Comment saved = new Comment();
         saved.setId(100);
@@ -54,6 +75,7 @@ public class CommentServiceTest {
         saved.setCreatedAt(LocalDateTime.now());
 
         when(postRepository.existsById(postId)).thenReturn(true);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(userPost)); // IMPORTANT
         when(appUserRepository.findByEmail("user@example.com")).thenReturn(Optional.of(mockUser));
         when(commentRepository.save(any(Comment.class))).thenReturn(saved);
 
@@ -63,7 +85,7 @@ public class CommentServiceTest {
             OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
             OAuth2User oAuth2User = mock(OAuth2User.class);
 
-            when(SecurityContextHolder.getContext()).thenReturn(securityContext);
+            mockedStatic.when(SecurityContextHolder::getContext).thenReturn(securityContext);
             when(securityContext.getAuthentication()).thenReturn(authToken);
             when(authToken.getPrincipal()).thenReturn(oAuth2User);
             when(oAuth2User.getAttributes()).thenReturn(Map.of("email", "user@example.com"));
@@ -76,6 +98,16 @@ public class CommentServiceTest {
             assertEquals(postId, result.getPostId());
             assertEquals(mockUser.getId(), result.getUserId());
             assertEquals(content, result.getContent());
+
+            // Optional: verify a notification was attempted (different user)
+            verify(notificationService, times(1)).createNotification(
+                    eq(recipient.getId()),
+                    eq(mockUser.getId()),
+                    eq("COMMENT"),
+                    contains("commented on your post"),
+                    eq(mockUser.getUsername() + ""),
+                    eq(postId)
+            );
         }
     }
 
