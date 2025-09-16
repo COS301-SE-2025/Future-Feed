@@ -110,7 +110,7 @@ const HomePage = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
+// 
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
