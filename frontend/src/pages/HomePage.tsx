@@ -399,175 +399,279 @@ const HomePage = () => {
     }
   };
 
-  const fetchFollowingPosts = async () => {
-    if (!currentUser?.id) {
-      console.warn("Cannot fetch following posts: currentUser is not loaded");
+  // ===================== Shared helpers (put once, top-level) =====================
+const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
+
+function stripBOM(s: string) {
+  return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
+}
+
+function stripXssiPrefix(s: string) {
+  if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
+    const i = s.indexOf("\n");
+    return i >= 0 ? s.slice(i + 1) : "";
+  }
+  return s;
+}
+
+function sliceToJsonBlock(s: string) {
+  const firstBrace = s.indexOf("{");
+  const firstBracket = s.indexOf("[");
+  const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a,b)=>a-b)[0] ?? -1;
+  if (first < 0) return s;
+  const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+  if (last < first) return s;
+  return s.slice(first, last + 1);
+}
+
+function looksLikeHtml(s: string) {
+  return /<!doctype html>|<html[\s>]/i.test(s);
+}
+
+/**
+ * Robustly parse a Response that *should* be JSON, but may:
+ *  - include BOM/XSSI/log noise,
+ *  - return primitives (true/false/5),
+ *  - be mislabeled (no content-type).
+ */
+async function robustParse<T = any>(response: Response, endpointForLogs: string): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+  const raw = stripBOM((await response.text()).trim());
+  const cleaned = stripXssiPrefix(raw);
+
+  if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+    console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+    throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+  }
+
+  // If server says JSON, try normally, then fallback to slicing.
+  if (contentType.includes("application/json")) {
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      try {
+        return JSON.parse(sliceToJsonBlock(cleaned));
+      } catch (e) {
+        console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+        throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+      }
+    }
+  }
+
+  // Not marked JSON: try JSON anyway, else handle primitives gracefully.
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const t = cleaned.toLowerCase();
+    if (t === "true") return true as unknown as T;
+    if (t === "false") return false as unknown as T;
+    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as unknown as T;
+    // As a last resort, return the raw string (caller can decide)
+    return cleaned as unknown as T;
+  }
+}
+
+// Add this once to normalize fetch options everywhere:
+const commonInit: RequestInit = {
+  credentials: "include",
+  headers: { Accept: "application/json" },
+};
+
+// ===================== Your fixed function =====================
+const fetchFollowingPosts = async () => {
+  if (!currentUser?.id) {
+    console.warn("Cannot fetch following posts: currentUser is not loaded");
+    return;
+  }
+
+  console.debug("Fetching following posts");
+  setLoadingFollowing(true);
+
+  try {
+    // 1) Load follows, my reshares, and bookmarks
+    const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+      fetch(`${API_URL}/api/reshares`, commonInit),
+      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+    ]);
+
+    if (!followRes.ok) throw new Error("Failed to fetch followed users");
+    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+
+    const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+    const myReshares: ApiReshare[] = myResharesRes.ok
+      ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+      : [];
+    const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+
+    const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+    const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
+
+    // Nothing to do if there are no follows
+    if (!followedIds.length) {
+      setFollowingPosts([]);
       return;
     }
 
-    console.debug("Fetching following posts");
-    setLoadingFollowing(true);
-
-    try {
-      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
-      ]);
-
-      if (!followRes.ok) throw new Error("Failed to fetch followed users");
-      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-
-      // Safe JSON parsing utility
-      const safeJsonParse = async (response: Response, endpoint: string): Promise<any> => {
-        const text = await response.text();
+    // 2) Fetch posts for each followed user (robust parsing)
+    const allFollowingPosts = await Promise.all(
+      followedIds.map(async (userId: number) => {
         try {
-          return JSON.parse(text);
-        } catch (err) {
-          console.error(`Invalid JSON from ${endpoint}:`, text.substring(0, 200) + '...');
-          throw new Error(`Invalid JSON response from ${endpoint}`);
+          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
+          if (!res.ok) return [];
+          return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
+        } catch (error) {
+          console.warn(`Failed to fetch posts for user ${userId}:`, error);
+          return [];
         }
-      };
+      })
+    );
 
-      const followedUsers: ApiFollow[] = await safeJsonParse(followRes, 'follow');
-      const myReshares: ApiReshare[] = myResharesRes.ok ? await safeJsonParse(myResharesRes, 'reshares') : [];
-      const bookmarks: ApiBookmark[] = await safeJsonParse(bookmarksRes, 'bookmarks');
+    // 3) Flatten, dedupe, remove my own posts, ensure valid user
+    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+    const uniquePosts: ApiPost[] = Array.from(
+      new Map(flattenedPosts.map((post) => [post.id, post])).values()
+    ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
 
-      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
-      const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
+    const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
 
-      const allFollowingPosts = await Promise.all(
-        followedIds.map(async (userId: number) => {
+    // 4) Enrich each post (comments, likes, has-liked, topics, user)
+    const formattedPosts = await Promise.all(
+      validPosts.map(async (post: ApiPost) => {
+        try {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+            fetchTopicsForPost(post.id), // assuming this already returns parsed JSON
+          ]);
+
+          let comments: ApiComment[] = [];
+          let likeCount = 0;
+          let isLiked = false;
+          let topics: any = [];
+
+          // Comments
           try {
-            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, {
-              credentials: "include",
-            });
-            if (!res.ok) return [];
-            return await safeJsonParse(res, `posts?userId=${userId}`);
+            comments = commentsRes.ok
+              ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+              : [];
           } catch (error) {
-            console.warn(`Failed to fetch posts for user ${userId}:`, error);
-            return [];
+            console.warn(`Failed to parse comments for post ${post.id}:`, error);
+            comments = [];
           }
-        })
-      );
 
-      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const uniquePosts = Array.from(
-        new Map(flattenedPosts.map(post => [post.id, post])).values()
-      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
-
-      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
-
-      const formattedPosts = await Promise.all(
-        validPosts.map(async (post: ApiPost) => {
+          // Likes count (handles JSON or bare number)
           try {
-            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-              fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-              fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-              fetchTopicsForPost(post.id),
-            ]);
-
-            // Handle each response with safe parsing
-            let comments: ApiComment[] = [];
-            let likeCount = 0;
-            let isLiked = false;
-            let topics: any = [];
-
-            try {
-              comments = commentsRes.ok ? await safeJsonParse(commentsRes, `comments/post/${post.id}`) : [];
-            } catch (error) {
-              console.warn(`Failed to parse comments for post ${post.id}:`, error);
-            }
-
-            try {
-              likeCount = likesCountRes.ok ? await safeJsonParse(likesCountRes, `likes/count/${post.id}`) : 0;
-            } catch (error) {
-              console.warn(`Failed to parse like count for post ${post.id}:`, error);
-            }
-
-            try {
-              isLiked = hasLikedRes.ok ? await safeJsonParse(hasLikedRes, `likes/has-liked/${post.id}`) : false;
-            } catch (error) {
-              console.warn(`Failed to parse like status for post ${post.id}:`, error);
-            }
-
-            try {
-              topics = await topicsRes;
-            } catch (error) {
-              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-            }
-
-            const validComments = comments.filter((comment: ApiComment) => comment.userId);
-
-            // Process comments with individual error handling
-            const commentsWithUsers = await Promise.all(
-              validComments.map(async (comment: ApiComment) => {
-                try {
-                  const user = await fetchUser(comment.userId, comment.user);
-                  return {
-                    id: comment.id,
-                    postId: comment.postId,
-                    authorId: comment.userId,
-                    content: comment.content,
-                    createdAt: comment.createdAt,
-                    username: user.displayName,
-                    handle: `@${user.username}`,
-                    profilePicture: user.profilePicture,
-                  };
-                } catch (error) {
-                  console.warn(`Failed to process comment ${comment.id}:`, error);
-                  return null;
-                }
-              })
-            ).then(comments => comments.filter(comment => comment !== null));
-
-            const postUser = await fetchUser(post.user.id, post.user);
-            const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-            const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
-
-            return {
-              id: post.id,
-              username: postUser.displayName,
-              handle: `@${postUser.username}`,
-              profilePicture: postUser.profilePicture,
-              time: formatRelativeTime(post.createdAt),
-              createdAt: post.createdAt,
-              text: post.content,
-              image: post.imageUrl,
-              isLiked,
-              isBookmarked: bookmarkedPostIds.has(post.id),
-              isReshared,
-              commentCount: validComments.length,
-              authorId: post.user.id,
-              likeCount,
-              reshareCount,
-              comments: commentsWithUsers,
-              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-              topics,
-            };
-          } catch (postError) {
-            console.error(`Error processing post ${post.id}:`, postError);
-            return null;
+            const raw = likesCountRes.ok
+              ? await robustParse<number | string | { count: number }>(
+                  likesCountRes,
+                  `likes/count/${post.id}`
+                )
+              : 0;
+            if (typeof raw === "number") likeCount = raw;
+            else if (typeof raw === "string") likeCount = Number(raw) || 0;
+            else if (raw && typeof raw === "object" && "count" in raw)
+              likeCount = Number((raw as any).count) || 0;
+          } catch (error) {
+            console.warn(`Failed to parse like count for post ${post.id}:`, error);
           }
-        })
-      );
 
-      // Filter out any failed posts
-      const successfulPosts = formattedPosts.filter(post => post !== null);
+          // Has liked (handles JSON or bare boolean/"true"/"false")
+          try {
+            const raw = hasLikedRes.ok
+              ? await robustParse<boolean | string | { liked: boolean }>(
+                  hasLikedRes,
+                  `likes/has-liked/${post.id}`
+                )
+              : false;
+            if (typeof raw === "boolean") isLiked = raw;
+            else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+            else if (raw && typeof raw === "object" && "liked" in raw)
+              isLiked = Boolean((raw as any).liked);
+          } catch (error) {
+            console.warn(`Failed to parse like status for post ${post.id}:`, error);
+          }
 
-      setFollowingPosts(successfulPosts.sort((a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ));
+          // Topics
+          try {
+            topics = await topicsRes;
+          } catch (error) {
+            console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+            topics = [];
+          }
 
-    } catch (err) {
-      console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setLoadingFollowing(false);
-    }
-  };
+          const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+          // Attach user info to comments (fault-tolerant)
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              try {
+                const user = await fetchUser(comment.userId, comment.user);
+                return {
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: user.displayName,
+                  handle: `@${user.username}`,
+                  profilePicture: user.profilePicture,
+                };
+              } catch (error) {
+                console.warn(`Failed to process comment ${comment.id}:`, error);
+                return null;
+              }
+            })
+          ).then((cs) => cs.filter((c) => c !== null) as any[]);
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+          const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+            topics,
+          };
+        } catch (postError) {
+          console.error(`Error processing post ${post.id}:`, postError);
+          return null;
+        }
+      })
+    );
+
+    const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
+
+    setFollowingPosts(
+      successfulPosts.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    );
+  } catch (err) {
+    console.error("Error fetching following posts:", err);
+    setError("Failed to load posts from followed users.");
+    setTimeout(() => setError(null), 3000);
+  } finally {
+    setLoadingFollowing(false);
+  }
+};
+
 
   //modified
   const fetchTopics = async (): Promise<Topic[]> => {

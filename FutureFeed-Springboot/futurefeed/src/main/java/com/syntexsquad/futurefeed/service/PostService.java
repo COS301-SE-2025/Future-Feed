@@ -18,23 +18,32 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Service
 public class PostService {
 
+    private static final Logger log = LoggerFactory.getLogger(PostService.class);
+
     private final PostRepository postRepository;
     private final AppUserRepository appUserRepository;
     private final LikeRepository likerepository;
     private final CommentRepository commentRepository;
+    private final TopicService topicService;
 
-    public PostService(PostRepository postRepository, AppUserRepository appUserRepository,
-                       LikeRepository likerepository, CommentRepository commentRepository) {
+    public PostService(PostRepository postRepository,
+                       AppUserRepository appUserRepository,
+                       LikeRepository likerepository,
+                       CommentRepository commentRepository,
+                       TopicService topicService) {
         this.postRepository = postRepository;
         this.appUserRepository = appUserRepository;
         this.likerepository = likerepository;
         this.commentRepository = commentRepository;
+        this.topicService = topicService;
     }
 
     @Cacheable(value = "post", key = "#id")
@@ -48,7 +57,7 @@ public class PostService {
     }
 
     @Transactional
-    @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true) 
+    @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
     public Post createPost(PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = null;
@@ -68,18 +77,32 @@ public class PostService {
         AppUser user = appUserRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        Post saved;
         if (Boolean.TRUE.equals(postRequest.getIsBot())) {
             BotPost botPost = new BotPost();
             botPost.setContent(postRequest.getContent());
             botPost.setImageUrl(postRequest.getImageUrl());
-            return postRepository.save(botPost);
+            saved = postRepository.save(botPost);
         } else {
             UserPost userPost = new UserPost();
             userPost.setContent(postRequest.getContent());
             userPost.setImageUrl(postRequest.getImageUrl());
             userPost.setUser(user);
-            return postRepository.save(userPost);
+            saved = postRepository.save(userPost);
         }
+
+        postRepository.flush();
+        log.info("[post] created id={} isBot={} content.len={}", saved.getId(), postRequest.getIsBot(),
+                saved.getContent() == null ? 0 : saved.getContent().length());
+
+        try {
+            log.info("[post] autoTagIfMissing -> postId={}", saved.getId());
+            topicService.autoTagIfMissing(saved.getId());
+        } catch (Exception e) {
+            log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
+        }
+
+        return saved;
     }
 
     @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
@@ -105,7 +128,6 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    // Note: Caching paginated results can be tricky, but works with key
     @Cacheable(value = "paginatedPosts", key = "#page + '-' + #size")
     public Page<Post> getPaginatedPosts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
