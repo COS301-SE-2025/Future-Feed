@@ -28,7 +28,7 @@ public class BotExecutionService {
     @Autowired
     private BotPostService botPostService;
 
-    private final String FASTAPI_URL = "http://localhost:8000/execute-bot";  // update if hosted differently
+    private final String FASTAPI_URL = "http://localhost:8000/execute-bot";  
 
     public String executeBot(Integer botId) {
         Bot bot = botRepository.findById(botId)

@@ -11,6 +11,22 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash2, Filter } from 'lucide-react';
+
+interface Preset {
+  id: number;
+  userId: number;
+  name: string;
+}
+
+interface Rule {
+  id: number;
+  presetId: number;
+  type: 'TOPIC' | 'KEYWORD';
+  value: string;
+}
 
 interface ApiFollow {
   followedId: number;
@@ -108,6 +124,13 @@ const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [rules, setRules] = useState<{ [presedId: number]: Rule[] }>({});
+  const [newPresetName, setNewPresetName] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+  const [newRule, setNewRule] = useState({ type: 'KEYWORD' as 'TOPIC' | 'KEYWORD', value: '' });
+  const [isLoading, setIsLoading] = useState(false);
+
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -203,6 +226,7 @@ const HomePage = () => {
     }
   };
 
+  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
@@ -212,32 +236,14 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
 
-      if (!topics.length) {
-        await fetchTopics();
+      let currentTopics = topics;
+      if (!currentTopics.length) {
+        currentTopics = await fetchTopics();
       }
 
       const postTopics = topicIds
-        .map((id) => topics.find((topic) => topic.id === id))
+        .map((id) => currentTopics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-
-      if (postTopics.length < topicIds.length) {
-        const missingIds = topicIds.filter(id => !topics.some(t => t.id === id));
-        for (const id of missingIds) {
-          try {
-            const topicRes = await fetch(`${API_URL}/api/topics/${id}`, {
-              headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-              credentials: "include",
-            });
-            if (topicRes.ok) {
-              const topicData: Topic = await topicRes.json();
-              setTopics(prev => [...prev, topicData]);
-              postTopics.push(topicData);
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch topic ${id}:`, err);
-          }
-        }
-      }
 
       return postTopics;
     } catch (err) {
@@ -248,28 +254,59 @@ const HomePage = () => {
     }
   };
 
-  const fetchAllPosts = async () => {
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingForYou &&
+        hasMore
+      ) {
+        const nextPage = currentPage + 1;
+        fetchPaginatedPosts(nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setHasMore(false);
+          } else {
+            setCurrentPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [currentPage, loadingForYou, hasMore]);
+
+  // added fetchPaginated
+  const fetchPaginatedPosts = async (page: number) => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
-      return;
+      return 0;
     }
-    console.debug("Fetching all posts");
+    console.debug(`Fetching posts page ${page}`);
     setLoadingForYou(true);
+
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+        fetch(`${API_URL}/api/posts/paginated?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
         fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
         fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
+
       if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-      const apiPosts: ApiPost[] = await postsRes.json();
-      console.debug("API response for posts:", apiPosts);
+
+      const pageData = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content;
       const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
       const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
 
-      const validPosts = apiPosts.filter((post: ApiPost) => {
+      const validPosts = apiPosts.filter(post => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post);
           return false;
@@ -277,7 +314,7 @@ const HomePage = () => {
         return true;
       });
 
-      const formattedPosts = await Promise.all(
+      const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
@@ -318,6 +355,9 @@ const HomePage = () => {
             }
           }
 
+          const existingPost = posts.find(p => p.id === post.id);
+          const showComments = existingPost ? existingPost.showComments : false;
+
           return {
             id: post.id,
             username: postUser.displayName,
@@ -335,99 +375,259 @@ const HomePage = () => {
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount,
             comments: commentsWithUsers,
-            showComments: posts.find((p) => p.id === post.id)?.showComments || false,
+            showComments,
             topics: topicsRes,
           };
         })
       );
 
-      setPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setPosts(prev => {
+        const postsMap = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (postsMap.has(p.id)) {
+            postsMap.set(p.id, { ...p, showComments: postsMap.get(p.id)!.showComments });
+          } else {
+            postsMap.set(p.id, p);
+          }
+        });
+        return Array.from(postsMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      });
     } catch (err) {
-      console.error("Error fetching posts:", err);
-      // setError("Failed to load posts.");
-      // setTimeout(() => setError(null), 3);
+      console.error("Error fetching paginated posts:", err);
     } finally {
       setLoadingForYou(false);
     }
   };
 
-  const fetchFollowingPosts = async () => {
-    if (!currentUser?.id) {
-      console.warn("Cannot fetch following posts: currentUser is not loaded");
+  // ===================== Shared helpers (put once, top-level) =====================
+const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
+
+function stripBOM(s: string) {
+  return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
+}
+
+function stripXssiPrefix(s: string) {
+  if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
+    const i = s.indexOf("\n");
+    return i >= 0 ? s.slice(i + 1) : "";
+  }
+  return s;
+}
+
+function sliceToJsonBlock(s: string) {
+  const firstBrace = s.indexOf("{");
+  const firstBracket = s.indexOf("[");
+  const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a,b)=>a-b)[0] ?? -1;
+  if (first < 0) return s;
+  const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+  if (last < first) return s;
+  return s.slice(first, last + 1);
+}
+
+function looksLikeHtml(s: string) {
+  return /<!doctype html>|<html[\s>]/i.test(s);
+}
+
+/**
+ * Robustly parse a Response that *should* be JSON, but may:
+ *  - include BOM/XSSI/log noise,
+ *  - return primitives (true/false/5),
+ *  - be mislabeled (no content-type).
+ */
+async function robustParse<T = any>(response: Response, endpointForLogs: string): Promise<T> {
+  const contentType = response.headers.get("content-type") || "";
+  const raw = stripBOM((await response.text()).trim());
+  const cleaned = stripXssiPrefix(raw);
+
+  if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+    console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+    throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+  }
+
+  // If server says JSON, try normally, then fallback to slicing.
+  if (contentType.includes("application/json")) {
+    try {
+      return JSON.parse(cleaned);
+    } catch {
+      try {
+        return JSON.parse(sliceToJsonBlock(cleaned));
+      } catch (e) {
+        console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+        throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+      }
+    }
+  }
+
+  // Not marked JSON: try JSON anyway, else handle primitives gracefully.
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    const t = cleaned.toLowerCase();
+    if (t === "true") return true as unknown as T;
+    if (t === "false") return false as unknown as T;
+    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as unknown as T;
+    // As a last resort, return the raw string (caller can decide)
+    return cleaned as unknown as T;
+  }
+}
+
+// Add this once to normalize fetch options everywhere:
+const commonInit: RequestInit = {
+  credentials: "include",
+  headers: { Accept: "application/json" },
+};
+
+// ===================== Your fixed function =====================
+const fetchFollowingPosts = async () => {
+  if (!currentUser?.id) {
+    console.warn("Cannot fetch following posts: currentUser is not loaded");
+    return;
+  }
+
+  console.debug("Fetching following posts");
+  setLoadingFollowing(true);
+
+  try {
+    // 1) Load follows, my reshares, and bookmarks
+    const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+      fetch(`${API_URL}/api/reshares`, commonInit),
+      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+    ]);
+
+    if (!followRes.ok) throw new Error("Failed to fetch followed users");
+    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+
+    const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+    const myReshares: ApiReshare[] = myResharesRes.ok
+      ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+      : [];
+    const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+
+    const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+    const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
+
+    // Nothing to do if there are no follows
+    if (!followedIds.length) {
+      setFollowingPosts([]);
       return;
     }
-    console.debug("Fetching following posts");
-    setLoadingFollowing(true);
-    try {
-      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
-      ]);
-      if (!followRes.ok) throw new Error("Failed to fetch followed users");
-      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-      const followedUsers: ApiFollow[] = await followRes.json();
-      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
-      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
-      const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
 
-      const allFollowingPosts = await Promise.all(
-        followedIds.map(async (userId: number) => {
-          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, {
-            credentials: "include",
-          });
+    // 2) Fetch posts for each followed user (robust parsing)
+    const allFollowingPosts = await Promise.all(
+      followedIds.map(async (userId: number) => {
+        try {
+          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
           if (!res.ok) return [];
-          return await res.json();
-        })
-      );
+          return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
+        } catch (error) {
+          console.warn(`Failed to fetch posts for user ${userId}:`, error);
+          return [];
+        }
+      })
+    );
 
-      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const uniquePosts = Array.from(
-        new Map(flattenedPosts.map(post => [post.id, post])).values()
-      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
-      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+    // 3) Flatten, dedupe, remove my own posts, ensure valid user
+    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+    const uniquePosts: ApiPost[] = Array.from(
+      new Map(flattenedPosts.map((post) => [post.id, post])).values()
+    ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
 
-      const formattedPosts = await Promise.all(
-        validPosts.map(async (post: ApiPost) => {
+    const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+
+    // 4) Enrich each post (comments, likes, has-liked, topics, user)
+    const formattedPosts = await Promise.all(
+      validPosts.map(async (post: ApiPost) => {
+        try {
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-            fetchTopicsForPost(post.id),
+            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+            fetchTopicsForPost(post.id), // assuming this already returns parsed JSON
           ]);
 
-          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
-          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+          let comments: ApiComment[] = [];
+          let likeCount = 0;
+          let isLiked = false;
+          let topics: any = [];
 
+          // Comments
+          try {
+            comments = commentsRes.ok
+              ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+              : [];
+          } catch (error) {
+            console.warn(`Failed to parse comments for post ${post.id}:`, error);
+            comments = [];
+          }
+
+          // Likes count (handles JSON or bare number)
+          try {
+            const raw = likesCountRes.ok
+              ? await robustParse<number | string | { count: number }>(
+                  likesCountRes,
+                  `likes/count/${post.id}`
+                )
+              : 0;
+            if (typeof raw === "number") likeCount = raw;
+            else if (typeof raw === "string") likeCount = Number(raw) || 0;
+            else if (raw && typeof raw === "object" && "count" in raw)
+              likeCount = Number((raw as any).count) || 0;
+          } catch (error) {
+            console.warn(`Failed to parse like count for post ${post.id}:`, error);
+          }
+
+          // Has liked (handles JSON or bare boolean/"true"/"false")
+          try {
+            const raw = hasLikedRes.ok
+              ? await robustParse<boolean | string | { liked: boolean }>(
+                  hasLikedRes,
+                  `likes/has-liked/${post.id}`
+                )
+              : false;
+            if (typeof raw === "boolean") isLiked = raw;
+            else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+            else if (raw && typeof raw === "object" && "liked" in raw)
+              isLiked = Boolean((raw as any).liked);
+          } catch (error) {
+            console.warn(`Failed to parse like status for post ${post.id}:`, error);
+          }
+
+          // Topics
+          try {
+            topics = await topicsRes;
+          } catch (error) {
+            console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+            topics = [];
+          }
+
+          const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+          // Attach user info to comments (fault-tolerant)
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: ApiComment) => {
-              const user = await fetchUser(comment.userId, comment.user);
-              return {
-                id: comment.id,
-                postId: comment.postId,
-                authorId: comment.userId,
-                content: comment.content,
-                createdAt: comment.createdAt,
-                username: user.displayName,
-                handle: `@${user.username}`,
-                profilePicture: user.profilePicture,
-              };
+              try {
+                const user = await fetchUser(comment.userId, comment.user);
+                return {
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: user.displayName,
+                  handle: `@${user.username}`,
+                  profilePicture: user.profilePicture,
+                };
+              } catch (error) {
+                console.warn(`Failed to process comment ${comment.id}:`, error);
+                return null;
+              }
             })
-          );
+          ).then((cs) => cs.filter((c) => c !== null) as any[]);
 
           const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
-
-          let isLiked = false;
-          if (hasLikedRes.ok) {
-            try {
-              isLiked = await hasLikedRes.json();
-            } catch (err) {
-              console.warn(`Failed to parse like status for post ${post.id}:`, err);
-            }
-          }
+          const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+          const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
 
           return {
             id: post.id,
@@ -443,26 +643,38 @@ const HomePage = () => {
             isReshared,
             commentCount: validComments.length,
             authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            likeCount,
             reshareCount,
             comments: commentsWithUsers,
             showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-            topics: topicsRes,
+            topics,
           };
-        })
-      );
+        } catch (postError) {
+          console.error(`Error processing post ${post.id}:`, postError);
+          return null;
+        }
+      })
+    );
 
-      setFollowingPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } catch (err) {
-      console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setLoadingFollowing(false);
-    }
-  };
+    const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
 
-  const fetchTopics = async () => {
+    setFollowingPosts(
+      successfulPosts.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    );
+  } catch (err) {
+    console.error("Error fetching following posts:", err);
+    setError("Failed to load posts from followed users.");
+    setTimeout(() => setError(null), 3000);
+  } finally {
+    setLoadingFollowing(false);
+  }
+};
+
+
+  //modified
+  const fetchTopics = async (): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -471,12 +683,132 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
       setTopics(data || []);
+      return data || [];
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
       setTimeout(() => setError(null), 3000);
+      return [];
     }
   };
+
+  const fetchPresets = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets`, {
+        method: "GET",
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error('Failed to fetch Presets');
+      const data = await response.json();
+      setPresets(data);
+    } catch (err) {
+      setError("Error fetching presets");
+      console.error("Error fetching presets topic:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  const fetchRules = async (presetId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules/${presetId}`, {
+        method: "GET",
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error('Failed to fetch rules');
+      const data = await response.json();
+      console.log(data);
+      setRules(prev => ({ ...prev, [presetId]: data }));
+    } catch (err) {
+      setError("Failed to fetch rules for the preset");
+      console.log("Failed to fetch rules for the preset", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+  const createPreset = async () => {
+    if (!newPresetName.trim()) {
+      setError('Preset name is required');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      console.log('Creating preset with name:', newPresetName);
+      console.log('API URL:', `${API_URL}/api/presets`);
+
+      const response = await fetch(`${API_URL}/api/presets`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name: newPresetName })
+      });
+      console.log('Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Server error response:', errorText);
+        throw new Error(`Failed to create preset: ${response.status} ${errorText}`);
+      }
+      const data = await response.json();
+      console.log('Created Preset:', data);
+
+      setPresets(prev => [...prev, data]);
+      setNewPresetName('');
+      setError('');
+
+    } catch (err) {
+      console.log("Error couldnt create your preset.", err);
+      setError("couldnt create your rule.")
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+  const addRule = async (presetId: number) => {
+    if (!newRule.value.trim()) {
+      setError('Rule value is required');
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",   // <-- you also forgot headers here
+        },
+        body: JSON.stringify({
+          presetId,
+          type: newRule.type,
+          value: newRule.value,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to add rule');
+
+      const data = await response.json();
+      setRules(prev => ({
+        ...prev,
+        [presetId]: [...(prev[presetId] || []), data],
+      }));
+      setNewRule({ type: 'KEYWORD', value: '' });
+      setError('');
+    } catch (err) {
+      setError("Couldnt assign rule");
+      console.log("couldnt assgin rule", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
 
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1009,6 +1341,7 @@ const HomePage = () => {
       setPosts([]);
       setFollowingPosts([]);
       navigate("/");
+      localStorage.clear();
     } catch (err) {
       console.error("Logout failed", err);
       setError("Failed to log out. Please try again.");
@@ -1083,6 +1416,10 @@ const HomePage = () => {
   };
 
   useEffect(() => {
+    fetchPresets();
+  }, []);
+
+  useEffect(() => {
     const init = async () => {
       setLoading(true);
       const user = await fetchCurrentUser();
@@ -1097,7 +1434,7 @@ const HomePage = () => {
     if (!currentUser) return;
 
     if (activeTab === "for You") {
-      fetchAllPosts();
+      fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
     }
@@ -1109,22 +1446,25 @@ const HomePage = () => {
     if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
       fetchFollowingPosts();
     }
-  }, [currentUser, activeTab]);
+    if (selectedPreset) {
+      fetchRules(selectedPreset);
+    }
+  }, [currentUser, activeTab, selectedPreset]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
         <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
-            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-lime-600 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-gray-400 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
           >
             Create Topic
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-lime-600 border-3 border-lime-500 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-gray-400 border-2 border-lime-300 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
           >
             View Topics
           </Button>
@@ -1211,8 +1551,8 @@ const HomePage = () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchAllPosts()}
+                        className="mt-4 bg-black-500 hover:bg-lime-600 text-white"
+                        onClick={() => fetchPaginatedPosts(0)}
                       >
                         Refresh
                       </Button>
@@ -1239,9 +1579,148 @@ const HomePage = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">
-                    Presets to be implemented
-                  </p>
+                  {/*  */}
+                  <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto ">
+                      {["Your Presets", "Create Presets"].map((tab) => (
+                        <TabsTrigger
+                          key={tab}
+                          value={tab}
+                          className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                        >
+                          {tab.replace(/^\w/, (c) => c.toUpperCase())}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                    <TabsContent value="Your Presets" className="p-0">
+                      {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                          {error}
+                        </div>
+                      )}
+                      {isLoading ? (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-500"></div>
+                        </div>
+                      ) : presets.length === 0 ? (
+                        <Card>
+                          <CardContent className="pt-6">
+                            <p className="text-center text-gray-500">You don't have any presets yet.</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {presets.map(preset => (
+                            <Card key={preset.id} className="hover:bg-lime-200">
+                              <CardHeader className="pb-3">
+                                <div className="flex justify-between items-center">
+                                  <CardTitle>{preset.name}</CardTitle>
+                                </div>
+                                <CardDescription>ID: {preset.id}</CardDescription>
+                              </CardHeader>
+                              <CardContent>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
+                                  className="mb-3"
+                                >
+                                  {selectedPreset === preset.id ? 'Hide Rules' : 'Show Rules'}
+                                </Button>
+
+                                {selectedPreset === preset.id && (
+                                  <div className="mt-3 space-y-3">
+                                    <div className="flex items-center space-x-2">
+                                      <select
+                                        value={newRule.type}
+                                        onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
+                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                      >
+                                        <option value="KEYWORD">Keyword</option>
+                                        <option value="TOPIC">Topic</option>
+                                      </select>
+                                      <Input
+                                        placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
+                                        value={newRule.value}
+                                        onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
+                                        className="flex-1"
+                                      />
+                                      <Button className="bg-lime-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
+                                        <Plus size={16} className="mr-1" /> Add
+                                      </Button>
+                                    </div>
+
+                                    {rules[preset.id]?.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {rules[preset.id].map(rule => (
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md">
+                                            <div className="flex items-center">
+                                              <Filter size={14} className="mr-2 text-lime-500" />
+                                              <Badge variant="outline" className="mr-2">
+                                                {rule.type}
+                                              </Badge>
+                                              <span>{rule.value}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-500">No rules added yet.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+                    <TabsContent value="Create Presets">
+                      <Card className="w-full">
+                        <CardHeader>
+                          <div className="text-center">
+                            <CardTitle> Create a New Feed Preset</CardTitle>
+                            <CardDescription>Create a named preset to organize your filtering rules</CardDescription>
+                          </div>
+
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                              {error}
+                            </div>
+                          )}
+                          <div className="flex space-x-2 ">
+                            <Input
+                              placeholder="Preset name (e..g Tech & Bots)"
+                              value={newPresetName}
+                              onChange={(e) => setNewPresetName(e.target.value)}
+                              className="flex-1"
+                            />
+                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading} >
+                              {isLoading ? 'Creating ..' : 'Create Preset'}
+                            </Button>
+                          </div>
+                          {presets.length > 0 && (
+                            <div className="pt-4">
+                              <div className="text-center">
+                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
+                              </div>
+                              <div className="space-y-2">
+                                {presets.map(preset => (
+                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 border-lime-500 rounded-md">
+                                    <span>{preset.name}</span>
+                                    <Badge variant="secondary">ID: {preset.id}</Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
+                  {/*  */}
                 </TabsContent>
               </Tabs>
             </>
