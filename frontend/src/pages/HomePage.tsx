@@ -1505,13 +1505,13 @@ const HomePage = () => {
                         </Card>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-lime-200">
+                          {/* bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white */}
+                          {presets.map(preset => ( 
+                            <Card key={preset.id} className="hover:bg-blue-500 ">
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
-                                <CardDescription>ID: {preset.id}</CardDescription>
                               </CardHeader>
                               <CardContent>
                                 <Button
