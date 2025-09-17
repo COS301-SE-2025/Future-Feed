@@ -1,0 +1,45 @@
+name: FutureFeed CI
+
+on:
+  push:
+    branches: ['*']
+  pull_request:
+    branches: ['*']
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    env:
+      SPRING_PROFILES_ACTIVE: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # ---------- Run Unit Tests (Surefire -> *Test.java) ----------
+      - name: Run Unit Tests
+        run: |
+          cd FutureFeed-Springboot/futurefeed
+          mvn clean test \
+            -Dspring.profiles.active=test \
+            -Dtest=*Test
+
+      # ---------- Run Integration Tests (Failsafe -> *IT.java) ----------
+      - name: Run Integration Tests
+        run: |
+          cd FutureFeed-Springboot/futurefeed
+          mvn -Dspring.profiles.active=test -Dtest=*IT test
