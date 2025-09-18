@@ -6,7 +6,6 @@ import { Heart, MessageCircle, Bookmark, Trash2, Repeat2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
-import palettes from 'nice-color-palettes';
 
 interface UserProfile {
   id: number;
