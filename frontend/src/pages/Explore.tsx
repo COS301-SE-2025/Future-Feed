@@ -575,12 +575,13 @@ const Explore = () => {
         </div>
       </main>
 
-      <aside className="gap-4 flex flex-col ">
-        <div className="sticky p-3 top-4 z-10  ">
-
+      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
         </div>
-
-        <RightSidebar />
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
       </aside>
     </div>
   );
