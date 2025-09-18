@@ -789,6 +789,7 @@ const BotPage = () => {
                 onBookmark={() => handleBookmark(post.id)}
                 onReshare={() => {}}
                 onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                onProfileClick={() => navigate(`/bot/${botId}`)}
                 onDelete={() => handleDeletePost(post.id)}
                 onNavigate={() => navigate(`/post/${post.id}`)}
                 currentUser={bot}
