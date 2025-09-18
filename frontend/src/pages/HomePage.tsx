@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Filter } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 
 interface Preset {
   id: number;
