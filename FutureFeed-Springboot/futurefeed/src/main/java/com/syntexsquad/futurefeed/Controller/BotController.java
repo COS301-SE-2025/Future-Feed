@@ -50,6 +50,13 @@ public class BotController {
         return ResponseEntity.ok(bots);
     }
 
+    @GetMapping("/{botId}")
+    public ResponseEntity<BotResponseDTO> getBotById(@PathVariable Integer botId) {
+        BotResponseDTO bot = botService.getBotById(botId);
+        return ResponseEntity.ok(bot);
+    }
+
+
     @GetMapping("/{botId}/execute")
     public ResponseEntity<?> executeBot(@PathVariable Integer botId) {
         try {
