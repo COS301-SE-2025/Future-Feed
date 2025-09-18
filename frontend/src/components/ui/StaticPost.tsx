@@ -36,6 +36,7 @@ interface PostProps {
   onAddComment: (commentText: string) => void;
   onReshare: () => void;
   onDelete: () => void;
+  onProfileClick: () => void;
   className?: string;
   showComments: boolean;
   comments: {
@@ -72,6 +73,7 @@ const StaticPost: React.FC<PostProps> = ({
   onAddComment,
   onReshare,
   onDelete,
+  onProfileClick,
   className,
   showComments,
   comments,
@@ -135,13 +137,27 @@ const StaticPost: React.FC<PostProps> = ({
           <span className="hidden sm:inline text-sm ml-1">Back</span>
         </Button>
         <div className="flex gap-4">
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+          <Avatar 
+            className="h-10 w-10 sm:h-12 sm:w-12 hover:cursor-pointer"
+            onClick={(e) => {
+                e.stopPropagation();
+                onProfileClick();
+              }}
+          >
             <AvatarImage src={profilePicture || currentUser?.profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
+              <h2 
+                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onProfileClick();
+                }}  
+              >
+                {username || "Unknown User"}
+              </h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
                   {time}
@@ -159,7 +175,15 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
+            <p 
+              className="dark:text-gray-300 text-xs sm:text-sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                onProfileClick();
+              }}
+            >
+                {handle || "@unknown"}
+            </p>
             <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
             {image && (
               <img
