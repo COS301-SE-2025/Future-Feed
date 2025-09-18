@@ -1642,7 +1642,7 @@ const HomePage = () => {
                                         placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
                                         value={newRule.value}
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="flex-1"
+                                        className="flex-1 custom-placeholder"
                                       />
                                       <Button className="bg-lime-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
