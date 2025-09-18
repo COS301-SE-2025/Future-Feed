@@ -163,7 +163,7 @@ const Notifications = () => {
       <Card
         key={notification.id}
         className={`dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl ${
-          !notification.isRead ? "border-l-4 border-l-blue-500" : ""
+          !notification.isRead ? "border-l-3 border-l-blue-500" : ""
         } cursor-pointer`}
         onClick={() => handlePostNavigation(notification)}
       >
@@ -177,7 +177,7 @@ const Notifications = () => {
               <span className="text-blue-400">@{notification.senderUsername}</span>{" "}
               {notification.massage}
             </p>
-            <p className="text-gray-500 text-sm">{formatDate(notification.createdAt)}</p>
+            <p className="text-gray-500 text-sm mt-4">{formatDate(notification.createdAt)}</p>
           </div>
           {!notification.isRead && (
             <div className="w-3 h-3 rounded-full bg-blue-500 mt-2"></div>
@@ -193,7 +193,7 @@ const Notifications = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto mt-11">
+      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
         <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 bg-black dark:bg-blue-950 dark:border-slate-200">
           <Input
             type="text"
@@ -211,9 +211,9 @@ const Notifications = () => {
 
         <Tabs defaultValue="all" className="w-full p-3" onValueChange={setActiveTab}>
           <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="verified">Verified</TabsTrigger>
-            <TabsTrigger value="mentions">Mentions</TabsTrigger>
+            <TabsTrigger value="all" className="rounded-2xl">All</TabsTrigger>
+            <TabsTrigger value="verified" className="rounded-2xl">Verified</TabsTrigger>
+            <TabsTrigger value="mentions" className="rounded-2xl">Mentions</TabsTrigger>
           </TabsList>
 
           {loading && (
@@ -242,7 +242,7 @@ const Notifications = () => {
 
           {!loading && !error && (
             <>
-              <TabsContent value="all" className="space-y-4 mt-4">
+              <TabsContent value="all" className="space-y-4">
                 {filteredNotifications.length > 0 ? (
                   filteredNotifications.map(renderNotification)
                 ) : (
