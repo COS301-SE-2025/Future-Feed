@@ -78,7 +78,7 @@ public class CommentService {
                         recipient.getId(),
                         sender.getId(),
                         "COMMENT",
-                        sender.getUsername() + " commented on your post",
+                         " commented on your post",
                         sender.getUsername() + "",
                         postId
                 );
@@ -107,7 +107,7 @@ public class CommentService {
                             mentionedUser.getId(),
                             sender.getId(),
                             "MENTION",
-                            sender.getUsername() + " mentioned you on a post",
+                             " mentioned you on a post",
                             sender.getUsername() + "",
                             postId
                     );
