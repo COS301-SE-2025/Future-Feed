@@ -178,9 +178,6 @@ const Notifications = () => {
               {notification.massage}
             </p>
             <p className="text-gray-500 text-sm">{formatDate(notification.createdAt)}</p>
-            <p className="dark:text-blue-500">
-              View post #{notification.postId}
-            </p>
           </div>
           {!notification.isRead && (
             <div className="w-3 h-3 rounded-full bg-blue-500 mt-2"></div>
