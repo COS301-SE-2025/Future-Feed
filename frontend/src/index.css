@@ -200,6 +200,18 @@
 .future-feed .future-feed\:data-\[state\=active\]\:text-black[data-state="active"] {
   color: #000000 !important;
 }
+.future-feed .future-feed\:data-\[selected\=true\]\:text-lime[data-selected="true"] {
+  color: #84cc16 !important;
+  background-color: #84cc16;
+}
+.future-feed .future-feed\:data-\[selected\=true\]\:bg-black[data-selected="true"] {
+  background-color: black !important;
+}
+.future-feed .future-feed\:data-\[selected\=true\]\:border-lime[data-selected="true"] {
+  border-color: #84cc16 !important;
+}
+
+
 
 /*ligt mode rose gold herer*/
 .rose-gold-light-bg {
