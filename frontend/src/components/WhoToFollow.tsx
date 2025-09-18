@@ -9,6 +9,7 @@ import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
 //route detection for show morers
 import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 
 interface User {
   id: number
@@ -40,6 +41,7 @@ const WhoToFollow = () => {
   //route detection for show more
   const location = useLocation();
   const isExplorePage = location.pathname === '/explore';
+  const navigate = useNavigate();
   
 
   // Fetch top users with React Query
@@ -168,13 +170,16 @@ const WhoToFollow = () => {
               return (
                 <div key={user.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Avatar className="w-10 h-10 border border-lime-500">
+                    <Avatar 
+                      className="w-10 h-10 border border-lime-500 hover:cursor-pointer"
+                      onClick={() => navigate(`/profile/${user.id}`)}  
+                    >
                       <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
                       <AvatarFallback>{user.username}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold">{user.username}</p>
-                      <p className="dark:text-slate-200">@{user.name}</p>
+                      <p className="font-semibold hover:cursor-pointer hover:underline" onClick={() => navigate(`/profile/${user.id}`)}  >{user.username}</p>
+                      <p className="dark:text-slate-200 hover:cursor-pointer hover:underline" onClick={() => navigate(`/profile/${user.id}`)}  >@{user.name}</p>
                     </div>
                   </div>
 
