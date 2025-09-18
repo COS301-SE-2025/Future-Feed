@@ -1402,6 +1402,7 @@ const HomePage = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
