@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Skeleton } from "@/components/ui/skeleton";
-import SearchBar from "@/components/searchBar";
+import SearchBar from "@/components/SearchBar";
 
 // Define the notification interface
 interface Notification {
