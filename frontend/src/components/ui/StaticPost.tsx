@@ -117,9 +117,9 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-[#1a1a1a] border-2 border-lime-500 rounded-2xl my-7 mb-4 relative", className)}>
+    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-7 mb-4 relative", className)}>
       {isCopied && (
-        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-lime-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
+        <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
         </div>
       )}
@@ -131,7 +131,7 @@ const StaticPost: React.FC<PostProps> = ({
           className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
           aria-label="Go back"
         >
-          <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+          <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
           <span className="hidden sm:inline text-sm ml-1">Back</span>
         </Button>
         <div className="flex gap-4">
@@ -141,9 +141,9 @@ const StaticPost: React.FC<PostProps> = ({
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
+              <h2 className="font-bold future-feed:text-white dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
+                <span className="future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -159,13 +159,13 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            <p className="future-feed:text-white dark:text-gray-300 text-xs sm:text-sm">{handle || "@unknown"}</p>
+            <p className="future-feed:text-white mt-2 dark:text-white text-sm sm:text-base">{text}</p>
             {image && (
               <img
                 src={image}
                 alt="Post"
-                className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
+                className="mt-4 rounded-lg border  future-feed:border-lime max-w-full h-auto"
               />
             )}
             <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
@@ -230,17 +230,17 @@ const StaticPost: React.FC<PostProps> = ({
                     <span className="hidden sm:inline text-sm">Share</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 dark:bg-[#1a1a1a] border-2 border-lime-500">
+                <PopoverContent className="w-80 dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={postUrl}
                       readOnly
-                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border dark:border-lime-500"
+                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border  future-feed:border-lime"
                     />
                     <Button
                       onClick={handleCopyLink}
-                      className="bg-lime-500 text-white hover:bg-lime-600"
+                      className="bg-blue-500 text-white hover:bg-lime-600"
                       aria-label="Copy link"
                     >
                       Copy
@@ -277,10 +277,10 @@ const StaticPost: React.FC<PostProps> = ({
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
-                          <p className="text-xs sm:text-sm dark:text-white">{comment.content}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <h2 className="font-bold future-feed:text-white  dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                          <p className="text-xs future-feed:text-white sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
+                          <p className="text-xs sm:text-sm dark:text-white future-feed:text-white">{comment.content}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 future-feed:text-white ">
                             {formatRelativeTime(comment.createdAt)}
                           </p>
                         </div>
@@ -297,13 +297,13 @@ const StaticPost: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full mr-4 dark:bg-black hover:border-white dark:text-white dark:border-lime-500 resize-none border-2 border-lime-500 text-xs sm:text-sm"
+                    className="w-full mr-4 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white  future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
                   <Button
                     onClick={handleSubmitComment}
-                    className="bg-lime-500 mt-3 mr-4 text-white hover:bg-lime-600 text-xs sm:text-sm"
+                    className="bg-blue-500 mt-3 mr-4 text-white hover:bg-lime-600 text-xs sm:text-sm"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment

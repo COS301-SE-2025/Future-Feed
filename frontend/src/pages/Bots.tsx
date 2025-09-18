@@ -566,12 +566,12 @@ const Bots: React.FC = () => {
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className=" future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className=" future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 >
-                  <option className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="hourly">Hourly</option>
-                  <option  className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="daily">Daily</option>
-                  <option className ="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="weekly">Weekly</option>
-                  <option className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="monthly">Monthly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="hourly">Hourly</option>
+                  <option  className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="daily">Daily</option>
+                  <option className ="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="weekly">Weekly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="monthly">Monthly</option>
                 </select>
                 <Input
                   placeholder="Context Source (URL)"

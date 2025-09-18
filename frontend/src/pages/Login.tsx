@@ -45,7 +45,7 @@ const Login: React.FC = () => {
       />
     </div>
 
-      <Card className="mb-8 mt-5 w-full max-w-[828px] rounded-[20px] border-2 border-lime-500 bg-white px-10 py-8 shadow-[2px_2px_20px_#000000] sm:px-12 outline ">
+      <Card className="mb-8 mt-5 w-full max-w-[828px] rounded-[20px] border-2 border-rose-gold-accent-border  bg-white px-10 py-8 shadow-[2px_2px_20px_#000000] sm:px-12 outline ">
         <CardHeader>
           <CardTitle className="text-center future-feed:text-lime text-[40px]">Login</CardTitle>
         </CardHeader>
@@ -67,13 +67,13 @@ const Login: React.FC = () => {
 
             <div className="mb-6">
                 <div className="relative my-[15px] flex items-center justify-center text-center">
-              <div className="mr-2.5 h-px w-1/3 bg-blue-500 dark:bg-slate-200"></div>
+              <div className="mr-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
               <span className="text-[0.9rem] font-bold">
                 <Label htmlFor="username" className="mb-2 block future-feed:text-lime text-left text-[24px] font-bold">
                 Username
               </Label>
               </span>
-              <div className="ml-2.5 h-px w-1/3 bg-blue-500 dark:bg-slate-200"></div>
+              <div className="ml-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
             </div>
               
               <Input
@@ -89,13 +89,13 @@ const Login: React.FC = () => {
             <div className="mb-6">
                 <div className="mb-6">
                 <div className="relative my-[15px] flex items-center justify-center text-center">
-              <div className="mr-2.5 h-px w-1/3 bg-blue-500 dark:bg-slate-200"></div>
+              <div className="mr-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
               <span className="text-[0.9rem] font-bold">
                 <Label htmlFor="password" className="mb-2 block future-feed:text-lime text-left text-[24px] font-bold">
                     Password
                 </Label>
               </span>
-              <div className="ml-2.5 h-px w-1/3 bg-blue-500 dark:bg-slate-200"></div>
+              <div className="ml-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
             </div>
             </div>
               
