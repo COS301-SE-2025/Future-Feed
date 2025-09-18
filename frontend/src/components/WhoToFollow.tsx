@@ -141,9 +141,11 @@ const WhoToFollow = () => {
   const stableStatuses = useStableFollowStatus(userIds);
 
   return (
-    <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-gray-500 text-white ">
+
+    <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-3   ">
+
       <CardContent className="p-4 min-h-[200px]">
-        <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
+        <h2 className="font-bold text-rose-gold-text-light text-lg mb-4">Follow Latest</h2>
 
         {isLoading ? (
           <div className="space-y-3">
@@ -172,22 +174,22 @@ const WhoToFollow = () => {
                     </Avatar>
                     <div>
                       <p className="font-semibold">{user.username}</p>
-                      <p className="dark:text-lime-500">@{user.name}</p>
+                      <p className="dark:text-slate-200">@{user.name}</p>
                     </div>
                   </div>
 
                   {loadingFollow[user.id] ? (
                     <Skeleton className="h-8 w-16 rounded-2xl" />
                   ) : isFollowing ? (
-                    <Button
-                      className="w-[90px] rounded-full border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+                    <Button variant={"secondary"}
+                      className="w-[90px] rounded-full  font-semibold  hover:cursor-pointer"
                       onClick={() => handleUnfollow(user.id)}
                     >
                       Unfollow
                     </Button>
                   ) : (
                     <Button
-                      className="w-[90px] rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+                      className="w-[90px]  rounded-full bg-lime-500 font-semibold hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
@@ -199,7 +201,7 @@ const WhoToFollow = () => {
 
             <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
-        <p className="dark:text-gray-400 hover:underline cursor-pointer">Show more</p>
+        <p className="dark:text-slate-200 hover:underline cursor-pointer">Show more</p>
       </div>
       </Link>
             

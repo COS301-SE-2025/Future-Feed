@@ -1,7 +1,7 @@
 type ThemeColors =
 'green'
 
-type ThemeMode = 'dark' | 'light' | 'system'
+type ThemeMode = 'dark' | 'light' | 'system' | 'future-feed'
 type Theme = {
     mode: ThemeMode;
     color: ThemeColors;
