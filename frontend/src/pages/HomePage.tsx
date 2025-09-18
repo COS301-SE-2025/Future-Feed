@@ -1636,7 +1636,7 @@ const HomePage = () => {
                                       <select
                                         value={newRule.type}
                                         onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        className="flex h-9 w-25 rounded-md border border-input bg-background px-1 py-1 text-[14px]"
                                       >
                                         <option value="KEYWORD">Keyword</option>
                                         <option value="TOPIC">Topic</option>
