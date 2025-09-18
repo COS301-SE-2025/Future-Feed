@@ -671,13 +671,14 @@ const BotPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-200 flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className=" flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:p-6">
+        
+        <main className="w-[1100px] mx-auto">
           <div className="relative">
-            <Skeleton className="mt-25 h-40 w-full" />
+            <Skeleton className="mt-10 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>
@@ -694,19 +695,25 @@ const BotPage = () => {
             <div className="mt-4 flex gap-2">
               <Skeleton className="h-4 w-24" />
               <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-24" />
             </div>
           </div>
           <Skeleton className="my-4 h-1 w-full" />
-          <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
+          <div className="grid w-full grid-cols-5">
+            {[...Array(5)].map((_, idx) => (
+              <Skeleton key={idx} className="h-10 w-full" />
+            ))}
+          </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhoToFollow />
-          </div>
-        </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
       </div>
     );
   }
