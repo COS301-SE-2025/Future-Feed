@@ -27,10 +27,7 @@ public class NotificationController {
         this.appUserRepository = appUserRepository;
     }
 
-    //    @GetMapping("/{userId}")
-//    public ResponseEntity<List<Notification>> getNotifications(@PathVariable Integer userId) {
-//        return ResponseEntity.ok(notificationService.getNotificationsForUser(userId));
-//    }
+
     @GetMapping("/mentions/{userId}")
     public ResponseEntity<List<Notification>> getMentionNotifications(@PathVariable Integer userId) {
         //AppUser currentUser = getAuthenticatedUser();
