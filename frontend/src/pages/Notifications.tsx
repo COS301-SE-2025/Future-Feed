@@ -9,10 +9,6 @@ import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
 import { Input } from "@/components/ui/input"
 
-interface Notification {
-  id: number;
-  type: "COMMENT" | "BOOKMARK" | "LIKE" | "MENTION"
-}
 const Notifications = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 dark:text-white mx-auto">
