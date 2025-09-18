@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Filter } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 
 interface Preset {
   id: number;
@@ -399,42 +399,56 @@ const HomePage = () => {
     }
   };
 
+
+  // Union for all possible API Response's
+  type ApiResponse =
+    | ApiFollow[]
+    | ApiReshare[]
+    | ApiBookmark[]
+    | ApiPost[]
+    | ApiComment[]
+    | number
+    | boolean
+    | string
+    | { count: number }
+    | { liked: boolean };
+
   // ===================== Shared helpers (put once, top-level) =====================
-const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
+  const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
 
-function stripBOM(s: string) {
-  return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
-}
-
-function stripXssiPrefix(s: string) {
-  if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
-    const i = s.indexOf("\n");
-    return i >= 0 ? s.slice(i + 1) : "";
+  function stripBOM(s: string) {
+    return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
   }
-  return s;
-}
 
-function sliceToJsonBlock(s: string) {
-  const firstBrace = s.indexOf("{");
-  const firstBracket = s.indexOf("[");
-  const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a,b)=>a-b)[0] ?? -1;
-  if (first < 0) return s;
-  const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
-  if (last < first) return s;
-  return s.slice(first, last + 1);
-}
+  function stripXssiPrefix(s: string) {
+    if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
+      const i = s.indexOf("\n");
+      return i >= 0 ? s.slice(i + 1) : "";
+    }
+    return s;
+  }
 
-function looksLikeHtml(s: string) {
-  return /<!doctype html>|<html[\s>]/i.test(s);
-}
+  function sliceToJsonBlock(s: string) {
+    const firstBrace = s.indexOf("{");
+    const firstBracket = s.indexOf("[");
+    const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a, b) => a - b)[0] ?? -1;
+    if (first < 0) return s;
+    const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+    if (last < first) return s;
+    return s.slice(first, last + 1);
+  }
 
-/**
- * Robustly parse a Response that *should* be JSON, but may:
- *  - include BOM/XSSI/log noise,
- *  - return primitives (true/false/5),
- *  - be mislabeled (no content-type).
- */
-async function robustParse<T = any>(response: Response, endpointForLogs: string): Promise<T> {
+  function looksLikeHtml(s: string) {
+    return /<!doctype html>|<html[\s>]/i.test(s);
+  }
+
+  /**
+   * Robustly parse a Response that *should* be JSON, but may:
+   *  - include BOM/XSSI/log noise,
+   *  - return primitives (true/false/5),
+   *  - be mislabeled (no content-type).
+   */
+  async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
   const contentType = response.headers.get("content-type") || "";
   const raw = stripBOM((await response.text()).trim());
   const cleaned = stripXssiPrefix(raw);
@@ -444,41 +458,38 @@ async function robustParse<T = any>(response: Response, endpointForLogs: string)
     throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
   }
 
-  // If server says JSON, try normally, then fallback to slicing.
   if (contentType.includes("application/json")) {
     try {
-      return JSON.parse(cleaned);
+      return JSON.parse(cleaned) as T;
     } catch {
       try {
-        return JSON.parse(sliceToJsonBlock(cleaned));
-      } catch (e) {
+        return JSON.parse(sliceToJsonBlock(cleaned)) as T;
+      } catch {
         console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
         throw new Error(`Invalid JSON response from ${endpointForLogs}`);
       }
     }
   }
 
-  // Not marked JSON: try JSON anyway, else handle primitives gracefully.
   try {
-    return JSON.parse(cleaned);
+    return JSON.parse(cleaned) as T;
   } catch {
     const t = cleaned.toLowerCase();
-    if (t === "true") return true as unknown as T;
-    if (t === "false") return false as unknown as T;
-    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as unknown as T;
-    // As a last resort, return the raw string (caller can decide)
-    return cleaned as unknown as T;
+    if (t === "true") return true as T;
+    if (t === "false") return false as T;
+    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
+    return cleaned as T;
   }
 }
 
-// Add this once to normalize fetch options everywhere:
-const commonInit: RequestInit = {
-  credentials: "include",
-  headers: { Accept: "application/json" },
-};
+  // Add this once to normalize fetch options everywhere:
+  const commonInit: RequestInit = {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  };
 
-// ===================== Your fixed function =====================
-const fetchFollowingPosts = async () => {
+  // ===================== Your fixed function =====================
+  const fetchFollowingPosts = async () => {
   if (!currentUser?.id) {
     console.warn("Cannot fetch following posts: currentUser is not loaded");
     return;
@@ -488,7 +499,6 @@ const fetchFollowingPosts = async () => {
   setLoadingFollowing(true);
 
   try {
-    // 1) Load follows, my reshares, and bookmarks
     const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
       fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
       fetch(`${API_URL}/api/reshares`, commonInit),
@@ -507,13 +517,11 @@ const fetchFollowingPosts = async () => {
     const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
     const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
-    // Nothing to do if there are no follows
     if (!followedIds.length) {
       setFollowingPosts([]);
       return;
     }
 
-    // 2) Fetch posts for each followed user (robust parsing)
     const allFollowingPosts = await Promise.all(
       followedIds.map(async (userId: number) => {
         try {
@@ -527,7 +535,6 @@ const fetchFollowingPosts = async () => {
       })
     );
 
-    // 3) Flatten, dedupe, remove my own posts, ensure valid user
     const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
     const uniquePosts: ApiPost[] = Array.from(
       new Map(flattenedPosts.map((post) => [post.id, post])).values()
@@ -535,7 +542,6 @@ const fetchFollowingPosts = async () => {
 
     const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
 
-    // 4) Enrich each post (comments, likes, has-liked, topics, user)
     const formattedPosts = await Promise.all(
       validPosts.map(async (post: ApiPost) => {
         try {
@@ -543,15 +549,14 @@ const fetchFollowingPosts = async () => {
             fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
             fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-            fetchTopicsForPost(post.id), // assuming this already returns parsed JSON
+            fetchTopicsForPost(post.id),
           ]);
 
           let comments: ApiComment[] = [];
           let likeCount = 0;
           let isLiked = false;
-          let topics: any = [];
+          let topics: Topic[] = [];
 
-          // Comments
           try {
             comments = commentsRes.ok
               ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
@@ -561,7 +566,6 @@ const fetchFollowingPosts = async () => {
             comments = [];
           }
 
-          // Likes count (handles JSON or bare number)
           try {
             const raw = likesCountRes.ok
               ? await robustParse<number | string | { count: number }>(
@@ -571,13 +575,11 @@ const fetchFollowingPosts = async () => {
               : 0;
             if (typeof raw === "number") likeCount = raw;
             else if (typeof raw === "string") likeCount = Number(raw) || 0;
-            else if (raw && typeof raw === "object" && "count" in raw)
-              likeCount = Number((raw as any).count) || 0;
+            else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
           } catch (error) {
             console.warn(`Failed to parse like count for post ${post.id}:`, error);
           }
 
-          // Has liked (handles JSON or bare boolean/"true"/"false")
           try {
             const raw = hasLikedRes.ok
               ? await robustParse<boolean | string | { liked: boolean }>(
@@ -587,13 +589,11 @@ const fetchFollowingPosts = async () => {
               : false;
             if (typeof raw === "boolean") isLiked = raw;
             else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-            else if (raw && typeof raw === "object" && "liked" in raw)
-              isLiked = Boolean((raw as any).liked);
+            else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
           } catch (error) {
             console.warn(`Failed to parse like status for post ${post.id}:`, error);
           }
 
-          // Topics
           try {
             topics = await topicsRes;
           } catch (error) {
@@ -603,7 +603,6 @@ const fetchFollowingPosts = async () => {
 
           const validComments = (comments || []).filter((c: ApiComment) => c.userId);
 
-          // Attach user info to comments (fault-tolerant)
           const commentsWithUsers = await Promise.all(
             validComments.map(async (comment: ApiComment) => {
               try {
@@ -617,13 +616,13 @@ const fetchFollowingPosts = async () => {
                   username: user.displayName,
                   handle: `@${user.username}`,
                   profilePicture: user.profilePicture,
-                };
+                } as CommentData;
               } catch (error) {
                 console.warn(`Failed to process comment ${comment.id}:`, error);
                 return null;
               }
             })
-          ).then((cs) => cs.filter((c) => c !== null) as any[]);
+          ).then((cs) => cs.filter((c): c is CommentData => c !== null));
 
           const postUser = await fetchUser(post.user.id, post.user);
           const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
