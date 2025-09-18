@@ -144,32 +144,6 @@ const Notifications = () => {
     }
   };
 
-  // Function to mark all notifications as read
-  const markAllAsRead = async () => {
-    if (!currentUser) return;
-    
-    try {
-      const response = await fetch(`${API_URL}/api/notifications/${currentUser.id}/read-all`, {
-        method: "PUT",
-        headers: { 
-          Authorization: `Bearer ${localStorage.getItem("access_token")}` 
-        },
-        credentials: "include"
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to mark all notifications as read: ${response.status}`);
-      }
-      
-      // Update local state
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, isRead: true }))
-      );
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
-    }
-  };
-
   return (
     <div className="flex future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
       <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
