@@ -210,9 +210,6 @@ const Notifications = () => {
   // Apply tab filter
   const applyTabFilter = (notifications: Notification[]) => {
     if (activeTab === "all") return notifications;
-    if (activeTab === "verified") return notifications.filter((notification) =>
-      [3, 47].includes(notification.senderUserId)
-    ); // Placeholder: Adjust for verified users
     if (activeTab === "mentions") return notifications.filter((notification) =>
       notification.type === "MENTION"
     );
@@ -273,7 +270,7 @@ const Notifications = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Notifications</h1>
           <div className="">
@@ -288,7 +285,6 @@ const Notifications = () => {
         <Tabs defaultValue="all" className="w-full p-3" onValueChange={setActiveTab}>
           <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
             <TabsTrigger value="all" className="rounded-2xl">All</TabsTrigger>
-            <TabsTrigger value="verified" className="rounded-2xl">Verified</TabsTrigger>
             <TabsTrigger value="mentions" className="rounded-2xl">Mentions</TabsTrigger>
           </TabsList>
 
@@ -325,13 +321,6 @@ const Notifications = () => {
                   <p className="p-4 dark:text-gray-400">No notifications yet.</p>
                 )}
               </TabsContent>
-              <TabsContent value="verified" className="space-y-4">
-                {applyTabFilter(filteredNotifications).length > 0 ? (
-                  applyTabFilter(filteredNotifications).map(renderNotification)
-                ) : (
-                  <p className="p-4 dark:text-gray-400">No verified activity yet.</p>
-                )}
-              </TabsContent>
               <TabsContent value="mentions" className="space-y-4">
                 {applyTabFilter(filteredNotifications).length > 0 ? (
                   applyTabFilter(filteredNotifications).map(renderNotification)
@@ -342,11 +331,6 @@ const Notifications = () => {
             </>
           )}
         </Tabs>
-
-        <div className="w-full dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
-          <WhatsHappening />
-          <WhoToFollow />
-        </div>
       </main>
 
       <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">

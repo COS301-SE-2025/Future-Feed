@@ -68,7 +68,7 @@ const PersonalSidebar = () => {
 
     </aside>
        {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime dark:bg-indigo-960  border text-lime-500  dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 bg-white">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime dark:bg-indigo-960  border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 bg-white">
         <Link to="/home" className="flex flex-col items-center">
           <Home strokeWidth={3} className="w-5 h-5 " />
 
