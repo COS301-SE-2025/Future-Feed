@@ -254,8 +254,7 @@ const Notifications = () => {
           </Avatar>
           <div className="flex-1">
             <p>
-              <span className="text-blue-400">@{notification.senderUsername}</span>{" "}
-              {notification.massage}
+              <span className="text-blue-400">@{notification.massage}</span>
             </p>
             <p className="text-gray-500 text-sm mt-4">{formatDate(notification.createdAt)}</p>
           </div>
