@@ -642,23 +642,23 @@ const BotPage = () => {
     );
   };
 
-  const renderSkeletonPosts = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <div
-        key={index}
-        className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
-          </div>
-        </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
-      </div>
-    ));
-  };
+  // const renderSkeletonPosts = () => {
+  //   return Array.from({ length: 5 }).map((_, index) => (
+  //     <div
+  //       key={index}
+  //       className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+  //     >
+  //       <div className="flex items-center space-x-4">
+  //         <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+  //         <div className="flex-1">
+  //           <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+  //         </div>
+  //       </div>
+  //       <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+  //       <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+  //     </div>
+  //   ));
+  // };
 
   useEffect(() => {
     const loadData = async () => {
