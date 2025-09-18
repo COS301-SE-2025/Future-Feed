@@ -39,7 +39,6 @@ const Notifications = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -51,12 +50,10 @@ const Notifications = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
       const data: UserProfile = await res.json();
-      setCurrentUser(data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
-      setCurrentUser(null);
       return null;
     }
   };
