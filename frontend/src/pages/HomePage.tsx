@@ -133,7 +133,7 @@ const HomePage = () => {
 
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-// 
+  // 
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
@@ -449,38 +449,38 @@ const HomePage = () => {
    *  - be mislabeled (no content-type).
    */
   async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
-  const contentType = response.headers.get("content-type") || "";
-  const raw = stripBOM((await response.text()).trim());
-  const cleaned = stripXssiPrefix(raw);
+    const contentType = response.headers.get("content-type") || "";
+    const raw = stripBOM((await response.text()).trim());
+    const cleaned = stripXssiPrefix(raw);
 
-  if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
-    console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
-    throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
-  }
+    if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+      console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+      throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+    }
 
-  if (contentType.includes("application/json")) {
+    if (contentType.includes("application/json")) {
+      try {
+        return JSON.parse(cleaned) as T;
+      } catch {
+        try {
+          return JSON.parse(sliceToJsonBlock(cleaned)) as T;
+        } catch {
+          console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+          throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+        }
+      }
+    }
+
     try {
       return JSON.parse(cleaned) as T;
     } catch {
-      try {
-        return JSON.parse(sliceToJsonBlock(cleaned)) as T;
-      } catch {
-        console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
-        throw new Error(`Invalid JSON response from ${endpointForLogs}`);
-      }
+      const t = cleaned.toLowerCase();
+      if (t === "true") return true as T;
+      if (t === "false") return false as T;
+      if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
+      return cleaned as T;
     }
   }
-
-  try {
-    return JSON.parse(cleaned) as T;
-  } catch {
-    const t = cleaned.toLowerCase();
-    if (t === "true") return true as T;
-    if (t === "false") return false as T;
-    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
-    return cleaned as T;
-  }
-}
 
   // Add this once to normalize fetch options everywhere:
   const commonInit: RequestInit = {
@@ -490,186 +490,186 @@ const HomePage = () => {
 
   // ===================== Your fixed function =====================
   const fetchFollowingPosts = async () => {
-  if (!currentUser?.id) {
-    console.warn("Cannot fetch following posts: currentUser is not loaded");
-    return;
-  }
-
-  console.debug("Fetching following posts");
-  setLoadingFollowing(true);
-
-  try {
-    const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
-      fetch(`${API_URL}/api/reshares`, commonInit),
-      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
-    ]);
-
-    if (!followRes.ok) throw new Error("Failed to fetch followed users");
-    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-
-    const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
-    const myReshares: ApiReshare[] = myResharesRes.ok
-      ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
-      : [];
-    const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
-
-    const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
-    const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
-
-    if (!followedIds.length) {
-      setFollowingPosts([]);
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch following posts: currentUser is not loaded");
       return;
     }
 
-    const allFollowingPosts = await Promise.all(
-      followedIds.map(async (userId: number) => {
-        try {
-          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
-          if (!res.ok) return [];
-          return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
-        } catch (error) {
-          console.warn(`Failed to fetch posts for user ${userId}:`, error);
-          return [];
-        }
-      })
-    );
+    console.debug("Fetching following posts");
+    setLoadingFollowing(true);
 
-    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-    const uniquePosts: ApiPost[] = Array.from(
-      new Map(flattenedPosts.map((post) => [post.id, post])).values()
-    ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+    try {
+      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
 
-    const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+      if (!followRes.ok) throw new Error("Failed to fetch followed users");
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-    const formattedPosts = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        try {
-          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-            fetchTopicsForPost(post.id),
-          ]);
+      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
 
-          let comments: ApiComment[] = [];
-          let likeCount = 0;
-          let isLiked = false;
-          let topics: Topic[] = [];
+      const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
+      if (!followedIds.length) {
+        setFollowingPosts([]);
+        return;
+      }
+
+      const allFollowingPosts = await Promise.all(
+        followedIds.map(async (userId: number) => {
           try {
-            comments = commentsRes.ok
-              ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
-              : [];
+            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
+            if (!res.ok) return [];
+            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
           } catch (error) {
-            console.warn(`Failed to parse comments for post ${post.id}:`, error);
-            comments = [];
+            console.warn(`Failed to fetch posts for user ${userId}:`, error);
+            return [];
           }
+        })
+      );
 
+      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+      const uniquePosts: ApiPost[] = Array.from(
+        new Map(flattenedPosts.map((post) => [post.id, post])).values()
+      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+
+      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
           try {
-            const raw = likesCountRes.ok
-              ? await robustParse<number | string | { count: number }>(
+            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+              fetchTopicsForPost(post.id),
+            ]);
+
+            let comments: ApiComment[] = [];
+            let likeCount = 0;
+            let isLiked = false;
+            let topics: Topic[] = [];
+
+            try {
+              comments = commentsRes.ok
+                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+                : [];
+            } catch (error) {
+              console.warn(`Failed to parse comments for post ${post.id}:`, error);
+              comments = [];
+            }
+
+            try {
+              const raw = likesCountRes.ok
+                ? await robustParse<number | string | { count: number }>(
                   likesCountRes,
                   `likes/count/${post.id}`
                 )
-              : 0;
-            if (typeof raw === "number") likeCount = raw;
-            else if (typeof raw === "string") likeCount = Number(raw) || 0;
-            else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
-          } catch (error) {
-            console.warn(`Failed to parse like count for post ${post.id}:`, error);
-          }
+                : 0;
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (error) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, error);
+            }
 
-          try {
-            const raw = hasLikedRes.ok
-              ? await robustParse<boolean | string | { liked: boolean }>(
+            try {
+              const raw = hasLikedRes.ok
+                ? await robustParse<boolean | string | { liked: boolean }>(
                   hasLikedRes,
                   `likes/has-liked/${post.id}`
                 )
-              : false;
-            if (typeof raw === "boolean") isLiked = raw;
-            else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-            else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
-          } catch (error) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, error);
+                : false;
+              if (typeof raw === "boolean") isLiked = raw;
+              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
+            } catch (error) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, error);
+            }
+
+            try {
+              topics = await topicsRes;
+            } catch (error) {
+              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+              topics = [];
+            }
+
+            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+            const commentsWithUsers = await Promise.all(
+              validComments.map(async (comment: ApiComment) => {
+                try {
+                  const user = await fetchUser(comment.userId, comment.user);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
+                  } as CommentData;
+                } catch (error) {
+                  console.warn(`Failed to process comment ${comment.id}:`, error);
+                  return null;
+                }
+              })
+            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
+
+            const postUser = await fetchUser(post.user.id, post.user);
+            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
+
+            return {
+              id: post.id,
+              username: postUser.displayName,
+              handle: `@${postUser.username}`,
+              profilePicture: postUser.profilePicture,
+              time: formatRelativeTime(post.createdAt),
+              createdAt: post.createdAt,
+              text: post.content,
+              image: post.imageUrl,
+              isLiked,
+              isBookmarked: bookmarkedPostIds.has(post.id),
+              isReshared,
+              commentCount: validComments.length,
+              authorId: post.user.id,
+              likeCount,
+              reshareCount,
+              comments: commentsWithUsers,
+              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+              topics,
+            };
+          } catch (postError) {
+            console.error(`Error processing post ${post.id}:`, postError);
+            return null;
           }
+        })
+      );
 
-          try {
-            topics = await topicsRes;
-          } catch (error) {
-            console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-            topics = [];
-          }
+      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
 
-          const validComments = (comments || []).filter((c: ApiComment) => c.userId);
-
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: ApiComment) => {
-              try {
-                const user = await fetchUser(comment.userId, comment.user);
-                return {
-                  id: comment.id,
-                  postId: comment.postId,
-                  authorId: comment.userId,
-                  content: comment.content,
-                  createdAt: comment.createdAt,
-                  username: user.displayName,
-                  handle: `@${user.username}`,
-                  profilePicture: user.profilePicture,
-                } as CommentData;
-              } catch (error) {
-                console.warn(`Failed to process comment ${comment.id}:`, error);
-                return null;
-              }
-            })
-          ).then((cs) => cs.filter((c): c is CommentData => c !== null));
-
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
-          const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
-
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            profilePicture: postUser.profilePicture,
-            time: formatRelativeTime(post.createdAt),
-            createdAt: post.createdAt,
-            text: post.content,
-            image: post.imageUrl,
-            isLiked,
-            isBookmarked: bookmarkedPostIds.has(post.id),
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-            topics,
-          };
-        } catch (postError) {
-          console.error(`Error processing post ${post.id}:`, postError);
-          return null;
-        }
-      })
-    );
-
-    const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
-
-    setFollowingPosts(
-      successfulPosts.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    );
-  } catch (err) {
-    console.error("Error fetching following posts:", err);
-    setError("Failed to load posts from followed users.");
-    setTimeout(() => setError(null), 3000);
-  } finally {
-    setLoadingFollowing(false);
-  }
-};
+      setFollowingPosts(
+        successfulPosts.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+    } catch (err) {
+      console.error("Error fetching following posts:", err);
+      setError("Failed to load posts from followed users.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingFollowing(false);
+    }
+  };
 
 
   //modified
@@ -1451,9 +1451,10 @@ const HomePage = () => {
   }, [currentUser, activeTab, selectedPreset]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-gray-200">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 dark:text-white mx-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
+
         <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
@@ -1609,13 +1610,13 @@ const HomePage = () => {
                         </Card>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white */}
                           {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-lime-200">
+                            <Card key={preset.id} className="hover:bg-blue-500 ">
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
-                                <CardDescription>ID: {preset.id}</CardDescription>
                               </CardHeader>
                               <CardContent>
                                 <Button
@@ -1633,7 +1634,7 @@ const HomePage = () => {
                                       <select
                                         value={newRule.type}
                                         onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        className="flex h-9 w-25 rounded-md border border-input bg-background px-1 py-1 text-[14px]"
                                       >
                                         <option value="KEYWORD">Keyword</option>
                                         <option value="TOPIC">Topic</option>
@@ -1642,9 +1643,9 @@ const HomePage = () => {
                                         placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
                                         value={newRule.value}
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="flex-1"
+                                        className="flex-1 custom-placeholder"
                                       />
-                                      <Button className="bg-lime-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
+                                      <Button className="bg-lime-500 h-9 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
                                       </Button>
                                     </div>
@@ -1652,8 +1653,8 @@ const HomePage = () => {
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
-                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md">
-                                            <div className="flex items-center">
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                            <div className="flex items-center ">
                                               <Filter size={14} className="mr-2 text-lime-500" />
                                               <Badge variant="outline" className="mr-2">
                                                 {rule.type}
