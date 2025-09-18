@@ -1,6 +1,5 @@
 // src/pages/Notifications.tsx
 import PersonalSidebar from "@/components/PersonalSidebar"
-import RightSidebar from "@/components/RightSidebar"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Settings } from "lucide-react"
