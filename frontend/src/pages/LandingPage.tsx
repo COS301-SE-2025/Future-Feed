@@ -76,7 +76,7 @@ const LandingPage = () => {
     }, []);
 
     return (
-        <div className="overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-slate-200   bg-gray-200 text-white-800 overflow-hidden ">
+        <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-gray-200 text-white-800 overflow-hidden ">
 
             <ThemeProvider>
             
@@ -84,7 +84,7 @@ const LandingPage = () => {
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="mt-2 ml-2" asChild>
-                        <AlignJustify className="w-6 h-6"></AlignJustify>
+                        <AlignJustify className="future-feed:text-lime w-6 h-6"></AlignJustify>
                     </SheetTrigger>
                     <SheetContent side="left">
                         <SheetHeader>
@@ -96,11 +96,11 @@ const LandingPage = () => {
                         <div className="grid flex-1 auto-rows-min gap-6 px-4">
                             <div className="grid gap-3">
                                 <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
-                                <Link to="/register"><Button variant="secondary" className="hover:cursor-pointer w-full ">Create Account</Button></Link>
+                                <Link to="/register"><Button variant="secondary" className="hover:bg-blue-500 hover:text-white hover:cursor-pointer w-full ">Create Account</Button></Link>
                             </div>
                             <div className="grid gap-3">
                                 <Label className=":hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
-                                <Link to="/login"><Button variant="secondary" className="hover:cursor-pointer w-full ">Login</Button></Link>
+                                <Link to="/login"><Button variant="secondary" className="hover:bg-blue-500 hover:text-white hover:cursor-pointer w-full ">Login</Button></Link>
                             </div>
                         </div>
                         <SheetFooter>
@@ -159,10 +159,10 @@ const LandingPage = () => {
                         }}
 
                     >
-                        <span className="text-sm dark:text-slate-500 text-slate-200   ">FutureFeed</span>
+                        <span className="text-sm dark:text-slate-200 future-feed:text-lime  text-blue-500    ">FutureFeed</span>
                         <h1 className="text-5xl font-bold leading-tight">
                             Share ideas and <br /> connect through <br /> conversation with <br />
-                            <span className="text-slate-200 dark:text-slate-500">Future Feed</span>
+                            <span className="text-blue-500 future-feed:text-lime  dark:text-slate-200 ">Future Feed</span>
                         </h1>
                     </motion.div>
 
@@ -178,10 +178,10 @@ const LandingPage = () => {
                             y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-slate-200">
+                        <h1 className="text-4xl font-bold future-feed:text-lime leading-tight text-blue-500 ">
                             What will you say?
                         </h1>
-                        <p className="mt-4 text-lg dark:text-gray-400">
+                        <p className="mt-4 text-lg dark:text-slate-200">
                             Get started on Future Feed by logging in or creating <br /> your Future Feed account. <br />
                             your Future Feed username is reserved just for you
                         </p>
@@ -199,11 +199,11 @@ const LandingPage = () => {
                             y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-slate-200">
+                        <h1 className="text-4xl font-bold future-feed:text-lime leading-tight text-blue-500 ">
                             Keep up with your <br /> favourite creators <br />
                             and friends
                         </h1>
-                        <p className="mt-4 text-lg dark:text-gray-400">
+                        <p className="mt-4 text-lg dark:text-slate-200">
                             See feeds from people and creators you follow
                         </p>
                     </motion.div>
@@ -220,10 +220,10 @@ const LandingPage = () => {
                             y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold leading-tight text-slate-200 dark:text-slate-200">
+                        <h1 className="text-4xl future-feed:text-lime font-bold leading-tight text-blue-500  dark:text-blue-500 ">
                             Express yourself in <br /> more ways imaginable
                         </h1>
-                        <p className="mt-4 text-lg dark:text-gray-400">
+                        <p className="mt-4 text-lg dark:text-slate-200">
                             Share a feed to friends in chatboxes <br />
                             Share feeds generated from bots <br />
                             Have your very own personal AI bot
@@ -245,7 +245,7 @@ const LandingPage = () => {
                         
                     >
                         <Link to="/login">
-                            <Button  className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300  dark:hover:text-slate-200 dark:hover:border-slate-200 border  dark:hover:bg-indigo-950 hover:cursor-pointer">Join the Future Feed Family</Button>
+                            <Button  className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300  dark:hover:text-blue-500  dark:hover:border-slate-200 border  dark:hover:bg-indigo-950 hover:cursor-pointer">Join the Future Feed Family</Button>
                         </Link>
                     </motion.div>
                 </div>
