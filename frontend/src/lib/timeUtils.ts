@@ -21,7 +21,15 @@ export const formatRelativeTime = (date: string): string => {
       day:'numeric',
     });
   }
-
+  if(diffDays >= 8 && diffDays < 15){
+    return "a week ago";
+  }
+  if(diffDays >= 15 && diffDays < 22){
+    return "2 weeks ago";
+  }
+  if(diffDays >= 22 && diffDays < 30){
+    return "3 weeks ago";
+  }
   if (diffSeconds < 60) {
     return "just now";
   } else if (diffMinutes < 2) {
