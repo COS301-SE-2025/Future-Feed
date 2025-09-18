@@ -8,7 +8,6 @@ const WhatsHappening = () => {
     const isHomePage = location.pathname === '/home';
     return(
         <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white">
-
                 <CardContent className="p-4">
                     <h2 className="font-bold text-lg mb-4">Latest Feeds</h2>
                     <div className="space-y-3 text-sm">

@@ -201,7 +201,6 @@ const Notifications = () => {
               </CardContent>
             </Card>
           )}
-
           {/* Notifications content */}
           {!loading && !error && (
             <>
