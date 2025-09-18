@@ -14,6 +14,14 @@ export const formatRelativeTime = (date: string): string => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+  if(diffDays >= 30){
+    return postDate.toLocaleDateString('en-US', {
+      year:'numeric',
+      month:'long',
+      day:'numeric',
+    });
+  }
+
   if (diffSeconds < 60) {
     return "just now";
   } else if (diffMinutes < 2) {
