@@ -1612,9 +1612,9 @@ const HomePage = () => {
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-lime-200">
+                            <Card key={preset.id} className="">
                               <CardHeader className="pb-3">
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between future-feed:text-white items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
                                 <CardDescription>ID: {preset.id}</CardDescription>
@@ -1635,16 +1635,16 @@ const HomePage = () => {
                                       <select
                                         value={newRule.type}
                                         onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        className="flex h-10 w-28 rounded-md border border-input future-feed:bg-lime future-feed:text-black future-feed:hover-black future-feed:border-black px-3 py-2 text-sm"
                                       >
-                                        <option value="KEYWORD">Keyword</option>
+                                        <option className="future-feed:bg-lime " value="KEYWORD">Keyword</option>
                                         <option value="TOPIC">Topic</option>
                                       </select>
                                       <Input
                                         placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
                                         value={newRule.value}
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="flex-1"
+                                        className="future-feed:border-lime flex-1"
                                       />
                                       <Button className="bg-blue-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
@@ -1696,20 +1696,20 @@ const HomePage = () => {
                               placeholder="Preset name (e..g Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
-                              className="flex-1"
+                              className="future-feed:border-lime flex-1"
                             />
-                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading} >
+                            <Button className="" onClick={createPreset} disabled={isLoading} >
                               {isLoading ? 'Creating ..' : 'Create Preset'}
                             </Button>
                           </div>
                           {presets.length > 0 && (
                             <div className="pt-4">
                               <div className="text-center">
-                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
+                                <h3 className="text-lg future-feed:text-lime dark:text-slate-200 font-medium mb-2">Your Existing Presets</h3>
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 border-rose-gold-accent future-feed:border-lime future-feed:text-white dark:text-slate-200  rounded-md">
                                     <span>{preset.name}</span>
                                     <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>

@@ -181,6 +181,9 @@
 .future-feed .future-feed\:hover\:bg-lime:hover {
   background-color: #84cc16 !important;
 }
+.future-feed .future-feed\:hover\:bg-black:hover {
+  background-color: black !important;
+}
 
 .future-feed .future-feed\:hover\:text-lime:hover {
   color: #84cc16 !important;
