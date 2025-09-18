@@ -524,8 +524,8 @@ const Explore = () => {
               loadFollowingData(currentUserId);
             }
           }}
-          className="w-full p-2">
-          <TabsList className="w-full  flex justify-around ">
+          className="w-full p-2 future-feed:text-lime">
+          <TabsList className="w-full future-feed:text-lime  flex justify-around ">
             {["accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}

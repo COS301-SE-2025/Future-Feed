@@ -189,7 +189,7 @@ const WhoToFollow = () => {
                     </Button>
                   ) : (
                     <Button
-                      className="w-[90px]  rounded-full bg-lime-500 font-semibold hover:cursor-pointer"
+                      className="w-[90px] bg-white text-blue-500  rounded-full  font-semibold hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
@@ -201,7 +201,7 @@ const WhoToFollow = () => {
 
             <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
-        <p className="dark:text-slate-200 hover:underline cursor-pointer">Show more</p>
+        <p className="dark:text-slate-200 text-white  hover:underline cursor-pointer">Show more</p>
       </div>
       </Link>
             
