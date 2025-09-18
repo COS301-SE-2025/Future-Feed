@@ -6,7 +6,6 @@ import PersonalSidebar from "@/components/PersonalSidebar";
 
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import RightSidebar from "@/components/RightSidebar";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
