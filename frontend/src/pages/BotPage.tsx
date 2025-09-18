@@ -38,8 +38,8 @@ interface Topic {
 
 interface PostData {
   id: number;
-  username: string;
-  handle: string;
+  username: string; // Used as display name (bot.name)
+  handle: string; // @bot.schedule
   time: string;
   text: string;
   image?: string;
@@ -53,14 +53,17 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  profilePicture?: string;
 }
 
 interface BotProfile {
   id: number;
-  username: string;
-  displayName: string;
-  bio?: string;
-  email: string;
+  ownerId: number;
+  name: string;
+  prompt: string;
+  schedule: string;
+  contextSource: string;
+  createdAt: string;
 }
 
 interface BotPost {
@@ -85,14 +88,6 @@ interface RawComment {
   content: string;
   createdAt: string;
 }
-
-const mockBotData: BotProfile = {
-  id: 0,
-  username: "mybot",
-  displayName: "My Bot",
-  bio: "This is where the bot's prompt will be.",
-  email: "no email for bot",
-};
 
 const API_URL = "http://localhost:8080";
 
@@ -175,16 +170,13 @@ const BotPage = () => {
 
     try {
       setLoading(true);
-      setBot({ ...mockBotData, id: parsedBotId });
 
       const botPostsResponse = await fetch(
         `${API_URL}/api/bot-posts/by-bot/${parsedBotId}`,
         { credentials: "include" }
       );
       if (!botPostsResponse.ok) {
-        throw new Error(
-          `Failed to fetch bot posts: ${botPostsResponse.status}`
-        );
+        throw new Error(`Failed to fetch bot posts: ${botPostsResponse.status}`);
       }
       const botPosts: BotPost[] = await botPostsResponse.json();
 
@@ -199,9 +191,7 @@ const BotPage = () => {
               { credentials: "include" }
             );
             if (!postResponse.ok) {
-              console.warn(
-                `Skipping post ID ${bp.postId}: ${postResponse.status}`
-              );
+              console.warn(`Skipping post ID ${bp.postId}: ${postResponse.status}`);
               return null;
             }
             const postData: SinglePostResponse = await postResponse.json();
@@ -254,20 +244,16 @@ const BotPage = () => {
               )
             ).filter((c): c is CommentData => c !== null);
 
-            const likeCount = likesCountRes.ok
-              ? await likesCountRes.json()
-              : 0;
-            const isLiked = hasLikedRes.ok
-              ? await hasLikedRes.json()
-              : false;
+            const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+            const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const isBookmarked = hasBookmarkedRes.ok
               ? await hasBookmarkedRes.json()
               : false;
 
             return {
               id: postData.id,
-              username: mockBotData.displayName,
-              handle: `@${mockBotData.username}`,
+              username: bot?.name || "Unknown Bot", // Use bot.name as display name
+              handle: `@${bot?.schedule || "unknown"}`,
               time: formatRelativeTime(postData.createdAt),
               text: postData.content,
               ...(postData.imageUrl ? { image: postData.imageUrl } : {}),
@@ -289,9 +275,7 @@ const BotPage = () => {
         })
       );
 
-      const validPosts = formattedPosts.filter(
-        (p): p is PostData => p !== null
-      );
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
       setPosts(validPosts);
       if (validPosts.length === 0) {
         console.warn("No valid posts after processing.");
@@ -314,7 +298,6 @@ const BotPage = () => {
         throw new Error("User info missing username or displayName");
       }
       setUser(data);
-      // userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -450,9 +433,10 @@ const BotPage = () => {
       }
 
       // sync truth
-      const hasBookmarkedRes = await fetch(`${API_URL}/api/bookmarks/${user.id}/${postId}/exists`, {
-        credentials: "include",
-      });
+      const hasBookmarkedRes = await fetch(
+        `${API_URL}/api/bookmarks/${user.id}/${postId}/exists`,
+        { credentials: "include" }
+      );
       if (hasBookmarkedRes.ok) {
         const exists = await hasBookmarkedRes.json();
         setPosts((prev) =>
@@ -477,7 +461,7 @@ const BotPage = () => {
       return;
     }
 
-    const tempId = Date.now(); // <<< use one temp id consistently
+    const tempId = Date.now();
 
     try {
       const post = posts.find((p) => p.id === postId);
@@ -500,8 +484,8 @@ const BotPage = () => {
                     authorId: bot.id,
                     content: commentText,
                     createdAt: new Date().toISOString(),
-                    username: bot.displayName,
-                    handle: `@${bot.username}`,
+                    username: bot.name,
+                    handle: `@${bot.schedule}`,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -519,7 +503,7 @@ const BotPage = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        // revert optimistic comment (using the SAME tempId)
+        // revert optimistic comment
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId
@@ -554,8 +538,8 @@ const BotPage = () => {
                         authorId: newComment.userId || bot.id,
                         content: newComment.content,
                         createdAt: newComment.createdAt,
-                        username: bot.displayName,
-                        handle: `@${bot.username}`,
+                        username: bot.name,
+                        handle: `@${bot.schedule}`,
                       }
                     : c
                 ),
@@ -565,7 +549,7 @@ const BotPage = () => {
       );
     } catch (err) {
       console.error("Error adding comment:", err);
-      // ensure we revert if something unexpected happened after optimistic add
+      // ensure revert
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -625,7 +609,30 @@ const BotPage = () => {
       console.error("Error executing bot:", err);
       setError("Failed to execute bot.");
     }
-  }
+  };
+
+  const fetchBotInfo = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch bot info: ${res.status}`);
+      const data: BotProfile = await res.json();
+      if (!data.name) {
+        throw new Error("Bot info missing name");
+      }
+      setBot(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching bot info:", err);
+      setError("Failed to load bot info. Please log in again.");
+      navigate("/login");
+      setBot(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleComments = (postId: number) => {
     setPosts((prev) =>
@@ -654,9 +661,12 @@ const BotPage = () => {
   };
 
   useEffect(() => {
-    fetchBotPosts();
-    fetchCurrentUser();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const loadData = async () => {
+      await fetchBotInfo();
+      await fetchBotPosts();
+      await fetchCurrentUser();
+    };
+    loadData();
   }, [botId]);
 
   if (loading) {
@@ -724,25 +734,25 @@ const BotPage = () => {
         <div className="pt-16 px-4">
           <div className="flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl font-bold">{bot.displayName || bot.username}</h1>
-              <p className="dark:text-gray-400">@{bot.username}</p>
-              <p className="mt-2 text-sm">{bot.bio || "This is my bot's bio"}</p>
+              <h1 className="text-xl font-bold">{bot.name}</h1>
+              <p className="dark:text-gray-400">Schedule: {bot.schedule}</p>
+              <p className="mt-2 text-sm">{bot.prompt || "This is an area for prompt"}</p>
             </div>
             <div className="mt-[-50px] gap-4 flex items-center">
               <Button
-              variant="outline"
-              className="-mt-30 text-white bg-lime-600 dark:hover:text-white dark:text-black dark:bg-lime-500 dark:border-lime-500 dark:hover:bg-lime-800 hover:cursor-pointer"
-              onClick={handleExecuteBot}
-            >
-              Execute Bot
-            </Button>
-            <Button
-              variant="outline"
-              className="-mt-30 text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
-              onClick={() => navigate("/edit-bot")}
-            >
-              Edit Bot
-            </Button>
+                variant="outline"
+                className="-mt-30 text-white bg-lime-600 dark:hover:text-white dark:text-black dark:bg-lime-500 dark:border-lime-500 dark:hover:bg-lime-800 hover:cursor-pointer"
+                onClick={handleExecuteBot}
+              >
+                Execute Bot
+              </Button>
+              <Button
+                variant="outline"
+                className="-mt-30 text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
+                onClick={() => navigate("/edit-bot")}
+              >
+                Edit Bot
+              </Button>
             </div>
           </div>
           <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
@@ -770,8 +780,8 @@ const BotPage = () => {
           posts.map((post) => (
             <div key={post.id} className="mb-4">
               <Post
-                username={post.username}
-                handle={post.handle}
+                username={bot.name}
+                handle={bot.schedule}
                 time={post.time}
                 text={post.text}
                 image={post.image}
@@ -792,7 +802,7 @@ const BotPage = () => {
                 onProfileClick={() => navigate(`/bot/${botId}`)}
                 onDelete={() => handleDeletePost(post.id)}
                 onNavigate={() => navigate(`/post/${post.id}`)}
-                currentUser={bot}
+                currentUser={user}
                 authorId={post.authorId}
                 topics={post.topics || []}
               />

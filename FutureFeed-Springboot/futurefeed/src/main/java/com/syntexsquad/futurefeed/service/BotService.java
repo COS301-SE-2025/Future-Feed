@@ -61,6 +61,12 @@ public class BotService {
         return toResponseDTO(saved);
     }
 
+    public BotResponseDTO getBotById(Integer botId) {
+        Bot bot = botRepository.findById(botId)
+                .orElseThrow(() -> new RuntimeException("Bot not found"));
+        return toResponseDTO(bot);
+    }
+
     public BotResponseDTO updateBot(Integer botId, BotRequestDTO dto) {
         PromptValidator.validatePrompt(dto.getPrompt()); 
 
