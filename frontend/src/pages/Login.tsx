@@ -56,7 +56,7 @@ const Login: React.FC = () => {
               type="button"
               onClick={() => {
                 console.log(import.meta.env.VITE_API_URL);
-                window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+                window.location.href = `http://ec2-13-246-24-221.af-south-1.compute.amazonaws.com/oauth2/authorization/google`;
               }}
             
               className="mb-6 flex h-[50px] w-full items-center justify-center rounded-[25px] border border-black bg-white p-5 text-[20px] font-bold shadow-[2px_2px_4px_#888] cursor-pointer  dark:shadow-none "
