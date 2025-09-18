@@ -3,13 +3,12 @@ import { useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Settings } from "lucide-react";
 import GRP2 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import SearchBar from "@/components/searchBar";
 
 // Define the notification interface
 interface Notification {
@@ -34,13 +33,61 @@ interface UserProfile {
   dateOfBirth?: string | null;
 }
 
+// Simplified user info for caching
+interface UserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
+}
+
+// Cache for user data
+const userCache = new Map<number, UserInfo>();
+
 const Notifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [userProfiles, setUserProfiles] = useState<Map<number, UserInfo>>(new Map());
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+  // Fetch user info for a single user
+  const fetchUser = async (userId: number): Promise<UserInfo> => {
+    if (userCache.has(userId)) {
+      return userCache.get(userId)!;
+    }
+    try {
+      const res = await fetch(`${API_URL}/api/user/${userId}`, {
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user ${userId}: ${res.status}`);
+      const user = await res.json();
+      const userInfo: UserInfo = {
+        id: user.id ?? userId,
+        username: user.username ?? `user${userId}`,
+        displayName: user.displayName ?? `User ${userId}`,
+        profilePicture: user.profilePicture ?? GRP2,
+      };
+      userCache.set(userId, userInfo);
+      return userInfo;
+    } catch (err) {
+      console.warn(`Error fetching user ${userId}:`, err);
+      const userInfo: UserInfo = {
+        id: userId,
+        username: `user${userId}`,
+        displayName: `User ${userId}`,
+        profilePicture: GRP2,
+      };
+      userCache.set(userId, userInfo);
+      return userInfo;
+    }
+  };
 
   // Fetch current user info
   const fetchCurrentUser = async () => {
@@ -82,6 +129,14 @@ const Notifications = () => {
 
       const data: Notification[] = await response.json();
       setNotifications(data);
+      setFilteredNotifications(data);
+
+      // Fetch user profiles for all senderUserIds
+      const uniqueUserIds = Array.from(new Set(data.map((n) => n.senderUserId)));
+      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
+      const users = await Promise.all(userPromises);
+      const userMap = new Map(users.map((user) => [user.id, user]));
+      setUserProfiles(userMap);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unknown error occurred");
       console.error("Error fetching notifications:", err);
@@ -124,12 +179,16 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
+      setFilteredNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId ? { ...notification, isRead: true } : notification
+        )
+      );
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
   };
 
-  // Handle navigation to post
   const handlePostNavigation = (notification: Notification) => {
     if (!notification.isRead) {
       markAsRead(notification.id);
@@ -137,15 +196,29 @@ const Notifications = () => {
     navigate(`/post/${notification.postId}`);
   };
 
-  // Filter notifications based on active tab
-  const filteredNotifications = notifications.filter((notification) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "verified") return [3, 47].includes(notification.senderUserId); // Placeholder: Adjust for verified users
-    if (activeTab === "mentions") return notification.type === "MENTION";
-    return true;
-  });
+  // Handle notification filter from SearchBar
+  const handleNotificationFilter = (query: string) => {
+    if (query === "") {
+      setFilteredNotifications(notifications);
+    } else {
+      setFilteredNotifications(
+        notifications.filter((notification) => notification.type.toLowerCase() === query.toLowerCase())
+      );
+    }
+  };
 
-  // Format date function
+  // Apply tab filter
+  const applyTabFilter = (notifications: Notification[]) => {
+    if (activeTab === "all") return notifications;
+    if (activeTab === "verified") return notifications.filter((notification) =>
+      [3, 47].includes(notification.senderUserId)
+    ); // Placeholder: Adjust for verified users
+    if (activeTab === "mentions") return notifications.filter((notification) =>
+      notification.type === "MENTION"
+    );
+    return notifications;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -159,6 +232,13 @@ const Notifications = () => {
 
   // Render notification card
   const renderNotification = (notification: Notification) => {
+    const user = userProfiles.get(notification.senderUserId) || {
+      id: notification.senderUserId,
+      username: notification.senderUsername,
+      displayName: notification.senderUsername,
+      profilePicture: GRP2,
+    };
+
     return (
       <Card
         key={notification.id}
@@ -169,7 +249,7 @@ const Notifications = () => {
       >
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar className="w-14 h-14 border-4 border-slate-300">
-            <AvatarImage src={GRP2} alt={notification.senderUsername} />
+            <AvatarImage src={user.profilePicture || GRP2} alt={notification.senderUsername} />
             <AvatarFallback>{notification.senderUsername.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -194,18 +274,14 @@ const Notifications = () => {
       </aside>
 
       <main className="flex-1 p-6 pl-2 min-h-screen overflow-y-auto">
-        <div className="block lg:hidden px-4 py-3 sticky top-0 z-10 bg-black dark:bg-blue-950 dark:border-slate-200">
-          <Input
-            type="text"
-            placeholder="Search"
-            className="rounded-full bg-black dark:bg-blue-950 dark:text-white dark:placeholder:text-lime-500 border-lime-500 focus-visible:ring-0 focus-visible:ring-offset-0 w-full"
-          />
-        </div>
-
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-lime-500 font-bold">Notifications</h1>
-          <div className="flex items-center gap-2">
-            <Settings size={20} className="dark:text-lime-500" />
+          <div className="">
+            <SearchBar
+              notifications={notifications}
+              onNotificationFilter={handleNotificationFilter}
+              userProfiles={userProfiles}
+            />
           </div>
         </div>
 
@@ -243,22 +319,22 @@ const Notifications = () => {
           {!loading && !error && (
             <>
               <TabsContent value="all" className="space-y-4">
-                {filteredNotifications.length > 0 ? (
-                  filteredNotifications.map(renderNotification)
+                {applyTabFilter(filteredNotifications).length > 0 ? (
+                  applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
                   <p className="p-4 dark:text-gray-400">No notifications yet.</p>
                 )}
               </TabsContent>
-              <TabsContent value="verified" className="space-y-4 mt-4">
-                {filteredNotifications.length > 0 ? (
-                  filteredNotifications.map(renderNotification)
+              <TabsContent value="verified" className="space-y-4">
+                {applyTabFilter(filteredNotifications).length > 0 ? (
+                  applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
                   <p className="p-4 dark:text-gray-400">No verified activity yet.</p>
                 )}
               </TabsContent>
-              <TabsContent value="mentions" className="space-y-4 mt-4">
-                {filteredNotifications.length > 0 ? (
-                  filteredNotifications.map(renderNotification)
+              <TabsContent value="mentions" className="space-y-4">
+                {applyTabFilter(filteredNotifications).length > 0 ? (
+                  applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
                   <p className="p-4 dark:text-gray-400">No mentions found.</p>
                 )}
