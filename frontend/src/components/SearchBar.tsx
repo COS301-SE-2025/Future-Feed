@@ -27,7 +27,7 @@ interface UserSearchResult {
 
 interface SearchBarProps {
   notifications: Notification[];
-  onNotificationFilter: (query: string) => void;
+  onNotificationFilter: (query: string, userId?: number) => void;
   userProfiles: Map<number, UserSearchResult>;
 }
 
@@ -60,18 +60,19 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
   // Handle search input change
   const handleSearch = (value: string) => {
     setQuery(value);
-    const notificationTypes = ["mention", "like", "follow", "comment"]; // Adjust based on your notification types
+    const notificationTypes = ["mention", "like", "follow", "comment", "bookmark", "unfollow"];
     if (notificationTypes.includes(value.toLowerCase())) {
       onNotificationFilter(value.toUpperCase());
     } else {
-      onNotificationFilter(""); // Clear filter if not a notification type
+      onNotificationFilter("");
     }
   };
 
   const handleUserClick = (userId: number) => {
     setQuery("");
     setIsFocused(false);
-    navigate(`/profile/${userId}`);
+    onNotificationFilter("", userId); // Filter notifications by user
+    navigate("/notifications"); // Ensure we're on the notifications page
   };
 
   return (
@@ -81,7 +82,8 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
         <Input
           type="text"
           placeholder="Search notifications"
-          onChange={(e)=> handleSearch(e.target.value)}
+          value={query}
+          onChange={(e) => handleSearch(e.target.value)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow clicks
           className="rounded-full bg-white dark:bg-blue-950 dark:text-white dark:placeholder:text-lime-500 border-gray-200 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"
@@ -95,7 +97,7 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
               {filteredUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex gap-3 items-center p-2 hover:bg-gray-700 rounded-lg cursor-pointer"
+                  className="flex gap-3 items-center p-2 hover:bg-lime-400 rounded-lg cursor-pointer"
                   onClick={() => handleUserClick(user.id)}
                 >
                   <Avatar className="w-10 h-10">

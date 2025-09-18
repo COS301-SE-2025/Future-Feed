@@ -59,6 +59,7 @@ public class ReshareService {
         }
     }
     
+    @Transactional(readOnly = true)
     @Cacheable(value = "userReshares", key = "'user_' + #userId")
     public List<Reshare> getResharesByUser() {
         AppUser user = getAuthenticatedUser();
