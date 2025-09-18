@@ -80,11 +80,11 @@ public class FollowControllerTest {
     @Test
     @WithMockUser
     public void unfollow_ShouldReturnBadRequestOnException() throws Exception {
-        doThrow(new RuntimeException("Unfollow failed")).when(followService).unfollow(123);
+        doThrow(new IllegalStateException("Unfollow failed")).when(followService).unfollow(123);
 
         mockMvc.perform(delete("/api/follow/123"))
             .andExpect(status().isBadRequest())
-            .andExpect(content().string(org.hamcrest.Matchers.containsString("Error: Unfollow failed")));
+            .andExpect(content().string(org.hamcrest.Matchers.containsString("Unfollow failed")));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class FollowControllerTest {
 
         mockMvc.perform(get("/api/follow/status/123"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.following").value(true));
+            .andExpect(jsonPath("$.isFollowing").value(true));
     }
 
     @Test

@@ -89,7 +89,7 @@ const Post: React.FC<PostProps> = ({
   topics,
 }) => {
   const [newComment, setNewComment] = React.useState("");
-
+ 
   const handleSubmitComment = () => {
     if (newComment.trim() && isUserLoaded) {
       onAddComment(newComment);
@@ -121,7 +121,7 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        "dark:bg-[#1a1a1a] border-2 border- hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
         className
       )}
       onClick={handleClick}
