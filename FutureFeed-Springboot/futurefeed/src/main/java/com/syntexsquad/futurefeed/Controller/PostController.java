@@ -5,7 +5,10 @@ import com.syntexsquad.futurefeed.dto.PostDTO;
 import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.dto.UserPublicDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.Bot;
+import com.syntexsquad.futurefeed.model.BotPost;
 import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.repository.BotPostRepository;
 import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.springframework.data.domain.Page;
@@ -24,14 +27,20 @@ public class PostController {
     private final PostService postService;
     private final MediaService mediaService;
     private final ObjectMapper objectMapper;
+    private final BotPostRepository botPostRepository; // NEW: to resolve bot for a post
 
-    public PostController(PostService postService, MediaService mediaService, ObjectMapper objectMapper) {
+    public PostController(PostService postService,
+                          MediaService mediaService,
+                          ObjectMapper objectMapper,
+                          BotPostRepository botPostRepository) { // DI for helper repo
         this.postService = postService;
         this.mediaService = mediaService;
         this.objectMapper = objectMapper;
+        this.botPostRepository = botPostRepository;
     }
 
-    // inline converters 
+    // --- inline converters (kept) ---
+
     private static UserPublicDTO toUserPublic(AppUser u) {
         if (u == null) return null;
         UserPublicDTO dto = new UserPublicDTO();
@@ -42,18 +51,45 @@ public class PostController {
         dto.setProfilePictureUrl(u.getProfilePictureUrl());
         return dto;
     }
-    private static PostDTO toPostDTO(Post p) {
+
+    // NEW: adapt a Bot to the user view (no image URL needed; frontend will use placeholder)
+    private static void overlayBotIdentity(UserPublicDTO base, Bot bot) {
+        if (bot == null || base == null) return;
+        // Keep base.id (owner id) intact to avoid breaking existing user-routing assumptions.
+        // Only overlay visible identity fields so the UI shows the bot instead of the owner.
+        String name = bot.getName() == null ? "" : bot.getName();
+        base.setUsername("@" + name);
+        base.setDisplayName(name);
+        // If you have a bot description field, you can set it here. Otherwise, leave bio as-is or null.
+        // base.setBio(bot.getDescription());
+        base.setProfilePictureUrl(null); // bot has no image; let frontend default avatar kick in
+    }
+
+    private PostDTO toPostDTO(Post p) {
         PostDTO dto = new PostDTO();
         dto.setId(p.getId());
         dto.setContent(p.getContent());
         dto.setImageUrl(p.getImageUrl());
         dto.setCreatedAt(p.getCreatedAt() != null ? p.getCreatedAt().toString() : null);
-        dto.setUser(toUserPublic(p.getUser()));
+
+        // Default mapping (owner as user)
+        UserPublicDTO userView = toUserPublic(p.getUser());
+
+        // If BotPost, overlay bot identity to show bot as the "user" in the UI
+        if (p instanceof BotPost) {
+            botPostRepository.findBotByPostId(p.getId())
+                    .ifPresent(bot -> overlayBotIdentity(userView, bot));
+        }
+
+        dto.setUser(userView);
         return dto;
     }
-    private static List<PostDTO> toPostDTOs(Collection<Post> posts) {
-        return posts.stream().map(PostController::toPostDTO).collect(Collectors.toList());
+
+    private List<PostDTO> toPostDTOs(Collection<Post> posts) {
+        return posts.stream().map(this::toPostDTO).collect(Collectors.toList());
     }
+
+    // --- endpoints below are UNCHANGED ---
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPostById(@PathVariable Integer id) {

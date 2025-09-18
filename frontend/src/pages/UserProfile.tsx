@@ -1504,6 +1504,7 @@ const UserProfile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1550,6 +1551,7 @@ const UserProfile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1596,6 +1598,7 @@ const UserProfile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1642,6 +1645,7 @@ const UserProfile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1688,6 +1692,7 @@ const UserProfile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}

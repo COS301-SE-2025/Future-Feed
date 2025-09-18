@@ -82,6 +82,7 @@ public class PostService {
             BotPost botPost = new BotPost();
             botPost.setContent(postRequest.getContent());
             botPost.setImageUrl(postRequest.getImageUrl());
+            botPost.setUser(user);
             saved = postRepository.save(botPost);
         } else {
             UserPost userPost = new UserPost();
