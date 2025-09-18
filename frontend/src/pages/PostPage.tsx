@@ -507,7 +507,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -530,7 +530,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (error) {
     return (
-      <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -553,7 +553,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (!post) {
     return (
-      <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -573,7 +573,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
   }
 
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+    <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>

@@ -1365,7 +1365,7 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1451,20 +1451,22 @@ const HomePage = () => {
   }, [currentUser, activeTab, selectedPreset]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 dark:text-white mx-auto">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
 
-        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
+        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime  flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
-            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-gray-400 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] future-feed:text-lime future-feed:border-lime"
+            variant={"secondary"}
           >
             Create Topic
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-gray-400 border-2 border-lime-300 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] mt-3 future-feed:text-lime  future-feed:border-lime "
+            variant={"secondary"}
           >
             View Topics
           </Button>
@@ -1472,7 +1474,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 text-white p-3 rounded-full z-20 shadow-lg"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1482,17 +1484,17 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors "
             >
               Logout
             </button>
-            <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
+            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors"
               >
                 Create Topic
               </button>
@@ -1501,7 +1503,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors mt-3"
               >
                 View Topics
               </button>
@@ -1527,18 +1529,18 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
                 onClick={() => setIsPostModalOpen(true)}
               >
-                <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
+                <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
               </div>
               <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
+                <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                      className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
                     >
                       {tab.replace(/^\w/, (c) => c.toUpperCase())}
                     </TabsTrigger>
@@ -1551,7 +1553,7 @@ const HomePage = () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
-                        className="mt-4 bg-black-500 hover:bg-lime-600 text-white"
+                        className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
                       >
                         Refresh
@@ -1568,7 +1570,7 @@ const HomePage = () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
                       <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+                        className="mt-4 bg-blue-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchFollowingPosts()}
                       >
                         Refresh
@@ -1581,12 +1583,12 @@ const HomePage = () => {
                 <TabsContent value="Presets">
                   {/*  */}
                   <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto ">
+                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto ">
                       {["Your Presets", "Create Presets"].map((tab) => (
                         <TabsTrigger
                           key={tab}
                           value={tab}
-                          className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                          className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
                         >
                           {tab.replace(/^\w/, (c) => c.toUpperCase())}
                         </TabsTrigger>
@@ -1600,7 +1602,7 @@ const HomePage = () => {
                       )}
                       {isLoading ? (
                         <div className="flex justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-500"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
                       ) : presets.length === 0 ? (
                         <Card>
@@ -1645,7 +1647,7 @@ const HomePage = () => {
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
                                         className="flex-1 custom-placeholder"
                                       />
-                                      <Button className="bg-lime-500 h-9 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
+                                      <Button className="bg-blue-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
                                       </Button>
                                     </div>
@@ -1708,7 +1710,7 @@ const HomePage = () => {
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 border-lime-500 rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 rounded-md">
                                     <span>{preset.name}</span>
                                     <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>
@@ -1740,7 +1742,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black  dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -1753,14 +1755,14 @@ const HomePage = () => {
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white">Share your thoughts</h2>
+              <h2 className="text-xl font-bold mb-5 future-feed:text-lime  text-blue-500 dark:text-white">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
                 rows={8}
               />
               <div className="mb-4">
@@ -1770,7 +1772,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
+                  className="dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1">
@@ -1785,7 +1787,7 @@ const HomePage = () => {
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
+                  className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
@@ -1805,7 +1807,7 @@ const HomePage = () => {
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-600"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post
@@ -1820,7 +1822,7 @@ const HomePage = () => {
           style={topicModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
@@ -1831,17 +1833,17 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
                 value={newTopicName}
                 onChange={(e) => setNewTopicName(e.target.value)}
-                className="mb-4 dark:bg-black dark:text-white dark:border-lime-500"
+                className="mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200"
               />
               <Button
                 onClick={createTopic}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                 disabled={!newTopicName.trim() || !currentUser}
               >
                 Create
@@ -1855,7 +1857,7 @@ const HomePage = () => {
           style={viewTopicsModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
@@ -1863,14 +1865,14 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">All Topics</h2>
+            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
                 <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-lime-700 dark:text-white mb-2">
+                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2">
                       {topic.name}
                     </li>
                   ))}
@@ -1878,7 +1880,7 @@ const HomePage = () => {
               )}
               <Button
                 onClick={() => setIsViewTopicsModalOpen(false)}
-                className="mt-4 bg-lime-500 text-white hover:bg-lime-600"
+                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
               >
                 Close
               </Button>
