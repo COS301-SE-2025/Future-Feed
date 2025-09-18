@@ -143,7 +143,15 @@ const Post: React.FC<PostProps> = ({
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
+              <h2 
+                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onProfileClick();
+                }}
+              >
+                {username || "Unknown User"}
+              </h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
                   {time}
@@ -164,7 +172,15 @@ const Post: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
+            <p 
+              className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onProfileClick();
+              }}
+            >
+              {handle || "@unknown"}
+            </p>
             <p className="mt-2 dark:text-white text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
               {text}
             </p>
