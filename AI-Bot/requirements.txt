@@ -6,3 +6,4 @@ beautifulsoup4
 langchain
 langchain-together
 python-dotenv
+sentence-transformers==2.5.1

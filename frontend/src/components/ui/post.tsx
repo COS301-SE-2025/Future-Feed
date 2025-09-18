@@ -6,6 +6,7 @@ import { Heart, MessageCircle, Bookmark, Trash2, Repeat2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
+// import palettes from 'nice-color-palettes';
 
 interface UserProfile {
   id: number;
@@ -41,6 +42,7 @@ interface PostProps {
   onReshare: () => void;
   onDelete: () => void;
   onNavigate: () => void;
+  onProfileClick: () => void;
   className?: string;
   onToggleComments: () => void;
   showComments: boolean;
@@ -79,6 +81,7 @@ const Post: React.FC<PostProps> = ({
   onReshare,
   onDelete,
   onNavigate,
+  onProfileClick,
   className,
   onToggleComments,
   showComments,
@@ -89,7 +92,7 @@ const Post: React.FC<PostProps> = ({
   topics,
 }) => {
   const [newComment, setNewComment] = React.useState("");
-
+ 
   const handleSubmitComment = () => {
     if (newComment.trim() && isUserLoaded) {
       onAddComment(newComment);
@@ -121,14 +124,20 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        "dark:bg-[#1a1a1a] border-2 border- hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
         className
       )}
       onClick={handleClick}
     >
       <CardContent className="sm:px-8 sm:py-1 ">
         <div className="flex gap-3 sm:gap-4">
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
+          <Avatar 
+            className="h-10 w-10 sm:h-12 sm:w-12"
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick();
+            }}
+          >
             <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>

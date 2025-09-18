@@ -52,9 +52,13 @@ public class ReshareService {
     @CacheEvict(value = {"reshareCount", "hasReshared", "userReshares"}, allEntries = true)
     public void unresharePost(Integer postId) {
         AppUser user = getAuthenticatedUser();
-        reshareRepository.deleteByUserIdAndPostId(user.getId(), postId);
+        try {
+            reshareRepository.deleteByUserIdAndPostId(user.getId(), postId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to unreshare post", e);
+        }
     }
-
+    
     @Cacheable(value = "userReshares", key = "'user_' + #userId")
     public List<Reshare> getResharesByUser() {
         AppUser user = getAuthenticatedUser();

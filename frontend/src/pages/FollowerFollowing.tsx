@@ -171,7 +171,7 @@ const FollowerFollowing = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>
 
   const renderUserCard = (user: User) => (
-    <Card key={user.id} className="dark:bg-[#1a1a1a] dark:text-white border dark:border-lime-500 rounded-2xl">
+    <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white  rounded-2xl">
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -179,21 +179,23 @@ const FollowerFollowing = () => {
         </Avatar>
         <div className="flex-1">
           <p className="font-semibold">{user.displayName}</p>
-          <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
-          <p className="text-sm dark:text-neutral-300 mt-1">{user.bio || ""}</p>
+          <p className="text-sm text-gray-500 dark:text-slate-500">@{user.username}</p>
+          <p className="text-sm dark:text-slate-500 mt-1">{user.bio || ""}</p>
           
         </div>
         {followStatus[user.id] ? (
           <Button
             onClick={() => handleUnfollow(user.id)}
-            className="px-4 py-1 rounded-full  border border-gray-400 font-semibold dark:text-white dark:bg-black hover:bg-lime-500 hover:cursor-pointer"
+            className="px-4 py-1 rounded-full  border border-gray-400 font-semibold  hover:cursor-pointer"
+            variant={"secondary"}
           >
             Unfollow
           </Button>
         ) : (
           <Button
             onClick={() => handleFollow(user)}
-            className="px-4 py-1 rounded-full bg-lime-500 text-black font-semibold hover:bg-lime-600 hover:cursor-pointer"
+            className="px-4 py-1 rounded-full font-semibold  hover:cursor-pointer"
+            
           >
             Follow
           </Button>
@@ -205,7 +207,7 @@ const FollowerFollowing = () => {
   const renderSkeleton = () => (
     <div className="space-y-4">
       {Array.from({ length: 4 }).map((_, idx) => (
-        <Card key={idx} className="dark:bg-[#1a1a1a] dark:border-lime-500 rounded-2xl">
+        <Card key={idx} className=" rounded-2xl">
           <CardContent className="flex gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -221,40 +223,40 @@ const FollowerFollowing = () => {
   );
 
   return (
-    <div className="flex min-h-screen dark:bg-black dark:text-white">
+    <div className="bg-gray-200 future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
       <PersonalSidebar />
-      <main className="h-fit p-6 dark:bg-black flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
+      <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         
 
-        <div className="flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-black border rounded-2xl dark:border-lime-600 z-10">
-          <Avatar className=" w-24 h-24 border-4 dark:border-lime-600">
+        <div className="future-feed:border-black  text-gray-400 flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
+          <Avatar className=" w-24 h-24 border-4 ">
              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
               <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
               
             </Link>
           </Avatar>
-          <h1 className="text-xl font-bold">{user.displayName || user.username}</h1>
+          <h1 className="text-xl future-feed:text-white  font-bold">{user.displayName || user.username}</h1>
           <p className="dark:text-gray-400">@{user.username}</p>
         </div>
 
         <Tabs defaultValue={tabParam} className="w-full p-3 ">
-          <TabsList className="w-full flex justify-around dark:bg-black border dark:border-lime-600 rounded-2xl">
+          <TabsList className="w-full flex justify-around border  rounded-2xl">
             <TabsTrigger
               value="followers"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
+              className="flex-1 rounded-2xl  dark:data-[state=active]:border-b-2"
             >
               Followers ({followers.length})
             </TabsTrigger>
             <TabsTrigger
               value="following"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
+              className="flex-1 rounded-2xl "
             >
               Following ({followingUsers.length})
             </TabsTrigger>
             <TabsTrigger
               value="bots"
-              className="flex-1 rounded-2xl dark:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-600 dark:data-[state=active]:text-black"
+              className="flex-1 rounded-2xl "
             >
               Bots
             </TabsTrigger>
@@ -285,12 +287,12 @@ const FollowerFollowing = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="w-full dark:bg-black px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
       </main >
-      <div className=" dark:bg-black px-4 mt-7 py-6 space-y-6">
+      <div className=" dark:bg-blue-950 px-4 mt-7 py-6 space-y-6">
          <RightSidebar />
 
       </div>
