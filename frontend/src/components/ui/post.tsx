@@ -124,7 +124,7 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-[#1a1a1a] border-2 border- hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        "future-feed:bg-card future-feed:text-white  dark:bg-indigo-950 border-2 border- hover:bg-slate-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
         className
       )}
       onClick={handleClick}
@@ -156,7 +156,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       onDelete();
                     }}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                    className="text-red-500 hover:bg-slate-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />

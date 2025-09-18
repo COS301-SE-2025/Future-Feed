@@ -322,7 +322,7 @@ const Bots: React.FC = () => {
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4">
       {[...Array(3)].map((_, index) => (
-        <Card key={index} className="border-lime-500 ">
+        <Card key={index} className=" ">
           <CardContent className="p-4 flex justify-between items-center animate-pulse">
             <div className="w-full">
               <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
@@ -349,8 +349,8 @@ const Bots: React.FC = () => {
         <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-rose-gold-accent-border bg-white   shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl text-lime-600 dark:text-slate-200">Bots Management</CardTitle>
-              <Button onClick={() => setIsCreateModalOpen(true)} className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer">
+              <CardTitle className="text-2xl text-black future-feed:text-lime  dark:text-slate-200">Bots Management</CardTitle>
+              <Button onClick={() => setIsCreateModalOpen(true)} className=" text-white  cursor-pointer">
                 <FaPlus className="mr-2" /> Create Bot
               </Button>
             </div>
@@ -377,7 +377,7 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {bots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="border-lime-500  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold">{bot.name}</h3>
@@ -409,7 +409,7 @@ const Bots: React.FC = () => {
                                   </div>
                                   <Button
                                     variant="outline"
-                                    className="dark:border-lime-500 dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
+                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -425,7 +425,7 @@ const Bots: React.FC = () => {
                                   </Button>
                                   <Button
                                     variant="outline"
-                                    className="dark:border-lime-500 dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
+                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -449,7 +449,7 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {activeBots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="border-lime-500   hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="   hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold">{bot.name}</h3>
@@ -481,7 +481,7 @@ const Bots: React.FC = () => {
                                   </div>
                                   <Button
                                     variant="outline"
-                                    className="dark:border-lime-500 dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
+                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -497,7 +497,7 @@ const Bots: React.FC = () => {
                                   </Button>
                                   <Button
                                     variant="outline"
-                                    className="dark:border-lime-500 dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
+                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -531,9 +531,9 @@ const Bots: React.FC = () => {
 
       {isCreateModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
-          <Card className="bg-white  rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
+          <Card className="  rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl text-lime-600 dark:text-slate-200">Create New Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-slate-200">Create New Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -555,33 +555,33 @@ const Bots: React.FC = () => {
                   placeholder="Bot Name"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
-                  className=" dark:text-white"
+                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <Input
                   placeholder="Bot Prompt"
                   value={newBotDescription}
                   onChange={(e) => setNewBotDescription(e.target.value)}
-                  className=" dark:text-white"
+                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className=" dark:text-white border p-2 rounded-md"
+                  className=" future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 >
-                  <option value="hourly">Hourly</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="hourly">Hourly</option>
+                  <option  className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="daily">Daily</option>
+                  <option className ="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="weekly">Weekly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black  dark:indigo-950 dark:text-white" value="monthly">Monthly</option>
                 </select>
                 <Input
                   placeholder="Context Source (URL)"
                   value={newBotContextSource}
                   onChange={(e) => setNewBotContextSource(e.target.value)}
-                  className=" dark:text-white"
+                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <Button
                   type="submit"
-                  className="bg-lime-500 text-white hover:bg-lime-600 cursor-pointer"
+                  className=" text-white hover:bg-lime-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Create Bot
@@ -594,9 +594,9 @@ const Bots: React.FC = () => {
 
       {isEditModalOpen && editingBot && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
-          <Card className="bg-white  rounded-2xl p-6 w-full max-w-md border-2 border-lime-500">
+          <Card className="bg-white  rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-1">
-              <CardTitle className="text-xl text-lime-600 dark:text-lime-500">Update Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-lime-500">Update Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
