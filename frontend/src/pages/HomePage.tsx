@@ -1634,7 +1634,7 @@ const HomePage = () => {
                                       <select
                                         value={newRule.type}
                                         onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        className="flex h-9 w-25 rounded-md border border-input bg-background px-1 py-1 text-[14px]"
                                       >
                                         <option value="KEYWORD">Keyword</option>
                                         <option value="TOPIC">Topic</option>
@@ -1645,7 +1645,7 @@ const HomePage = () => {
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
                                         className="flex-1 custom-placeholder"
                                       />
-                                      <Button className="bg-lime-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
+                                      <Button className="bg-lime-500 h-9 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
                                       </Button>
                                     </div>
