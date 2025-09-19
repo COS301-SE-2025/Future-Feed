@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState} from "react";
 import type { ReactNode } from "react";
 
-// Define the Notification interface
 export interface Notification {
   id: number;
   type: string;
@@ -13,17 +12,14 @@ export interface Notification {
   createdAt: string;
 }
 
-// Define context shape
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
 }
 
-// Create context
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-// Notification provider component
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -35,7 +31,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Hook to use the notification context
 export const useNotifications = () => {
   const context = useContext(NotificationContext);
   if (!context) {

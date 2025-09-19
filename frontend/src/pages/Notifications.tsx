@@ -12,7 +12,6 @@ import SearchBar from "@/components/SearchBar";
 import { useNotifications} from "@/context/NotificationContext";
 import type { Notification } from "@/context/NotificationContext";
 
-// Define user interface
 interface UserProfile {
   id: number;
   username: string;
@@ -23,7 +22,6 @@ interface UserProfile {
   dateOfBirth?: string | null;
 }
 
-// Simplified user info for caching
 interface UserInfo {
   id: number;
   username: string;
@@ -31,7 +29,6 @@ interface UserInfo {
   profilePicture?: string;
 }
 
-// Cache for user data
 const userCache = new Map<number, UserInfo>();
 
 const Notifications = () => {
@@ -44,7 +41,6 @@ const Notifications = () => {
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  // Fetch user info for a single user
   const fetchUser = async (userId: number): Promise<UserInfo> => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
@@ -79,7 +75,6 @@ const Notifications = () => {
     }
   };
 
-  // Fetch current user info
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
@@ -98,7 +93,6 @@ const Notifications = () => {
     }
   };
 
-  // Fetch notifications
   const fetchNotifications = async (userId: number) => {
     try {
       setLoading(true);
@@ -118,10 +112,9 @@ const Notifications = () => {
       }
 
       const data: Notification[] = await response.json();
-      setNotifications(data); // Update context state
+      setNotifications(data);
       setFilteredNotifications(data);
 
-      // Fetch user profiles for all senderUserIds
       const uniqueUserIds = Array.from(new Set(data.map((n) => n.senderUserId)));
       const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
       const users = await Promise.all(userPromises);
@@ -135,7 +128,6 @@ const Notifications = () => {
     }
   };
 
-  // Initialize user and notifications
   useEffect(() => {
     const initializeUserAndNotifications = async () => {
       const user = await fetchCurrentUser();
@@ -149,8 +141,6 @@ const Notifications = () => {
     initializeUserAndNotifications();
   }, []);
 
-  // Mark notification as read
-// Mark notification as read
 const markAsRead = async (notificationId: number) => {
   try {
     const response = await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
@@ -187,7 +177,6 @@ const markAsRead = async (notificationId: number) => {
     navigate(`/post/${notification.postId}`);
   };
 
-  // Handle notification filter from SearchBar
   const handleNotificationFilter = (query: string, userId?: number) => {
     if (query === "" && !userId) {
       setFilteredNotifications(notifications);
@@ -195,7 +184,7 @@ const markAsRead = async (notificationId: number) => {
       setFilteredNotifications(
         notifications.filter((notification) => notification.senderUserId === userId)
       );
-      setActiveTab("all"); // Ensure "All" tab is active when filtering by user
+      setActiveTab("all"); 
     } else {
       setFilteredNotifications(
         notifications.filter((notification) => notification.type.toLowerCase() === query.toLowerCase())
@@ -203,7 +192,6 @@ const markAsRead = async (notificationId: number) => {
     }
   };
 
-  // Handle tab change and reset notifications for "All" tab
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     if (value === "all") {
@@ -211,7 +199,6 @@ const markAsRead = async (notificationId: number) => {
     }
   };
 
-  // Apply tab filter
   const applyTabFilter = (notifications: Notification[]) => {
     if (activeTab === "all") return notifications;
     if (activeTab === "interactions") return notifications.filter((notification) =>
@@ -234,7 +221,6 @@ const markAsRead = async (notificationId: number) => {
     });
   };
 
-  // Render notification card
   const renderNotification = (notification: Notification) => {
     const user = userProfiles.get(notification.senderUserId) || {
       id: notification.senderUserId,
