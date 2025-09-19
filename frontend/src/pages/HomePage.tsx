@@ -171,7 +171,6 @@ const HomePage = () => {
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
         profilePicture: postUser.profilePicture,
       };
-      console.debug(`Using postUser for user ${userId}:`, validUser);
       return validUser;
     }
 
@@ -399,8 +398,6 @@ const HomePage = () => {
     }
   };
 
-
-  // Union for all possible API Response's
   type ApiResponse =
     | ApiFollow[]
     | ApiReshare[]
@@ -413,7 +410,6 @@ const HomePage = () => {
     | { count: number }
     | { liked: boolean };
 
-  // ===================== Shared helpers (put once, top-level) =====================
   const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
 
   function stripBOM(s: string) {
@@ -1512,7 +1508,7 @@ const HomePage = () => {
       <div
         className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
@@ -1532,7 +1528,7 @@ const HomePage = () => {
               >
                 <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -1726,11 +1722,11 @@ const HomePage = () => {
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhoToFollow />
           </div>
         </aside>
