@@ -5,7 +5,7 @@ export interface Notification {
   id: number;
   type: string;
   senderUserId: number;
-  message: string;
+  massage: string;
   senderUsername: string;
   postId: number;
   isRead: boolean;
