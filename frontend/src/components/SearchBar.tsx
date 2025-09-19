@@ -5,18 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import GRP2 from "../assets/GRP1.jpg";
-
-// Define the notification interface
-interface Notification {
-  id: number;
-  type: string;
-  senderUserId: number;
-  massage: string;
-  senderUsername: string;
-  postId: number;
-  isRead: boolean;
-  createdAt: string;
-}
+import type { Notification } from "@/context/NotificationContext"; // Use type-only import
 
 // Define simplified user interface for search results
 interface UserSearchResult {
@@ -58,7 +47,8 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
     : [];
 
   // Handle search input change
-  const handleSearch = (value: string) => {
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
     setQuery(value);
     const notificationTypes = ["mention", "like", "follow", "comment", "bookmark", "unfollow"];
     if (notificationTypes.includes(value.toLowerCase())) {
@@ -83,7 +73,7 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
           type="text"
           placeholder="Search notifications"
           value={query}
-          onChange={(e) => handleSearch(e.target.value)}
+          onChange={handleSearch}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow clicks
           className="rounded-full bg-white dark:bg-blue-950 dark:text-white dark:placeholder:text-lime-500 border-gray-200 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"

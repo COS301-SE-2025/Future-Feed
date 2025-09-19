@@ -9,18 +9,8 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Skeleton } from "@/components/ui/skeleton";
 import SearchBar from "@/components/SearchBar";
-
-// Define the notification interface
-interface Notification {
-  id: number;
-  type: string;
-  senderUserId: number;
-  massage: string; // Note: Typo in API ("massage" should be "message")
-  senderUsername: string;
-  postId: number;
-  isRead: boolean;
-  createdAt: string;
-}
+import { useNotifications} from "@/context/NotificationContext";
+import type { Notification } from "@/context/NotificationContext";
 
 // Define user interface
 interface UserProfile {
@@ -45,7 +35,7 @@ interface UserInfo {
 const userCache = new Map<number, UserInfo>();
 
 const Notifications = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { notifications, setNotifications } = useNotifications();
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +118,7 @@ const Notifications = () => {
       }
 
       const data: Notification[] = await response.json();
-      setNotifications(data);
+      setNotifications(data); // Update context state
       setFilteredNotifications(data);
 
       // Fetch user profiles for all senderUserIds
@@ -160,34 +150,35 @@ const Notifications = () => {
   }, []);
 
   // Mark notification as read
-  const markAsRead = async (notificationId: number) => {
-    try {
-      const response = await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
+// Mark notification as read
+const markAsRead = async (notificationId: number) => {
+  try {
+    const response = await fetch(`${API_URL}/api/notifications/${notificationId}/read`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+      credentials: "include",
+    });
 
-      if (!response.ok) {
-        throw new Error(`Failed to mark notification as read: ${response.status}`);
-      }
-
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId ? { ...notification, isRead: true } : notification
-        )
-      );
-      setFilteredNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === notificationId ? { ...notification, isRead: true } : notification
-        )
-      );
-    } catch (err) {
-      console.error("Error marking notification as read:", err);
+    if (!response.ok) {
+      throw new Error(`Failed to mark notification as read: ${response.status}`);
     }
-  };
+
+    setNotifications((prev: Notification[]) =>
+      prev.map((notification: Notification) =>
+        notification.id === notificationId ? { ...notification, isRead: true } : notification
+      )
+    );
+    setFilteredNotifications((prev: Notification[]) =>
+      prev.map((notification: Notification) =>
+        notification.id === notificationId ? { ...notification, isRead: true } : notification
+      )
+    );
+  } catch (err) {
+    console.error("Error marking notification as read:", err);
+  }
+};
 
   const handlePostNavigation = (notification: Notification) => {
     if (!notification.isRead) {
@@ -216,7 +207,6 @@ const Notifications = () => {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     if (value === "all") {
-      // Reset to all notifications
       setFilteredNotifications(notifications);
     }
   };
@@ -269,7 +259,7 @@ const Notifications = () => {
           <div className="flex-1">
             <p>
               <span className="text-blue-400">@{notification.senderUsername}</span>{" "}
-              {notification.massage}
+              {notification.message}
             </p>
             <p className="text-gray-500 text-sm mt-4">{formatDate(notification.createdAt)}</p>
           </div>
