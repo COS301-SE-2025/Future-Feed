@@ -482,13 +482,11 @@ const HomePage = () => {
     }
   }
 
-  // Add this once to normalize fetch options everywhere:
   const commonInit: RequestInit = {
     credentials: "include",
     headers: { Accept: "application/json" },
   };
 
-  // ===================== Your fixed function =====================
   const fetchFollowingPosts = async () => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch following posts: currentUser is not loaded");
