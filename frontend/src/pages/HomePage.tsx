@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Percent } from 'lucide-react';
 
 interface Preset {
   id: number;
@@ -24,8 +24,10 @@ interface Preset {
 interface Rule {
   id: number;
   presetId: number;
-  type: 'TOPIC' | 'KEYWORD';
-  value: string;
+  topicId?: number;
+  sourceType?: 'user' | 'bot';
+  specificUserId?: number;
+  percentage?: number;
 }
 
 interface ApiFollow {
@@ -128,16 +130,22 @@ const HomePage = () => {
   const [rules, setRules] = useState<{ [presedId: number]: Rule[] }>({});
   const [newPresetName, setNewPresetName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
-  const [newRule, setNewRule] = useState({ type: 'KEYWORD' as 'TOPIC' | 'KEYWORD', value: '' });
+  const [newRule, setNewRule] = useState({
+    topicId: undefined as number | undefined,
+    sourceType: undefined as 'user' | 'bot' | undefined,
+    specificUserId: undefined as number | undefined,
+    percentage: undefined as number | undefined
+  });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-  // 
+
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
-    config: { tension: 220, friction: 30 },
+    config: { tension: 250, friction: 35 },
   });
 
   const topicModalProps = useSpring({
@@ -222,6 +230,24 @@ const HomePage = () => {
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
       return null;
+    }
+  };
+  const fetchAllUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await fetch(`${API_URL}/api/user/all`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setAllUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError("Failed to load users");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -666,7 +692,6 @@ const HomePage = () => {
   };
 
 
-  //modified
   const fetchTopics = async (): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
@@ -697,11 +722,12 @@ const HomePage = () => {
       setPresets(data);
     } catch (err) {
       setError("Error fetching presets");
-      console.error("Error fetching presets topic:", err);
+      console.error("Error fetching presets:", err);
     } finally {
       setIsLoading(false);
     }
   }
+
   const fetchRules = async (presetId: number) => {
     try {
       const response = await fetch(`${API_URL}/api/presets/rules/${presetId}`, {
@@ -710,7 +736,6 @@ const HomePage = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch rules');
       const data = await response.json();
-      console.log(data);
       setRules(prev => ({ ...prev, [presetId]: data }));
     } catch (err) {
       setError("Failed to fetch rules for the preset");
@@ -720,6 +745,7 @@ const HomePage = () => {
       }, 3000);
     }
   }
+
   const createPreset = async () => {
     if (!newPresetName.trim()) {
       setError('Preset name is required');
@@ -728,9 +754,6 @@ const HomePage = () => {
     }
     try {
       setIsLoading(true);
-      console.log('Creating preset with name:', newPresetName);
-      console.log('API URL:', `${API_URL}/api/presets`);
-
       const response = await fetch(`${API_URL}/api/presets`, {
         method: "POST",
         credentials: "include",
@@ -739,23 +762,19 @@ const HomePage = () => {
         },
         body: JSON.stringify({ name: newPresetName })
       });
-      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server error response:', errorText);
         throw new Error(`Failed to create preset: ${response.status} ${errorText}`);
       }
       const data = await response.json();
-      console.log('Created Preset:', data);
-
       setPresets(prev => [...prev, data]);
       setNewPresetName('');
       setError('');
 
     } catch (err) {
-      console.log("Error couldnt create your preset.", err);
-      setError("couldnt create your rule.")
+      console.log("Error couldn't create your preset.", err);
+      setError("Couldn't create your preset.")
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -763,9 +782,20 @@ const HomePage = () => {
       setIsLoading(false);
     }
   }
+
   const addRule = async (presetId: number) => {
-    if (!newRule.value.trim()) {
-      setError('Rule value is required');
+    // Validate that at least one filter condition is provided
+    if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
+      setError('At least one filter condition (topic, source type, or specific user) is required');
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+      return;
+    }
+
+    // Validate percentage if provided
+    if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
+      setError('Percentage must be between 1 and 100');
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -777,14 +807,17 @@ const HomePage = () => {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "Content-Type": "application/json",   // <-- you also forgot headers here
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           presetId,
-          type: newRule.type,
-          value: newRule.value,
+          topicId: newRule.topicId || null,
+          sourceType: newRule.sourceType || null,
+          specificUserId: newRule.specificUserId || null,
+          percentage: newRule.percentage || null
         }),
       });
+
       if (!response.ok) throw new Error('Failed to add rule');
 
       const data = await response.json();
@@ -792,17 +825,69 @@ const HomePage = () => {
         ...prev,
         [presetId]: [...(prev[presetId] || []), data],
       }));
-      setNewRule({ type: 'KEYWORD', value: '' });
+
+      // Reset form
+      setNewRule({
+        topicId: undefined,
+        sourceType: undefined,
+        specificUserId: undefined,
+        percentage: undefined
+      });
       setError('');
     } catch (err) {
-      setError("Couldnt assign rule");
-      console.log("couldnt assgin rule", err);
+      setError("Couldn't add rule");
+      console.log("Couldn't add rule", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+  const deleteRule = async (presetId: number, ruleId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules/${ruleId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete rule');
+
+      setRules(prev => ({
+        ...prev,
+        [presetId]: (prev[presetId] || []).filter(rule => rule.id !== ruleId)
+      }));
+    } catch (err) {
+      setError("Couldn't delete rule");
+      console.log("Couldn't delete rule", err);
       setTimeout(() => {
         setError('');
       }, 3000);
     }
   }
 
+  // Helper function to format rule for display
+  const formatRule = (rule: Rule) => {
+    const parts = [];
+
+    if (rule.topicId) {
+      const topic = topics.find(t => t.id === rule.topicId);
+      parts.push(`Topic: ${topic?.name || `ID ${rule.topicId}`}`);
+    }
+
+    if (rule.sourceType) {
+      parts.push(`Source: ${rule.sourceType}`);
+    }
+
+    if (rule.specificUserId) {
+      const user = allUsers.find(u => u.id === rule.specificUserId);
+      parts.push(`User: ${user?.displayName || `ID ${rule.specificUserId}`}`);
+    }
+
+    if (rule.percentage) {
+      parts.push(`${rule.percentage}%`);
+    }
+
+    return parts.join(' | ');
+  };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
       setError("Topic name cannot be empty.");
@@ -1410,6 +1495,7 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchPresets();
+    fetchAllUsers();
   }, []);
 
   useEffect(() => {
@@ -1478,7 +1564,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
             >
               Logout
             </button>
@@ -1488,7 +1574,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
               >
                 Create Topic
               </button>
@@ -1497,7 +1583,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
               >
                 View Topics
               </button>
@@ -1575,9 +1661,8 @@ const HomePage = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  {/*  */}
                   <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto ">
+                    <TabsList className="w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto">
                       {["Your Presets", "Create Presets"].map((tab) => (
                         <TabsTrigger
                           key={tab}
@@ -1588,6 +1673,7 @@ const HomePage = () => {
                         </TabsTrigger>
                       ))}
                     </TabsList>
+
                     <TabsContent value="Your Presets" className="p-0">
                       {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -1606,9 +1692,8 @@ const HomePage = () => {
                         </Card>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white */}
                           {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-blue-500 ">
+                            <Card key={preset.id} className="hover:bg-blue-500">
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>{preset.name}</CardTitle>
@@ -1626,37 +1711,102 @@ const HomePage = () => {
 
                                 {selectedPreset === preset.id && (
                                   <div className="mt-3 space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                      <select
-                                        value={newRule.type}
-                                        onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-9 w-25 rounded-md border border-input bg-background px-1 py-1 text-[14px]"
+                                    {/* Rule creation form */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.topicId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            topicId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Topic</option>
+                                          {topics.map(topic => (
+                                            <option key={topic.id} value={topic.id}>
+                                              {topic.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.sourceType || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            sourceType: e.target.value as 'user' | 'bot' | undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Source Type</option>
+                                          <option value="user">User Posts</option>
+                                          <option value="bot">Bot Posts</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.specificUserId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            specificUserId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          disabled={loadingUsers}
+                                        >
+                                          <option value="">Select Specific User</option>
+                                          {allUsers.map(user => (
+                                            <option key={user.id} value={user.id}>
+                                              {user.displayName} (@{user.username})
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="100"
+                                          placeholder="Percentage (1-100)"
+                                          value={newRule.percentage || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            percentage: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex-1"
+                                        />
+                                        <Percent size={16} className="text-gray-400" />
+                                      </div>
+
+                                      <Button
+                                        className="w-full bg-blue-500 hover:bg-gray-500"
+                                        onClick={() => addRule(preset.id)}
+                                        size="sm"
                                       >
-                                        <option value="KEYWORD">Keyword</option>
-                                        <option value="TOPIC">Topic</option>
-                                      </select>
-                                      <Input
-                                        placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
-                                        value={newRule.value}
-                                        onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="flex-1 custom-placeholder"
-                                      />
-                                      <Button className="bg-blue-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
-                                        <Plus size={16} className="mr-1" /> Add
+                                        <Plus size={16} className="mr-1" /> Add Rule
                                       </Button>
                                     </div>
 
+                                    {/* Existing rules */}
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
                                           <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
-                                            <div className="flex items-center ">
+                                            <div className="flex items-center flex-1">
                                               <Filter size={14} className="mr-2 text-lime-500" />
-                                              <Badge variant="outline" className="mr-2">
-                                                {rule.type}
-                                              </Badge>
-                                              <span>{rule.value}</span>
+                                              <span className="text-sm">{formatRule(rule)}</span>
                                             </div>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => deleteRule(preset.id, rule.id)}
+                                              className="text-red-500 hover:text-red-700"
+                                            >
+                                              <FaTimes size={12} />
+                                            </Button>
                                           </div>
                                         ))}
                                       </div>
@@ -1671,14 +1821,14 @@ const HomePage = () => {
                         </div>
                       )}
                     </TabsContent>
+
                     <TabsContent value="Create Presets">
                       <Card className="w-full">
                         <CardHeader>
                           <div className="text-center">
-                            <CardTitle> Create a New Feed Preset</CardTitle>
+                            <CardTitle>Create a New Feed Preset</CardTitle>
                             <CardDescription>Create a named preset to organize your filtering rules</CardDescription>
                           </div>
-
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {error && (
@@ -1686,15 +1836,15 @@ const HomePage = () => {
                               {error}
                             </div>
                           )}
-                          <div className="flex space-x-2 ">
+                          <div className="flex space-x-2">
                             <Input
-                              placeholder="Preset name (e..g Tech & Bots)"
+                              placeholder="Preset name (e.g., Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
                               className="flex-1"
                             />
-                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading} >
-                              {isLoading ? 'Creating ..' : 'Create Preset'}
+                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading}>
+                              {isLoading ? 'Creating...' : 'Create Preset'}
                             </Button>
                           </div>
                           {presets.length > 0 && (
@@ -1704,7 +1854,7 @@ const HomePage = () => {
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border rounded-md">
                                     <span>{preset.name}</span>
                                     <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>
@@ -1716,7 +1866,6 @@ const HomePage = () => {
                       </Card>
                     </TabsContent>
                   </Tabs>
-                  {/*  */}
                 </TabsContent>
               </Tabs>
             </>
