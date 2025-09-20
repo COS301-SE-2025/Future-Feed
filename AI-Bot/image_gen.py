@@ -8,22 +8,20 @@ from typing import Optional
 class ImageGenError(Exception):
     pass
 
-# Try the official Together SDK; fall back to raw HTTP if missing
 try:
-    from together import Together  # pip install together
+    from together import Together  
     _HAS_TOGETHER = True
 except Exception:
     _HAS_TOGETHER = False
 
 TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 DEFAULT_MODEL = os.getenv("IMAGE_MODEL", "black-forest-labs/FLUX.1-schnell")
-# IMPORTANT: default to 8 (schnell requires 1..12)
 DEFAULT_STEPS = int(os.getenv("IMAGE_STEPS", "8"))
 TOGETHER_IMG_URL = "https://api.together.xyz/v1/images/generations"
 
 def _clamp_steps(steps: Optional[int]) -> int:
     s = DEFAULT_STEPS if steps is None else int(steps)
-    return max(1, min(12, s))  # schnell constraint
+    return max(1, min(12, s)) 
 
 def _generate_with_sdk(prompt: str, width: int, height: int, model: str, steps: Optional[int]) -> str:
     if not TOGETHER_API_KEY:
@@ -52,11 +50,11 @@ def _generate_with_http(prompt: str, width: int, height: int, model: str, steps:
     payload = {
         "model": model,
         "prompt": prompt,
-        "steps": _clamp_steps(steps),   # <-- clamp here
+        "steps": _clamp_steps(steps),   
         "width": width,
         "height": height,
         "n": 1,
-        "response_format": "base64",    # returns data[0].b64_json
+        "response_format": "base64",   
         "output_format": "png",
     }
     headers = {
