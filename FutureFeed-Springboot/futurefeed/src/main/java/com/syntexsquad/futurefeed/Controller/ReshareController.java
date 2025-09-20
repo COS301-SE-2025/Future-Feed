@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.Controller;
 
 //import com.syntexsquad.futurefeed.dto.PostReshareInfoDTO;
 import com.syntexsquad.futurefeed.dto.ReshareRequest;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.service.ReshareService;
 import org.springframework.http.ResponseEntity;
@@ -50,5 +51,10 @@ public class ReshareController {
     public ResponseEntity<Boolean> hasReshared(@PathVariable Integer postId) {
         boolean hasReshared = reshareService.hasUserReshared(postId);
         return ResponseEntity.ok(hasReshared);
+    }
+
+    @GetMapping("/my-reshares/{userId}")
+    public ResponseEntity<List<Post>> getResharedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(reshareService.getResharedPostsByUserId(userId));
     }
 }

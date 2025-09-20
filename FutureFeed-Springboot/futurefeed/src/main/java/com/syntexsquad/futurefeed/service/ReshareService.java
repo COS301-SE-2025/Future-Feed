@@ -1,8 +1,10 @@
 package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.repository.ReshareRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -20,10 +22,12 @@ public class ReshareService {
 
     private final ReshareRepository reshareRepository;
     private final AppUserRepository appUserRepository;
+    private final PostRepository postRepository;
 
-    public ReshareService(ReshareRepository reshareRepository, AppUserRepository appUserRepository) {
+    public ReshareService(ReshareRepository reshareRepository, AppUserRepository appUserRepository, PostRepository postRepository) {
         this.reshareRepository = reshareRepository;
         this.appUserRepository = appUserRepository;
+        this.postRepository = postRepository;
     }
 
     private AppUser getAuthenticatedUser() {
@@ -77,5 +81,14 @@ public class ReshareService {
         AppUser user = getAuthenticatedUser();
         Integer userId = user.getId();
         return reshareRepository.existsByUserIdAndPostId(userId, postId);
+    }
+
+    public List<Post> getResharedPostsByUserId(Integer userId) {
+        List<Reshare> reshares = reshareRepository.findByUserId(userId);
+        List<Integer> postIds = reshares.stream()
+                .map(Reshare::getPostId)
+                .distinct()
+                .toList();
+        return postRepository.findAllById(postIds);
     }
 }
