@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Filter } from 'lucide-react';
+import { Plus, Filter } from 'lucide-react';
 
 interface Preset {
   id: number;
@@ -133,7 +133,7 @@ const HomePage = () => {
 
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-
+  // 
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
@@ -171,7 +171,6 @@ const HomePage = () => {
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
         profilePicture: postUser.profilePicture,
       };
-      console.debug(`Using postUser for user ${userId}:`, validUser);
       return validUser;
     }
 
@@ -399,278 +398,272 @@ const HomePage = () => {
     }
   };
 
-  // ===================== Shared helpers (put once, top-level) =====================
-const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
+  type ApiResponse =
+    | ApiFollow[]
+    | ApiReshare[]
+    | ApiBookmark[]
+    | ApiPost[]
+    | ApiComment[]
+    | number
+    | boolean
+    | string
+    | { count: number }
+    | { liked: boolean };
 
-function stripBOM(s: string) {
-  return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
-}
+  const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
 
-function stripXssiPrefix(s: string) {
-  if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
-    const i = s.indexOf("\n");
-    return i >= 0 ? s.slice(i + 1) : "";
-  }
-  return s;
-}
-
-function sliceToJsonBlock(s: string) {
-  const firstBrace = s.indexOf("{");
-  const firstBracket = s.indexOf("[");
-  const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a,b)=>a-b)[0] ?? -1;
-  if (first < 0) return s;
-  const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
-  if (last < first) return s;
-  return s.slice(first, last + 1);
-}
-
-function looksLikeHtml(s: string) {
-  return /<!doctype html>|<html[\s>]/i.test(s);
-}
-
-/**
- * Robustly parse a Response that *should* be JSON, but may:
- *  - include BOM/XSSI/log noise,
- *  - return primitives (true/false/5),
- *  - be mislabeled (no content-type).
- */
-async function robustParse<T = any>(response: Response, endpointForLogs: string): Promise<T> {
-  const contentType = response.headers.get("content-type") || "";
-  const raw = stripBOM((await response.text()).trim());
-  const cleaned = stripXssiPrefix(raw);
-
-  if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
-    console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
-    throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+  function stripBOM(s: string) {
+    return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
   }
 
-  // If server says JSON, try normally, then fallback to slicing.
-  if (contentType.includes("application/json")) {
-    try {
-      return JSON.parse(cleaned);
-    } catch {
+  function stripXssiPrefix(s: string) {
+    if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
+      const i = s.indexOf("\n");
+      return i >= 0 ? s.slice(i + 1) : "";
+    }
+    return s;
+  }
+
+  function sliceToJsonBlock(s: string) {
+    const firstBrace = s.indexOf("{");
+    const firstBracket = s.indexOf("[");
+    const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a, b) => a - b)[0] ?? -1;
+    if (first < 0) return s;
+    const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+    if (last < first) return s;
+    return s.slice(first, last + 1);
+  }
+
+  function looksLikeHtml(s: string) {
+    return /<!doctype html>|<html[\s>]/i.test(s);
+  }
+
+  /**
+   * Robustly parse a Response that *should* be JSON, but may:
+   *  - include BOM/XSSI/log noise,
+   *  - return primitives (true/false/5),
+   *  - be mislabeled (no content-type).
+   */
+  async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
+    const contentType = response.headers.get("content-type") || "";
+    const raw = stripBOM((await response.text()).trim());
+    const cleaned = stripXssiPrefix(raw);
+
+    if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+      console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+      throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+    }
+
+    if (contentType.includes("application/json")) {
       try {
-        return JSON.parse(sliceToJsonBlock(cleaned));
-      } catch (e) {
-        console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
-        throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+        return JSON.parse(cleaned) as T;
+      } catch {
+        try {
+          return JSON.parse(sliceToJsonBlock(cleaned)) as T;
+        } catch {
+          console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+          throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+        }
       }
+    }
+
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      const t = cleaned.toLowerCase();
+      if (t === "true") return true as T;
+      if (t === "false") return false as T;
+      if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
+      return cleaned as T;
     }
   }
 
-  // Not marked JSON: try JSON anyway, else handle primitives gracefully.
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    const t = cleaned.toLowerCase();
-    if (t === "true") return true as unknown as T;
-    if (t === "false") return false as unknown as T;
-    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as unknown as T;
-    // As a last resort, return the raw string (caller can decide)
-    return cleaned as unknown as T;
-  }
-}
+  const commonInit: RequestInit = {
+    credentials: "include",
+    headers: { Accept: "application/json" },
+  };
 
-// Add this once to normalize fetch options everywhere:
-const commonInit: RequestInit = {
-  credentials: "include",
-  headers: { Accept: "application/json" },
-};
-
-// ===================== Your fixed function =====================
-const fetchFollowingPosts = async () => {
-  if (!currentUser?.id) {
-    console.warn("Cannot fetch following posts: currentUser is not loaded");
-    return;
-  }
-
-  console.debug("Fetching following posts");
-  setLoadingFollowing(true);
-
-  try {
-    // 1) Load follows, my reshares, and bookmarks
-    const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
-      fetch(`${API_URL}/api/reshares`, commonInit),
-      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
-    ]);
-
-    if (!followRes.ok) throw new Error("Failed to fetch followed users");
-    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-
-    const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
-    const myReshares: ApiReshare[] = myResharesRes.ok
-      ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
-      : [];
-    const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
-
-    const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
-    const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
-
-    // Nothing to do if there are no follows
-    if (!followedIds.length) {
-      setFollowingPosts([]);
+  const fetchFollowingPosts = async () => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch following posts: currentUser is not loaded");
       return;
     }
 
-    // 2) Fetch posts for each followed user (robust parsing)
-    const allFollowingPosts = await Promise.all(
-      followedIds.map(async (userId: number) => {
-        try {
-          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
-          if (!res.ok) return [];
-          return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
-        } catch (error) {
-          console.warn(`Failed to fetch posts for user ${userId}:`, error);
-          return [];
-        }
-      })
-    );
+    console.debug("Fetching following posts");
+    setLoadingFollowing(true);
 
-    // 3) Flatten, dedupe, remove my own posts, ensure valid user
-    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-    const uniquePosts: ApiPost[] = Array.from(
-      new Map(flattenedPosts.map((post) => [post.id, post])).values()
-    ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+    try {
+      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
 
-    const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+      if (!followRes.ok) throw new Error("Failed to fetch followed users");
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-    // 4) Enrich each post (comments, likes, has-liked, topics, user)
-    const formattedPosts = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        try {
-          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-            fetchTopicsForPost(post.id), // assuming this already returns parsed JSON
-          ]);
+      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
 
-          let comments: ApiComment[] = [];
-          let likeCount = 0;
-          let isLiked = false;
-          let topics: any = [];
+      const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
-          // Comments
+      if (!followedIds.length) {
+        setFollowingPosts([]);
+        return;
+      }
+
+      const allFollowingPosts = await Promise.all(
+        followedIds.map(async (userId: number) => {
           try {
-            comments = commentsRes.ok
-              ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
-              : [];
+            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
+            if (!res.ok) return [];
+            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
           } catch (error) {
-            console.warn(`Failed to parse comments for post ${post.id}:`, error);
-            comments = [];
+            console.warn(`Failed to fetch posts for user ${userId}:`, error);
+            return [];
           }
+        })
+      );
 
-          // Likes count (handles JSON or bare number)
+      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+      const uniquePosts: ApiPost[] = Array.from(
+        new Map(flattenedPosts.map((post) => [post.id, post])).values()
+      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+
+      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
           try {
-            const raw = likesCountRes.ok
-              ? await robustParse<number | string | { count: number }>(
+            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+              fetchTopicsForPost(post.id),
+            ]);
+
+            let comments: ApiComment[] = [];
+            let likeCount = 0;
+            let isLiked = false;
+            let topics: Topic[] = [];
+
+            try {
+              comments = commentsRes.ok
+                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+                : [];
+            } catch (error) {
+              console.warn(`Failed to parse comments for post ${post.id}:`, error);
+              comments = [];
+            }
+
+            try {
+              const raw = likesCountRes.ok
+                ? await robustParse<number | string | { count: number }>(
                   likesCountRes,
                   `likes/count/${post.id}`
                 )
-              : 0;
-            if (typeof raw === "number") likeCount = raw;
-            else if (typeof raw === "string") likeCount = Number(raw) || 0;
-            else if (raw && typeof raw === "object" && "count" in raw)
-              likeCount = Number((raw as any).count) || 0;
-          } catch (error) {
-            console.warn(`Failed to parse like count for post ${post.id}:`, error);
-          }
+                : 0;
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (error) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, error);
+            }
 
-          // Has liked (handles JSON or bare boolean/"true"/"false")
-          try {
-            const raw = hasLikedRes.ok
-              ? await robustParse<boolean | string | { liked: boolean }>(
+            try {
+              const raw = hasLikedRes.ok
+                ? await robustParse<boolean | string | { liked: boolean }>(
                   hasLikedRes,
                   `likes/has-liked/${post.id}`
                 )
-              : false;
-            if (typeof raw === "boolean") isLiked = raw;
-            else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-            else if (raw && typeof raw === "object" && "liked" in raw)
-              isLiked = Boolean((raw as any).liked);
-          } catch (error) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, error);
+                : false;
+              if (typeof raw === "boolean") isLiked = raw;
+              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
+            } catch (error) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, error);
+            }
+
+            try {
+              topics = await topicsRes;
+            } catch (error) {
+              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+              topics = [];
+            }
+
+            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+            const commentsWithUsers = await Promise.all(
+              validComments.map(async (comment: ApiComment) => {
+                try {
+                  const user = await fetchUser(comment.userId, comment.user);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
+                  } as CommentData;
+                } catch (error) {
+                  console.warn(`Failed to process comment ${comment.id}:`, error);
+                  return null;
+                }
+              })
+            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
+
+            const postUser = await fetchUser(post.user.id, post.user);
+            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
+
+            return {
+              id: post.id,
+              username: postUser.displayName,
+              handle: `@${postUser.username}`,
+              profilePicture: postUser.profilePicture,
+              time: formatRelativeTime(post.createdAt),
+              createdAt: post.createdAt,
+              text: post.content,
+              image: post.imageUrl,
+              isLiked,
+              isBookmarked: bookmarkedPostIds.has(post.id),
+              isReshared,
+              commentCount: validComments.length,
+              authorId: post.user.id,
+              likeCount,
+              reshareCount,
+              comments: commentsWithUsers,
+              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+              topics,
+            };
+          } catch (postError) {
+            console.error(`Error processing post ${post.id}:`, postError);
+            return null;
           }
+        })
+      );
 
-          // Topics
-          try {
-            topics = await topicsRes;
-          } catch (error) {
-            console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-            topics = [];
-          }
+      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
 
-          const validComments = (comments || []).filter((c: ApiComment) => c.userId);
-
-          // Attach user info to comments (fault-tolerant)
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: ApiComment) => {
-              try {
-                const user = await fetchUser(comment.userId, comment.user);
-                return {
-                  id: comment.id,
-                  postId: comment.postId,
-                  authorId: comment.userId,
-                  content: comment.content,
-                  createdAt: comment.createdAt,
-                  username: user.displayName,
-                  handle: `@${user.username}`,
-                  profilePicture: user.profilePicture,
-                };
-              } catch (error) {
-                console.warn(`Failed to process comment ${comment.id}:`, error);
-                return null;
-              }
-            })
-          ).then((cs) => cs.filter((c) => c !== null) as any[]);
-
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
-          const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
-
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            profilePicture: postUser.profilePicture,
-            time: formatRelativeTime(post.createdAt),
-            createdAt: post.createdAt,
-            text: post.content,
-            image: post.imageUrl,
-            isLiked,
-            isBookmarked: bookmarkedPostIds.has(post.id),
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-            topics,
-          };
-        } catch (postError) {
-          console.error(`Error processing post ${post.id}:`, postError);
-          return null;
-        }
-      })
-    );
-
-    const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
-
-    setFollowingPosts(
-      successfulPosts.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    );
-  } catch (err) {
-    console.error("Error fetching following posts:", err);
-    setError("Failed to load posts from followed users.");
-    setTimeout(() => setError(null), 3000);
-  } finally {
-    setLoadingFollowing(false);
-  }
-};
+      setFollowingPosts(
+        successfulPosts.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+    } catch (err) {
+      console.error("Error fetching following posts:", err);
+      setError("Failed to load posts from followed users.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingFollowing(false);
+    }
+  };
 
 
   //modified
@@ -1366,7 +1359,7 @@ const fetchFollowingPosts = async () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1403,6 +1396,7 @@ const fetchFollowingPosts = async () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
@@ -1451,19 +1445,22 @@ const fetchFollowingPosts = async () => {
   }, [currentUser, activeTab, selectedPreset]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-gray-200">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
+
+        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime  flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
-            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-gray-400 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] future-feed:text-lime future-feed:border-lime"
+            variant={"secondary"}
           >
             Create Topic
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-gray-400 border-2 border-lime-300 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] mt-3 future-feed:text-lime  future-feed:border-lime "
+            variant={"secondary"}
           >
             View Topics
           </Button>
@@ -1471,7 +1468,7 @@ const fetchFollowingPosts = async () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 text-white p-3 rounded-full z-20 shadow-lg"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1481,17 +1478,17 @@ const fetchFollowingPosts = async () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors "
             >
               Logout
             </button>
-            <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
+            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors"
               >
                 Create Topic
               </button>
@@ -1500,7 +1497,7 @@ const fetchFollowingPosts = async () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors mt-3"
               >
                 View Topics
               </button>
@@ -1511,7 +1508,7 @@ const fetchFollowingPosts = async () => {
       <div
         className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
@@ -1526,18 +1523,18 @@ const fetchFollowingPosts = async () => {
           ) : (
             <>
               <div
-                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
                 onClick={() => setIsPostModalOpen(true)}
               >
-                <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
+                <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
+              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+                <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                      className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
                     >
                       {tab.replace(/^\w/, (c) => c.toUpperCase())}
                     </TabsTrigger>
@@ -1550,7 +1547,7 @@ const fetchFollowingPosts = async () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
-                        className="mt-4 bg-black-500 hover:bg-lime-600 text-white"
+                        className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
                       >
                         Refresh
@@ -1567,7 +1564,7 @@ const fetchFollowingPosts = async () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
                       <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+                        className="mt-4 bg-blue-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchFollowingPosts()}
                       >
                         Refresh
@@ -1580,12 +1577,12 @@ const fetchFollowingPosts = async () => {
                 <TabsContent value="Presets">
                   {/*  */}
                   <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto ">
+                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto ">
                       {["Your Presets", "Create Presets"].map((tab) => (
                         <TabsTrigger
                           key={tab}
                           value={tab}
-                          className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                          className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
                         >
                           {tab.replace(/^\w/, (c) => c.toUpperCase())}
                         </TabsTrigger>
@@ -1599,7 +1596,7 @@ const fetchFollowingPosts = async () => {
                       )}
                       {isLoading ? (
                         <div className="flex justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-lime-500"></div>
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
                       ) : presets.length === 0 ? (
                         <Card>
@@ -1609,13 +1606,13 @@ const fetchFollowingPosts = async () => {
                         </Card>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white */}
                           {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-lime-200">
+                            <Card key={preset.id} className="hover:bg-blue-500 ">
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
-                                <CardDescription>ID: {preset.id}</CardDescription>
                               </CardHeader>
                               <CardContent>
                                 <Button
@@ -1633,7 +1630,7 @@ const fetchFollowingPosts = async () => {
                                       <select
                                         value={newRule.type}
                                         onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        className="flex h-9 w-25 rounded-md border border-input bg-background px-1 py-1 text-[14px]"
                                       >
                                         <option value="KEYWORD">Keyword</option>
                                         <option value="TOPIC">Topic</option>
@@ -1642,9 +1639,9 @@ const fetchFollowingPosts = async () => {
                                         placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
                                         value={newRule.value}
                                         onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="flex-1"
+                                        className="flex-1 custom-placeholder"
                                       />
-                                      <Button className="bg-lime-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
+                                      <Button className="bg-blue-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
                                         <Plus size={16} className="mr-1" /> Add
                                       </Button>
                                     </div>
@@ -1652,8 +1649,8 @@ const fetchFollowingPosts = async () => {
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
-                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md">
-                                            <div className="flex items-center">
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                            <div className="flex items-center ">
                                               <Filter size={14} className="mr-2 text-lime-500" />
                                               <Badge variant="outline" className="mr-2">
                                                 {rule.type}
@@ -1707,7 +1704,7 @@ const fetchFollowingPosts = async () => {
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 border-lime-500 rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 rounded-md">
                                     <span>{preset.name}</span>
                                     <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>
@@ -1725,11 +1722,11 @@ const fetchFollowingPosts = async () => {
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhoToFollow />
           </div>
         </aside>
@@ -1739,7 +1736,7 @@ const fetchFollowingPosts = async () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black  dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -1752,14 +1749,14 @@ const fetchFollowingPosts = async () => {
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white">Share your thoughts</h2>
+              <h2 className="text-xl font-bold mb-5 future-feed:text-lime  text-blue-500 dark:text-white">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
                 rows={8}
               />
               <div className="mb-4">
@@ -1769,7 +1766,7 @@ const fetchFollowingPosts = async () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
+                  className="dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1">
@@ -1784,7 +1781,7 @@ const fetchFollowingPosts = async () => {
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
+                  className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
@@ -1804,7 +1801,7 @@ const fetchFollowingPosts = async () => {
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-600"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post
@@ -1819,7 +1816,7 @@ const fetchFollowingPosts = async () => {
           style={topicModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
@@ -1830,17 +1827,17 @@ const fetchFollowingPosts = async () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
                 value={newTopicName}
                 onChange={(e) => setNewTopicName(e.target.value)}
-                className="mb-4 dark:bg-black dark:text-white dark:border-lime-500"
+                className="mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200"
               />
               <Button
                 onClick={createTopic}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                 disabled={!newTopicName.trim() || !currentUser}
               >
                 Create
@@ -1854,7 +1851,7 @@ const fetchFollowingPosts = async () => {
           style={viewTopicsModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
@@ -1862,14 +1859,14 @@ const fetchFollowingPosts = async () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">All Topics</h2>
+            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
                 <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-lime-700 dark:text-white mb-2">
+                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2">
                       {topic.name}
                     </li>
                   ))}
@@ -1877,7 +1874,7 @@ const fetchFollowingPosts = async () => {
               )}
               <Button
                 onClick={() => setIsViewTopicsModalOpen(false)}
-                className="mt-4 bg-lime-500 text-white hover:bg-lime-600"
+                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
               >
                 Close
               </Button>
