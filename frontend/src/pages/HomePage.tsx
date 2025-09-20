@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Filter, Percent } from 'lucide-react';
+import { useNotifications,type Notification} from "@/context/NotificationContext";
 
 interface Preset {
   id: number;
@@ -139,6 +140,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const { setNotifications } = useNotifications();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -1060,7 +1062,31 @@ const HomePage = () => {
       }
     }
   };
+  const fetchNotifications = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+      credentials: "include",
+    });
 
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        setError("Unauthorized. Please log in again.");
+        return;
+      }
+      throw new Error(`Failed to fetch notifications: ${response.status}`);
+    }
+
+    const data: Notification[] = await response.json();
+    setNotifications(data); // Store in NotificationContext
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+    setError("Failed to load notifications.");
+    setTimeout(() => setError(null), 3000);
+  }
+};
   const handleLike = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
@@ -1503,7 +1529,10 @@ const HomePage = () => {
       setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
-        await fetchTopics();
+        await Promise.all([
+          fetchTopics(),
+          fetchNotifications(user.id),
+        ]);
       }
       setLoading(false);
     };
