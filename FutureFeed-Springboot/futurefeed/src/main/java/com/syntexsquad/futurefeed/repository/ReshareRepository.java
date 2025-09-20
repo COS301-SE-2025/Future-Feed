@@ -27,4 +27,6 @@ public interface ReshareRepository extends JpaRepository<Reshare, ReshareId> {
 
     @Query("SELECT COUNT(r) FROM Reshare r WHERE r.post.id = :postId")
     long countByPostId(@Param("postId") Integer postId);
+
+
 }

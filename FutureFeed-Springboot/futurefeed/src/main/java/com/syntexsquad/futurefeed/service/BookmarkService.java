@@ -8,6 +8,8 @@ import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BookmarkRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,7 +31,21 @@ public class BookmarkService {
         this.postRepo = postRepo;
         this.notificationService = notificationService;
     }
+    private AppUser getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+    public List<Post> getBookmarkedPosts() {
+        AppUser user = getAuthenticatedUser();
+        List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
 
+        return bookmarks.stream()
+                .map(Bookmark::getPost)
+                .distinct()
+                .toList();
+    }
     public boolean addBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
@@ -113,4 +129,14 @@ public class BookmarkService {
         Post post = postRepo.findById(postId).orElseThrow();
         return bookmarkRepo.findByUserAndPost(user, post).isPresent();
     }
+
+    public List<Post> getBookmarkedPostsByUserId(Integer userId) {
+        AppUser user = userRepo.findById(userId).orElseThrow();
+        List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
+        return bookmarks.stream()
+                .map(Bookmark::getPost)
+                .distinct()
+                .toList();
+    }
+
 }
