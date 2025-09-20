@@ -66,9 +66,9 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
   };
 
   return (
-    <div className="relative w-46 ml-20">
+    <div className="relative">
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={22} />
+        <Search className=" absolute left-3 top-1/2 transform -translate-y-1/2 text-lime-500" size={22} />
         <Input
           type="text"
           placeholder="Search notifications"
@@ -76,7 +76,7 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
           onChange={handleSearch}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow clicks
-          className="rounded-full bg-white dark:bg-blue-950 dark:text-white dark:placeholder:text-lime-500 border-gray-200 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"
+          className="rounded-full bg-white dark:bg-blue-950 dark:text-white dark:placeholder:text-lime-500 border-l-4 border-b-4 border-l-gray-300 border-b-gray-300 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"
         />
       </div>
 
