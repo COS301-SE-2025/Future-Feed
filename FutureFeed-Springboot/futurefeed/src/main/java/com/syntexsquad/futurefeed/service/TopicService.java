@@ -14,9 +14,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -159,10 +161,10 @@ public class TopicService {
             return;
         }
 
-        postTopicRepository.deleteByPostId(postId); 
+        postTopicRepository.deleteByPostId(postId);
         for (Integer topicId : topicIds) {
             PostTopic pt = new PostTopic();
-            pt.setPost(post);      
+            pt.setPost(post);
             pt.setTopicId(topicId);
             PostTopic saved = postTopicRepository.save(pt);
             log.info("[autoTag] mapping saved id={} postId={} topicId={}", saved.getId(), postId, topicId);
@@ -171,5 +173,14 @@ public class TopicService {
 
     private String norm(String s) {
         return s == null ? "" : s.trim();
+    }
+
+    public List<Topic> getTrendingTopics(int limit, int hoursBack) {
+        LocalDateTime since = LocalDateTime.now().minusHours(hoursBack);
+        return topicRepository.findTrendingTopics(since, PageRequest.of(0, limit));
+    }
+
+    public List<Post> getPostsForTopic(Integer topicId) {
+        return topicRepository.findPostsByTopicId(topicId);
     }
 }

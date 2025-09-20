@@ -144,7 +144,7 @@ const WhoToFollow = () => {
 
   return (
 
-    <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-3   ">
+    <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-3  hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
 
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-rose-gold-text-light text-lg mb-4">Follow Latest</h2>
@@ -194,7 +194,7 @@ const WhoToFollow = () => {
                     </Button>
                   ) : (
                     <Button
-                      className="w-[90px]  rounded-full bg-lime-500 font-semibold hover:cursor-pointer"
+                      className="w-[90px] bg-white text-blue-500  rounded-full  font-semibold hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
@@ -206,7 +206,7 @@ const WhoToFollow = () => {
 
             <Link to="/explore"className="flex items-center gap-3 dark:hover:text-white">
             <div className={!isExplorePage ? "" : "invisible"}>
-        <p className="dark:text-slate-200 hover:underline cursor-pointer">Show more</p>
+        <p className="dark:text-slate-200 text-white  hover:underline cursor-pointer">Show more</p>
       </div>
       </Link>
             

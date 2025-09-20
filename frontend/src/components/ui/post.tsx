@@ -92,7 +92,7 @@ const Post: React.FC<PostProps> = ({
   topics,
 }) => {
   const [newComment, setNewComment] = React.useState("");
- 
+
   const handleSubmitComment = () => {
     if (newComment.trim() && isUserLoaded) {
       onAddComment(newComment);
@@ -124,22 +124,29 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-[#1a1a1a] border-2 border- hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        "future-feed:bg-card future-feed:text-white  dark:bg-indigo-950 border-2 border- hover:bg-slate-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
         className
       )}
       onClick={handleClick}
     >
       <CardContent className="sm:px-8 sm:py-1 ">
         <div className="flex gap-3 sm:gap-4">
-          <Avatar 
+          <Avatar
             className="h-10 w-10 sm:h-12 sm:w-12"
             onClick={(e) => {
               e.stopPropagation();
               onProfileClick();
             }}
           >
-            <AvatarImage src={profilePicture} alt={handle} />
-            <AvatarFallback>{getInitials(username)}</AvatarFallback>
+            {profilePicture ? (
+              <AvatarImage
+                src={profilePicture}
+                alt={handle}
+                onError={() => console.error(`Failed to load profile picture for ${handle}:`, profilePicture)}
+              />
+            ) : (
+              <AvatarFallback>{getInitials(username)}</AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
@@ -164,7 +171,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       onDelete();
                     }}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                    className="text-red-500 hover:bg-slate-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -232,12 +239,14 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
-                  "hover:text-blue-500 dark:hover:text-blue-400"
+                  commentCount > 0 ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400",
+                  "hover:text-gray-500 dark:hover:text-gray-400"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <div className="relative">
+                  <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
                 <span className="hidden xl:inline">Comment</span>
                 <span className="ml-1">({commentCount})</span>
               </Button>

@@ -14,6 +14,22 @@ export const formatRelativeTime = (date: string): string => {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+  if(diffDays >= 30){
+    return postDate.toLocaleDateString('en-US', {
+      year:'numeric',
+      month:'long',
+      day:'numeric',
+    });
+  }
+  if(diffDays >= 8 && diffDays < 15){
+    return "a week ago";
+  }
+  if(diffDays >= 15 && diffDays < 22){
+    return "2 weeks ago";
+  }
+  if(diffDays >= 22 && diffDays < 30){
+    return "3 weeks ago";
+  }
   if (diffSeconds < 60) {
     return "just now";
   } else if (diffMinutes < 2) {
