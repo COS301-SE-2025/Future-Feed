@@ -7,6 +7,8 @@ import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.dto.UserPublicDTO;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.moderation.ModerationClient;
+import com.syntexsquad.futurefeed.moderation.ModerationResult;
 import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +20,10 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RestController
@@ -28,21 +33,25 @@ public class PostController {
     private final PostService postService;
     private final MediaService mediaService;
     private final ObjectMapper objectMapper;
+    /** Optional: will be null in tests unless you provide a bean. */
+    private final ModerationClient moderationClient;
 
-    // FastAPI base URL for image generation (can override via properties or env)
+    // Reuse FastAPI base URL for image generation only
     @Value("${fastapi.base-url:http://localhost:8000}")
     private String fastapiBaseUrl;
 
     public PostController(PostService postService,
                           MediaService mediaService,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          java.util.Optional<ModerationClient> moderationClient // optional injection
+    ) {
         this.postService = postService;
         this.mediaService = mediaService;
         this.objectMapper = objectMapper;
+        this.moderationClient = moderationClient.orElse(null);
     }
 
     // ---------- DTO helpers ----------
-
     private static UserPublicDTO toUserPublic(AppUser u) {
         if (u == null) return null;
         UserPublicDTO dto = new UserPublicDTO();
@@ -68,8 +77,17 @@ public class PostController {
         return posts.stream().map(PostController::toPostDTO).collect(Collectors.toList());
     }
 
-    // ---------- Endpoints ----------
+    // ---------- URL extract helper ----------
+    private static final Pattern URL_RE = Pattern.compile("\\bhttps?://[^\\s)]+", Pattern.CASE_INSENSITIVE);
+    private static List<String> extractLinks(String text) {
+        if (text == null) return List.of();
+        Matcher m = URL_RE.matcher(text);
+        List<String> out = new ArrayList<>();
+        while (m.find()) out.add(m.group());
+        return out;
+    }
 
+    // ---------- Endpoints ----------
     @GetMapping("/{id}")
     public ResponseEntity<?> getPostById(@PathVariable Integer id) {
         try {
@@ -82,7 +100,6 @@ public class PostController {
         }
     }
 
-    // Keep support for query param "userId"
     @GetMapping(params = "userId")
     public ResponseEntity<List<PostDTO>> getPostsByUserParam(@RequestParam Integer userId) {
         var posts = postService.getPostsByUserId(userId);
@@ -121,7 +138,7 @@ public class PostController {
     }
 
     @GetMapping("/commented/{userId}")
-    public ResponseEntity<List<PostDTO>> getCommentedPosts(@PathVariable Integer userId) {
+    public ResponseEntity<List<PostDTO>> getPostsCommentedByUser(@PathVariable Integer userId) {
         return ResponseEntity.ok(toPostDTOs(postService.getPostsCommentedByUser(userId)));
     }
 
@@ -178,22 +195,58 @@ public class PostController {
         }
     }
 
-    // ---------- Core create logic (upload OR image-gen) ----------
-
+    // ---------- Core create logic (with optional moderation) ----------
     private ResponseEntity<?> createPostInternal(PostRequest postRequest, MultipartFile file) {
         if (postRequest.getContent() == null || postRequest.getContent().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.TEXT_PLAIN)
                     .body("Content must not be null or empty");
         }
+
+        List<String> links = extractLinks(postRequest.getContent());
+        Path tempPath = null;
+
         try {
-            // 1) If client uploaded a file, it wins (backward compatible)
+            // (A) Uploaded file flow
             if (file != null && !file.isEmpty()) {
+                // If moderation is available, scan a temp copy before upload
+                if (moderationClient != null) {
+                    tempPath = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
+                    file.transferTo(tempPath.toFile());
+                    ModerationResult mod = moderationClient.moderatePost(
+                            postRequest.getContent(), links, List.of(tempPath.toString()), true);
+                    if (!mod.isSafe()) {
+                        tryDeleteQuietly(tempPath);
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                        "error", "ContentRejected",
+                                        "message", mod.getMessageToUser(),
+                                        "labels", mod.getLabels()
+                                ));
+                    }
+                }
+                // Upload (either after moderation or directly when moderation is absent)
                 String mediaUrl = mediaService.uploadFile(file);
                 postRequest.setImageUrl(mediaUrl);
+                tryDeleteQuietly(tempPath);
+                tempPath = null;
             }
-            // 2) Otherwise, if an imagePrompt is provided, generate and upload a PNG
+            // (B) Generated image flow
             else if (hasText(postRequest.getImagePrompt())) {
+                // If moderation exists, check text first
+                if (moderationClient != null) {
+                    ModerationResult preGen = moderationClient.moderatePost(
+                            postRequest.getContent(), links, List.of(), true);
+                    if (!preGen.isSafe()) {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                        "error", "ContentRejected",
+                                        "message", preGen.getMessageToUser(),
+                                        "labels", preGen.getLabels()
+                                ));
+                    }
+                }
+
                 String b64 = callImageGen(
                         postRequest.getImagePrompt(),
                         postRequest.getImageWidth(),
@@ -201,30 +254,66 @@ public class PostController {
                         postRequest.getImageSteps(),
                         postRequest.getImageModel()
                 );
-                // Wrap bytes as MultipartFile and reuse existing mediaService
                 byte[] png = Base64.getDecoder().decode(b64);
-                MultipartFile genFile = new BytesMultipartFile(
-                        "media",
-                        "generated.png",
-                        "image/png",
-                        png
-                );
+
+                // If moderation exists, scan generated image before persisting
+                if (moderationClient != null) {
+                    tempPath = Files.createTempFile("gen-", ".png");
+                    Files.write(tempPath, png);
+                    ModerationResult postGen = moderationClient.moderatePost(
+                            postRequest.getContent(), links, List.of(tempPath.toString()), true);
+                    if (!postGen.isSafe()) {
+                        tryDeleteQuietly(tempPath);
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(Map.of(
+                                        "error", "ImageRejected",
+                                        "message", postGen.getMessageToUser(),
+                                        "labels", postGen.getLabels()
+                                ));
+                    }
+                }
+
+                // Upload safe (or unmoderated in tests) image
+                MultipartFile genFile = new BytesMultipartFile("media", "generated.png", "image/png", png);
                 String mediaUrl = mediaService.uploadFile(genFile);
                 postRequest.setImageUrl(mediaUrl);
+                tryDeleteQuietly(tempPath);
+                tempPath = null;
+            }
+            // (C) No image: moderate text+links only if available
+            else if (moderationClient != null) {
+                ModerationResult mod = moderationClient.moderatePost(
+                        postRequest.getContent(), links, List.of(), true);
+                if (!mod.isSafe()) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(Map.of(
+                                    "error", "ContentRejected",
+                                    "message", mod.getMessageToUser(),
+                                    "labels", mod.getLabels()
+                            ));
+                }
             }
 
-            // 3) Persist post (with or without imageUrl)
+            // Persist post (same as before)
             Post post = postService.createPost(postRequest);
             return ResponseEntity.ok(toPostDTO(post));
 
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(Map.of("error", "UploadFailed", "message", e.getMessage()));
+        } catch (RestClientResponseException e) {
+            // Image service error
+            tryDeleteQuietly(tempPath);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("error", "ImageService", "message", e.getResponseBodyAsString()));
         } catch (RuntimeException ex) {
+            // <-- Restores what your tests expect
+            tryDeleteQuietly(tempPath);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .contentType(MediaType.TEXT_PLAIN)
                     .body("Server error: " + ex.getMessage());
+        } catch (Exception e) {
+            // Moderation or IO unexpected error
+            tryDeleteQuietly(tempPath);
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", "ModerationUnavailable", "message", e.getMessage()));
         }
     }
 
@@ -232,33 +321,23 @@ public class PostController {
         return s != null && !s.trim().isEmpty();
     }
 
-    /**
-     * Calls FastAPI /generate-image and returns base64 PNG string.
-     * No extra Spring beans are required here.
-     */
-    private String callImageGen(String prompt,
-                                Integer width,
-                                Integer height,
-                                Integer steps,
-                                String model) {
-
+    /** Calls FastAPI /generate-image and returns base64 PNG string. */
+    private String callImageGen(String prompt, Integer width, Integer height, Integer steps, String model) {
         try {
             String url = fastapiBaseUrl + "/generate-image";
-
             Map<String, Object> body = new LinkedHashMap<>();
             body.put("prompt", prompt);
             body.put("width", width == null ? 1024 : width);
             body.put("height", height == null ? 1024 : height);
-            body.put("steps", steps);      // may be null; backend clamps for FLUX.1 schnell
-            body.put("model", model);      // may be null; backend default applies
+            body.put("steps", steps);
+            body.put("model", model);
             body.put("safe_check", true);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             String json = objectMapper.writeValueAsString(body);
-            HttpEntity<String> entity = new HttpEntity<>(json, headers);
 
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
             RestTemplate rt = new RestTemplate();
             ResponseEntity<String> resp = rt.exchange(url, HttpMethod.POST, entity, String.class);
 
@@ -279,8 +358,12 @@ public class PostController {
         }
     }
 
-    // ---------- Minimal MultipartFile adapter for raw bytes (no spring-test needed) ----------
+    private static void tryDeleteQuietly(Path p) {
+        if (p == null) return;
+        try { Files.deleteIfExists(p); } catch (Exception ignored) {}
+    }
 
+    // Minimal MultipartFile adapter for raw bytes
     private static class BytesMultipartFile implements MultipartFile {
         private final String name;
         private final String originalFilename;
@@ -301,7 +384,7 @@ public class PostController {
         @Override public long getSize() { return bytes.length; }
         @Override public byte[] getBytes() { return bytes; }
         @Override public InputStream getInputStream() { return new ByteArrayInputStream(bytes); }
-        @Override public void transferTo(File dest) throws IOException, IllegalStateException {
+        @Override public void transferTo(File dest) throws IOException {
             try (FileOutputStream fos = new FileOutputStream(dest)) {
                 fos.write(bytes);
             }
