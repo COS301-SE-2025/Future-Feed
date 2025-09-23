@@ -1,38 +1,98 @@
+// components/WhatsHappening.tsx
 import { Card, CardContent } from "@/components/ui/card";
-import {useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-
+import { useTrendingTopics } from "@/hooks/useTrendingTopics";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
 
 const WhatsHappening = () => {
-    const location = useLocation();
-    const isHomePage = location.pathname === '/home';
-    return(
-        <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white">
-                <CardContent className="p-4">
-                    <h2 className="font-bold text-lg mb-4">Latest Feeds</h2>
-                    <div className="space-y-3 text-sm">
-                        <div>
-                            <p className="font-semibold">Kings World Cup Clubs</p>
-                            <p className="dark:text-slate-200">LIVE · Paris 2025</p>
-                        </div>
-                        <div>
-                            <p className="dark:text-slate-200">Trending in South Africa</p>
-                            <p className="font-semibold">Cobrizi</p>
-                        </div>
-                        <div>
-                            <p className="dark:text-slate-200">Trending in South Africa</p>
-                            <p className="font-semibold">The River</p>
-                        </div>
-                        <Link to="/home" className="flex items-center gap-3 dark:hover:text-white">
-                        <div className={!isHomePage ? "" : "invisible"}>
-        <p className="dark:text-slate-200 hover:underline cursor-pointer">Show more</p>
-      </div>
-      </Link>
-                       
-                    </div>
-                </CardContent>
-            </Card>
+  const location = useLocation();
+  const isHomePage = location.pathname === '/home';
+  
+  const { 
+    data: trendingTopics, 
+    isLoading, 
+    error,
+    isError,
+    status // Add status for debugging
+  } = useTrendingTopics();
 
-    );
+  // Debug logs
+  useEffect(() => {
+    console.log('Trending topics query status:', {
+      status,
+      isLoading,
+      isError,
+      error,
+      data: trendingTopics
+    });
+  }, [status, isLoading, isError, error, trendingTopics]);
+
+  return (
+    <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white">
+      <CardContent className="p-4">
+        <h2 className="font-bold text-lg mb-4">Trending Topics </h2>
+        <div className="space-y-3 text-sm">
+          
+          {/* Loading state */}
+          {isLoading && (
+            <>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="space-y-2">
+                  <Skeleton className="h-4 w-3/4 bg-gray-400" />
+                  <Skeleton className="h-3 w-1/2 bg-gray-400" />
+                </div>
+              ))}
+            </>
+          )}
+          
+          {/* Error state */}
+          {isError && (
+            <div className="text-red-300 text-sm">
+              Failed to load trending topics: {error?.message}
+            </div>
+          )}
+          
+          {/* Success state - show ALL trending topics from API */}
+          {trendingTopics && trendingTopics.length > 0 && (
+            <>
+              {trendingTopics.map((topic) => (
+                <div key={topic.id}>
+                  <p className="dark:text-slate-200">Trending Worldwide</p>
+                  <p className="font-semibold">#{topic.name}</p>
+                </div>
+              ))}
+            </>
+          )}
+          
+          {/* Empty state */}
+          {trendingTopics && trendingTopics.length === 0 && !isLoading && (
+            <div className="text-gray-400 text-sm">
+              No trending topics found
+            </div>
+          )}
+          
+          {/* Fallback content only if we have no data and not loading */}
+          {!trendingTopics && !isLoading && !isError && (
+            <>
+              <div>
+                <p className="font-semibold">ERROR , SOMETHING WENT WRONG, PLEASE BE PATIENT...</p>
+                
+              </div>
+              
+            </>
+          )}
+          
+          <Link to="/home" className="flex items-center gap-3 dark:hover:text-white">
+            <div className={!isHomePage ? "" : "invisible"}>
+              <p className="dark:text-slate-200 hover:underline cursor-pointer">Show more</p>
+            </div>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
+
 export default WhatsHappening;
