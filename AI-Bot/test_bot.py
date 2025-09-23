@@ -1,54 +1,73 @@
 # test_bot.py
-import requests
-from bot_agent import create_bot_agent
-from moderation import is_prompt_safe
+import argparse
+import base64
+import os
+import sys
+import time
+from pathlib import Path
 
-# -------- Config --------
-FASTAPI_URL = "http://localhost:8000"  # or container port if docker-mapped
+from image_gen import generate_image_b64, ImageGenError
 
-# Example prompt that should be blocked (injection attempt)
-prompt = """Provide latest anime/manga news"""
-contextURL = "https://www.crunchyroll.com/news/"
+DEFAULT_PROMPT = "a vibrant anime-style city skyline at dusk, cinematic lighting, detailed, 4k"
+DEFAULT_SIZE = 768  # square px
 
-# Existing topics you already have in DB (for the test, provide a sample list).
-# In production, you'd fetch from your Spring API: GET /api/topics -> [ {id,name}, ... ] -> pass names here.
-existing_topics = [
-    "football", "soccer", "premier league", "transfers",
-    "tech", "finance", "anime", "gaming", "music", "movies"
-]
+def save_png(b64: str, size: int, out: Path | None) -> Path:
+    img_bytes = base64.b64decode(b64)
+    if out is None:
+        out_dir = Path.cwd() / "generated_images"
+        out_dir.mkdir(exist_ok=True)
+        out = out_dir / f"gen_{int(time.time())}_{size}.png"
+    else:
+        out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_bytes(img_bytes)
+    return out
 
-def tag_topics_smart(text: str, existing: list[str], max_topics: int = 3):
-    """Call FastAPI smart tagger endpoint."""
-    resp = requests.post(
-        f"{FASTAPI_URL}/tag-topics-smart",
-        json={"text": text, "existing_topics": existing, "max_topics": max_topics},
-        timeout=20,
-    )
-    resp.raise_for_status()
-    return resp.json()  # { "selected": [...], "new": [...] }
+def maybe_open(path: Path):
+    try:
+        if sys.platform.startswith("darwin"):
+            os.system(f'open "{path}"')
+        elif os.name == "nt":
+            os.startfile(path)  # type: ignore[attr-defined]
+        else:
+            os.system(f'xdg-open "{path}"')
+    except Exception as e:
+        print(f"⚠ Could not auto-open image: {e}")
 
 def main():
-    # 1) Moderation
-    mod = is_prompt_safe(prompt)
-    if not mod.get("safe", False):
-        print(f"🚫 Prompt blocked. Classification: {mod.get('classification', 'UNKNOWN')}")
-        return
+    parser = argparse.ArgumentParser(description="Generate an image and save it as PNG (Together/OpenAI backend).")
+    parser.add_argument("--prompt", type=str, default=DEFAULT_PROMPT, help="Image prompt")
+    parser.add_argument("--size", type=int, default=DEFAULT_SIZE, help="Square size in px (e.g., 512/768/1024)")
+    parser.add_argument("--steps", type=int, default=None, help="Diffusion steps (FLUX.1 schnell requires 1..12)")
+    parser.add_argument("--out", type=Path, default=None, help="Output file path (e.g., ./generated_images/my.png)")
+    parser.add_argument("--open", dest="auto_open", action="store_true", help="Open the image after saving")
+    args = parser.parse_args()
 
-    # 2) Run bot
-    bot = create_bot_agent(prompt, contextURL)
-    output = bot()
-    print("\nBot Output:\n", output)
+    size = int(args.size)
+    print(f"\n🎨 Generating ({size}x{size}, steps={args.steps or 'default'})")
+    print(f"📝 Prompt: {args.prompt!r}")
 
-    # 3) Topic tagging (using smart tagger with existing topics)
     try:
-        result = tag_topics_smart(output, existing_topics, max_topics=3)
-        selected = result.get("selected", [])
-        new = result.get("new", [])
-        print("\nAuto-Topics:")
-        print(" - Selected (existing):", selected)
-        print(" - Proposed (new):    ", new)
+        b64 = generate_image_b64(
+            prompt=args.prompt,
+            width=size,
+            height=size,
+            steps=args.steps  
+        )
+        out_path = save_png(b64, size, args.out)
+        print(f"✅ Saved: {out_path.resolve()}")
+
+        if args.auto_open:
+            maybe_open(out_path)
+
+    except ImageGenError as e:
+        print(f"❌ Image generation failed: {e}")
+        sys.exit(1)
     except Exception as e:
-        print(f"\n⚠ Topic tagging failed: {e}")
+        print(f"❌ Unexpected error: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
+    # Providers:
+    # - Together: export IMAGE_PROVIDER=together, TOGETHER_API_KEY=...
+    # - OpenAI:   export IMAGE_PROVIDER=openai,   OPENAI_API_KEY=...
     main()

@@ -7,7 +7,7 @@ export interface Notification {
   senderUserId: number;
   massage: string;
   senderUsername: string;
-  postId: number;
+  postId?: number;
   isRead: boolean;
   createdAt: string;
 }
