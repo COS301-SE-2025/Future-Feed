@@ -2,6 +2,7 @@ package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.dto.PostTopicDTO;
 import com.syntexsquad.futurefeed.dto.TopicDTO;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Topic;
 import com.syntexsquad.futurefeed.service.TopicService;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,17 @@ public class TopicController {
     @GetMapping("/by-topic/{topicId}")
     public ResponseEntity<List<Integer>> getPostIdsByTopic(@PathVariable Integer topicId) {
         return ResponseEntity.ok(topicService.getPostIdsByTopicId(topicId));
+    }
+
+    @GetMapping("/trending")
+    public List<Topic> getTrendingTopics(
+            @RequestParam(defaultValue = "5") int limit,
+            @RequestParam(defaultValue = "24") int hoursBack) {
+        return topicService.getTrendingTopics(limit, hoursBack);
+    }
+
+    @GetMapping("/{topicId}/posts")
+    public List<Post> getPostsForTopic(@PathVariable Integer topicId) {
+        return topicService.getPostsForTopic(topicId);
     }
 }
