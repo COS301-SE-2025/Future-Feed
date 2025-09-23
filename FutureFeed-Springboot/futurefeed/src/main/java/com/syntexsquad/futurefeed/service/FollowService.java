@@ -22,10 +22,12 @@ public class FollowService {
 
     private final FollowerRepository followerRepository;
     private final AppUserRepository appUserRepository;
+    private final NotificationService notificationService;
 
-    public FollowService(FollowerRepository followerRepository, AppUserRepository appUserRepository) {
+    public FollowService(FollowerRepository followerRepository, AppUserRepository appUserRepository, NotificationService notificationService) {
         this.followerRepository = followerRepository;
         this.appUserRepository = appUserRepository;
+        this.notificationService = notificationService;
     }
     public List<FollowedUserDto> getTopFollowedUsers(int limit) {
         Pageable pageable = PageRequest.of(0, limit);
@@ -59,6 +61,15 @@ public class FollowService {
             relation.setFollowerId(follower.getId());
             relation.setFollowedId(followedId);
             followerRepository.save(relation);
+
+            notificationService.createNotification(
+                    followedId,
+                    follower.getId(),
+                    "FOLLOW",
+                    " started following you",
+                    follower.getUsername() + "",
+                    null  // No postId needed for follow notification
+            );
         }
     }
 
@@ -70,6 +81,14 @@ public class FollowService {
             throw new IllegalStateException("You are not following this user.");
         }
         followerRepository.deleteByFollowerIdAndFollowedId(follower.getId(), followedId);
+        notificationService.createNotification(
+                followedId,
+                follower.getId(),
+                "UNFOLLOW",
+                "  unfollowed you",
+                follower.getUsername() + "",
+                null  // No postId needed for follow notification
+        );
     }
 
     public FollowStatusResponse isFollowing(Integer followedId) {

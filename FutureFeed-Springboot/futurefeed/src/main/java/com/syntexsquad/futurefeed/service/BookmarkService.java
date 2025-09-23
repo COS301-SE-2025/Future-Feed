@@ -1,8 +1,15 @@
 package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.BookmarkDto;
-import com.syntexsquad.futurefeed.model.*;
-import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.Bookmark;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.UserPost;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.repository.BookmarkRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,13 +20,32 @@ public class BookmarkService {
     private final BookmarkRepository bookmarkRepo;
     private final AppUserRepository userRepo;
     private final PostRepository postRepo;
+    private final NotificationService notificationService;
 
-    public BookmarkService(BookmarkRepository bookmarkRepo, AppUserRepository userRepo, PostRepository postRepo) {
+    public BookmarkService(BookmarkRepository bookmarkRepo,
+                           AppUserRepository userRepo,
+                           PostRepository postRepo,
+                           NotificationService notificationService) {
         this.bookmarkRepo = bookmarkRepo;
         this.userRepo = userRepo;
         this.postRepo = postRepo;
+        this.notificationService = notificationService;
     }
+    private AppUser getAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email = auth.getName();
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+    public List<Post> getBookmarkedPosts() {
+        AppUser user = getAuthenticatedUser();
+        List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
 
+        return bookmarks.stream()
+                .map(Bookmark::getPost)
+                .distinct()
+                .toList();
+    }
     public boolean addBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
@@ -27,12 +53,46 @@ public class BookmarkService {
         if (bookmarkRepo.findByUserAndPost(user, post).isPresent()) return false;
 
         bookmarkRepo.save(new Bookmark(user, post));
+
+        if (post instanceof UserPost userPost) {
+            AppUser owner = userPost.getUser(); // may be null
+            if (owner != null) {
+                Integer recipientId = owner.getId();
+                if (!recipientId.equals(user.getId())) {
+                    notificationService.createNotification(
+                            recipientId,
+                            user.getId(),
+                            "BOOKMARK",
+                            " added your post to bookmarks",
+                            user.getUsername() + "",
+                            postId
+                    );
+                }
+            }
+        }
         return true;
     }
 
     public boolean removeBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
+
+        if (post instanceof UserPost userPost) {
+            AppUser owner = userPost.getUser(); // may be null
+            if (owner != null) {
+                Integer recipientId = owner.getId();
+                if (!recipientId.equals(user.getId())) {
+                    notificationService.createNotification(
+                            recipientId,
+                            user.getId(),
+                            "BOOKMARK REMOVED",
+                             " removed your post from bookmarks",
+                            user.getUsername() + "",
+                            postId
+                    );
+                }
+            }
+        }
 
         return bookmarkRepo.findByUserAndPost(user, post)
                 .map(b -> {
@@ -46,6 +106,7 @@ public class BookmarkService {
         AppUser user = userRepo.findById(userId).orElseThrow();
         return bookmarkRepo.findByUser(user);
     }
+
     public List<BookmarkDto> getUserBookmarkDtos(Integer userId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
@@ -67,6 +128,15 @@ public class BookmarkService {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
         return bookmarkRepo.findByUserAndPost(user, post).isPresent();
+    }
+
+    public List<Post> getBookmarkedPostsByUserId(Integer userId) {
+        AppUser user = userRepo.findById(userId).orElseThrow();
+        List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
+        return bookmarks.stream()
+                .map(Bookmark::getPost)
+                .distinct()
+                .toList();
     }
 
 }

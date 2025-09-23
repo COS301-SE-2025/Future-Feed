@@ -1,5 +1,6 @@
 package com.syntexsquad.futurefeed.repository;
 
+import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Like;
 import com.syntexsquad.futurefeed.model.LikeId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -30,4 +31,10 @@ public interface LikeRepository extends JpaRepository<Like, LikeId> {
 
     @Query("SELECT l.post.id FROM Like l WHERE l.userId = :userId")
     List<Integer> findPostIdsByUserId(@Param("userId") Integer userId);
+
+
+
+    @Query("SELECT l FROM Like l WHERE l.userId = :userId")
+    List<Like> findByUser(@Param("userId") Integer userId);
+    List<Like> findByUserId(Integer userId);
 }

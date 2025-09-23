@@ -1,17 +1,22 @@
 package com.syntexsquad.futurefeed;
 
 import com.syntexsquad.futurefeed.dto.FollowStatusResponse;
-import com.syntexsquad.futurefeed.service.FollowService;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Follower;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.FollowerRepository;
+import com.syntexsquad.futurefeed.service.FollowService;
+import com.syntexsquad.futurefeed.service.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
+
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -25,22 +30,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT) // avoid UnnecessaryStubbing for tests not using security
 public class FollowServiceTest {
 
-    @Mock
-    private FollowerRepository followerRepository;
+    @Mock private FollowerRepository followerRepository;
+    @Mock private AppUserRepository appUserRepository;
+    @Mock private NotificationService notificationService; // <-- IMPORTANT
 
-    @Mock
-    private AppUserRepository appUserRepository;
-
-    @Mock
-    private SecurityContext securityContext;
-
-    @Mock
-    private OAuth2AuthenticationToken oauth2AuthenticationToken;
-
-    @Mock
-    private OAuth2User oAuth2User;
+    @Mock private SecurityContext securityContext;
+    @Mock private OAuth2AuthenticationToken oauth2AuthenticationToken;
+    @Mock private OAuth2User oAuth2User;
 
     @InjectMocks
     private FollowService followService;
@@ -49,15 +48,20 @@ public class FollowServiceTest {
 
     @BeforeEach
     public void setup() {
-        lenient().when(oAuth2User.getAttributes()).thenReturn(Map.of("email", "testuser@example.com"));
-        lenient().when(oauth2AuthenticationToken.getPrincipal()).thenReturn(oAuth2User);
-        lenient().when(securityContext.getAuthentication()).thenReturn(oauth2AuthenticationToken);
+        // Security context stubs
+        when(oAuth2User.getAttributes()).thenReturn(Map.of("email", "testuser@example.com"));
+        when(oauth2AuthenticationToken.getPrincipal()).thenReturn(oAuth2User);
+        when(securityContext.getAuthentication()).thenReturn(oauth2AuthenticationToken);
         SecurityContextHolder.setContext(securityContext);
 
+        // Authenticated user
         authenticatedUser = new AppUser();
         authenticatedUser.setId(1);
         authenticatedUser.setEmail("testuser@example.com");
-        lenient().when(appUserRepository.findByEmail("testuser@example.com")).thenReturn(Optional.of(authenticatedUser));
+        authenticatedUser.setUsername("tester");
+
+        when(appUserRepository.findByEmail("testuser@example.com"))
+                .thenReturn(Optional.of(authenticatedUser));
     }
 
     @Test
@@ -69,15 +73,25 @@ public class FollowServiceTest {
         followService.follow(followedId);
 
         verify(followerRepository, times(1)).save(any(Follower.class));
+        // Optional: prove notification was sent
+        verify(notificationService, times(1)).createNotification(
+                eq(followedId),
+                eq(authenticatedUser.getId()),
+                eq("FOLLOW"),
+                contains("started following you"),
+                eq(authenticatedUser.getUsername() + ""),
+                isNull()
+        );
     }
 
     @Test
     public void testFollow_ThrowsIfFollowSelf() {
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> {
-            followService.follow(authenticatedUser.getId());
-        });
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> followService.follow(authenticatedUser.getId()));
         assertEquals("Cannot follow yourself.", ex.getMessage());
+
         verify(followerRepository, never()).save(any());
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -89,6 +103,7 @@ public class FollowServiceTest {
         followService.follow(followedId);
 
         verify(followerRepository, never()).save(any());
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -99,7 +114,17 @@ public class FollowServiceTest {
 
         followService.unfollow(followedId);
 
-        verify(followerRepository, times(1)).deleteByFollowerIdAndFollowedId(authenticatedUser.getId(), followedId);
+        verify(followerRepository, times(1))
+                .deleteByFollowerIdAndFollowedId(authenticatedUser.getId(), followedId);
+
+        verify(notificationService, times(1)).createNotification(
+                eq(followedId),
+                eq(authenticatedUser.getId()),
+                eq("UNFOLLOW"),
+                contains("unfollowed you"),
+                eq(authenticatedUser.getUsername() + ""),
+                isNull()
+        );
     }
 
     @Test
@@ -108,12 +133,12 @@ public class FollowServiceTest {
         when(followerRepository.existsByFollowerIdAndFollowedId(authenticatedUser.getId(), followedId))
                 .thenReturn(false);
 
-        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> {
-            followService.unfollow(followedId);
-        });
+        IllegalStateException ex =
+                assertThrows(IllegalStateException.class, () -> followService.unfollow(followedId));
         assertEquals("You are not following this user.", ex.getMessage());
 
         verify(followerRepository, never()).deleteByFollowerIdAndFollowedId(anyInt(), anyInt());
+        verify(notificationService, never()).createNotification(any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -123,7 +148,6 @@ public class FollowServiceTest {
                 .thenReturn(true);
 
         FollowStatusResponse response = followService.isFollowing(followedId);
-
         assertTrue(response.isFollowing());
     }
 
@@ -134,7 +158,6 @@ public class FollowServiceTest {
                 .thenReturn(false);
 
         FollowStatusResponse response = followService.isFollowing(followedId);
-
         assertFalse(response.isFollowing());
     }
 
@@ -145,7 +168,6 @@ public class FollowServiceTest {
         when(followerRepository.findByFollowedId(userId)).thenReturn(followers);
 
         List<Follower> result = followService.getFollowersOf(userId);
-
         assertEquals(followers, result);
     }
 
@@ -156,7 +178,6 @@ public class FollowServiceTest {
         when(followerRepository.findByFollowerId(userId)).thenReturn(following);
 
         List<Follower> result = followService.getFollowingOf(userId);
-
         assertEquals(following, result);
     }
 }

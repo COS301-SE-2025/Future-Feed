@@ -1,6 +1,7 @@
 package com.syntexsquad.futurefeed.Controller;
 
 import com.syntexsquad.futurefeed.model.Comment;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.CommentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,4 +50,10 @@ public class CommentController {
             return ResponseEntity.status(401).body("Unauthorized or user not found");
         }
     }
+
+    @GetMapping("/my-comments/{userId}")
+    public ResponseEntity<List<Post>> getCommentedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(commentService.getPostsCommentedByUser(userId));
+    }
+
 }

@@ -1,8 +1,11 @@
 package com.syntexsquad.futurefeed.Controller;
 
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.LikeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/likes")
@@ -49,4 +52,11 @@ public class LikeController {
     public ResponseEntity<Long> countLikes(@PathVariable Integer postId) {
         return ResponseEntity.ok(likeService.countLikes(postId));
     }
+
+    @GetMapping("/my-likes/{userId}")
+    public ResponseEntity<List<Post>> getLikedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(likeService.getLikedPostsByUserId(userId));
+    }
+
+
 }

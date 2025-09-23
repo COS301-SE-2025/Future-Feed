@@ -2,11 +2,10 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
-
+import { useNavigate } from "react-router-dom";
 
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import RightSidebar from "@/components/RightSidebar";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,7 +47,7 @@ const Explore = () => {
   //monitor sesrch query and check is search is active
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
-
+  const navigate = useNavigate();
   //
   //  const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
@@ -442,13 +441,23 @@ const Explore = () => {
     return (
       <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
-          <Avatar className="w-14 h-14 border-4 border-slate-300">
+          <Avatar 
+            className="w-14 h-14 border-4 border-slate-300 hover:cursor-pointer"
+            onClick={() => navigate(`/profile/${user.id}`)} 
+          >
             <AvatarImage src={user.profilePicture} alt={user.username} />
             <AvatarFallback>{user.username[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p className="font-semibold">{user.displayName}</p>
-            <p className="text-sm text-gray-500 dark:text-neutral-400">@{user.username}</p>
+            <p 
+              className="font-semibold hover:cursor-pointer hover:underline" 
+              onClick={() => navigate(`/profile/${user.id}`)}
+            >
+            {user.displayName}</p>
+            <p 
+              className="text-sm text-gray-500 dark:text-neutral-400 hover:cursor-pointer hover:underline"
+              onClick={() => navigate(`/profile/${user.id}`)}
+            >@{user.username}</p>
             <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
           </div>
           {followStatus[user.id] ? (
@@ -575,12 +584,13 @@ const Explore = () => {
         </div>
       </main>
 
-      <aside className="gap-4 flex flex-col ">
-        <div className="sticky p-3 top-4 z-10  ">
-
+      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
         </div>
-
-        <RightSidebar />
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
       </aside>
     </div>
   );

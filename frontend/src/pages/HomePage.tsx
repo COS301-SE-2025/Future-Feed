@@ -13,7 +13,8 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Filter } from 'lucide-react';
+import { Plus, Filter, Percent } from 'lucide-react';
+import { useNotifications,type Notification} from "@/context/NotificationContext";
 
 interface Preset {
   id: number;
@@ -24,8 +25,10 @@ interface Preset {
 interface Rule {
   id: number;
   presetId: number;
-  type: 'TOPIC' | 'KEYWORD';
-  value: string;
+  topicId?: number;
+  sourceType?: 'user' | 'bot';
+  specificUserId?: number;
+  percentage?: number;
 }
 
 interface ApiFollow {
@@ -128,16 +131,23 @@ const HomePage = () => {
   const [rules, setRules] = useState<{ [presedId: number]: Rule[] }>({});
   const [newPresetName, setNewPresetName] = useState('');
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
-  const [newRule, setNewRule] = useState({ type: 'KEYWORD' as 'TOPIC' | 'KEYWORD', value: '' });
+  const [newRule, setNewRule] = useState({
+    topicId: undefined as number | undefined,
+    sourceType: undefined as 'user' | 'bot' | undefined,
+    specificUserId: undefined as number | undefined,
+    percentage: undefined as number | undefined
+  });
   const [isLoading, setIsLoading] = useState(false);
-
+  const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const { setNotifications } = useNotifications();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-// 
+
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
-    config: { tension: 220, friction: 30 },
+    config: { tension: 250, friction: 35 },
   });
 
   const topicModalProps = useSpring({
@@ -171,7 +181,6 @@ const HomePage = () => {
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
         profilePicture: postUser.profilePicture,
       };
-      console.debug(`Using postUser for user ${userId}:`, validUser);
       return validUser;
     }
 
@@ -223,6 +232,24 @@ const HomePage = () => {
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
       return null;
+    }
+  };
+  const fetchAllUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await fetch(`${API_URL}/api/user/all`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setAllUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError("Failed to load users");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingUsers(false);
     }
   };
 
@@ -399,8 +426,6 @@ const HomePage = () => {
     }
   };
 
-
-  // Union for all possible API Response's
   type ApiResponse =
     | ApiFollow[]
     | ApiReshare[]
@@ -413,7 +438,6 @@ const HomePage = () => {
     | { count: number }
     | { liked: boolean };
 
-  // ===================== Shared helpers (put once, top-level) =====================
   const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
 
   function stripBOM(s: string) {
@@ -449,230 +473,227 @@ const HomePage = () => {
    *  - be mislabeled (no content-type).
    */
   async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
-  const contentType = response.headers.get("content-type") || "";
-  const raw = stripBOM((await response.text()).trim());
-  const cleaned = stripXssiPrefix(raw);
+    const contentType = response.headers.get("content-type") || "";
+    const raw = stripBOM((await response.text()).trim());
+    const cleaned = stripXssiPrefix(raw);
 
-  if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
-    console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
-    throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
-  }
+    if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+      console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+      throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+    }
 
-  if (contentType.includes("application/json")) {
+    if (contentType.includes("application/json")) {
+      try {
+        return JSON.parse(cleaned) as T;
+      } catch {
+        try {
+          return JSON.parse(sliceToJsonBlock(cleaned)) as T;
+        } catch {
+          console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+          throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+        }
+      }
+    }
+
     try {
       return JSON.parse(cleaned) as T;
     } catch {
-      try {
-        return JSON.parse(sliceToJsonBlock(cleaned)) as T;
-      } catch {
-        console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
-        throw new Error(`Invalid JSON response from ${endpointForLogs}`);
-      }
+      const t = cleaned.toLowerCase();
+      if (t === "true") return true as T;
+      if (t === "false") return false as T;
+      if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
+      return cleaned as T;
     }
   }
 
-  try {
-    return JSON.parse(cleaned) as T;
-  } catch {
-    const t = cleaned.toLowerCase();
-    if (t === "true") return true as T;
-    if (t === "false") return false as T;
-    if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
-    return cleaned as T;
-  }
-}
-
-  // Add this once to normalize fetch options everywhere:
   const commonInit: RequestInit = {
     credentials: "include",
     headers: { Accept: "application/json" },
   };
 
-  // ===================== Your fixed function =====================
   const fetchFollowingPosts = async () => {
-  if (!currentUser?.id) {
-    console.warn("Cannot fetch following posts: currentUser is not loaded");
-    return;
-  }
-
-  console.debug("Fetching following posts");
-  setLoadingFollowing(true);
-
-  try {
-    const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-      fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
-      fetch(`${API_URL}/api/reshares`, commonInit),
-      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
-    ]);
-
-    if (!followRes.ok) throw new Error("Failed to fetch followed users");
-    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-
-    const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
-    const myReshares: ApiReshare[] = myResharesRes.ok
-      ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
-      : [];
-    const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
-
-    const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
-    const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
-
-    if (!followedIds.length) {
-      setFollowingPosts([]);
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch following posts: currentUser is not loaded");
       return;
     }
 
-    const allFollowingPosts = await Promise.all(
-      followedIds.map(async (userId: number) => {
-        try {
-          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
-          if (!res.ok) return [];
-          return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
-        } catch (error) {
-          console.warn(`Failed to fetch posts for user ${userId}:`, error);
-          return [];
-        }
-      })
-    );
+    console.debug("Fetching following posts");
+    setLoadingFollowing(true);
 
-    const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-    const uniquePosts: ApiPost[] = Array.from(
-      new Map(flattenedPosts.map((post) => [post.id, post])).values()
-    ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+    try {
+      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
 
-    const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+      if (!followRes.ok) throw new Error("Failed to fetch followed users");
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-    const formattedPosts = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        try {
-          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-            fetchTopicsForPost(post.id),
-          ]);
+      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
 
-          let comments: ApiComment[] = [];
-          let likeCount = 0;
-          let isLiked = false;
-          let topics: Topic[] = [];
+      const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
+      if (!followedIds.length) {
+        setFollowingPosts([]);
+        return;
+      }
+
+      const allFollowingPosts = await Promise.all(
+        followedIds.map(async (userId: number) => {
           try {
-            comments = commentsRes.ok
-              ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
-              : [];
+            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
+            if (!res.ok) return [];
+            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
           } catch (error) {
-            console.warn(`Failed to parse comments for post ${post.id}:`, error);
-            comments = [];
+            console.warn(`Failed to fetch posts for user ${userId}:`, error);
+            return [];
           }
+        })
+      );
 
+      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
+      const uniquePosts: ApiPost[] = Array.from(
+        new Map(flattenedPosts.map((post) => [post.id, post])).values()
+      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+
+      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
+
+      const formattedPosts = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
           try {
-            const raw = likesCountRes.ok
-              ? await robustParse<number | string | { count: number }>(
+            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+              fetchTopicsForPost(post.id),
+            ]);
+
+            let comments: ApiComment[] = [];
+            let likeCount = 0;
+            let isLiked = false;
+            let topics: Topic[] = [];
+
+            try {
+              comments = commentsRes.ok
+                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+                : [];
+            } catch (error) {
+              console.warn(`Failed to parse comments for post ${post.id}:`, error);
+              comments = [];
+            }
+
+            try {
+              const raw = likesCountRes.ok
+                ? await robustParse<number | string | { count: number }>(
                   likesCountRes,
                   `likes/count/${post.id}`
                 )
-              : 0;
-            if (typeof raw === "number") likeCount = raw;
-            else if (typeof raw === "string") likeCount = Number(raw) || 0;
-            else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
-          } catch (error) {
-            console.warn(`Failed to parse like count for post ${post.id}:`, error);
-          }
+                : 0;
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (error) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, error);
+            }
 
-          try {
-            const raw = hasLikedRes.ok
-              ? await robustParse<boolean | string | { liked: boolean }>(
+            try {
+              const raw = hasLikedRes.ok
+                ? await robustParse<boolean | string | { liked: boolean }>(
                   hasLikedRes,
                   `likes/has-liked/${post.id}`
                 )
-              : false;
-            if (typeof raw === "boolean") isLiked = raw;
-            else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-            else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
-          } catch (error) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, error);
+                : false;
+              if (typeof raw === "boolean") isLiked = raw;
+              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
+            } catch (error) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, error);
+            }
+
+            try {
+              topics = await topicsRes;
+            } catch (error) {
+              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+              topics = [];
+            }
+
+            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+            const commentsWithUsers = await Promise.all(
+              validComments.map(async (comment: ApiComment) => {
+                try {
+                  const user = await fetchUser(comment.userId, comment.user);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
+                  } as CommentData;
+                } catch (error) {
+                  console.warn(`Failed to process comment ${comment.id}:`, error);
+                  return null;
+                }
+              })
+            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
+
+            const postUser = await fetchUser(post.user.id, post.user);
+            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
+
+            return {
+              id: post.id,
+              username: postUser.displayName,
+              handle: `@${postUser.username}`,
+              profilePicture: postUser.profilePicture,
+              time: formatRelativeTime(post.createdAt),
+              createdAt: post.createdAt,
+              text: post.content,
+              image: post.imageUrl,
+              isLiked,
+              isBookmarked: bookmarkedPostIds.has(post.id),
+              isReshared,
+              commentCount: validComments.length,
+              authorId: post.user.id,
+              likeCount,
+              reshareCount,
+              comments: commentsWithUsers,
+              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+              topics,
+            };
+          } catch (postError) {
+            console.error(`Error processing post ${post.id}:`, postError);
+            return null;
           }
+        })
+      );
 
-          try {
-            topics = await topicsRes;
-          } catch (error) {
-            console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-            topics = [];
-          }
+      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
 
-          const validComments = (comments || []).filter((c: ApiComment) => c.userId);
-
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: ApiComment) => {
-              try {
-                const user = await fetchUser(comment.userId, comment.user);
-                return {
-                  id: comment.id,
-                  postId: comment.postId,
-                  authorId: comment.userId,
-                  content: comment.content,
-                  createdAt: comment.createdAt,
-                  username: user.displayName,
-                  handle: `@${user.username}`,
-                  profilePicture: user.profilePicture,
-                } as CommentData;
-              } catch (error) {
-                console.warn(`Failed to process comment ${comment.id}:`, error);
-                return null;
-              }
-            })
-          ).then((cs) => cs.filter((c): c is CommentData => c !== null));
-
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
-          const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
-
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            profilePicture: postUser.profilePicture,
-            time: formatRelativeTime(post.createdAt),
-            createdAt: post.createdAt,
-            text: post.content,
-            image: post.imageUrl,
-            isLiked,
-            isBookmarked: bookmarkedPostIds.has(post.id),
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-            topics,
-          };
-        } catch (postError) {
-          console.error(`Error processing post ${post.id}:`, postError);
-          return null;
-        }
-      })
-    );
-
-    const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
-
-    setFollowingPosts(
-      successfulPosts.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    );
-  } catch (err) {
-    console.error("Error fetching following posts:", err);
-    setError("Failed to load posts from followed users.");
-    setTimeout(() => setError(null), 3000);
-  } finally {
-    setLoadingFollowing(false);
-  }
-};
+      setFollowingPosts(
+        successfulPosts.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
+    } catch (err) {
+      console.error("Error fetching following posts:", err);
+      setError("Failed to load posts from followed users.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingFollowing(false);
+    }
+  };
 
 
-  //modified
   const fetchTopics = async (): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
@@ -703,11 +724,12 @@ const HomePage = () => {
       setPresets(data);
     } catch (err) {
       setError("Error fetching presets");
-      console.error("Error fetching presets topic:", err);
+      console.error("Error fetching presets:", err);
     } finally {
       setIsLoading(false);
     }
   }
+
   const fetchRules = async (presetId: number) => {
     try {
       const response = await fetch(`${API_URL}/api/presets/rules/${presetId}`, {
@@ -716,7 +738,6 @@ const HomePage = () => {
       });
       if (!response.ok) throw new Error('Failed to fetch rules');
       const data = await response.json();
-      console.log(data);
       setRules(prev => ({ ...prev, [presetId]: data }));
     } catch (err) {
       setError("Failed to fetch rules for the preset");
@@ -726,6 +747,7 @@ const HomePage = () => {
       }, 3000);
     }
   }
+
   const createPreset = async () => {
     if (!newPresetName.trim()) {
       setError('Preset name is required');
@@ -734,9 +756,6 @@ const HomePage = () => {
     }
     try {
       setIsLoading(true);
-      console.log('Creating preset with name:', newPresetName);
-      console.log('API URL:', `${API_URL}/api/presets`);
-
       const response = await fetch(`${API_URL}/api/presets`, {
         method: "POST",
         credentials: "include",
@@ -745,23 +764,19 @@ const HomePage = () => {
         },
         body: JSON.stringify({ name: newPresetName })
       });
-      console.log('Response status:', response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Server error response:', errorText);
         throw new Error(`Failed to create preset: ${response.status} ${errorText}`);
       }
       const data = await response.json();
-      console.log('Created Preset:', data);
-
       setPresets(prev => [...prev, data]);
       setNewPresetName('');
       setError('');
 
     } catch (err) {
-      console.log("Error couldnt create your preset.", err);
-      setError("couldnt create your rule.")
+      console.log("Error couldn't create your preset.", err);
+      setError("Couldn't create your preset.")
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -769,9 +784,20 @@ const HomePage = () => {
       setIsLoading(false);
     }
   }
+
   const addRule = async (presetId: number) => {
-    if (!newRule.value.trim()) {
-      setError('Rule value is required');
+    // Validate that at least one filter condition is provided
+    if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
+      setError('At least one filter condition (topic, source type, or specific user) is required');
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+      return;
+    }
+
+    // Validate percentage if provided
+    if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
+      setError('Percentage must be between 1 and 100');
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -783,14 +809,17 @@ const HomePage = () => {
         method: 'POST',
         credentials: 'include',
         headers: {
-          "Content-Type": "application/json",   // <-- you also forgot headers here
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           presetId,
-          type: newRule.type,
-          value: newRule.value,
+          topicId: newRule.topicId || null,
+          sourceType: newRule.sourceType || null,
+          specificUserId: newRule.specificUserId || null,
+          percentage: newRule.percentage || null
         }),
       });
+
       if (!response.ok) throw new Error('Failed to add rule');
 
       const data = await response.json();
@@ -798,17 +827,69 @@ const HomePage = () => {
         ...prev,
         [presetId]: [...(prev[presetId] || []), data],
       }));
-      setNewRule({ type: 'KEYWORD', value: '' });
+
+      // Reset form
+      setNewRule({
+        topicId: undefined,
+        sourceType: undefined,
+        specificUserId: undefined,
+        percentage: undefined
+      });
       setError('');
     } catch (err) {
-      setError("Couldnt assign rule");
-      console.log("couldnt assgin rule", err);
+      setError("Couldn't add rule");
+      console.log("Couldn't add rule", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+  const deleteRule = async (presetId: number, ruleId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules/${ruleId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete rule');
+
+      setRules(prev => ({
+        ...prev,
+        [presetId]: (prev[presetId] || []).filter(rule => rule.id !== ruleId)
+      }));
+    } catch (err) {
+      setError("Couldn't delete rule");
+      console.log("Couldn't delete rule", err);
       setTimeout(() => {
         setError('');
       }, 3000);
     }
   }
 
+  // Helper function to format rule for display
+  const formatRule = (rule: Rule) => {
+    const parts = [];
+
+    if (rule.topicId) {
+      const topic = topics.find(t => t.id === rule.topicId);
+      parts.push(`Topic: ${topic?.name || `ID ${rule.topicId}`}`);
+    }
+
+    if (rule.sourceType) {
+      parts.push(`Source: ${rule.sourceType}`);
+    }
+
+    if (rule.specificUserId) {
+      const user = allUsers.find(u => u.id === rule.specificUserId);
+      parts.push(`User: ${user?.displayName || `ID ${rule.specificUserId}`}`);
+    }
+
+    if (rule.percentage) {
+      parts.push(`${rule.percentage}%`);
+    }
+
+    return parts.join(' | ');
+  };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
       setError("Topic name cannot be empty.");
@@ -981,7 +1062,31 @@ const HomePage = () => {
       }
     }
   };
+  const fetchNotifications = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+      credentials: "include",
+    });
 
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        setError("Unauthorized. Please log in again.");
+        return;
+      }
+      throw new Error(`Failed to fetch notifications: ${response.status}`);
+    }
+
+    const data: Notification[] = await response.json();
+    setNotifications(data); // Store in NotificationContext
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+    setError("Failed to load notifications.");
+    setTimeout(() => setError(null), 3000);
+  }
+};
   const handleLike = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
@@ -1416,6 +1521,7 @@ const HomePage = () => {
 
   useEffect(() => {
     fetchPresets();
+    fetchAllUsers();
   }, []);
 
   useEffect(() => {
@@ -1423,7 +1529,10 @@ const HomePage = () => {
       setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
-        await fetchTopics();
+        await Promise.all([
+          fetchTopics(),
+          fetchNotifications(user.id),
+        ]);
       }
       setLoading(false);
     };
@@ -1454,6 +1563,7 @@ const HomePage = () => {
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
+
         <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime  flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
@@ -1483,7 +1593,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
             >
               Logout
             </button>
@@ -1493,7 +1603,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
               >
                 Create Topic
               </button>
@@ -1502,7 +1612,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-white hover:text-blue-500  transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
               >
                 View Topics
               </button>
@@ -1513,7 +1623,7 @@ const HomePage = () => {
       <div
         className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
@@ -1533,7 +1643,7 @@ const HomePage = () => {
               >
                 <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -1580,9 +1690,8 @@ const HomePage = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  {/*  */}
                   <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                    <TabsList className=" w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto ">
+                    <TabsList className="w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto">
                       {["Your Presets", "Create Presets"].map((tab) => (
                         <TabsTrigger
                           key={tab}
@@ -1593,6 +1702,7 @@ const HomePage = () => {
                         </TabsTrigger>
                       ))}
                     </TabsList>
+
                     <TabsContent value="Your Presets" className="p-0">
                       {error && (
                         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
@@ -1612,12 +1722,11 @@ const HomePage = () => {
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {presets.map(preset => (
-                            <Card key={preset.id} className="">
+                            <Card key={preset.id} className="hover:bg-blue-500">
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between future-feed:text-white items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
-                                <CardDescription>ID: {preset.id}</CardDescription>
                               </CardHeader>
                               <CardContent>
                                 <Button
@@ -1631,37 +1740,102 @@ const HomePage = () => {
 
                                 {selectedPreset === preset.id && (
                                   <div className="mt-3 space-y-3">
-                                    <div className="flex items-center space-x-2">
-                                      <select
-                                        value={newRule.type}
-                                        onChange={(e) => setNewRule({ ...newRule, type: e.target.value as 'TOPIC' | 'KEYWORD' })}
-                                        className="flex h-10 w-28 rounded-md border border-input future-feed:bg-lime future-feed:text-black future-feed:hover-black future-feed:border-black px-3 py-2 text-sm"
+                                    {/* Rule creation form */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.topicId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            topicId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Topic</option>
+                                          {topics.map(topic => (
+                                            <option key={topic.id} value={topic.id}>
+                                              {topic.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.sourceType || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            sourceType: e.target.value as 'user' | 'bot' | undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Source Type</option>
+                                          <option value="user">User Posts</option>
+                                          <option value="bot">Bot Posts</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.specificUserId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            specificUserId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          disabled={loadingUsers}
+                                        >
+                                          <option value="">Select Specific User</option>
+                                          {allUsers.map(user => (
+                                            <option key={user.id} value={user.id}>
+                                              {user.displayName} (@{user.username})
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="100"
+                                          placeholder="Percentage (1-100)"
+                                          value={newRule.percentage || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            percentage: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex-1"
+                                        />
+                                        <Percent size={16} className="text-gray-400" />
+                                      </div>
+
+                                      <Button
+                                        className="w-full bg-blue-500 hover:bg-gray-500"
+                                        onClick={() => addRule(preset.id)}
+                                        size="sm"
                                       >
-                                        <option className="future-feed:bg-lime " value="KEYWORD">Keyword</option>
-                                        <option value="TOPIC">Topic</option>
-                                      </select>
-                                      <Input
-                                        placeholder={newRule.type === 'KEYWORD' ? 'Enter keyword' : 'Enter topic'}
-                                        value={newRule.value}
-                                        onChange={(e) => setNewRule({ ...newRule, value: e.target.value })}
-                                        className="future-feed:border-lime flex-1"
-                                      />
-                                      <Button className="bg-blue-500 hover:bg-gray-500" onClick={() => addRule(preset.id)} size="sm">
-                                        <Plus size={16} className="mr-1" /> Add
+                                        <Plus size={16} className="mr-1" /> Add Rule
                                       </Button>
                                     </div>
 
+                                    {/* Existing rules */}
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
-                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md">
-                                            <div className="flex items-center">
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                            <div className="flex items-center flex-1">
                                               <Filter size={14} className="mr-2 text-lime-500" />
-                                              <Badge variant="outline" className="mr-2">
-                                                {rule.type}
-                                              </Badge>
-                                              <span>{rule.value}</span>
+                                              <span className="text-sm">{formatRule(rule)}</span>
                                             </div>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => deleteRule(preset.id, rule.id)}
+                                              className="text-red-500 hover:text-red-700"
+                                            >
+                                              <FaTimes size={12} />
+                                            </Button>
                                           </div>
                                         ))}
                                       </div>
@@ -1676,14 +1850,14 @@ const HomePage = () => {
                         </div>
                       )}
                     </TabsContent>
+
                     <TabsContent value="Create Presets">
                       <Card className="w-full">
                         <CardHeader>
                           <div className="text-center">
-                            <CardTitle> Create a New Feed Preset</CardTitle>
+                            <CardTitle>Create a New Feed Preset</CardTitle>
                             <CardDescription>Create a named preset to organize your filtering rules</CardDescription>
                           </div>
-
                         </CardHeader>
                         <CardContent className="space-y-4">
                           {error && (
@@ -1691,15 +1865,15 @@ const HomePage = () => {
                               {error}
                             </div>
                           )}
-                          <div className="flex space-x-2 ">
+                          <div className="flex space-x-2">
                             <Input
-                              placeholder="Preset name (e..g Tech & Bots)"
+                              placeholder="Preset name (e.g., Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
                               className="future-feed:border-lime flex-1"
                             />
-                            <Button className="" onClick={createPreset} disabled={isLoading} >
-                              {isLoading ? 'Creating ..' : 'Create Preset'}
+                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading}>
+                              {isLoading ? 'Creating...' : 'Create Preset'}
                             </Button>
                           </div>
                           {presets.length > 0 && (
@@ -1709,7 +1883,7 @@ const HomePage = () => {
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-1 border-1 dark:border-slate-200 border-rose-gold-accent future-feed:border-lime future-feed:text-white dark:text-slate-200  rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border rounded-md">
                                     <span>{preset.name}</span>
                                     <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>
@@ -1721,17 +1895,16 @@ const HomePage = () => {
                       </Card>
                     </TabsContent>
                   </Tabs>
-                  {/*  */}
                 </TabsContent>
               </Tabs>
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhoToFollow />
           </div>
         </aside>
