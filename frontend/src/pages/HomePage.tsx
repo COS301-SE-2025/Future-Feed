@@ -13,8 +13,8 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Filter, Percent } from 'lucide-react';
-import { useNotifications,type Notification} from "@/context/NotificationContext";
+import { Plus, Filter, Percent, SmilePlus } from 'lucide-react';
+import { useNotifications, type Notification } from "@/context/NotificationContext";
 
 interface Preset {
   id: number;
@@ -1063,30 +1063,30 @@ const HomePage = () => {
     }
   };
   const fetchNotifications = async (userId: number) => {
-  try {
-    const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-      credentials: "include",
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+        },
+        credentials: "include",
+      });
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        setError("Unauthorized. Please log in again.");
-        return;
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          setError("Unauthorized. Please log in again.");
+          return;
+        }
+        throw new Error(`Failed to fetch notifications: ${response.status}`);
       }
-      throw new Error(`Failed to fetch notifications: ${response.status}`);
-    }
 
-    const data: Notification[] = await response.json();
-    setNotifications(data); // Store in NotificationContext
-  } catch (err) {
-    console.error("Error fetching notifications:", err);
-    setError("Failed to load notifications.");
-    setTimeout(() => setError(null), 3000);
-  }
-};
+      const data: Notification[] = await response.json();
+      setNotifications(data); // Store in NotificationContext
+    } catch (err) {
+      console.error("Error fetching notifications:", err);
+      setError("Failed to load notifications.");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
   const handleLike = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
@@ -1677,13 +1677,29 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : followingPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts from followed users.</p>
-                      <Button
-                        className="mt-4 bg-blue-500 hover:bg-white hover:text-blue-500  text-white"
-                        onClick={() => fetchFollowingPosts()}
-                      >
-                        Refresh
-                      </Button>
+
+                      <div className="flex flex-col justify-center items-center mt-10 gap-12">
+                        <SmilePlus size={50} color="#3B82F6" />
+                        <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
+
+                      </div>
+                      <div className="flex gap-20 mt-13"> {/* Added flex container for buttons */}
+                        <Button
+                          className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
+                          onClick={() => navigate("/explore")}
+                          size={'lg'}
+                        >
+                          Follow
+                        </Button>
+                        <Button
+                          className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
+                          onClick={() => fetchFollowingPosts()}
+                          size={'lg'}
+                        >
+                          Refresh
+                        </Button>
+                      </div>
+
                     </div>
                   ) : (
                     renderPosts(followingPosts)
