@@ -1460,7 +1460,7 @@ const UserProfile = () => {
             <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 bg-blue-500 dark:bg-slate-200" />
+        <Separator className="my-4 future-feed:bg-lime bg-blue-500 dark:bg-slate-200" />
         <Tabs defaultValue="posts" className="w-full" onValueChange={(value) => handleTabChange(value, user.id)}>
           <TabsList className="grid w-full  dark:bg-blue-950 grid-cols-5 ">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>

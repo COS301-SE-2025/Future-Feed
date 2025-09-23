@@ -78,7 +78,7 @@ public class CommentService {
                         recipient.getId(),
                         sender.getId(),
                         "COMMENT",
-                        sender.getUsername() + " commented on your post",
+                         " commented on your post",
                         sender.getUsername() + "",
                         postId
                 );
@@ -107,7 +107,7 @@ public class CommentService {
                             mentionedUser.getId(),
                             sender.getId(),
                             "MENTION",
-                            sender.getUsername() + " mentioned you on a post",
+                             " mentioned you on a post",
                             sender.getUsername() + "",
                             postId
                     );
@@ -134,4 +134,26 @@ public class CommentService {
     })
     public void evictCaches(Integer postId, Integer userId) {
     }
+
+
+    public List<Post> getCommentedPosts() {
+        AppUser user = getAuthenticatedUser();
+        List<Comment> comments = commentRepository.findByUserId(user.getId());
+
+        return comments.stream()
+                .map(comment -> postRepository.findById(comment.getPostId()).orElse(null))
+                .filter(post -> post != null)
+                .distinct()
+                .toList();
+    }
+
+    public List<Post> getPostsCommentedByUser(Integer userId) {
+        List<Comment> comments = commentRepository.findByUserId(userId);
+        List<Integer> postIds = comments.stream()
+                .map(Comment::getPostId)
+                .distinct()
+                .toList();
+        return postRepository.findAllById(postIds);
+    }
+
 }

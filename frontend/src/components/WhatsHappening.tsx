@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect } from "react";
 
 const WhatsHappening = () => {
+
   const location = useLocation();
   const isHomePage = location.pathname === '/home';
   
@@ -28,6 +29,7 @@ const WhatsHappening = () => {
       data: trendingTopics
     });
   }, [status, isLoading, isError, error, trendingTopics]);
+
 
   return (
     <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl border-3 text-white">

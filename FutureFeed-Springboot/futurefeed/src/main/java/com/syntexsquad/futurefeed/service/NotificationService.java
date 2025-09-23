@@ -5,6 +5,7 @@ import com.syntexsquad.futurefeed.model.Notification;
 import com.syntexsquad.futurefeed.repository.NotificationRepository;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -58,5 +59,43 @@ public class NotificationService {
             );
         }).toList();
     }
+    @Transactional
+    public boolean markNotificationAsRead(Integer userId, Integer notificationId) {
+        Notification notification = notificationRepo.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Notification not found"));
+
+        if (!notification.getRecipientUserId().equals(userId)) {
+            throw new RuntimeException("You can only mark your own notifications as read");
+        }
+
+        notification.setIsRead(true);
+        notificationRepo.save(notification);
+        return true;
+    }
+
+    @Transactional
+    public int markAllNotificationsAsRead(Integer userId) {
+        List<Notification> notifications =
+                notificationRepo.findByRecipientUserIdOrderByCreatedAtDesc(userId);
+
+        notifications.forEach(n -> n.setIsRead(true));
+        notificationRepo.saveAll(notifications);
+        return notifications.size();
+    }
+
+
+    public boolean deleteNotification(Integer userId, Integer notificationId) {
+        return notificationRepo.findByIdAndRecipientUserId(notificationId, userId)
+                .map(notification -> {
+                    notificationRepo.delete(notification);
+                    return true;
+                }).orElse(false);
+    }
+
+    // Delete all notifications for a user
+    public void deleteAllNotifications(Integer userId) {
+        notificationRepo.deleteByRecipientUserId(userId);
+    }
+
 
 }
