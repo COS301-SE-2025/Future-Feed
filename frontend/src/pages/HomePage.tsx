@@ -15,7 +15,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Plus, Filter, Percent, SmilePlus, ArrowLeft } from 'lucide-react';
 import { useNotifications, type Notification } from "@/context/NotificationContext";
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 interface Preset {
   id: number;
   userId: number;
@@ -2003,16 +2021,12 @@ const HomePage = () => {
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
                       ) : presets.length === 0 ? (
-                        <Card>
-                          <CardContent className="pt-6">
-                            <p className="text-center text-gray-500">You don't have any presets yet.</p>
-                          </CardContent>
-                        </Card>
+                        <p className="text-center text-lg text-gray-500 mt-10">You don't have any presets yet.</p>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {presets.map((preset) => (
-                            <Card key={preset.id} className="hover:bg-blue-500">
-                              <CardHeader className="pb-3">
+                            <Card key={preset.id} className="hover:bg-slate-100">
+                              <CardHeader className="pb-2">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>
                                     <Input
@@ -2024,46 +2038,82 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg font-semibold"
+                                      className="text-lg font-semibold border-2 border-l-lime-500"
                                     />
                                   </CardTitle>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        setSelectedPreset(preset.id);
-                                        fetchPresetPosts(preset.id);
-                                      }}
-                                    >
-                                      View Feed
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
-                                    >
-                                      Save
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => deletePreset(preset.id)}
-                                      className="text-red-500 hover:text-red-700"
-                                    >
-                                      Delete
-                                    </Button>
-                                    <Button
-                                      variant={preset.id === defaultPresetId ? "default" : "outline"}
-                                      size="sm"
-                                      onClick={() => setDefaultPreset(preset.id)}
-                                    >
-                                      {preset.id === defaultPresetId ? "Default" : "Set Default"}
-                                    </Button>
-                                  </div>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button variant="outline" size="sm">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Preset Actions</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider> 
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="center">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedPreset(preset.id);
+                                          fetchPresetPosts(preset.id);
+                                        }}
+                                      >
+                                        View Feed
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
+                                      >
+                                        Save
+                                      </DropdownMenuItem>
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <DropdownMenuItem
+                                            onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                            className="text-red-500 focus:text-red-700"
+                                          >
+                                            Delete
+                                          </DropdownMenuItem>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Delete Preset</DialogTitle>
+                                            <DialogDescription>
+                                              Are you sure you want to delete the preset "{preset.name}"? This action cannot be undone.
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <DialogFooter>
+                                            <Button variant="outline" onClick={() => { }}>
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              variant="destructive"
+                                              onClick={() => deletePreset(preset.id)}
+                                            >
+                                              Delete
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      </Dialog>
+                                      <DropdownMenuItem
+                                        onClick={() => setDefaultPreset(preset.id)}
+                                        disabled={preset.id === defaultPresetId}
+                                      >
+                                        {preset.id === defaultPresetId ? "Default" : "Set Default"}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
                                 {preset.id === defaultPresetId && (
-                                  <Badge variant="secondary">Default Preset</Badge>
+                                  <Badge variant="secondary" className="bg-lime-500">Default Preset</Badge>
                                 )}
                               </CardHeader>
                               <CardContent>
@@ -2071,14 +2121,14 @@ const HomePage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
-                                  className="mb-3"
+                                  className="mb-1 bg-blue-500 text-white hover:text-white hover:bg-gray-500"
                                 >
                                   {selectedPreset === preset.id ? "Hide Rules" : "Show Rules"}
                                 </Button>
                                 {selectedPreset === preset.id && (
                                   <div className="mt-3 space-y-3">
                                     <div className="space-y-2">
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
                                           value={newRule.topicId || ""}
                                           onChange={(e) =>
@@ -2087,7 +2137,7 @@ const HomePage = () => {
                                               topicId: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          className="flex h-9 w-full rounded-md border border-input hover:border hover:border-lime-500 bg-background px-2 py-1 text-sm"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2097,7 +2147,7 @@ const HomePage = () => {
                                           ))}
                                         </select>
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
                                           value={newRule.sourceType || ""}
                                           onChange={(e) =>
@@ -2106,14 +2156,14 @@ const HomePage = () => {
                                               sourceType: e.target.value as "user" | "bot" | undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                         >
-                                          <option value="">Select Source Type</option>
+                                          <option value="">Select a source type</option>
                                           <option value="user">User Posts</option>
                                           <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
                                           value={newRule.specificUserId || ""}
                                           onChange={(e) =>
@@ -2122,7 +2172,7 @@ const HomePage = () => {
                                               specificUserId: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                           disabled={loadingUsers}
                                         >
                                           <option value="">Select Specific User</option>
@@ -2133,7 +2183,7 @@ const HomePage = () => {
                                           ))}
                                         </select>
                                       </div>
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <Input
                                           type="number"
                                           min="1"
@@ -2146,16 +2196,15 @@ const HomePage = () => {
                                               percentage: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex-1"
+                                          className="flex-1 hover:border hover:border-lime-500"
                                         />
                                         <Percent size={16} className="text-gray-400" />
                                       </div>
                                       <Button
-                                        className="w-full bg-blue-500 hover:bg-gray-500"
+                                        className="w-full bg-blue-500 hover:bg-gray-500 p-1"
                                         onClick={() => addRule(preset.id)}
                                         size="sm"
-                                      >
-                                        <Plus size={16} className="mr-1" /> Add Rule
+                                      >Add Rule
                                       </Button>
                                     </div>
                                     {rules[preset.id]?.length > 0 ? (
@@ -2166,7 +2215,7 @@ const HomePage = () => {
                                             className="flex items-center justify-between p-2 border rounded-md bg-white"
                                           >
                                             <div className="flex items-center flex-1">
-                                              <Filter size={14} className="mr-2 text-lime-500" />
+                                              <Filter size={14} className="mr-2 text-blue-500" />
                                               <span className="text-sm">{formatRule(rule)}</span>
                                             </div>
                                             <Button
@@ -2214,13 +2263,6 @@ const HomePage = () => {
                               className="flex-1"
                             />
                             <Button
-                              className="bg-lime-600"
-                              onClick={() => createPreset(true)} // Set as default
-                              disabled={isLoading}
-                            >
-                              {isLoading ? "Creating..." : "Create & Set Default"}
-                            </Button>
-                            <Button
                               className="bg-blue-500"
                               onClick={() => createPreset(false)} // Create without setting as default
                               disabled={isLoading}
@@ -2235,12 +2277,8 @@ const HomePage = () => {
                               </div>
                               <div className="space-y-2">
                                 {presets.map((preset) => (
-                                  <div key={preset.id} className="flex items-center justify-between p-2 border rounded-md">
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border-2 border-l-lime-500 rounded-md">
                                     <span>{preset.name}</span>
-                                    <Badge variant="secondary">ID: {preset.id}</Badge>
-                                    {preset.id === defaultPresetId && (
-                                      <Badge variant="default">Default</Badge>
-                                    )}
                                   </div>
                                 ))}
                               </div>
