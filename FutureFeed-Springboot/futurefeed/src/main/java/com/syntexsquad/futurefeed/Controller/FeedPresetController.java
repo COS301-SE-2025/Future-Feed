@@ -53,4 +53,43 @@ public class FeedPresetController {
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
+
+    // --- Update a preset ---
+    @PutMapping("/{presetId}")
+    public ResponseEntity<FeedPreset> updatePreset(@PathVariable Integer presetId, @RequestBody FeedPresetDTO dto) {
+        return ResponseEntity.ok(presetService.updatePreset(presetId, dto));
+    }
+
+    // --- Delete a preset ---
+    @DeleteMapping("/{presetId}")
+    public ResponseEntity<String> deletePreset(@PathVariable Integer presetId) {
+        presetService.deletePreset(presetId);
+        return ResponseEntity.ok("Preset deleted successfully.");
+    }
+
+    // --- Update a rule ---
+    @PutMapping("/rules/{ruleId}")
+    public ResponseEntity<PresetRule> updateRule(@PathVariable Integer ruleId, @RequestBody PresetRuleDTO dto) {
+        return ResponseEntity.ok(presetService.updateRule(ruleId, dto));
+    }
+
+    // --- Delete a rule ---
+    @DeleteMapping("/rules/{ruleId}")
+    public ResponseEntity<String> deleteRule(@PathVariable Integer ruleId) {
+        presetService.deleteRule(ruleId);
+        return ResponseEntity.ok("Rule deleted successfully.");
+    }
+
+    @PutMapping("/{presetId}/default")
+    public ResponseEntity<String> setDefaultPreset(@PathVariable Integer presetId) {
+        presetService.setDefaultPreset(presetId);
+        return ResponseEntity.ok("Preset set as default.");
+    }
+
+    @GetMapping("/default")
+    public ResponseEntity<FeedPreset> getDefaultPreset() {
+        FeedPreset defaultPreset = presetService.getDefaultPreset();
+        return ResponseEntity.ok(defaultPreset);
+    }
+
 }
