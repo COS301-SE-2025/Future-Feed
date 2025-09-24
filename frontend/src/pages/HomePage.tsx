@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Filter, Percent, SmilePlus } from 'lucide-react';
+import { Plus, Filter, Percent, SmilePlus, ArrowLeft } from 'lucide-react';
 import { useNotifications, type Notification } from "@/context/NotificationContext";
 
 interface Preset {
@@ -141,6 +141,9 @@ const HomePage = () => {
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const { setNotifications } = useNotifications();
+  const [presetPosts, setPresetPosts] = useState<PostData[]>([]);
+  const [loadingPresetPosts, setLoadingPresetPosts] = useState(false);
+  const [isViewingPresetFeed, setIsViewingPresetFeed] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -692,7 +695,130 @@ const HomePage = () => {
       setLoadingFollowing(false);
     }
   };
+  const fetchPresetPosts = async (presetId: number) => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch preset posts: currentUser is not loaded");
+      return;
+    }
+    console.debug(`Fetching posts for preset ${presetId}`);
+    setLoadingPresetPosts(true);
+    setIsViewingPresetFeed(true); // Set to show posts and hide presets
 
+    try {
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/presets/feed/${presetId}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
+
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+
+      const apiPosts: ApiPost[] = await robustParse<ApiPost[]>(postsRes, `presets/feed/${presetId}`);
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+
+      const validPosts = apiPosts.filter(post => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
+
+      const formattedPosts: PostData[] = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+            fetchTopicsForPost(post.id),
+          ]);
+
+          const comments: ApiComment[] = commentsRes.ok
+            ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+            : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked: boolean = false; // Explicitly declare as boolean
+          if (hasLikedRes.ok) {
+            try {
+              const raw = await robustParse<boolean | string | { liked: boolean }>(
+                hasLikedRes,
+                `likes/has-liked/${post.id}`
+              );
+              if (typeof raw === "boolean") {
+                isLiked = raw;
+              } else if (typeof raw === "string") {
+                isLiked = raw.toLowerCase() === "true";
+              } else if (raw && "liked" in raw) {
+                isLiked = Boolean(raw.liked);
+              } else {
+                console.warn(`Unexpected like status format for post ${post.id}:`, raw);
+              }
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await robustParse<number>(likesCountRes, `likes/count/${post.id}`) : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
+            topics: topicsRes,
+          };
+        })
+      );
+
+      setPresetPosts(
+        formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    } catch (err) {
+      console.error(`Error fetching preset posts for preset ${presetId}:`, err);
+      setError("Failed to load preset posts.");
+      setTimeout(() => setError(null), 3000);
+      setPresetPosts([]);
+    } finally {
+      setLoadingPresetPosts(false);
+    }
+  };
 
   const fetchTopics = async (): Promise<Topic[]> => {
     try {
@@ -1725,7 +1851,34 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
-                      {isLoading ? (
+                      {isViewingPresetFeed ? (
+                        <>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              onClick={() => {
+                                setIsViewingPresetFeed(false);
+                                setPresetPosts([]); // Clear posts when returning to presets
+                              }}
+                            >
+                              <ArrowLeft />
+                            </Button>
+                            <div className="mt-2">
+                              Back to Presets
+                            </div>
+                          </div>
+                          {loadingPresetPosts ? (
+                            renderSkeletonPosts()
+                          ) : presetPosts.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10">
+                              <p className="text-lg dark:text-white">No posts available for this preset yet.</p>
+                            </div>
+                          ) : (
+                            renderPosts(presetPosts)
+                          )}
+                        </>
+                      ) : isLoading ? (
                         <div className="flex justify-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
@@ -1742,6 +1895,16 @@ const HomePage = () => {
                               <CardHeader className="pb-3">
                                 <div className="flex justify-between items-center">
                                   <CardTitle>{preset.name}</CardTitle>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedPreset(preset.id);
+                                      fetchPresetPosts(preset.id);
+                                    }}
+                                  >
+                                    View Feed
+                                  </Button>
                                 </div>
                               </CardHeader>
                               <CardContent>
@@ -1753,10 +1916,8 @@ const HomePage = () => {
                                 >
                                   {selectedPreset === preset.id ? 'Hide Rules' : 'Show Rules'}
                                 </Button>
-
                                 {selectedPreset === preset.id && (
                                   <div className="mt-3 space-y-3">
-                                    {/* Rule creation form */}
                                     <div className="space-y-2">
                                       <div className="flex items-center space-x-2">
                                         <select
@@ -1775,7 +1936,6 @@ const HomePage = () => {
                                           ))}
                                         </select>
                                       </div>
-
                                       <div className="flex items-center space-x-2">
                                         <select
                                           value={newRule.sourceType || ''}
@@ -1790,7 +1950,6 @@ const HomePage = () => {
                                           <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-
                                       <div className="flex items-center space-x-2">
                                         <select
                                           value={newRule.specificUserId || ''}
@@ -1809,7 +1968,6 @@ const HomePage = () => {
                                           ))}
                                         </select>
                                       </div>
-
                                       <div className="flex items-center space-x-2">
                                         <Input
                                           type="number"
@@ -1825,7 +1983,6 @@ const HomePage = () => {
                                         />
                                         <Percent size={16} className="text-gray-400" />
                                       </div>
-
                                       <Button
                                         className="w-full bg-blue-500 hover:bg-gray-500"
                                         onClick={() => addRule(preset.id)}
@@ -1834,8 +1991,6 @@ const HomePage = () => {
                                         <Plus size={16} className="mr-1" /> Add Rule
                                       </Button>
                                     </div>
-
-                                    {/* Existing rules */}
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
                                         {rules[preset.id].map(rule => (
