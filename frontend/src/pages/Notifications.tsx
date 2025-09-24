@@ -365,7 +365,6 @@ const Notifications = () => {
           )}
         </CardContent>
         
-        {/* Delete button - appears on hover */}
         <Button
           variant="ghost"
           size="icon"
@@ -382,14 +381,14 @@ const Notifications = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 dark:text-white mx-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 future-feed:bg-black dark:text-white mx-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
       <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-lime-500 font-bold">Notifications</h1>
+          <h1 className="future-feed:text-white text-xl dark:text-lime-500 font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
