@@ -1,23 +1,27 @@
 package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.syntexsquad.futurefeed.config.S3Config;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.UserPost;
 import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.service.MediaService;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -26,18 +30,34 @@ import java.util.Set;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driverClassName=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
+//@Transactional
 public class LikeIT {
 
     @Autowired private MockMvc mockMvc;
+    @Autowired private TopicRepository topicRepo;
     @Autowired private AppUserRepository userRepo;
-    @Autowired private PostRepository postRepo;
-    @Autowired private PostTopicRepository postTopicRepo;
-    @Autowired private LikeRepository likeRepo;
-    @Autowired private CommentRepository commentRepo;
+    @Autowired private FollowerRepository followerRepo;
     @Autowired private FeedPresetRepository presetRepo;
     @Autowired private PresetRuleRepository ruleRepo;
+    @Autowired private PostRepository postRepo;
+    @Autowired private PostTopicRepository postTopicRepo;
+    @Autowired private CommentRepository commentRepo;
+    @Autowired private ReshareRepository reshareRepo;
+    @Autowired private LikeRepository likeRepo;
+    @Autowired private BookmarkRepository bookmarkRepo;
+    @Autowired private BotPostRepository botPostRepo;
+    @Autowired private BotRepository botRepo;
+    @MockBean private S3Config s3Config;
+    @MockBean private MediaService mediaService;
 
     private static final String TEST_EMAIL = "testuser@example.com";
     private static final String TEST_USERNAME = "testuser";
@@ -45,24 +65,34 @@ public class LikeIT {
     private Integer postId;
 
     @BeforeEach
+    
     public void setup() {
         // --- CLEANUP IN FK ORDER ---
-        postTopicRepo.deleteAll();     // post_topics -> posts
-        likeRepo.deleteAll();          // likes -> posts
-        commentRepo.deleteAll();       // comments -> posts
-        ruleRepo.deleteAll();          // preset_rules -> feed_presets
-        presetRepo.deleteAll();        // feed_presets -> users
-        postRepo.deleteAll();          // posts -> users
-        userRepo.deleteAll();          // users
+        ruleRepo.deleteAll();
+        presetRepo.deleteAll();
+        reshareRepo.deleteAll();
+        commentRepo.deleteAll();
+        likeRepo.deleteAll();
+        bookmarkRepo.deleteAll();
+        botPostRepo.deleteAll();
+        postTopicRepo.deleteAll();
+        postRepo.deleteAll();
+        followerRepo.deleteAll();
+        botRepo.deleteAll();
+        //userRepo.deleteAll();
 
         // --- CREATE USER ---
-        AppUser user = new AppUser();
-        user.setUsername(TEST_USERNAME);
-        user.setEmail(TEST_EMAIL);
-        user.setPassword("test123");
-        user.setDisplayName("Test User");
-        user.setDateOfBirth(LocalDate.of(2000, 1, 1));
-        user = userRepo.save(user);
+        AppUser user = userRepo.findByUsername("testuser")
+            .orElseGet(() -> {
+                AppUser u = new AppUser();
+                u.setUsername("testuser");
+                u.setEmail("testuser@example.com");
+                u.setPassword("test123");
+                u.setDisplayName("Test User");
+                u.setBio("Test bio");
+                u.setDateOfBirth(LocalDate.of(2000, 1, 1));
+                return userRepo.save(u);
+            });
 
         // --- CREATE POST ---
         UserPost post = new UserPost();

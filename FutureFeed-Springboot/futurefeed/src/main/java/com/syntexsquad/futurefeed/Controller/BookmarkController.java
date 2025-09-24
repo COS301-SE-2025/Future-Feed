@@ -1,6 +1,7 @@
 package com.syntexsquad.futurefeed.Controller;
 import com.syntexsquad.futurefeed.dto.BookmarkDto;
 import com.syntexsquad.futurefeed.model.Bookmark;
+import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.BookmarkService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,4 +41,10 @@ public class BookmarkController {
     public ResponseEntity<List<BookmarkDto>> getBookmarks(@PathVariable Integer userId) {
         return ResponseEntity.ok(bookmarkService.getUserBookmarkDtos(userId));
     }
+
+    @GetMapping("/my-bookmarks/{userId}")
+    public ResponseEntity<List<Post>> getBookmarkedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(bookmarkService.getBookmarkedPostsByUserId(userId));
+    }
+
 }

@@ -11,6 +11,25 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Filter, Percent } from 'lucide-react';
+import { useNotifications,type Notification} from "@/context/NotificationContext";
+
+interface Preset {
+  id: number;
+  userId: number;
+  name: string;
+}
+
+interface Rule {
+  id: number;
+  presetId: number;
+  topicId?: number;
+  sourceType?: 'user' | 'bot';
+  specificUserId?: number;
+  percentage?: number;
+}
 
 interface ApiFollow {
   followedId: number;
@@ -108,13 +127,27 @@ const HomePage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [presets, setPresets] = useState<Preset[]>([]);
+  const [rules, setRules] = useState<{ [presedId: number]: Rule[] }>({});
+  const [newPresetName, setNewPresetName] = useState('');
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null);
+  const [newRule, setNewRule] = useState({
+    topicId: undefined as number | undefined,
+    sourceType: undefined as 'user' | 'bot' | undefined,
+    specificUserId: undefined as number | undefined,
+    percentage: undefined as number | undefined
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const { setNotifications } = useNotifications();
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   const postModalProps = useSpring({
     opacity: isPostModalOpen ? 1 : 0,
     transform: isPostModalOpen ? "translateY(0px)" : "translateY(50px)",
-    config: { tension: 220, friction: 30 },
+    config: { tension: 250, friction: 35 },
   });
 
   const topicModalProps = useSpring({
@@ -148,7 +181,6 @@ const HomePage = () => {
         displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
         profilePicture: postUser.profilePicture,
       };
-      console.debug(`Using postUser for user ${userId}:`, validUser);
       return validUser;
     }
 
@@ -202,7 +234,26 @@ const HomePage = () => {
       return null;
     }
   };
+  const fetchAllUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await fetch(`${API_URL}/api/user/all`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      const data = await response.json();
+      setAllUsers(data);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      setError("Failed to load users");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
+  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
@@ -212,32 +263,14 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
       const topicIds: number[] = await res.json();
 
-      if (!topics.length) {
-        await fetchTopics();
+      let currentTopics = topics;
+      if (!currentTopics.length) {
+        currentTopics = await fetchTopics();
       }
 
       const postTopics = topicIds
-        .map((id) => topics.find((topic) => topic.id === id))
+        .map((id) => currentTopics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-
-      if (postTopics.length < topicIds.length) {
-        const missingIds = topicIds.filter(id => !topics.some(t => t.id === id));
-        for (const id of missingIds) {
-          try {
-            const topicRes = await fetch(`${API_URL}/api/topics/${id}`, {
-              headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-              credentials: "include",
-            });
-            if (topicRes.ok) {
-              const topicData: Topic = await topicRes.json();
-              setTopics(prev => [...prev, topicData]);
-              postTopics.push(topicData);
-            }
-          } catch (err) {
-            console.warn(`Failed to fetch topic ${id}:`, err);
-          }
-        }
-      }
 
       return postTopics;
     } catch (err) {
@@ -248,28 +281,59 @@ const HomePage = () => {
     }
   };
 
-  const fetchAllPosts = async () => {
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
+  // Scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingForYou &&
+        hasMore
+      ) {
+        const nextPage = currentPage + 1;
+        fetchPaginatedPosts(nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setHasMore(false);
+          } else {
+            setCurrentPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [currentPage, loadingForYou, hasMore]);
+
+  // added fetchPaginated
+  const fetchPaginatedPosts = async (page: number) => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
-      return;
+      return 0;
     }
-    console.debug("Fetching all posts");
+    console.debug(`Fetching posts page ${page}`);
     setLoadingForYou(true);
+
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/posts`, { credentials: "include" }),
+        fetch(`${API_URL}/api/posts/paginated?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
         fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
         fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
+
       if (!postsRes.ok) throw new Error(`Failed to fetch posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-      const apiPosts: ApiPost[] = await postsRes.json();
-      console.debug("API response for posts:", apiPosts);
+
+      const pageData = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content;
       const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
       const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
 
-      const validPosts = apiPosts.filter((post: ApiPost) => {
+      const validPosts = apiPosts.filter(post => {
         if (!post.user?.id) {
           console.warn("Skipping post with undefined user.id:", post);
           return false;
@@ -277,7 +341,7 @@ const HomePage = () => {
         return true;
       });
 
-      const formattedPosts = await Promise.all(
+      const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
@@ -318,6 +382,9 @@ const HomePage = () => {
             }
           }
 
+          const existingPost = posts.find(p => p.id === post.id);
+          const showComments = existingPost ? existingPost.showComments : false;
+
           return {
             id: post.id,
             username: postUser.displayName,
@@ -335,20 +402,113 @@ const HomePage = () => {
             likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
             reshareCount,
             comments: commentsWithUsers,
-            showComments: posts.find((p) => p.id === post.id)?.showComments || false,
+            showComments,
             topics: topicsRes,
           };
         })
       );
 
-      setPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      setPosts(prev => {
+        const postsMap = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (postsMap.has(p.id)) {
+            postsMap.set(p.id, { ...p, showComments: postsMap.get(p.id)!.showComments });
+          } else {
+            postsMap.set(p.id, p);
+          }
+        });
+        return Array.from(postsMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      });
     } catch (err) {
-      console.error("Error fetching posts:", err);
-      // setError("Failed to load posts.");
-      // setTimeout(() => setError(null), 3);
+      console.error("Error fetching paginated posts:", err);
     } finally {
       setLoadingForYou(false);
     }
+  };
+
+  type ApiResponse =
+    | ApiFollow[]
+    | ApiReshare[]
+    | ApiBookmark[]
+    | ApiPost[]
+    | ApiComment[]
+    | number
+    | boolean
+    | string
+    | { count: number }
+    | { liked: boolean };
+
+  const textPreview = (s: string, n = 500) => (s.length > n ? s.slice(0, n) + "…" : s);
+
+  function stripBOM(s: string) {
+    return s.charCodeAt(0) === 0xFEFF ? s.slice(1) : s;
+  }
+
+  function stripXssiPrefix(s: string) {
+    if (s.startsWith(")]}',") || s.startsWith(")]}'\n")) {
+      const i = s.indexOf("\n");
+      return i >= 0 ? s.slice(i + 1) : "";
+    }
+    return s;
+  }
+
+  function sliceToJsonBlock(s: string) {
+    const firstBrace = s.indexOf("{");
+    const firstBracket = s.indexOf("[");
+    const first = [firstBrace, firstBracket].filter(i => i >= 0).sort((a, b) => a - b)[0] ?? -1;
+    if (first < 0) return s;
+    const last = Math.max(s.lastIndexOf("}"), s.lastIndexOf("]"));
+    if (last < first) return s;
+    return s.slice(first, last + 1);
+  }
+
+  function looksLikeHtml(s: string) {
+    return /<!doctype html>|<html[\s>]/i.test(s);
+  }
+
+  /**
+   * Robustly parse a Response that *should* be JSON, but may:
+   *  - include BOM/XSSI/log noise,
+   *  - return primitives (true/false/5),
+   *  - be mislabeled (no content-type).
+   */
+  async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
+    const contentType = response.headers.get("content-type") || "";
+    const raw = stripBOM((await response.text()).trim());
+    const cleaned = stripXssiPrefix(raw);
+
+    if (!contentType.includes("application/json") && looksLikeHtml(cleaned)) {
+      console.error(`HTML received from ${endpointForLogs}:`, textPreview(cleaned));
+      throw new Error(`Non-JSON (HTML) received from ${endpointForLogs}`);
+    }
+
+    if (contentType.includes("application/json")) {
+      try {
+        return JSON.parse(cleaned) as T;
+      } catch {
+        try {
+          return JSON.parse(sliceToJsonBlock(cleaned)) as T;
+        } catch {
+          console.error(`Invalid JSON from ${endpointForLogs}:`, textPreview(raw));
+          throw new Error(`Invalid JSON response from ${endpointForLogs}`);
+        }
+      }
+    }
+
+    try {
+      return JSON.parse(cleaned) as T;
+    } catch {
+      const t = cleaned.toLowerCase();
+      if (t === "true") return true as T;
+      if (t === "false") return false as T;
+      if (/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return Number(cleaned) as T;
+      return cleaned as T;
+    }
+  }
+
+  const commonInit: RequestInit = {
+    credentials: "include",
+    headers: { Accept: "application/json" },
   };
 
   const fetchFollowingPosts = async () => {
@@ -356,103 +516,174 @@ const HomePage = () => {
       console.warn("Cannot fetch following posts: currentUser is not loaded");
       return;
     }
+
     console.debug("Fetching following posts");
     setLoadingFollowing(true);
+
     try {
       const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, { credentials: "include" }),
-        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
       ]);
+
       if (!followRes.ok) throw new Error("Failed to fetch followed users");
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
-      const followedUsers: ApiFollow[] = await followRes.json();
-      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
-      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
-      const followedIds = followedUsers.map((follow: ApiFollow) => follow.followedId);
+
+      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+
+      const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
+      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
+
+      if (!followedIds.length) {
+        setFollowingPosts([]);
+        return;
+      }
 
       const allFollowingPosts = await Promise.all(
         followedIds.map(async (userId: number) => {
-          const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, {
-            credentials: "include",
-          });
-          if (!res.ok) return [];
-          return await res.json();
+          try {
+            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
+            if (!res.ok) return [];
+            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
+          } catch (error) {
+            console.warn(`Failed to fetch posts for user ${userId}:`, error);
+            return [];
+          }
         })
       );
 
       const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const uniquePosts = Array.from(
-        new Map(flattenedPosts.map(post => [post.id, post])).values()
+      const uniquePosts: ApiPost[] = Array.from(
+        new Map(flattenedPosts.map((post) => [post.id, post])).values()
       ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
+
       const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
 
       const formattedPosts = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-            fetchTopicsForPost(post.id),
-          ]);
+          try {
+            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+              fetchTopicsForPost(post.id),
+            ]);
 
-          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
-          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+            let comments: ApiComment[] = [];
+            let likeCount = 0;
+            let isLiked = false;
+            let topics: Topic[] = [];
 
-          const commentsWithUsers = await Promise.all(
-            validComments.map(async (comment: ApiComment) => {
-              const user = await fetchUser(comment.userId, comment.user);
-              return {
-                id: comment.id,
-                postId: comment.postId,
-                authorId: comment.userId,
-                content: comment.content,
-                createdAt: comment.createdAt,
-                username: user.displayName,
-                handle: `@${user.username}`,
-                profilePicture: user.profilePicture,
-              };
-            })
-          );
-
-          const postUser = await fetchUser(post.user.id, post.user);
-          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
-
-          let isLiked = false;
-          if (hasLikedRes.ok) {
             try {
-              isLiked = await hasLikedRes.json();
-            } catch (err) {
-              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+              comments = commentsRes.ok
+                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+                : [];
+            } catch (error) {
+              console.warn(`Failed to parse comments for post ${post.id}:`, error);
+              comments = [];
             }
-          }
 
-          return {
-            id: post.id,
-            username: postUser.displayName,
-            handle: `@${postUser.username}`,
-            profilePicture: postUser.profilePicture,
-            time: formatRelativeTime(post.createdAt),
-            createdAt: post.createdAt,
-            text: post.content,
-            image: post.imageUrl,
-            isLiked,
-            isBookmarked: bookmarkedPostIds.has(post.id),
-            isReshared,
-            commentCount: validComments.length,
-            authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-            reshareCount,
-            comments: commentsWithUsers,
-            showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-            topics: topicsRes,
-          };
+            try {
+              const raw = likesCountRes.ok
+                ? await robustParse<number | string | { count: number }>(
+                  likesCountRes,
+                  `likes/count/${post.id}`
+                )
+                : 0;
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (error) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, error);
+            }
+
+            try {
+              const raw = hasLikedRes.ok
+                ? await robustParse<boolean | string | { liked: boolean }>(
+                  hasLikedRes,
+                  `likes/has-liked/${post.id}`
+                )
+                : false;
+              if (typeof raw === "boolean") isLiked = raw;
+              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
+            } catch (error) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, error);
+            }
+
+            try {
+              topics = await topicsRes;
+            } catch (error) {
+              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
+              topics = [];
+            }
+
+            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
+
+            const commentsWithUsers = await Promise.all(
+              validComments.map(async (comment: ApiComment) => {
+                try {
+                  const user = await fetchUser(comment.userId, comment.user);
+                  return {
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
+                  } as CommentData;
+                } catch (error) {
+                  console.warn(`Failed to process comment ${comment.id}:`, error);
+                  return null;
+                }
+              })
+            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
+
+            const postUser = await fetchUser(post.user.id, post.user);
+            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
+            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
+
+            return {
+              id: post.id,
+              username: postUser.displayName,
+              handle: `@${postUser.username}`,
+              profilePicture: postUser.profilePicture,
+              time: formatRelativeTime(post.createdAt),
+              createdAt: post.createdAt,
+              text: post.content,
+              image: post.imageUrl,
+              isLiked,
+              isBookmarked: bookmarkedPostIds.has(post.id),
+              isReshared,
+              commentCount: validComments.length,
+              authorId: post.user.id,
+              likeCount,
+              reshareCount,
+              comments: commentsWithUsers,
+              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
+              topics,
+            };
+          } catch (postError) {
+            console.error(`Error processing post ${post.id}:`, postError);
+            return null;
+          }
         })
       );
 
-      setFollowingPosts(formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
+
+      setFollowingPosts(
+        successfulPosts.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+      );
     } catch (err) {
       console.error("Error fetching following posts:", err);
       setError("Failed to load posts from followed users.");
@@ -462,7 +693,8 @@ const HomePage = () => {
     }
   };
 
-  const fetchTopics = async () => {
+
+  const fetchTopics = async (): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -471,13 +703,193 @@ const HomePage = () => {
       if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
       const data: Topic[] = await res.json();
       setTopics(data || []);
+      return data || [];
     } catch (err) {
       console.error("Error fetching topics:", err);
       setError("Failed to load topics.");
       setTimeout(() => setError(null), 3000);
+      return [];
     }
   };
 
+  const fetchPresets = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets`, {
+        method: "GET",
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error('Failed to fetch Presets');
+      const data = await response.json();
+      setPresets(data);
+    } catch (err) {
+      setError("Error fetching presets");
+      console.error("Error fetching presets:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const fetchRules = async (presetId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules/${presetId}`, {
+        method: "GET",
+        credentials: "include"
+      });
+      if (!response.ok) throw new Error('Failed to fetch rules');
+      const data = await response.json();
+      setRules(prev => ({ ...prev, [presetId]: data }));
+    } catch (err) {
+      setError("Failed to fetch rules for the preset");
+      console.log("Failed to fetch rules for the preset", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+
+  const createPreset = async () => {
+    if (!newPresetName.trim()) {
+      setError('Preset name is required');
+      setTimeout(() => setError(null), 3000);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ name: newPresetName })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to create preset: ${response.status} ${errorText}`);
+      }
+      const data = await response.json();
+      setPresets(prev => [...prev, data]);
+      setNewPresetName('');
+      setError('');
+
+    } catch (err) {
+      console.log("Error couldn't create your preset.", err);
+      setError("Couldn't create your preset.")
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const addRule = async (presetId: number) => {
+    // Validate that at least one filter condition is provided
+    if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
+      setError('At least one filter condition (topic, source type, or specific user) is required');
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+      return;
+    }
+
+    // Validate percentage if provided
+    if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
+      setError('Percentage must be between 1 and 100');
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          presetId,
+          topicId: newRule.topicId || null,
+          sourceType: newRule.sourceType || null,
+          specificUserId: newRule.specificUserId || null,
+          percentage: newRule.percentage || null
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add rule');
+
+      const data = await response.json();
+      setRules(prev => ({
+        ...prev,
+        [presetId]: [...(prev[presetId] || []), data],
+      }));
+
+      // Reset form
+      setNewRule({
+        topicId: undefined,
+        sourceType: undefined,
+        specificUserId: undefined,
+        percentage: undefined
+      });
+      setError('');
+    } catch (err) {
+      setError("Couldn't add rule");
+      console.log("Couldn't add rule", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+  const deleteRule = async (presetId: number, ruleId: number) => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/rules/${ruleId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete rule');
+
+      setRules(prev => ({
+        ...prev,
+        [presetId]: (prev[presetId] || []).filter(rule => rule.id !== ruleId)
+      }));
+    } catch (err) {
+      setError("Couldn't delete rule");
+      console.log("Couldn't delete rule", err);
+      setTimeout(() => {
+        setError('');
+      }, 3000);
+    }
+  }
+
+  // Helper function to format rule for display
+  const formatRule = (rule: Rule) => {
+    const parts = [];
+
+    if (rule.topicId) {
+      const topic = topics.find(t => t.id === rule.topicId);
+      parts.push(`Topic: ${topic?.name || `ID ${rule.topicId}`}`);
+    }
+
+    if (rule.sourceType) {
+      parts.push(`Source: ${rule.sourceType}`);
+    }
+
+    if (rule.specificUserId) {
+      const user = allUsers.find(u => u.id === rule.specificUserId);
+      parts.push(`User: ${user?.displayName || `ID ${rule.specificUserId}`}`);
+    }
+
+    if (rule.percentage) {
+      parts.push(`${rule.percentage}%`);
+    }
+
+    return parts.join(' | ');
+  };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
       setError("Topic name cannot be empty.");
@@ -650,7 +1062,31 @@ const HomePage = () => {
       }
     }
   };
+  const fetchNotifications = async (userId: number) => {
+  try {
+    const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+      },
+      credentials: "include",
+    });
 
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        setError("Unauthorized. Please log in again.");
+        return;
+      }
+      throw new Error(`Failed to fetch notifications: ${response.status}`);
+    }
+
+    const data: Notification[] = await response.json();
+    setNotifications(data); // Store in NotificationContext
+  } catch (err) {
+    console.error("Error fetching notifications:", err);
+    setError("Failed to load notifications.");
+    setTimeout(() => setError(null), 3000);
+  }
+};
   const handleLike = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
@@ -1009,6 +1445,7 @@ const HomePage = () => {
       setPosts([]);
       setFollowingPosts([]);
       navigate("/");
+      localStorage.clear();
     } catch (err) {
       console.error("Logout failed", err);
       setError("Failed to log out. Please try again.");
@@ -1033,7 +1470,7 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="mt-4 b-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1070,6 +1507,7 @@ const HomePage = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
           showComments={post.showComments || false}
           comments={post.comments || []}
           isUserLoaded={!!currentUser}
@@ -1082,11 +1520,19 @@ const HomePage = () => {
   };
 
   useEffect(() => {
+    fetchPresets();
+    fetchAllUsers();
+  }, []);
+
+  useEffect(() => {
     const init = async () => {
       setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
-        await fetchTopics();
+        await Promise.all([
+          fetchTopics(),
+          fetchNotifications(user.id),
+        ]);
       }
       setLoading(false);
     };
@@ -1096,7 +1542,7 @@ const HomePage = () => {
     if (!currentUser) return;
 
     if (activeTab === "for You") {
-      fetchAllPosts();
+      fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
     }
@@ -1108,22 +1554,28 @@ const HomePage = () => {
     if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
       fetchFollowingPosts();
     }
-  }, [currentUser, activeTab]);
+    if (selectedPreset) {
+      fetchRules(selectedPreset);
+    }
+  }, [currentUser, activeTab, selectedPreset]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="p-4 mt-6 border-t border-lime-500 flex flex-col gap-2 hidden lg:flex">
+
+        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime  flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
-            className="w-[200px] dark:bg-black dark:border-3 dark:border-lime-500 bg-lime-600 text-white dark:text-lime-600 border-3 border-lime-300 hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] future-feed:text-lime future-feed:border-lime"
+            variant={"secondary"}
           >
             Create Topic
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 dark:text-lime-600 dark:bg-black dark:border-3 dark:border-lime-600 bg-lime-600 border-3 border-lime-500 text-white hover:bg-white hover:text-lime-600 dark:hover:bg-[#1a1a1a]"
+            className="w-[200px] mt-3 future-feed:text-lime  future-feed:border-lime "
+            variant={"secondary"}
           >
             View Topics
           </Button>
@@ -1131,7 +1583,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-lime-500 text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 text-white p-3 rounded-full z-20 shadow-lg"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1141,17 +1593,17 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
             >
               Logout
             </button>
-            <div className="p-4 border-t border-lime-500 flex flex-col gap-2">
+            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
               >
                 Create Topic
               </button>
@@ -1160,7 +1612,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-lime-500 text-white rounded hover:bg-lime-600 transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
               >
                 View Topics
               </button>
@@ -1171,7 +1623,7 @@ const HomePage = () => {
       <div
         className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {error && (
             <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
               <p>{error}</p>
@@ -1186,18 +1638,18 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-[#1a1a1a] border border-lime-500 rounded-2xl z-10 bg-white cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
                 onClick={() => setIsPostModalOpen(true)}
               >
-                <h1 className="text-xl dark:text-lime-500 font-bold text-lime-600">What's on your mind?</h1>
+                <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                <TabsList className="w-full flex justify-around rounded-2xl border border-lime-500 dark:bg-black sticky top-[68px] z-10 overflow-x-auto">
+              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+                <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
                       key={tab}
                       value={tab}
-                      className="flex-1 min-w-[100px] rounded-2xl dark:text-white text-green capitalize dark:data-[state=active]:text-white dark:data-[state=active]:border-b-2 dark:data-[state=active]:border-lime-500 text-sm lg:text-base"
+                      className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
                     >
                       {tab.replace(/^\w/, (c) => c.toUpperCase())}
                     </TabsTrigger>
@@ -1210,8 +1662,8 @@ const HomePage = () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts available.</p>
                       <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
-                        onClick={() => fetchAllPosts()}
+                        className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
+                        onClick={() => fetchPaginatedPosts(0)}
                       >
                         Refresh
                       </Button>
@@ -1227,7 +1679,7 @@ const HomePage = () => {
                     <div className="flex flex-col items-center justify-center py-10">
                       <p className="text-lg dark:text-white">No posts from followed users.</p>
                       <Button
-                        className="mt-4 bg-lime-500 hover:bg-lime-600 text-white"
+                        className="mt-4 bg-blue-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchFollowingPosts()}
                       >
                         Refresh
@@ -1238,19 +1690,221 @@ const HomePage = () => {
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  <p className="text-3xl mt-40 font-bold dark:text-white text-lime-600 text-center">
-                    Presets to be implemented
-                  </p>
+                  <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+                    <TabsList className="w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto">
+                      {["Your Presets", "Create Presets"].map((tab) => (
+                        <TabsTrigger
+                          key={tab}
+                          value={tab}
+                          className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
+                        >
+                          {tab.replace(/^\w/, (c) => c.toUpperCase())}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+
+                    <TabsContent value="Your Presets" className="p-0">
+                      {error && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                          {error}
+                        </div>
+                      )}
+                      {isLoading ? (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
+                        </div>
+                      ) : presets.length === 0 ? (
+                        <Card>
+                          <CardContent className="pt-6">
+                            <p className="text-center text-gray-500">You don't have any presets yet.</p>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {presets.map(preset => (
+                            <Card key={preset.id} className="hover:bg-blue-500">
+                              <CardHeader className="pb-3">
+                                <div className="flex justify-between future-feed:text-white items-center">
+                                  <CardTitle>{preset.name}</CardTitle>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
+                                  className="mb-3"
+                                >
+                                  {selectedPreset === preset.id ? 'Hide Rules' : 'Show Rules'}
+                                </Button>
+
+                                {selectedPreset === preset.id && (
+                                  <div className="mt-3 space-y-3">
+                                    {/* Rule creation form */}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.topicId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            topicId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Topic</option>
+                                          {topics.map(topic => (
+                                            <option key={topic.id} value={topic.id}>
+                                              {topic.name}
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.sourceType || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            sourceType: e.target.value as 'user' | 'bot' | undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                        >
+                                          <option value="">Select Source Type</option>
+                                          <option value="user">User Posts</option>
+                                          <option value="bot">Bot Posts</option>
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <select
+                                          value={newRule.specificUserId || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            specificUserId: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          disabled={loadingUsers}
+                                        >
+                                          <option value="">Select Specific User</option>
+                                          {allUsers.map(user => (
+                                            <option key={user.id} value={user.id}>
+                                              {user.displayName} (@{user.username})
+                                            </option>
+                                          ))}
+                                        </select>
+                                      </div>
+
+                                      <div className="flex items-center space-x-2">
+                                        <Input
+                                          type="number"
+                                          min="1"
+                                          max="100"
+                                          placeholder="Percentage (1-100)"
+                                          value={newRule.percentage || ''}
+                                          onChange={(e) => setNewRule({
+                                            ...newRule,
+                                            percentage: e.target.value ? parseInt(e.target.value) : undefined
+                                          })}
+                                          className="flex-1"
+                                        />
+                                        <Percent size={16} className="text-gray-400" />
+                                      </div>
+
+                                      <Button
+                                        className="w-full bg-blue-500 hover:bg-gray-500"
+                                        onClick={() => addRule(preset.id)}
+                                        size="sm"
+                                      >
+                                        <Plus size={16} className="mr-1" /> Add Rule
+                                      </Button>
+                                    </div>
+
+                                    {/* Existing rules */}
+                                    {rules[preset.id]?.length > 0 ? (
+                                      <div className="space-y-2">
+                                        {rules[preset.id].map(rule => (
+                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                            <div className="flex items-center flex-1">
+                                              <Filter size={14} className="mr-2 text-lime-500" />
+                                              <span className="text-sm">{formatRule(rule)}</span>
+                                            </div>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => deleteRule(preset.id, rule.id)}
+                                              className="text-red-500 hover:text-red-700"
+                                            >
+                                              <FaTimes size={12} />
+                                            </Button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-500">No rules added yet.</p>
+                                    )}
+                                  </div>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="Create Presets">
+                      <Card className="w-full">
+                        <CardHeader>
+                          <div className="text-center">
+                            <CardTitle>Create a New Feed Preset</CardTitle>
+                            <CardDescription>Create a named preset to organize your filtering rules</CardDescription>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {error && (
+                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                              {error}
+                            </div>
+                          )}
+                          <div className="flex space-x-2">
+                            <Input
+                              placeholder="Preset name (e.g., Tech & Bots)"
+                              value={newPresetName}
+                              onChange={(e) => setNewPresetName(e.target.value)}
+                              className="future-feed:border-lime flex-1"
+                            />
+                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading}>
+                              {isLoading ? 'Creating...' : 'Create Preset'}
+                            </Button>
+                          </div>
+                          {presets.length > 0 && (
+                            <div className="pt-4">
+                              <div className="text-center">
+                                <h3 className="text-lg future-feed:text-lime dark:text-slate-200 font-medium mb-2">Your Existing Presets</h3>
+                              </div>
+                              <div className="space-y-2">
+                                {presets.map(preset => (
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border rounded-md">
+                                    <span>{preset.name}</span>
+                                    <Badge variant="secondary">ID: {preset.id}</Badge>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
                 </TabsContent>
               </Tabs>
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhoToFollow />
           </div>
         </aside>
@@ -1260,7 +1914,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white dark:bg-[#1a1f1f] rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black  dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -1273,14 +1927,14 @@ const HomePage = () => {
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-5 text-lime-700 dark:text-white">Share your thoughts</h2>
+              <h2 className="text-xl font-bold mb-5 future-feed:text-lime  text-blue-500 dark:text-white">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-black dark:text-white dark:border-lime-500 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
                 rows={8}
               />
               <div className="mb-4">
@@ -1290,7 +1944,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="dark:bg-black dark:text-white dark:border-lime-500 border-2 rounded-md p-2 w-full text-lime-700"
+                  className="dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1">
@@ -1305,7 +1959,7 @@ const HomePage = () => {
               <div className="flex justify-between items-center">
                 <Button
                   variant="outline"
-                  className="dark:text-white text-black dark:border-lime-500 flex items-center space-x-1 border-2 border-lime-500 dark:hover:border-lime-800"
+                  className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
                   onClick={() => document.getElementById("image-upload")?.click()}
                 >
                   <FaImage className="w-4 h-4" />
@@ -1325,7 +1979,7 @@ const HomePage = () => {
                 />
                 <Button
                   onClick={handlePost}
-                  className="bg-lime-500 text-white hover:bg-lime-600"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
                   disabled={!postText.trim() || !currentUser}
                 >
                   Post
@@ -1340,7 +1994,7 @@ const HomePage = () => {
           style={topicModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
@@ -1351,17 +2005,17 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
                 value={newTopicName}
                 onChange={(e) => setNewTopicName(e.target.value)}
-                className="mb-4 dark:bg-black dark:text-white dark:border-lime-500"
+                className="mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200"
               />
               <Button
                 onClick={createTopic}
-                className="bg-lime-500 text-white hover:bg-lime-600"
+                className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                 disabled={!newTopicName.trim() || !currentUser}
               >
                 Create
@@ -1375,7 +2029,7 @@ const HomePage = () => {
           style={viewTopicsModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
         >
-          <div className="bg-white dark:bg-black rounded-2xl p-6 w-full max-w-md border-2 border-lime-500 flex flex-col relative">
+          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
@@ -1383,14 +2037,14 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-lime-700 dark:text-white">All Topics</h2>
+            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
                 <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-lime-700 dark:text-white mb-2">
+                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2">
                       {topic.name}
                     </li>
                   ))}
@@ -1398,7 +2052,7 @@ const HomePage = () => {
               )}
               <Button
                 onClick={() => setIsViewTopicsModalOpen(false)}
-                className="mt-4 bg-lime-500 text-white hover:bg-lime-600"
+                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
               >
                 Close
               </Button>

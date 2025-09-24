@@ -41,6 +41,7 @@ interface PostProps {
   onReshare: () => void;
   onDelete: () => void;
   onNavigate: () => void;
+  onProfileClick: () => void;
   className?: string;
   onToggleComments: () => void;
   showComments: boolean;
@@ -79,6 +80,7 @@ const Post: React.FC<PostProps> = ({
   onReshare,
   onDelete,
   onNavigate,
+  onProfileClick,
   className,
   onToggleComments,
   showComments,
@@ -89,6 +91,7 @@ const Post: React.FC<PostProps> = ({
   topics,
 }) => {
   const [newComment, setNewComment] = React.useState("");
+  const [isHovered, setIsHovered] = React.useState(false);
 
   const handleSubmitComment = () => {
     if (newComment.trim() && isUserLoaded) {
@@ -121,24 +124,49 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-[#1a1a1a] border-2 border-lime-500 hover:bg-lime-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer",
+        "future-feed:bg-card future-feed:text-white dark:bg-indigo-950 border-2 border- hover:bg-slate-200 dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer relative group",
         className
       )}
       onClick={handleClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <CardContent className="sm:px-8 sm:py-1 ">
         <div className="flex gap-3 sm:gap-4">
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12">
-            <AvatarImage src={profilePicture} alt={handle} />
-            <AvatarFallback>{getInitials(username)}</AvatarFallback>
+          <Avatar
+            className="h-10 w-10 sm:h-12 sm:w-12"
+            onClick={(e) => {
+              e.stopPropagation();
+              onProfileClick();
+            }}
+          >
+            {profilePicture ? (
+              <AvatarImage
+                src={profilePicture}
+                alt={handle}
+                onError={() => console.error(`Failed to load profile picture for ${handle}:`, profilePicture)}
+              />
+            ) : (
+              <AvatarFallback>{getInitials(username)}</AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 className="font-bold dark:text-white text-sm sm:text-base">{username || "Unknown User"}</h2>
+              <h2 
+                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onProfileClick();
+                }}
+              >
+                {username || "Unknown User"}
+              </h2>
               <div className="flex items-center gap-2">
-                <span className="text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
+                {/* Timestamp that shifts on hover */}
+                <span className={`text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap transition-all duration-200 ${isHovered && currentUser && currentUser.id === authorId ? 'mr-8' : 'mr-0'}`}>
                   {time}
                 </span>
+                {/* Delete button - appears on hover for post owner */}
                 {currentUser && currentUser.id === authorId && (
                   <Button
                     variant="ghost"
@@ -147,15 +175,23 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       onDelete();
                     }}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                    className={`absolute top-3 right-2 h-6 w-6 p-1 text-red-500 hover:bg-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                     aria-label="Delete post"
                   >
-                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
             </div>
-            <p className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]">{handle || "@unknown"}</p>
+            <p 
+              className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]"
+              onClick={(e) => {
+                e.stopPropagation();
+                onProfileClick();
+              }}
+            >
+              {handle || "@unknown"}
+            </p>
             <p className="mt-2 dark:text-white text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
               {text}
             </p>
@@ -207,12 +243,14 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
-                  "hover:text-blue-500 dark:hover:text-blue-400"
+                  commentCount > 0 ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400",
+                  "hover:text-gray-500 dark:hover:text-gray-400"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <div className="relative">
+                  <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
                 <span className="hidden xl:inline">Comment</span>
                 <span className="ml-1">({commentCount})</span>
               </Button>
