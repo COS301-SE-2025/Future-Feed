@@ -1864,15 +1864,16 @@ const HomePage = () => {
                             >
                               <ArrowLeft />
                             </Button>
-                            <div className="mt-2">
+                            <div className="mt-1 ml-3 text-lg text-gray-400">
                               Back to Presets
                             </div>
+                            
                           </div>
                           {loadingPresetPosts ? (
                             renderSkeletonPosts()
                           ) : presetPosts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10">
-                              <p className="text-lg dark:text-white">No posts available for this preset yet.</p>
+                              <p className="text-lg dark:text-white text-gray-400">No posts available for this preset yet.</p>
                             </div>
                           ) : (
                             renderPosts(presetPosts)
