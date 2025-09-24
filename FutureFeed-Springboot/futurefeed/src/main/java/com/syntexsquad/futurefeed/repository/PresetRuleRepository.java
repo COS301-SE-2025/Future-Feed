@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface PresetRuleRepository extends JpaRepository<PresetRule, Integer> {
     List<PresetRule> findByPresetId(Integer presetId);
+    void deleteByPresetId(Integer presetId);
+
 }
 
