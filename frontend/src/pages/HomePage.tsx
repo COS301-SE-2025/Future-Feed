@@ -734,7 +734,6 @@ const HomePage = () => {
         body: JSON.stringify({ name, defaultPreset }),
       });
       if (!response.ok) throw new Error(`Failed to update preset: ${response.status}`);
-      const updatedPreset: Preset = await response.json();
       setPresets((prev) =>
         prev.map((p) => (p.id === presetId ? { ...p, name, defaultPreset } : p))
       );
@@ -2014,9 +2013,58 @@ const HomePage = () => {
                           {presets.map((preset) => (
                             <Card key={preset.id} className="hover:bg-blue-500">
                               <CardHeader className="pb-3">
-                                <div className="flex justify-between future-feed:text-white items-center">
-                                  <CardTitle>{preset.name}</CardTitle>
+                                <div className="flex justify-between items-center">
+                                  <CardTitle>
+                                    <Input
+                                      value={preset.name}
+                                      onChange={(e) => {
+                                        setPresets((prev) =>
+                                          prev.map((p) =>
+                                            p.id === preset.id ? { ...p, name: e.target.value } : p
+                                          )
+                                        );
+                                      }}
+                                      className="text-lg font-semibold"
+                                    />
+                                  </CardTitle>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedPreset(preset.id);
+                                        fetchPresetPosts(preset.id);
+                                      }}
+                                    >
+                                      View Feed
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
+                                    >
+                                      Save
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => deletePreset(preset.id)}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      Delete
+                                    </Button>
+                                    <Button
+                                      variant={preset.id === defaultPresetId ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => setDefaultPreset(preset.id)}
+                                    >
+                                      {preset.id === defaultPresetId ? "Default" : "Set Default"}
+                                    </Button>
+                                  </div>
                                 </div>
+                                {preset.id === defaultPresetId && (
+                                  <Badge variant="secondary">Default Preset</Badge>
+                                )}
                               </CardHeader>
                               <CardContent>
                                 <Button
@@ -2163,27 +2211,27 @@ const HomePage = () => {
                               placeholder="Preset name (e.g., Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
-                              className="future-feed:border-lime flex-1"
+                              className="flex-1"
                             />
                             <Button
                               className="bg-lime-600"
-                              onClick={() => createPreset(false)} // Create without setting as default
-                              disabled={isLoading}
-                            >
-                              {isLoading ? "Creating..." : "Create Preset"}
-                            </Button>
-                            <Button
-                              className="bg-blue-500"
-                              onClick={() => createPreset(true)} // Create and set as default
+                              onClick={() => createPreset(true)} // Set as default
                               disabled={isLoading}
                             >
                               {isLoading ? "Creating..." : "Create & Set Default"}
+                            </Button>
+                            <Button
+                              className="bg-blue-500"
+                              onClick={() => createPreset(false)} // Create without setting as default
+                              disabled={isLoading}
+                            >
+                              {isLoading ? "Creating..." : "Create"}
                             </Button>
                           </div>
                           {presets.length > 0 && (
                             <div className="pt-4">
                               <div className="text-center">
-                                <h3 className="text-lg future-feed:text-lime dark:text-slate-200 font-medium mb-2">Your Existing Presets</h3>
+                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
                               </div>
                               <div className="space-y-2">
                                 {presets.map((preset) => (
