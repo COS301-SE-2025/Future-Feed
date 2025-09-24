@@ -2117,7 +2117,7 @@ const HomePage = () => {
                                   </DropdownMenu>
                                 </div>
                                 {preset.id === defaultPresetId && (
-                                  <Badge variant="secondary" className="bg-lime-300">Default Preset</Badge>
+                                  <Badge variant="secondary" className="bg-lime-300 dark:bg-lime-700 dark:text-white">Default Preset</Badge>
                                 )}
                               </CardHeader>
                               <CardContent>
@@ -2125,7 +2125,7 @@ const HomePage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
-                                  className="mb-1 bg-blue-500 text-white hover:text-white hover:bg-gray-500"
+                                  className="mb-1 bg-blue-500 text-white dark:bg-white dark:text-black hover:text-white hover:bg-gray-500 rounded rounded-full"
                                 >
                                   {selectedPreset === preset.id ? "Hide Rules" : "Show Rules"}
                                 </Button>
@@ -2205,7 +2205,7 @@ const HomePage = () => {
                                         <Percent size={16} className="text-gray-400" />
                                       </div>
                                       <Button
-                                        className="w-full bg-blue-500 hover:bg-gray-500 p-1"
+                                        className="w-full bg-blue-500 hover:bg-gray-500 p-1 rounded rounded-full"
                                         onClick={() => addRule(preset.id)}
                                         size="sm"
                                       >Add Rule
