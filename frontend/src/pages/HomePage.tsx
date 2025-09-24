@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Filter, Percent, SmilePlus, ArrowLeft } from 'lucide-react';
+import { Plus, Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
 import { useNotifications, type Notification } from "@/context/NotificationContext";
 import {
   DropdownMenu,
@@ -2058,7 +2058,7 @@ const HomePage = () => {
                                         </Tooltip>
                                       </TooltipProvider> 
                                     </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="center">
+                                    <DropdownMenuContent align="start">
                                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                       <DropdownMenuSeparator />
                                       <DropdownMenuItem
@@ -2067,11 +2067,14 @@ const HomePage = () => {
                                           fetchPresetPosts(preset.id);
                                         }}
                                       >
+                                        <ChartNoAxesGantt className="text-lime-300"/>
                                         View Feed
+                                        
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
                                       >
+                                        <SaveAll className="text-lime-300"/>
                                         Save
                                       </DropdownMenuItem>
                                       <Dialog>
@@ -2080,6 +2083,7 @@ const HomePage = () => {
                                             onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
                                             className="text-red-500 focus:text-red-700"
                                           >
+                                            <Trash2 className="text-red-400"/>
                                             Delete
                                           </DropdownMenuItem>
                                         </DialogTrigger>
@@ -2113,7 +2117,7 @@ const HomePage = () => {
                                   </DropdownMenu>
                                 </div>
                                 {preset.id === defaultPresetId && (
-                                  <Badge variant="secondary" className="bg-lime-500">Default Preset</Badge>
+                                  <Badge variant="secondary" className="bg-lime-300">Default Preset</Badge>
                                 )}
                               </CardHeader>
                               <CardContent>
