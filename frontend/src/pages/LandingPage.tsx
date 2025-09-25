@@ -9,7 +9,7 @@ import Settingsmobile from "../assets/settingsmobile.png"
 import Editprofilemobile from "../assets/home14.png"
 import { ThemeProvider } from "@/components/theme-provider"
 // import { ModeToggle } from "@/components/mode-toggle"
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/sheet"
 
 const LandingPage = () => {
-    const navigate = useNavigate();
 
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<HTMLDivElement[]>([]);
@@ -75,33 +74,6 @@ const LandingPage = () => {
         container?.addEventListener("scroll", handleScroll);
         return () => container?.removeEventListener("scroll", handleScroll);
     }, []);
-
-    useEffect(() => {
-  // Check for OAuth success parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  const oauthSuccess = urlParams.get('oauth_success');
-
-  console.log('OAuth Callback - Parameters:', { token, oauthSuccess });
-  console.log('Current URL:', window.location.href);
-
-  if (token || oauthSuccess) {
-    console.log('OAuth successful, redirecting to /home');
-    
-    // Store token if provided
-    if (token) {
-      localStorage.setItem('authToken', token);
-      console.log('Token stored:', token);
-    }
-    
-    // Clear URL parameters
-    window.history.replaceState({}, '', window.location.pathname);
-    
-    // Redirect to home
-    navigate('/home');
-  }
-}, [navigate]);
-
 
     return (
         <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-gray-200 text-white-800 overflow-hidden ">
