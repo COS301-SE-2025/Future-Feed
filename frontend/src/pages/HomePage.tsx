@@ -12,7 +12,6 @@ import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
 import { useNotifications} from "@/context/NotificationContext";
 import {
@@ -2014,7 +2013,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg font-semibold border-2 border-l-lime-500"
+                                      className="text-lg font-bold border border-0 bg-white"
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
@@ -2092,9 +2091,6 @@ const HomePage = () => {
                                     </DropdownMenuContent>
                                   </DropdownMenu>
                                 </div>
-                                {preset.id === defaultPresetId && (
-                                  <Badge variant="secondary" className="bg-lime-300 dark:bg-lime-700 dark:text-white">Default Preset</Badge>
-                                )}
                               </CardHeader>
                               <CardContent>
                                 <Button
