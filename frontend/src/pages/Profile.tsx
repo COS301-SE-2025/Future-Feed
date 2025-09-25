@@ -1398,6 +1398,10 @@ const Profile = () => {
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
+    if (userId == profileId){
+      navigate('/profile');
+    }
+
     const userData = await fetchUser(profileId);
     setUser(userData);
 
@@ -1513,26 +1517,16 @@ const Profile = () => {
                 </Button>
               )
             ) : (
-              <Link to="/edit-profile">
-                <Button
-                  variant="secondary"
-                  className="mt-2 min-w-[90px] px-4 py-1 rounded-full font-semibold bg-white dark:bg-slate-200 dark:hover:bg-slate-300 dark:hover:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
-                >
-                  Edit Profile
-                </Button>
-              </Link>
+              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+              <Button variant="secondary" className="bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
+                Edit Profile
+              </Button>
+            </Link>
             )}
           </div>
           <div className="mt-4 flex gap-4 text-sm text-gray-400 dark:text-slate-500 future-feed:text-lime">
-            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followingUsers.length}</span> Following
-            </Link>
-            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followers.length}</span> Followers
-            </Link>
-            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200 future-feed:text-white">0</span> Bots
-            </Link>
+              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followingUsers.length}</span> Following  ·
+              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followers.length}</span> Followers  ·
             <span className="font-medium dark:text-slate-200 future-feed:text-white">{posts.length}</span> Posts
           </div>
         </div>
