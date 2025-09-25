@@ -2303,7 +2303,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
+                className="w-full mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none text-gray-500"
                 rows={8}
               />
               <div className="mb-4">
