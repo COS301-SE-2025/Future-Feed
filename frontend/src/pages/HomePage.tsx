@@ -12,14 +12,32 @@ import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Filter, Percent } from 'lucide-react';
-import { useNotifications,type Notification} from "@/context/NotificationContext";
-
+import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
+import { useNotifications} from "@/context/NotificationContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 interface Preset {
   id: number;
   userId: number;
   name: string;
+  defaultPreset?: boolean;
 }
 
 interface Rule {
@@ -140,7 +158,12 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const { setNotifications } = useNotifications();
+  const { fetchNotifications } = useNotifications();
+  const [presetPosts, setPresetPosts] = useState<PostData[]>([]);
+  const [loadingPresetPosts, setLoadingPresetPosts] = useState(false);
+  const [isViewingPresetFeed, setIsViewingPresetFeed] = useState(false);
+  const [defaultPresetId, setDefaultPresetId] = useState<number | null>(null);
+
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -343,6 +366,7 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
+          console.log(`Post ${post.id} raw user data:`, post.user);
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -692,7 +716,238 @@ const HomePage = () => {
       setLoadingFollowing(false);
     }
   };
+  const fetchDefaultPreset = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/presets/default`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.log("No default preset found.");
+          setDefaultPresetId(null);
+          return;
+        }
+        throw new Error(`Failed to fetch default preset: ${response.status}`);
+      }
+      const data: Preset = await response.json();
+      setDefaultPresetId(data.id);
+    } catch (err) {
+      console.error("Error fetching default preset:", err);
+      setError("Failed to load default preset.");
+      setTimeout(() => setError(null), 3000);
+    }
+  };
+  const updatePreset = async (presetId: number, name: string, defaultPreset: boolean) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets/${presetId}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
+        body: JSON.stringify({ name, defaultPreset }),
+      });
+      if (!response.ok) throw new Error(`Failed to update preset: ${response.status}`);
+      setPresets((prev) =>
+        prev.map((p) => (p.id === presetId ? { ...p, name, defaultPreset } : p))
+      );
+      if (defaultPreset) {
+        setDefaultPresetId(presetId);
+      }
+      setError(null);
+    } catch (err) {
+      console.error("Error updating preset:", err);
+      setError("Failed to update preset.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const deletePreset = async (presetId: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets/${presetId}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error(`Failed to delete preset: ${response.status}`);
+      setPresets((prev) => prev.filter((p) => p.id !== presetId));
+      setRules((prev) => {
+        const newRules = { ...prev };
+        delete newRules[presetId];
+        return newRules;
+      });
+      if (defaultPresetId === presetId) {
+        setDefaultPresetId(null);
+      }
+      if (selectedPreset === presetId) {
+        setSelectedPreset(null);
+        setIsViewingPresetFeed(false);
+        setPresetPosts([]);
+      }
+      setError(null);
+    } catch (err) {
+      console.error("Error deleting preset:", err);
+      setError("Failed to delete preset.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const setDefaultPreset = async (presetId: number) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`${API_URL}/api/presets/${presetId}/default`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!response.ok) throw new Error(`Failed to set default preset: ${response.status}`);
+      setDefaultPresetId(presetId);
+      setPresets((prev) =>
+        prev.map((p) => ({
+          ...p,
+          defaultPreset: p.id === presetId,
+        }))
+      );
+      setError(null);
+    } catch (err) {
+      console.error("Error setting default preset:", err);
+      setError("Failed to set default preset.");
+      setTimeout(() => setError(null), 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const fetchPresetPosts = async (presetId: number) => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch preset posts: currentUser is not loaded");
+      return;
+    }
+    console.debug(`Fetching posts for preset ${presetId}`);
+    setLoadingPresetPosts(true);
+    setIsViewingPresetFeed(true); // Set to show posts and hide presets
 
+    try {
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/presets/feed/${presetId}`, commonInit),
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
+
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+
+      const apiPosts: ApiPost[] = await robustParse<ApiPost[]>(postsRes, `presets/feed/${presetId}`);
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+
+      const validPosts = apiPosts.filter(post => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
+
+      const formattedPosts: PostData[] = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+            fetchTopicsForPost(post.id),
+          ]);
+
+          const comments: ApiComment[] = commentsRes.ok
+            ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+            : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = await fetchUser(post.user.id, post.user);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked: boolean = false; // Explicitly declare as boolean
+          if (hasLikedRes.ok) {
+            try {
+              const raw = await robustParse<boolean | string | { liked: boolean }>(
+                hasLikedRes,
+                `likes/has-liked/${post.id}`
+              );
+              if (typeof raw === "boolean") {
+                isLiked = raw;
+              } else if (typeof raw === "string") {
+                isLiked = raw.toLowerCase() === "true";
+              } else if (raw && "liked" in raw) {
+                isLiked = Boolean(raw.liked);
+              } else {
+                console.warn(`Unexpected like status format for post ${post.id}:`, raw);
+              }
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await robustParse<number>(likesCountRes, `likes/count/${post.id}`) : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
+            topics: topicsRes,
+          };
+        })
+      );
+
+      setPresetPosts(
+        formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    } catch (err) {
+      console.error(`Error fetching preset posts for preset ${presetId}:`, err);
+      setError("Failed to load preset posts.");
+      setTimeout(() => setError(null), 3000);
+      setPresetPosts([]);
+    } finally {
+      setLoadingPresetPosts(false);
+    }
+  };
 
   const fetchTopics = async (): Promise<Topic[]> => {
     try {
@@ -717,18 +972,21 @@ const HomePage = () => {
       setIsLoading(true);
       const response = await fetch(`${API_URL}/api/presets`, {
         method: "GET",
-        credentials: "include"
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
       });
-      if (!response.ok) throw new Error('Failed to fetch Presets');
-      const data = await response.json();
+      if (!response.ok) throw new Error("Failed to fetch Presets");
+      const data: Preset[] = await response.json();
       setPresets(data);
+      const defaultPreset = data.find((p) => p.defaultPreset);
+      setDefaultPresetId(defaultPreset ? defaultPreset.id : null);
     } catch (err) {
       setError("Error fetching presets");
       console.error("Error fetching presets:", err);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const fetchRules = async (presetId: number) => {
     try {
@@ -748,9 +1006,9 @@ const HomePage = () => {
     }
   }
 
-  const createPreset = async () => {
+  const createPreset = async (defaultPreset: boolean = false) => {
     if (!newPresetName.trim()) {
-      setError('Preset name is required');
+      setError("Preset name is required");
       setTimeout(() => setError(null), 3000);
       return;
     }
@@ -760,30 +1018,33 @@ const HomePage = () => {
         method: "POST",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
         },
-        body: JSON.stringify({ name: newPresetName })
+        body: JSON.stringify({ name: newPresetName, defaultPreset }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to create preset: ${response.status} ${errorText}`);
       }
-      const data = await response.json();
-      setPresets(prev => [...prev, data]);
-      setNewPresetName('');
-      setError('');
-
+      const data: Preset = await response.json();
+      setPresets((prev) => [...prev, data]);
+      if (data.defaultPreset) {
+        setDefaultPresetId(data.id);
+        // Optionally set as default via API if not handled by backend
+        await setDefaultPreset(data.id);
+      }
+      setNewPresetName("");
+      setError("");
     } catch (err) {
-      console.log("Error couldn't create your preset.", err);
-      setError("Couldn't create your preset.")
-      setTimeout(() => {
-        setError('');
-      }, 3000);
+      console.error("Error couldn't create your preset.", err);
+      setError("Couldn't create your preset.");
+      setTimeout(() => setError(""), 3000);
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const addRule = async (presetId: number) => {
     // Validate that at least one filter condition is provided
@@ -1062,31 +1323,6 @@ const HomePage = () => {
       }
     }
   };
-  const fetchNotifications = async (userId: number) => {
-  try {
-    const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-      },
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        setError("Unauthorized. Please log in again.");
-        return;
-      }
-      throw new Error(`Failed to fetch notifications: ${response.status}`);
-    }
-
-    const data: Notification[] = await response.json();
-    setNotifications(data); // Store in NotificationContext
-  } catch (err) {
-    console.error("Error fetching notifications:", err);
-    setError("Failed to load notifications.");
-    setTimeout(() => setError(null), 3000);
-  }
-};
   const handleLike = async (postId: number) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
@@ -1532,6 +1768,7 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
+          fetchDefaultPreset(),
         ]);
       }
       setLoading(false);
@@ -1545,8 +1782,10 @@ const HomePage = () => {
       fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
+    } else if (activeTab === "presets" && defaultPresetId) {
+      setSelectedPreset(defaultPresetId);
     }
-  }, [activeTab, currentUser]);
+  }, [activeTab, currentUser, defaultPresetId]);
 
 
 
@@ -1677,13 +1916,29 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : followingPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts from followed users.</p>
-                      <Button
-                        className="mt-4 bg-blue-500 hover:bg-white hover:text-blue-500  text-white"
-                        onClick={() => fetchFollowingPosts()}
-                      >
-                        Refresh
-                      </Button>
+
+                      <div className="flex flex-col justify-center items-center mt-10 gap-12">
+                        <SmilePlus size={50} color="#3B82F6" />
+                        <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
+
+                      </div>
+                      <div className="flex gap-20 mt-13"> {/* Added flex container for buttons */}
+                        <Button
+                          className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
+                          onClick={() => navigate("/explore")}
+                          size={'lg'}
+                        >
+                          Follow
+                        </Button>
+                        <Button
+                          className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
+                          onClick={() => fetchFollowingPosts()}
+                          size={'lg'}
+                        >
+                          Refresh
+                        </Button>
+                      </div>
+
                     </div>
                   ) : (
                     renderPosts(followingPosts)
@@ -1709,23 +1964,132 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
-                      {isLoading ? (
+                      {isViewingPresetFeed ? (
+                        <>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              onClick={() => {
+                                setIsViewingPresetFeed(false);
+                                setPresetPosts([]); // Clear posts when returning to presets
+                              }}
+                            >
+                              <ArrowLeft />
+                            </Button>
+                            <div className="mt-1 ml-3 text-lg text-gray-400">
+                              Back to Presets
+                            </div>
+                          </div>
+                          {loadingPresetPosts ? (
+                            renderSkeletonPosts()
+                          ) : presetPosts.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-10">
+                              <p className="text-lg dark:text-white text-gray-400">No posts available for this preset yet.</p>
+                            </div>
+                          ) : (
+                            renderPosts(presetPosts)
+                          )}
+                        </>
+                      ) : isLoading ? (
                         <div className="flex justify-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
                       ) : presets.length === 0 ? (
-                        <Card>
-                          <CardContent className="pt-6">
-                            <p className="text-center text-gray-500">You don't have any presets yet.</p>
-                          </CardContent>
-                        </Card>
+                        <p className="text-center text-lg text-gray-500 mt-10">You don't have any presets yet.</p>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {presets.map(preset => (
-                            <Card key={preset.id} className="hover:bg-blue-500">
-                              <CardHeader className="pb-3">
-                                <div className="flex justify-between future-feed:text-white items-center">
-                                  <CardTitle>{preset.name}</CardTitle>
+                          {presets.map((preset) => (
+                            <Card key={preset.id} className="hover:bg-slate-100">
+                              <CardHeader className="pb-2">
+                                <div className="flex justify-between items-center">
+                                  <CardTitle>
+                                    <Input
+                                      value={preset.name}
+                                      onChange={(e) => {
+                                        setPresets((prev) =>
+                                          prev.map((p) =>
+                                            p.id === preset.id ? { ...p, name: e.target.value } : p
+                                          )
+                                        );
+                                      }}
+                                      className="text-lg font-bold border border-0 bg-white"
+                                    />
+                                  </CardTitle>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button variant="outline" size="sm">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Preset Actions</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider> 
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start">
+                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedPreset(preset.id);
+                                          fetchPresetPosts(preset.id);
+                                        }}
+                                      >
+                                        <ChartNoAxesGantt className="text-lime-300"/>
+                                        View Feed
+                                        
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
+                                      >
+                                        <SaveAll className="text-lime-300"/>
+                                        Save
+                                      </DropdownMenuItem>
+                                      <Dialog>
+                                        <DialogTrigger asChild>
+                                          <DropdownMenuItem
+                                            onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                            className="text-red-500 focus:text-red-700"
+                                          >
+                                            <Trash2 className="text-red-400"/>
+                                            Delete
+                                          </DropdownMenuItem>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                          <DialogHeader>
+                                            <DialogTitle>Delete Preset</DialogTitle>
+                                            <DialogDescription>
+                                              Are you sure you want to delete the preset "{preset.name}"? This action cannot be undone.
+                                            </DialogDescription>
+                                          </DialogHeader>
+                                          <DialogFooter>
+                                            <Button variant="outline" onClick={() => { }}>
+                                              Cancel
+                                            </Button>
+                                            <Button
+                                              variant="destructive"
+                                              onClick={() => deletePreset(preset.id)}
+                                            >
+                                              Delete
+                                            </Button>
+                                          </DialogFooter>
+                                        </DialogContent>
+                                      </Dialog>
+                                      <DropdownMenuItem
+                                        onClick={() => setDefaultPreset(preset.id)}
+                                        disabled={preset.id === defaultPresetId}
+                                      >
+                                        {preset.id === defaultPresetId ? "Default" : "Set Default"}
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
                               </CardHeader>
                               <CardContent>
@@ -1733,99 +2097,101 @@ const HomePage = () => {
                                   variant="outline"
                                   size="sm"
                                   onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
-                                  className="mb-3"
+                                  className="mb-1 bg-blue-500 text-white dark:bg-white dark:text-black hover:text-white hover:bg-gray-500 rounded rounded-full"
                                 >
-                                  {selectedPreset === preset.id ? 'Hide Rules' : 'Show Rules'}
+                                  {selectedPreset === preset.id ? "Hide Rules" : "Show Rules"}
                                 </Button>
-
                                 {selectedPreset === preset.id && (
                                   <div className="mt-3 space-y-3">
-                                    {/* Rule creation form */}
                                     <div className="space-y-2">
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
-                                          value={newRule.topicId || ''}
-                                          onChange={(e) => setNewRule({
-                                            ...newRule,
-                                            topicId: e.target.value ? parseInt(e.target.value) : undefined
-                                          })}
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          value={newRule.topicId || ""}
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              topicId: e.target.value ? parseInt(e.target.value) : undefined,
+                                            })
+                                          }
+                                          className="flex h-9 w-full rounded-md border border-input hover:border hover:border-lime-500 bg-background px-2 py-1 text-sm"
                                         >
                                           <option value="">Select Topic</option>
-                                          {topics.map(topic => (
+                                          {topics.map((topic) => (
                                             <option key={topic.id} value={topic.id}>
                                               {topic.name}
                                             </option>
                                           ))}
                                         </select>
                                       </div>
-
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
-                                          value={newRule.sourceType || ''}
-                                          onChange={(e) => setNewRule({
-                                            ...newRule,
-                                            sourceType: e.target.value as 'user' | 'bot' | undefined
-                                          })}
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          value={newRule.sourceType || ""}
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              sourceType: e.target.value as "user" | "bot" | undefined,
+                                            })
+                                          }
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                         >
-                                          <option value="">Select Source Type</option>
+                                          <option value="">Select a source type</option>
                                           <option value="user">User Posts</option>
                                           <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <select
-                                          value={newRule.specificUserId || ''}
-                                          onChange={(e) => setNewRule({
-                                            ...newRule,
-                                            specificUserId: e.target.value ? parseInt(e.target.value) : undefined
-                                          })}
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
+                                          value={newRule.specificUserId || ""}
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              specificUserId: e.target.value ? parseInt(e.target.value) : undefined,
+                                            })
+                                          }
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                           disabled={loadingUsers}
                                         >
                                           <option value="">Select Specific User</option>
-                                          {allUsers.map(user => (
+                                          {allUsers.map((user) => (
                                             <option key={user.id} value={user.id}>
                                               {user.displayName} (@{user.username})
                                             </option>
                                           ))}
                                         </select>
                                       </div>
-
-                                      <div className="flex items-center space-x-2">
+                                      <div className="flex items-center space-x-2 p-1">
                                         <Input
                                           type="number"
                                           min="1"
                                           max="100"
                                           placeholder="Percentage (1-100)"
-                                          value={newRule.percentage || ''}
-                                          onChange={(e) => setNewRule({
-                                            ...newRule,
-                                            percentage: e.target.value ? parseInt(e.target.value) : undefined
-                                          })}
-                                          className="flex-1"
+                                          value={newRule.percentage || ""}
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              percentage: e.target.value ? parseInt(e.target.value) : undefined,
+                                            })
+                                          }
+                                          className="flex-1 hover:border hover:border-lime-500"
                                         />
                                         <Percent size={16} className="text-gray-400" />
                                       </div>
-
                                       <Button
-                                        className="w-full bg-blue-500 hover:bg-gray-500"
+                                        className="w-full bg-blue-500 hover:bg-gray-500 p-1 rounded rounded-full"
                                         onClick={() => addRule(preset.id)}
                                         size="sm"
-                                      >
-                                        <Plus size={16} className="mr-1" /> Add Rule
+                                      >Add Rule
                                       </Button>
                                     </div>
-
-                                    {/* Existing rules */}
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
-                                        {rules[preset.id].map(rule => (
-                                          <div key={rule.id} className="flex items-center justify-between p-2 border rounded-md bg-white">
+                                        {rules[preset.id].map((rule) => (
+                                          <div
+                                            key={rule.id}
+                                            className="flex items-center justify-between p-2 border rounded-md bg-white"
+                                          >
                                             <div className="flex items-center flex-1">
-                                              <Filter size={14} className="mr-2 text-lime-500" />
+                                              <Filter size={14} className="mr-2 text-blue-500" />
                                               <span className="text-sm">{formatRule(rule)}</span>
                                             </div>
                                             <Button
@@ -1870,22 +2236,25 @@ const HomePage = () => {
                               placeholder="Preset name (e.g., Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
-                              className="future-feed:border-lime flex-1"
+                              className="flex-1"
                             />
-                            <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading}>
-                              {isLoading ? 'Creating...' : 'Create Preset'}
+                            <Button
+                              className="bg-blue-500"
+                              onClick={() => createPreset(false)} // Create without setting as default
+                              disabled={isLoading}
+                            >
+                              {isLoading ? "Creating..." : "Create"}
                             </Button>
                           </div>
                           {presets.length > 0 && (
                             <div className="pt-4">
                               <div className="text-center">
-                                <h3 className="text-lg future-feed:text-lime dark:text-slate-200 font-medium mb-2">Your Existing Presets</h3>
+                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
                               </div>
                               <div className="space-y-2">
-                                {presets.map(preset => (
-                                  <div key={preset.id} className="flex items-center justify-between p-2 border rounded-md">
+                                {presets.map((preset) => (
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border-2 border-l-lime-500 rounded-md">
                                     <span>{preset.name}</span>
-                                    <Badge variant="secondary">ID: {preset.id}</Badge>
                                   </div>
                                 ))}
                               </div>
@@ -1934,7 +2303,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
+                className="w-full mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none text-gray-500"
                 rows={8}
               />
               <div className="mb-4">

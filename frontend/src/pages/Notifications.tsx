@@ -20,16 +20,6 @@ import {
 import { MoreVertical, Search, CheckCircle, Trash2, X } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 
-interface UserProfile {
-  id: number;
-  username: string;
-  displayName: string;
-  email: string;
-  profilePicture?: string;
-  bio?: string | null;
-  dateOfBirth?: string | null;
-}
-
 interface UserInfo {
   id: number;
   username: string;
@@ -40,13 +30,12 @@ interface UserInfo {
 const userCache = new Map<number, UserInfo>();
 
 const Notifications = () => {
-  const { notifications, setNotifications } = useNotifications();
+  const { notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, currentUserId } = useNotifications();
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [userProfiles, setUserProfiles] = useState<Map<number, UserInfo>>(new Map());
-  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [showSearch, setShowSearch] = useState(false);
   const navigate = useNavigate();
   const notificationTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -86,72 +75,24 @@ const Notifications = () => {
     }
   };
 
-  const fetchCurrentUser = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
-      const data: UserProfile = await res.json();
-      setCurrentUserId(data.id);
-      return data;
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError("Failed to load user info. Please log in again.");
-      return null;
-    }
-  };
-
-  const fetchNotifications = async (userId: number) => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_URL}/api/notifications/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          setError("Unauthorized. Please log in again.");
-          return;
-        }
-        throw new Error(`Failed to fetch notifications: ${response.status}`);
-      }
-
-      const data: Notification[] = await response.json();
-      setNotifications(data);
-      setFilteredNotifications(data);
-
-      const uniqueUserIds = Array.from(new Set(data.map((n) => n.senderUserId)));
-      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
-      const users = await Promise.all(userPromises);
-      const userMap = new Map(users.map((user) => [user.id, user]));
-      setUserProfiles(userMap);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred");
-      console.error("Error fetching notifications:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    const initializeUserAndNotifications = async () => {
-      const user = await fetchCurrentUser();
-      if (user) {
-        fetchNotifications(user.id);
+    const initializeNotifications = async () => {
+      if (currentUserId) {
+        setLoading(true);
+        await fetchNotifications(currentUserId);
+        setLoading(false);
       } else {
+        setError("User not authenticated. Please log in.");
         setLoading(false);
       }
     };
 
-    initializeUserAndNotifications();
-  }, []);
+    initializeNotifications();
+  }, [currentUserId, fetchNotifications]);
+
+  useEffect(() => {
+    setFilteredNotifications(notifications);
+  }, [notifications]);
 
   const markAsRead = async (notificationId: number) => {
     if (!currentUserId) {
@@ -181,43 +122,11 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      setFilteredNotifications((prev: Notification[]) =>
-        prev.map((notification: Notification) =>
-          notification.id === notificationId ? { ...notification, isRead: true } : notification
-        )
-      );
+      console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
       setTimeout(() => setError(null), 3000);
-    }
-  };
-
-  const markAllAsRead = async () => {
-    if (!currentUserId) return;
-
-    try {
-      const response = await fetch(`${API_URL}/api/notifications/mark-all-read?userId=${currentUserId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to mark all notifications as read: ${response.status}`);
-      }
-
-      // Update all notifications to be marked as read
-      setNotifications((prev: Notification[]) =>
-        prev.map((notification: Notification) => ({ ...notification, isRead: true }))
-      );
-      setFilteredNotifications((prev: Notification[]) =>
-        prev.map((notification: Notification) => ({ ...notification, isRead: true }))
-      );
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
     }
   };
 
@@ -247,14 +156,9 @@ const Notifications = () => {
         throw new Error(`Failed to delete notification: ${response.status}`);
       }
 
-      // Remove the deleted notification from both state arrays
       setNotifications((prev: Notification[]) =>
         prev.filter((notification: Notification) => notification.id !== notificationId)
       );
-      setFilteredNotifications((prev: Notification[]) =>
-        prev.filter((notification: Notification) => notification.id !== notificationId)
-      );
-
     } catch (err) {
       console.error("Error deleting notification:", err);
       setError(err instanceof Error ? err.message : "Failed to delete notification.");
@@ -263,28 +167,24 @@ const Notifications = () => {
   };
 
   const handlePostNavigation = (notification: Notification) => {
-    // Navigate only if postId exists
-    if (!notification.postId) {
-      console.warn("No postId for notification:", notification.massage);
+    const interactionTypes = ["LIKE", "COMMENT", "BOOKMARK", "RESHARE"];
+    
+    if (interactionTypes.includes(notification.type) && notification.postId) {
+      navigate(`/post/${notification.postId}`);
+      if (!notification.isRead && currentUserId) {
+        const timer = setTimeout(() => {
+          markAsRead(notification.id);
+          notificationTimers.current.delete(notification.id);
+        }, 1000);
+        notificationTimers.current.set(notification.id, timer);
+      }
+    } else if (!notification.postId && interactionTypes.includes(notification.type)) {
       setError("This notification does not link to a post.");
       setTimeout(() => setError(null), 3000);
-      return;
-    }
-
-    // Navigate to the post
-    navigate(`/post/${notification.postId}`);
-
-    // Delay marking as read by 1 second (only if unread)
-    if (!notification.isRead && currentUserId) {
-      const timer = setTimeout(() => {
-        markAsRead(notification.id);
-        notificationTimers.current.delete(notification.id);
-      }, 1000); // 1 second delay
-      notificationTimers.current.set(notification.id, timer);
-    } else if (!currentUserId) {
-      console.warn("Cannot mark notification as read: user not loaded");
-      setError("Please log in to mark notifications as read.");
-      setTimeout(() => setError(null), 3000);
+    } else {
+      if (["FOLLOW", "UNFOLLOW", "MENTION"].includes(notification.type)) {
+        navigate(`/profile/${notification.senderUserId}`);
+      }
     }
   };
 
@@ -313,7 +213,7 @@ const Notifications = () => {
   const applyTabFilter = (notifications: Notification[]) => {
     if (activeTab === "all") return notifications;
     if (activeTab === "interactions") return notifications.filter((notification) =>
-      ["LIKE", "COMMENT", "BOOKMARK", "FOLLOW", "UNFOLLOW"].includes(notification.type)
+      ["LIKE", "COMMENT", "BOOKMARK", "RESHARE", "FOLLOW", "UNFOLLOW"].includes(notification.type)
     );
     if (activeTab === "mentions") return notifications.filter((notification) =>
       notification.type === "MENTION"
@@ -365,7 +265,6 @@ const Notifications = () => {
           )}
         </CardContent>
         
-        {/* Delete button - appears on hover */}
         <Button
           variant="ghost"
           size="icon"
@@ -381,15 +280,29 @@ const Notifications = () => {
     );
   };
 
+  useEffect(() => {
+    const fetchUserProfiles = async () => {
+      const uniqueUserIds = Array.from(new Set(notifications.map((n) => n.senderUserId)));
+      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
+      const users = await Promise.all(userPromises);
+      const userMap = new Map(users.map((user) => [user.id, user]));
+      setUserProfiles(userMap);
+    };
+
+    if (notifications.length > 0) {
+      fetchUserProfiles();
+    }
+  }, [notifications]);
+
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 dark:text-white mx-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 future-feed:bg-black dark:text-white mx-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
       <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-lime-500 font-bold">Notifications</h1>
+          <h1 className="future-feed:text-white text-xl dark:text-lime-500 font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
@@ -401,12 +314,12 @@ const Notifications = () => {
                 onClick={() => setShowSearch(!showSearch)}
                 className="flex items-center cursor-pointer"
               >
-                <Search className="mr-2 text-lime-400 " />
+                <Search className="mr-2 text-lime-400" />
                 {showSearch ? "Hide Search" : "Show Search"}
               </DropdownMenuItem>
               <DropdownMenuItem 
-                onClick={markAllAsRead}
-                disabled={notifications.filter(n => !n.isRead).length === 0}
+                onClick={() => currentUserId && markAllAsRead(currentUserId)}
+                disabled={unreadCount === 0}
                 className="flex items-center cursor-pointer"
               >
                 <CheckCircle className="mr-2 h-4 w-4 text-lime-400" />
@@ -416,7 +329,6 @@ const Notifications = () => {
           </DropdownMenu>
         </div>
 
-        {/* Search Bar (Conditionally Rendered) */}
         {showSearch && (
           <div className="px-3 mb-4">
             <SearchBar
