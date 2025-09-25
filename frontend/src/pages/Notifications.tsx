@@ -76,22 +76,22 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    const initializeUserAndNotifications = async () => {
+    const initializeNotifications = async () => {
       if (currentUserId) {
+        setLoading(true);
         await fetchNotifications(currentUserId);
-        setFilteredNotifications(notifications); // Sync filtered notifications
+        setLoading(false);
       } else {
         setError("User not authenticated. Please log in.");
         setLoading(false);
       }
     };
 
-    initializeUserAndNotifications();
-  }, [fetchNotifications, currentUserId]);
+    initializeNotifications();
+  }, [currentUserId, fetchNotifications]);
 
   useEffect(() => {
-    setFilteredNotifications(notifications); // Keep filtered notifications in sync
-    setLoading(false); // Set loading to false after notifications are fetched
+    setFilteredNotifications(notifications);
   }, [notifications]);
 
   const markAsRead = async (notificationId: number) => {
@@ -122,7 +122,7 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      console.log(`Notification ${notificationId} marked as read`); // Debug log
+      console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
@@ -281,7 +281,6 @@ const Notifications = () => {
   };
 
   useEffect(() => {
-    // Fetch user profiles for notifications
     const fetchUserProfiles = async () => {
       const uniqueUserIds = Array.from(new Set(notifications.map((n) => n.senderUserId)));
       const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
