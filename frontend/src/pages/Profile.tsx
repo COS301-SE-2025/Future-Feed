@@ -1493,7 +1493,7 @@ const Profile = () => {
                   variant="secondary"
                   onClick={() => handleUnfollow(user.id)}
                   disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-2 min-w-[90px] px-4 py-1 rounded-full font-semibold bg-white dark:bg-slate-200 dark:hover:bg-slate-300 dark:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
+                  className="mt-[-100px] min-w-[90px] px-4 py-1 rounded-full font-semibold bg-white dark:bg-slate-200 dark:hover:bg-slate-300 dark:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
                 >
                   {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
                 </Button>
