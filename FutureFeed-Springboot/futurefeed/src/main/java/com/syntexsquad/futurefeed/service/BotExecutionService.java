@@ -28,7 +28,7 @@ public class BotExecutionService {
     @Autowired
     private BotPostService botPostService;
 
-    private final String FASTAPI_URL = "http://localhost:8000/execute-bot";  
+    private final String FASTAPI_URL = "https://api.rookemtrading.com/fastapi/execute-bot";  
 
     public String executeBot(Integer botId) {
         Bot bot = botRepository.findById(botId)

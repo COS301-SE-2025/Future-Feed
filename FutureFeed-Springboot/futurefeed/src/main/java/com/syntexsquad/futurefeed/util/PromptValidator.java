@@ -15,7 +15,7 @@ public class PromptValidator {
     // configurable via env or system prop; defaults to local FastAPI
     private static final String MOD_BASE =
             System.getProperty("moderation.base-url",
-            System.getenv().getOrDefault("MODERATION_BASE_URL", "http://localhost:8000"));
+            System.getenv().getOrDefault("MODERATION_BASE_URL", "https://api.rookemtrading.com/fastapi"));
 
     private static final ModerationClient CLIENT = new ModerationClient(
             MOD_BASE,

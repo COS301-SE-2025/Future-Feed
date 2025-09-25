@@ -1,12 +1,14 @@
 package com.syntexsquad.futurefeed.moderation;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.net.URI;
 import java.net.http.*;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ModerationClient {
 
@@ -31,7 +33,12 @@ public class ModerationClient {
         this.backoffMillis = Math.max(100L, backoffMillis);
         this.connectTimeout = connectTimeout != null ? connectTimeout : Duration.ofSeconds(3);
         this.requestTimeout = requestTimeout != null ? requestTimeout : Duration.ofSeconds(10);
-        this.http = HttpClient.newBuilder().connectTimeout(this.connectTimeout).build();
+
+        // 🔑 Force HTTP/1.1 so the request body is always sent
+        this.http = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(this.connectTimeout)
+                .build();
     }
 
     /** POST /moderate-post */
@@ -45,34 +52,46 @@ public class ModerationClient {
         String url = baseUrl + "/moderate-post";
         String json = mapper.writeValueAsString(body);
 
+        // Debug log
+        System.out.println("[ModerationClient] Sending JSON to " + url + " => " + json);
+
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(requestTimeout)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                 .build();
 
         HttpResponse<String> resp = sendWithRetry(req);
+
+        // Debug log
+        System.out.println("[ModerationClient] Response status=" + resp.statusCode() + " body=" + resp.body());
+
         if (resp.statusCode() / 100 != 2) {
             throw new RuntimeException("Moderation service error " + resp.statusCode() + ": " + resp.body());
         }
         return mapper.readValue(resp.body(), ModerationResult.class);
     }
 
-    /** POST /moderate  (prompt-only safety) */
+    /** POST /moderate (prompt-only safety) */
     public PromptModerationResult moderatePrompt(String prompt) throws Exception {
         String url = baseUrl + "/moderate";
         Map<String, Object> body = Map.of("prompt", prompt == null ? "" : prompt);
         String json = mapper.writeValueAsString(body);
 
+        System.out.println("[ModerationClient] Sending JSON to " + url + " => " + json);
+
         HttpRequest req = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(requestTimeout)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .header("Content-Type", "application/json; charset=UTF-8")
+                .POST(HttpRequest.BodyPublishers.ofString(json, StandardCharsets.UTF_8))
                 .build();
 
         HttpResponse<String> resp = sendWithRetry(req);
+
+        System.out.println("[ModerationClient] Response status=" + resp.statusCode() + " body=" + resp.body());
+
         if (resp.statusCode() / 100 != 2) {
             throw new RuntimeException("Moderation prompt error " + resp.statusCode() + ": " + resp.body());
         }
