@@ -1324,16 +1324,16 @@ const Profile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
-          <Skeleton className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
           <div className="flex-1">
-            <Skeleton className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
         </div>
-        <Skeleton className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <Skeleton className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
       </div>
     ));
   };
@@ -1414,25 +1414,26 @@ const Profile = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-slate-200 future-feed:bg-black future-feed:text-lime overflow-y-auto">
+      <div className=" flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="w-full max-w-[1100px] mx-auto">
+        
+        <main className="w-[1100px] mx-auto">
           <div className="relative">
-            <Skeleton className="h-40 w-full bg-blue-500 dark:bg-slate-200 future-feed:bg-lime" />
+            <Skeleton className="mt-25 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-24 h-24 rounded-full" />
+              <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
           <div className="pt-16 px-4">
             <div className="flex justify-between items-start">
-              <div className="ml-32">
+              <div className="ml-30 mt-[-120px]">
                 <Skeleton className="h-6 w-48 mb-2" />
                 <Skeleton className="h-4 w-32" />
                 <Skeleton className="h-4 w-64 mt-2" />
               </div>
-              <Skeleton className="h-10 w-32 mt-2" />
+              <Skeleton className="h-10 w-32 mt-[-220px]" />
             </div>
             <div className="mt-4 flex gap-2">
               <Skeleton className="h-4 w-24" />
@@ -1441,7 +1442,7 @@ const Profile = () => {
               <Skeleton className="h-4 w-24" />
             </div>
           </div>
-          <Skeleton className="my-4 h-1 w-full bg-blue-500 dark:bg-slate-200 future-feed:bg-lime" />
+          <Skeleton className="my-4 h-1 w-full" />
           <div className="grid w-full grid-cols-5">
             {[...Array(5)].map((_, idx) => (
               <Skeleton key={idx} className="h-10 w-full" />
@@ -1449,24 +1450,18 @@ const Profile = () => {
           </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhoToFollow />
-          </div>
-        </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
       </div>
     );
   }
 
-  if (error || !user) {
-    return (
-      <div className="p-4 text-black dark:text-slate-200 future-feed:text-lime">
-        {error ? `Error: ${error}` : "User not found"}
-      </div>
-    );
-  }
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
     <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
