@@ -1350,17 +1350,17 @@ const Profile = () => {
   const fetchFollowing = async (userId: number, allUsers: User[]) => {
     try {
       const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+        method: "GET",
         credentials: "include",
       });
-      if (!res.ok) throw new Error(`Failed to fetch following for user ${userId}`);
-      const followingIds: number[] = await res.json();
-      const following = allUsers.filter((u) => followingIds.includes(u.id));
-      setFollowingUsers(following);
-      console.log("Fetched following users:", following);
-      return following;
+      const data: FollowRelation[] = await res.json();
+      const followedUserIds = data.map((relation) => relation.followedId);
+      const followedUsers = allUsers.filter((user) => followedUserIds.includes(user.id));
+      setFollowingUsers(followedUsers);
+      profileDataCache.followingUsers = followedUsers;
+      return followedUsers;
     } catch (err) {
-      console.error(`Error fetching following for user ${userId}:`, err);
-      setError("Failed to load following users.");
+      console.error("Failed to fetch following users", err);
       return [];
     }
   };
@@ -1406,6 +1406,7 @@ const Profile = () => {
       const allUsers = await fetchUsers();
       await Promise.all([
         fetchFollowing(userData.id, allUsers),
+        setFollowingUsers(profileDataCache.followingUsers),
         fetchFollowers(userData.id, allUsers),
         setFollowers(profileDataCache.followers),
         fetchUserPosts(userData.id, userId || userData.id),
