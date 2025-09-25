@@ -241,11 +241,10 @@ const Profile = () => {
       setFollowStatus(id, true);
       if (currentUserId) {
         await refetchFollowing();
-        queryClient.invalidateQueries({ queryKey: ["following", currentUserId] });
+        queryClient.invalidateQueries({ queryKey: ['following', currentUserId] });
       }
     } catch (err) {
       console.error("Follow failed", err);
-      setError("Failed to follow user.");
     } finally {
       setFollowingId(null);
     }
@@ -263,11 +262,10 @@ const Profile = () => {
       setFollowStatus(id, false);
       if (currentUserId) {
         await refetchFollowing();
-        queryClient.invalidateQueries({ queryKey: ["following", currentUserId] });
+        queryClient.invalidateQueries({ queryKey: ['following', currentUserId] });
       }
     } catch (err) {
       console.error("Unfollow failed", err);
-      setError("Failed to unfollow user.");
     } finally {
       setUnfollowingId(null);
     }
@@ -1359,21 +1357,27 @@ const Profile = () => {
   };
 
   const fetchFollowers = async (userId: number, allUsers: User[]) => {
-    try {
-      const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`Failed to fetch followers for user ${userId}`);
-      const followerIds: number[] = await res.json();
-      const followers = allUsers.filter((u) => followerIds.includes(u.id));
-      setFollowers(followers);
-      return followers;
-    } catch (err) {
-      console.error(`Error fetching followers for user ${userId}:`, err);
-      setError("Failed to load followers.");
+  try {
+    const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error(`Failed to fetch followers for user ${userId}: ${res.status}`);
+    const followerIds: number[] = await res.json();
+    if (!Array.isArray(followerIds)) {
+      console.warn(`Invalid follower IDs response for user ${userId}:`, followerIds);
+      setFollowers([]);
       return [];
     }
-  };
+    const followers = allUsers.filter((u) => followerIds.includes(u.id));
+    setFollowers(followers);
+    return followers;
+  } catch (err) {
+    console.error(`Error fetching followers for user ${userId}:`, err);
+    setError("Failed to load followers.");
+    setFollowers([]);
+    return [];
+  }
+};
   
 
   useEffect(() => {
@@ -1465,26 +1469,26 @@ const Profile = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-slate-200 future-feed:bg-black future-feed:text-lime overflow-y-auto">
+    <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="w-full max-w-[1100px] mx-auto mt-3">
+      <main className="w-[1100px] mx-auto mt-3">
         <div className="relative">
-          <div className="h-40 bg-blue-500 dark:bg-slate-200 future-feed:bg-lime w-full" />
+          <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-24 h-24 border-4 border-slate-300 dark:border-slate-200 future-feed:border-lime">
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white future-feed:hover:text-lime">
+            <Avatar className="w-27 h-27 border-3  ">
+              <div className="flex items-center gap-3 dark:hover:text-white">
                 <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-              </Link>
+              </div>
             </Avatar>
           </div>
         </div>
         <div className="pt-16 px-4">
-          <div className="flex justify-between items-start text-gray-400 dark:text-slate-500 future-feed:text-lime">
-            <div className="ml-32">
-              <h1 className="text-xl font-bold dark:text-slate-200 future-feed:text-white">{user.displayName || user.username}</h1>
+          <div className="text-gray-400 flex justify-between items-start">
+            <div className="ml-30 mt-[-120px]">
+              <h1 className="text-xl future-feed:text-white font-bold">{user.displayName || user.username}</h1>
               <p className="dark:text-slate-500">@{user.username}</p>
               <p className="mt-2 text-sm">{user.bio}</p>
             </div>
@@ -1502,7 +1506,7 @@ const Profile = () => {
                 <Button
                   onClick={() => handleFollow(user.id)}
                   disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-2 min-w-[90px] px-4 py-1 rounded-full font-semibold bg-blue-500 dark:bg-slate-200 dark:hover:bg-slate-300 dark:hover:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
+                  className="mt-[-100px] min-w-[90px] px-4 py-1 rounded-full font-semibold bg-blue-500 dark:bg-slate-200 dark:hover:bg-slate-300 dark:hover:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
                 >
                   {followingId === user.id ? "Following..." : "Follow"}
                 </Button>
