@@ -218,6 +218,7 @@ const Profile = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
       return [];
+
     }
   };
 
@@ -229,6 +230,7 @@ const Profile = () => {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`Failed to check follow status for user ${userId}`);
+
       const data = await res.json();
       return data.following;
     } catch (err) {
@@ -1520,6 +1522,7 @@ const Profile = () => {
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
               <Button variant="secondary" className="bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
                 Edit Profile
+
               </Button>
             </Link>
             )}
