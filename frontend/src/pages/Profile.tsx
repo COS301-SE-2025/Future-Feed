@@ -14,6 +14,13 @@ import { useFollowStore } from "@/store/useFollowStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
 
+interface FollowRelation {
+  id: number;
+  followerId: number;
+  followedId: number;
+  followedAt: string;
+}
+
 interface UserProfile {
   id: number;
   username: string;
@@ -101,6 +108,8 @@ interface UserInfo2 {
 const userCache = new Map<number, UserInfo>();
 const profileDataCache = {
   user: null as UserProfile | null,
+  followers: [] as User[],
+  followingUsers: [] as User[],
   posts: [] as PostData[],
   reshares: [] as PostData[],
   commented: [] as PostData[],
@@ -1357,27 +1366,22 @@ const Profile = () => {
   };
 
   const fetchFollowers = async (userId: number, allUsers: User[]) => {
-  try {
-    const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
-      credentials: "include",
-    });
-    if (!res.ok) throw new Error(`Failed to fetch followers for user ${userId}: ${res.status}`);
-    const followerIds: number[] = await res.json();
-    if (!Array.isArray(followerIds)) {
-      console.warn(`Invalid follower IDs response for user ${userId}:`, followerIds);
-      setFollowers([]);
+    try {
+      const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+        method: "GET",
+        credentials: "include",
+      });
+      const data: FollowRelation[] = await res.json();
+      const followerUserIds = data.map((relation) => relation.followerId);
+      const followerUsers = allUsers.filter((user) => followerUserIds.includes(user.id));
+      setFollowers(followerUsers);
+      profileDataCache.followers = followerUsers;
+      return followerUsers;
+    } catch (err) {
+      console.error("Failed to fetch followers", err);
       return [];
     }
-    const followers = allUsers.filter((u) => followerIds.includes(u.id));
-    setFollowers(followers);
-    return followers;
-  } catch (err) {
-    console.error(`Error fetching followers for user ${userId}:`, err);
-    setError("Failed to load followers.");
-    setFollowers([]);
-    return [];
-  }
-};
+  };
   
 
   useEffect(() => {
@@ -1403,6 +1407,7 @@ const Profile = () => {
       await Promise.all([
         fetchFollowing(userData.id, allUsers),
         fetchFollowers(userData.id, allUsers),
+        setFollowers(profileDataCache.followers),
         fetchUserPosts(userData.id, userId || userData.id),
       ]);
     }
