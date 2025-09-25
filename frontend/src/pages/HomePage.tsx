@@ -14,7 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
-import { useNotifications, type Notification } from "@/context/NotificationContext";
+import { useNotifications} from "@/context/NotificationContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -159,7 +159,7 @@ const HomePage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const { setNotifications } = useNotifications();
+  const { fetchNotifications } = useNotifications();
   const [presetPosts, setPresetPosts] = useState<PostData[]>([]);
   const [loadingPresetPosts, setLoadingPresetPosts] = useState(false);
   const [isViewingPresetFeed, setIsViewingPresetFeed] = useState(false);
@@ -367,6 +367,7 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
+          console.log(`Post ${post.id} raw user data:`, post.user);
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -1321,31 +1322,6 @@ const HomePage = () => {
           [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         );
       }
-    }
-  };
-  const fetchNotifications = async (userId: number) => {
-    try {
-      const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          setError("Unauthorized. Please log in again.");
-          return;
-        }
-        throw new Error(`Failed to fetch notifications: ${response.status}`);
-      }
-
-      const data: Notification[] = await response.json();
-      setNotifications(data); // Store in NotificationContext
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-      setError("Failed to load notifications.");
-      setTimeout(() => setError(null), 3000);
     }
   };
   const handleLike = async (postId: number) => {
@@ -2331,7 +2307,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
+                className="w-full mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
                 rows={8}
               />
               <div className="mb-4">

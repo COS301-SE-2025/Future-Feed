@@ -300,7 +300,6 @@ const Post: React.FC<PostProps> = ({
                         </Avatar>
                         <div>
                           <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
                           <p className="text-xs sm:text-sm dark:text-white line-clamp-3 max-w-full">
                             {comment.content}
                           </p>
