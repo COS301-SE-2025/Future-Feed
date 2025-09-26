@@ -11,6 +11,8 @@ import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
 
+ const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
+ 
 interface User {
   id: number
   username: string
@@ -33,7 +35,7 @@ interface FollowStatusResponse {
 const WhoToFollow = () => {
   const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({});
   //const [statusesLoading, setStatusesLoading] = useState(false); // A
-  const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
+ 
   const { removeFollowingUser, addFollowingUser} = useFollowStore()
   //prevent unnecessary re-renders
   //const followStatus = useFollowStore(state => state.followStatus);
