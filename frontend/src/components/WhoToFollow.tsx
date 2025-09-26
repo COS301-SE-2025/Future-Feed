@@ -11,7 +11,7 @@ import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
 
- const API_Url = import.meta.env.VITE_API_Url || "http://localhost:8080"
+ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
  
 interface User {
   id: number
@@ -54,7 +54,7 @@ const WhoToFollow = () => {
   } = useQuery<TopFollowedUser[], Error>({
     queryKey: ['topFollowedUsers'],
     queryFn: async (): Promise<TopFollowedUser[]> => {
-      const res = await fetch(`${API_Url}/api/user/top-followed`, {
+      const res = await fetch(`${API_URL}/api/user/top-followed`, {
         method: "GET",
         credentials: "include",
       })
@@ -74,7 +74,7 @@ const WhoToFollow = () => {
       try {
         const statuses = await Promise.all(
           topUsers.map(async (user: TopFollowedUser) => {
-            const res = await fetch(`${API_Url}/api/follow/status/${user.id}`, {
+            const res = await fetch(`${API_URL}/api/follow/status/${user.id}`, {
               method: "GET",
               credentials: "include",
             })
@@ -95,12 +95,12 @@ const WhoToFollow = () => {
     }
 
     fetchStatuses()
-  }, [topUsers, safeUpdateStatus, API_Url])
+  }, [topUsers, safeUpdateStatus, API_URL])
 
   const handleFollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      await fetch(`${API_Url}/api/follow`, {
+      await fetch(`${API_URL}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -125,7 +125,7 @@ const WhoToFollow = () => {
   const handleUnfollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      await fetch(`${API_Url}/api/follow/${userId}`, {
+      await fetch(`${API_URL}/api/follow/${userId}`, {
         method: "DELETE",
         credentials: "include",
       })
