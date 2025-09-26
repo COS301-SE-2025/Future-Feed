@@ -1030,6 +1030,7 @@ const HomePage = () => {
       const data = await response.json();
       setRules(prev => ({ ...prev, [presetId]: data }));
     } catch (err) {
+      console.debug(err);
       setError("Failed to fetch rules for the preset");
       setTimeout(() => {
         setError('');
@@ -1129,6 +1130,7 @@ const HomePage = () => {
       });
       setError('');
     } catch (err) {
+      console.debug(err);
       setError("Couldn't add rule");
       setTimeout(() => {
         setError('');
@@ -1149,6 +1151,7 @@ const HomePage = () => {
         [presetId]: (prev[presetId] || []).filter(rule => rule.id !== ruleId)
       }));
     } catch (err) {
+      console.debug(err);
       setError("Couldn't delete rule");
       setTimeout(() => {
         setError('');
