@@ -54,6 +54,7 @@ interface PostData {
   showComments: boolean;
   topics: Topic[];
   profilePicture?: string;
+  createdAt: string;
 }
 
 interface BotProfile {
@@ -267,6 +268,7 @@ const BotPage = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topics ?? [],
+              createdAt: postData.createdAt,
             };
           } catch (err) {
             console.warn(`Error processing post ID ${bp.postId}:`, err);
@@ -275,7 +277,7 @@ const BotPage = () => {
         })
       );
 
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPosts(validPosts);
       if (validPosts.length === 0) {
         console.warn("No valid posts after processing.");
