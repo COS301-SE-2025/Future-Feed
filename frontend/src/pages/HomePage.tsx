@@ -198,14 +198,6 @@ const HomePage = () => {
   };
 
   const fetchUser = async (userId: number, postUser?: PostUser) => {
-    if (postUser && postUser.id === userId && postUser.username && postUser.displayName) {
-      const validUser = {
-        username: postUser.username && typeof postUser.username === "string" ? postUser.username : `unknown${userId}`,
-        displayName: postUser.displayName && typeof postUser.displayName === "string" ? postUser.displayName : `Unknown User ${userId}`,
-        profilePicture: postUser.profilePicture,
-      };
-      return validUser;
-    }
 
     if (currentUser && userId === currentUser.id) {
       const user = {
@@ -213,7 +205,7 @@ const HomePage = () => {
         displayName: currentUser.displayName,
         profilePicture: currentUser.profilePicture,
       };
-      console.debug(`Using currentUser for user ${userId}:`, user);
+      console.debug(`Using currentUser for user ${userId} ${postUser}:`, user);
       return user;
     }
     try {
@@ -366,7 +358,7 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-         const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -738,11 +730,6 @@ const HomePage = () => {
       return data;
     } catch (err) {
       console.error("Error fetching default preset:", err);
-      // Don't show error to user for 404 - it's normal
-      if (err instanceof Error && !err.message.includes('404')) {
-        setError("Failed to load default preset.");
-        setTimeout(() => setError(null), 3000);
-      }
       setDefaultPresetId(null);
       return null;
     }
@@ -1815,7 +1802,7 @@ const HomePage = () => {
       fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
-    } 
+    }
   }, [activeTab, currentUser]);
 
 
