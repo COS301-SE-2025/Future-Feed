@@ -7,13 +7,20 @@ export const formatRelativeTime = (date: string): string => {
     return "Invalid date";
   }
 
+  // Use UTC for both dates to avoid timezone issues
   const now = new Date();
-  const diffMs = now.getTime() - postDate.getTime();
+  const nowUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 
+                          now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
+  const postUTC = Date.UTC(postDate.getUTCFullYear(), postDate.getUTCMonth(), postDate.getUTCDate(),
+                          postDate.getUTCHours(), postDate.getUTCMinutes(), postDate.getUTCSeconds());
+  
+  const diffMs = nowUTC - postUTC;
   const diffSeconds = Math.floor(diffMs / 1000);
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
+  // ... rest of your function remains the same
   if(diffDays >= 30){
     return postDate.toLocaleDateString('en-US', {
       year:'numeric',
