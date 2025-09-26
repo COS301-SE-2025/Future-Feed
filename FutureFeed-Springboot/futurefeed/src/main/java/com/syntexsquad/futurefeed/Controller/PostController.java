@@ -59,10 +59,13 @@ public class PostController {
         dto.setUsername(u.getUsername());
         dto.setDisplayName(u.getDisplayName());
         dto.setBio(u.getBio());
-        dto.setProfilePictureUrl(u.getProfilePictureUrl());
+        String pic = (u.getProfilePictureUrl() != null && !u.getProfilePictureUrl().isBlank())
+                ? u.getProfilePictureUrl()
+                : u.getProfilePicture();
+        dto.setProfilePictureUrl(pic);
         return dto;
     }
-
+    
     private static PostDTO toPostDTO(Post p) {
         PostDTO dto = new PostDTO();
         dto.setId(p.getId());
