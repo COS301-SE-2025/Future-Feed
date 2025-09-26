@@ -13,7 +13,7 @@ import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
-import { useNotifications} from "@/context/NotificationContext";
+import { useNotifications } from "@/context/NotificationContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -551,7 +551,6 @@ const HomePage = () => {
         fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
       ]);
 
-      if (!followRes.ok) throw new Error("Failed to fetch followed users");
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
       const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
@@ -721,22 +720,34 @@ const HomePage = () => {
       const response = await fetch(`${API_URL}/api/presets/default`, {
         method: "GET",
         credentials: "include",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
       });
+
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No default preset found.");
+          console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
-          return;
+          return null;
         }
         throw new Error(`Failed to fetch default preset: ${response.status}`);
       }
+
       const data: Preset = await response.json();
       setDefaultPresetId(data.id);
+      console.log("Default preset loaded:", data.id, data.name);
+      return data;
     } catch (err) {
       console.error("Error fetching default preset:", err);
-      setError("Failed to load default preset.");
-      setTimeout(() => setError(null), 3000);
+      // Don't show error to user for 404 - it's normal
+      if (err instanceof Error && !err.message.includes('404')) {
+        setError("Failed to load default preset.");
+        setTimeout(() => setError(null), 3000);
+      }
+      setDefaultPresetId(null);
+      return null;
     }
   };
   const updatePreset = async (presetId: number, name: string, defaultPreset: boolean) => {
@@ -805,9 +816,18 @@ const HomePage = () => {
       const response = await fetch(`${API_URL}/api/presets/${presetId}/default`, {
         method: "PUT",
         credentials: "include",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
       });
-      if (!response.ok) throw new Error(`Failed to set default preset: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to set default preset: ${response.status} - ${errorText}`);
+      }
+
+      // Update local state
       setDefaultPresetId(presetId);
       setPresets((prev) =>
         prev.map((p) => ({
@@ -815,10 +835,12 @@ const HomePage = () => {
           defaultPreset: p.id === presetId,
         }))
       );
+
+      console.log(`Preset ${presetId} set as default`);
       setError(null);
     } catch (err) {
       console.error("Error setting default preset:", err);
-      setError("Failed to set default preset.");
+      setError("Failed to set default preset. Please try again.");
       setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
@@ -941,7 +963,6 @@ const HomePage = () => {
       );
     } catch (err) {
       console.error(`Error fetching preset posts for preset ${presetId}:`, err);
-      setError("Failed to load preset posts.");
       setTimeout(() => setError(null), 3000);
       setPresetPosts([]);
     } finally {
@@ -973,16 +994,33 @@ const HomePage = () => {
       const response = await fetch(`${API_URL}/api/presets`, {
         method: "GET",
         credentials: "include",
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("access_token")}`
+        },
       });
-      if (!response.ok) throw new Error("Failed to fetch Presets");
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch presets: ${response.status}`);
+      }
+
       const data: Preset[] = await response.json();
       setPresets(data);
+
+      // Find default preset from the list
       const defaultPreset = data.find((p) => p.defaultPreset);
-      setDefaultPresetId(defaultPreset ? defaultPreset.id : null);
+      if (defaultPreset) {
+        setDefaultPresetId(defaultPreset.id);
+        console.log("Default preset found in presets list:", defaultPreset.id);
+      } else {
+        setDefaultPresetId(null);
+        console.log("No default preset found in presets list");
+      }
+
     } catch (err) {
-      setError("Error fetching presets");
       console.error("Error fetching presets:", err);
+      setError("Error fetching presets");
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsLoading(false);
     }
@@ -1765,6 +1803,7 @@ const HomePage = () => {
       setLoading(true);
       const user = await fetchCurrentUser();
       if (user) {
+        await fetchPresets();
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
@@ -1783,7 +1822,7 @@ const HomePage = () => {
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
     } else if (activeTab === "presets" && defaultPresetId) {
-      setSelectedPreset(defaultPresetId);
+      console.log("presets tab activated, default preset Id:", defaultPresetId);
     }
   }, [activeTab, currentUser, defaultPresetId]);
 
@@ -1964,6 +2003,15 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
+                      {/* Add a welcome message when no default preset exists */}
+                      {!defaultPresetId && presets.length === 0 && (
+                        <div className="text-center p-8">
+                          <p className="text-lg text-gray-500 mb-4">No presets found</p>
+                          <p className="text-sm text-gray-400">
+                            Create your first preset to customize your feed!
+                          </p>
+                        </div>
+                      )}
                       {isViewingPresetFeed ? (
                         <>
                           <div className="flex gap-2">
@@ -1995,8 +2043,6 @@ const HomePage = () => {
                         <div className="flex justify-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
                         </div>
-                      ) : presets.length === 0 ? (
-                        <p className="text-center text-lg text-gray-500 mt-10">You don't have any presets yet.</p>
                       ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {presets.map((preset) => (
@@ -2031,7 +2077,7 @@ const HomePage = () => {
                                             <p>Preset Actions</p>
                                           </TooltipContent>
                                         </Tooltip>
-                                      </TooltipProvider> 
+                                      </TooltipProvider>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start">
                                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
@@ -2042,14 +2088,14 @@ const HomePage = () => {
                                           fetchPresetPosts(preset.id);
                                         }}
                                       >
-                                        <ChartNoAxesGantt className="text-lime-300"/>
+                                        <ChartNoAxesGantt className="text-lime-300" />
                                         View Feed
-                                        
+
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
                                       >
-                                        <SaveAll className="text-lime-300"/>
+                                        <SaveAll className="text-lime-300" />
                                         Save
                                       </DropdownMenuItem>
                                       <Dialog>
@@ -2058,7 +2104,7 @@ const HomePage = () => {
                                             onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
                                             className="text-red-500 focus:text-red-700"
                                           >
-                                            <Trash2 className="text-red-400"/>
+                                            <Trash2 className="text-red-400" />
                                             Delete
                                           </DropdownMenuItem>
                                         </DialogTrigger>
@@ -2066,7 +2112,7 @@ const HomePage = () => {
                                           <DialogHeader>
                                             <DialogTitle>Delete Preset</DialogTitle>
                                             <DialogDescription>
-                                              Are you sure you want to delete the preset "{preset.name}"? This action cannot be undone.
+                                              Are you sure you want to delete {preset.name} ? This action cannot be undone.
                                             </DialogDescription>
                                           </DialogHeader>
                                           <DialogFooter>

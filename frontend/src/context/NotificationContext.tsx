@@ -64,7 +64,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         }
 
         const data: Notification[] = await response.json();
-        console.log("Fetched notifications:", data); // Debug log
         setNotifications(data);
       } catch (err) {
         console.error("Error fetching notifications:", err);
@@ -92,7 +91,6 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         setNotifications((prev) =>
           prev.map((notification) => ({ ...notification, isRead: true }))
         );
-        console.log("All notifications marked as read"); // Debug log
       } catch (err) {
         console.error("Error marking all notifications as read:", err);
       }
