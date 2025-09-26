@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic
 requests
 beautifulsoup4
@@ -7,3 +7,5 @@ langchain
 langchain-together
 python-dotenv
 sentence-transformers==2.5.1
+together            
+nsfw-detector       
