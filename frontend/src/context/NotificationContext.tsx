@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import type { ReactNode } from "react";
 
 export interface Notification {
@@ -18,7 +18,7 @@ interface NotificationContextType {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   fetchNotifications: (userId: number) => Promise<void>;
   markAllAsRead: (userId: number) => Promise<void>;
-  currentUserId: number | null; // Add currentUserId to context
+  currentUserId: number | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -28,7 +28,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
@@ -44,55 +44,61 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error fetching user info:", err);
       return null;
     }
-  };
+  }, [API_URL]);
 
-  const fetchNotifications = async (userId: number) => {
-    try {
-      const response = await fetch(`${API_URL}/api/notifications/${userId}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
+  const fetchNotifications = useCallback(
+    async (userId: number) => {
+      try {
+        const response = await fetch(`${API_URL}/api/notifications/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          credentials: "include",
+        });
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error("Unauthorized. Please log in again.");
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            throw new Error("Unauthorized. Please log in again.");
+          }
+          throw new Error(`Failed to fetch notifications: ${response.status}`);
         }
-        throw new Error(`Failed to fetch notifications: ${response.status}`);
+
+        const data: Notification[] = await response.json();
+        console.log("Fetched notifications:", data); // Debug log
+        setNotifications(data);
+      } catch (err) {
+        console.error("Error fetching notifications:", err);
+        setNotifications([]);
       }
+    },
+    [API_URL]
+  );
 
-      const data: Notification[] = await response.json();
-      console.log("Fetched notifications:", data); // Debug log
-      setNotifications(data);
-    } catch (err) {
-      console.error("Error fetching notifications:", err);
-      setNotifications([]); // Ensure empty state on error
-    }
-  };
+  const markAllAsRead = useCallback(
+    async (userId: number) => {
+      try {
+        const response = await fetch(`${API_URL}/api/notifications/mark-all-read?userId=${userId}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          credentials: "include",
+        });
 
-  const markAllAsRead = async (userId: number) => {
-    try {
-      const response = await fetch(`${API_URL}/api/notifications/mark-all-read?userId=${userId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        credentials: "include",
-      });
+        if (!response.ok) {
+          throw new Error(`Failed to mark all notifications as read: ${response.status}`);
+        }
 
-      if (!response.ok) {
-        throw new Error(`Failed to mark all notifications as read: ${response.status}`);
+        setNotifications((prev) =>
+          prev.map((notification) => ({ ...notification, isRead: true }))
+        );
+        console.log("All notifications marked as read"); // Debug log
+      } catch (err) {
+        console.error("Error marking all notifications as read:", err);
       }
-
-      setNotifications((prev) =>
-        prev.map((notification) => ({ ...notification, isRead: true }))
-      );
-      console.log("All notifications marked as read"); // Debug log
-    } catch (err) {
-      console.error("Error marking all notifications as read:", err);
-    }
-  };
+    },
+    [API_URL]
+  );
 
   useEffect(() => {
     const initializeNotifications = async () => {
@@ -102,7 +108,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     initializeNotifications();
-  }, []);
+  }, [fetchCurrentUser, fetchNotifications]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
