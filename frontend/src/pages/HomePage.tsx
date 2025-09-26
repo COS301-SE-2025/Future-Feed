@@ -366,8 +366,7 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-          console.log(`Post ${post.id} raw user data:`, post.user);
-          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+         const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
             fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -728,7 +727,6 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         }
@@ -737,7 +735,6 @@ const HomePage = () => {
 
       const data: Preset = await response.json();
       setDefaultPresetId(data.id);
-      console.log("Default preset loaded:", data.id, data.name);
       return data;
     } catch (err) {
       console.error("Error fetching default preset:", err);
@@ -836,7 +833,6 @@ const HomePage = () => {
         }))
       );
 
-      console.log(`Preset ${presetId} set as default`);
       setError(null);
     } catch (err) {
       console.error("Error setting default preset:", err);
@@ -1011,10 +1007,8 @@ const HomePage = () => {
       const defaultPreset = data.find((p) => p.defaultPreset);
       if (defaultPreset) {
         setDefaultPresetId(defaultPreset.id);
-        console.log("Default preset found in presets list:", defaultPreset.id);
       } else {
         setDefaultPresetId(null);
-        console.log("No default preset found in presets list");
       }
 
     } catch (err) {
@@ -1037,7 +1031,6 @@ const HomePage = () => {
       setRules(prev => ({ ...prev, [presetId]: data }));
     } catch (err) {
       setError("Failed to fetch rules for the preset");
-      console.log("Failed to fetch rules for the preset", err);
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -1137,7 +1130,6 @@ const HomePage = () => {
       setError('');
     } catch (err) {
       setError("Couldn't add rule");
-      console.log("Couldn't add rule", err);
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -1158,7 +1150,6 @@ const HomePage = () => {
       }));
     } catch (err) {
       setError("Couldn't delete rule");
-      console.log("Couldn't delete rule", err);
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -1821,10 +1812,8 @@ const HomePage = () => {
       fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
       fetchFollowingPosts();
-    } else if (activeTab === "presets" && defaultPresetId) {
-      console.log("presets tab activated, default preset Id:", defaultPresetId);
-    }
-  }, [activeTab, currentUser, defaultPresetId]);
+    } 
+  }, [activeTab, currentUser]);
 
 
 
