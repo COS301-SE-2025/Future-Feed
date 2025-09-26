@@ -6,6 +6,7 @@ import WhoToFollow from "@/components/WhoToFollow";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import StaticPost from "@/components/ui/StaticPost";
+import StaticBotPost from "@/components/ui/StaticBotPost";
 
 interface UserProfile {
   id: number;
@@ -51,6 +52,7 @@ interface PostData {
   reshareCount: number;
   comments: CommentData[];
   showComments: boolean;
+  botId: number;
 }
 
 interface RawPost {
@@ -63,6 +65,7 @@ interface RawPost {
     username: string;
     displayName: string;
   } | null;
+  botId: number;
 }
 
 interface UserInfo {
@@ -197,6 +200,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
       reshareCount,
       comments: commentsWithUsers,
       showComments: true,
+      botId: post.botId,
     });
   } catch (err) {
     console.error(`Error fetching post ${id}:`, err);
@@ -573,11 +577,39 @@ const fetchPost = async (id: number, currentUserId: number) => {
   }
 
   return (
-    <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
-        <PersonalSidebar />
-      </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+  <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen dark:text-white overflow-y-auto">
+    <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+      <PersonalSidebar />
+    </aside>
+    <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+      {post.botId ? (
+        <StaticBotPost
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
+          onReshare={() => handleReshare(post.id)}
+          onDelete={() => handleDeletePost(post.id)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!currentUser}
+          currentUser={currentUser}
+          authorId={post.authorId}
+          postId={post.id}
+          botId={post.botId}
+        />
+      ) : (
         <StaticPost
           username={post.username}
           handle={post.handle}
@@ -603,17 +635,18 @@ const fetchPost = async (id: number, currentUserId: number) => {
           authorId={post.authorId}
           postId={post.id}
         />
-      </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhoToFollow />
-        </div>
-      </aside>
-    </div>
-  );
+      )}
+    </main>
+    <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <WhatsHappening />
+      </div>
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <WhoToFollow />
+      </div>
+    </aside>
+  </div>
+);
 };
 
 export default PostPage;
