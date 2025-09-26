@@ -111,4 +111,100 @@ public class FeedPresetService {
 
         return new ArrayList<>(resultFeed);
     }
+
+    // --- Update preset ---
+    public FeedPreset updatePreset(Integer presetId, FeedPresetDTO dto) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        // only allow owner to update
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to update this preset");
+        }
+
+        preset.setName(dto.getName());
+        preset.setDefaultPreset(dto.isDefaultPreset());
+        return presetRepo.save(preset);
+    }
+
+    // --- Delete preset ---
+    public void deletePreset(Integer presetId) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to delete this preset");
+        }
+
+        // optionally delete rules belonging to preset first
+        ruleRepo.deleteByPresetId(presetId);
+
+        presetRepo.delete(preset);
+    }
+
+    // --- Update rule ---
+    public PresetRule updateRule(Integer ruleId, PresetRuleDTO dto) {
+        PresetRule rule = ruleRepo.findById(ruleId)
+                .orElseThrow(() -> new RuntimeException("Rule not found"));
+
+        // validate preset ownership
+        FeedPreset preset = presetRepo.findById(rule.getPresetId())
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to update this rule");
+        }
+
+        rule.setTopicId(dto.getTopicId());
+        rule.setSourceType(dto.getSourceType());
+        rule.setSpecificUserId(dto.getSpecificUserId());
+        rule.setPercentage(dto.getPercentage());
+
+        return ruleRepo.save(rule);
+    }
+
+    // --- Delete rule ---
+    public void deleteRule(Integer ruleId) {
+        PresetRule rule = ruleRepo.findById(ruleId)
+                .orElseThrow(() -> new RuntimeException("Rule not found"));
+
+        FeedPreset preset = presetRepo.findById(rule.getPresetId())
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to delete this rule");
+        }
+
+        ruleRepo.delete(rule);
+    }
+
+    public void setDefaultPreset(Integer presetId) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        Integer userId = getAuthenticatedUser().getId();
+        if (!preset.getUserId().equals(userId)) {
+            throw new RuntimeException("Not authorized to update this preset");
+        }
+
+        // Unset existing default for this user
+        List<FeedPreset> userPresets = presetRepo.findByUserId(userId);
+        for (FeedPreset p : userPresets) {
+            if (p.isDefaultPreset()) {
+                p.setDefaultPreset(false);
+                presetRepo.save(p);
+            }
+        }
+
+        // Set new default
+        preset.setDefaultPreset(true);
+        presetRepo.save(preset);
+    }
+
+
+    public FeedPreset getDefaultPreset() {
+        Integer userId = getAuthenticatedUser().getId();
+        return presetRepo.findByUserIdAndDefaultPresetTrue(userId)
+                .orElseThrow(() -> new RuntimeException("No default preset found for this user"));
+    }
+
 }

@@ -1724,7 +1724,7 @@ const HomePage = () => {
                           {presets.map(preset => (
                             <Card key={preset.id} className="hover:bg-blue-500">
                               <CardHeader className="pb-3">
-                                <div className="flex justify-between items-center">
+                                <div className="flex justify-between future-feed:text-white items-center">
                                   <CardTitle>{preset.name}</CardTitle>
                                 </div>
                               </CardHeader>
@@ -1870,7 +1870,7 @@ const HomePage = () => {
                               placeholder="Preset name (e.g., Tech & Bots)"
                               value={newPresetName}
                               onChange={(e) => setNewPresetName(e.target.value)}
-                              className="flex-1"
+                              className="future-feed:border-lime flex-1"
                             />
                             <Button className="bg-lime-600" onClick={createPreset} disabled={isLoading}>
                               {isLoading ? 'Creating...' : 'Create Preset'}
@@ -1879,7 +1879,7 @@ const HomePage = () => {
                           {presets.length > 0 && (
                             <div className="pt-4">
                               <div className="text-center">
-                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
+                                <h3 className="text-lg future-feed:text-lime dark:text-slate-200 font-medium mb-2">Your Existing Presets</h3>
                               </div>
                               <div className="space-y-2">
                                 {presets.map(preset => (
