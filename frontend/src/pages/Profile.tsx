@@ -67,6 +67,7 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  createdAt: string;
 }
 
 interface Topic {
@@ -404,6 +405,7 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt
             };
             return postData;
           } catch (err) {
@@ -412,7 +414,7 @@ const Profile = () => {
           }
         })
       );
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPosts(validPosts);
       setFetchedTabs((prev) => ({ ...prev, posts: true }));
       profileDataCache.posts = validPosts;
@@ -518,6 +520,7 @@ const Profile = () => {
                 comments: commentsWithUsers,
                 showComments: false,
                 topics: topicsRes,
+                createdAt: reshare.createdAt
               };
               return postData;
             } catch (err) {
@@ -526,7 +529,7 @@ const Profile = () => {
             }
           })
         );
-        const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
+        const validReshares = resharedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         setReshares(validReshares);
         setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
         profileDataCache.reshares = validReshares;
@@ -628,6 +631,7 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt
             };
             return postData;
           } catch (err) {
@@ -636,7 +640,7 @@ const Profile = () => {
           }
         })
       );
-      const validComments = commentedPosts.filter((p): p is PostData => p !== null);
+      const validComments = commentedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setCommented(validComments);
       setFetchedTabs((prev) => ({ ...prev, comments: true }));
       profileDataCache.commented = validComments;
@@ -736,6 +740,7 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt
             };
             return postData;
           } catch (err) {
@@ -744,7 +749,7 @@ const Profile = () => {
           }
         })
       );
-      const validLikes = likedPosts.filter((p): p is PostData => p !== null);
+      const validLikes = likedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setLikedPosts(validLikes);
       setFetchedTabs((prev) => ({ ...prev, likes: true }));
       profileDataCache.likedPosts = validLikes;
@@ -843,6 +848,7 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt
             };
             return postData;
           } catch (err) {
@@ -851,7 +857,7 @@ const Profile = () => {
           }
         })
       );
-      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null);
+      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setBookmarkedPosts(validBookmarks);
       setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
       profileDataCache.bookmarkedPosts = validBookmarks;
