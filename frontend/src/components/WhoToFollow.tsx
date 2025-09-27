@@ -31,9 +31,7 @@ interface TopFollowedUser extends User {
   followerCount: number
 }
 
-interface FollowStatusResponse {
-  following: boolean
-}
+
 
 const WhoToFollow = () => {
   const isHydrated = useStoreHydration();

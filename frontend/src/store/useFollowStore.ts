@@ -1,6 +1,5 @@
 import { createWithEqualityFn } from 'zustand/traditional';
-import { persist } from 'zustand/middleware'; // Add persistence to fix issue on returning to page
-import type  { StateStorage } from 'zustand/middleware';
+import { persist } from 'zustand/middleware';
 
 type FollowStatus = Record<number, boolean>
 
@@ -28,7 +27,6 @@ interface FollowStore {
   followStatus: FollowStatus
   followingUserIds: number[]
   followingUsers: User[]
-  //hydration below
   _hasHydrated: boolean
   setHasHydrated: (hydrated: boolean) => void 
   setFollowStatus: (userId: number, isFollowing: boolean) => void
@@ -45,22 +43,26 @@ interface FollowStore {
   safeUpdateStatus: (userId: number, isFollowing: boolean) => void
 }
 
+type PersistedFollowState = {
+  followStatus: FollowStatus;
+  followingUserIds: number[];
+};
+
 export const useFollowStore = createWithEqualityFn<FollowStore>()(
-  persist( // Wrap everything with persist()
-    (set,get) => ({ // entire store is now persisted acrooss pages
+  persist(
+    (set, get) => ({
       followStatus: {},
       followingUserIds: [],
       followingUsers: [],
       followers: [],
-      _hasHydrated: false, // Initial hydration state
+      _hasHydrated: false,
       
-      // Add hydration setter
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
-      // Add a method to clean the followStatus
+      
       cleanFollowStatus: () => {
         const state = get();
         const cleanFollowStatus = Object.fromEntries(
-          Object.entries(state.followStatus).filter(([_, value]) => value !== undefined)
+          Object.entries(state.followStatus).filter(([, value]) => value !== undefined)
         );
         set({ followStatus: cleanFollowStatus });
       },
@@ -139,28 +141,28 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
             : state.followingUserIds.filter((id) => id !== userId),
         })),
 
-     bulkSetFollowStatus: (statuses) =>
-  set((state) => {
-    // Filter out undefined values
-    const cleanStatuses = Object.fromEntries(
-      Object.entries(statuses).filter(([_, value]) => value !== undefined)
-    );
-    
-    return {
-      followStatus: {
-        ...state.followStatus,
-        ...cleanStatuses
-      },
-      followingUserIds: [
-        ...new Set([
-          ...state.followingUserIds,
-          ...Object.entries(cleanStatuses)
-            .filter(([, value]) => value === true) // Only add true values
-            .map(([id]) => Number(id))
-        ])
-      ]
-    };
-  }),
+      bulkSetFollowStatus: (statuses) =>
+        set((state) => {
+          const cleanStatuses = Object.fromEntries(
+            Object.entries(statuses).filter(([, value]) => value !== undefined)
+          );
+          
+          return {
+            followStatus: {
+              ...state.followStatus,
+              ...cleanStatuses
+            },
+            followingUserIds: [
+              ...new Set([
+                ...state.followingUserIds,
+                ...Object.entries(cleanStatuses)
+                  .filter(([, value]) => value === true)
+                  .map(([id]) => Number(id))
+              ])
+            ]
+          };
+        }),
+
       safeUpdateStatus: (userId: number, isFollowing: boolean) =>
         set((state): Partial<FollowStore> => {
           const newStatus = {
@@ -184,10 +186,10 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
 
       addFollowingUser: (user) =>
         set((state) => {
-          const alreadyExists = state.followingUsers.some((u) => u.id === user.id)
+          const alreadyExists = state.followingUsers.some((u) => u.id === user.id);
           return {
             followingUsers: alreadyExists ? state.followingUsers : [...state.followingUsers, user],
-          }
+          };
         }),
 
       removeFollowingUser: (userId) =>
@@ -195,40 +197,37 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
           followingUsers: state.followingUsers.filter((u) => u.id !== userId),
         })),
     }),
- {
-    name: 'follow-store',
-    partialize: (state) => ({
-      followStatus: state.followStatus,
-      followingUserIds: state.followingUserIds
-    }),
-    // Add migration to handle existing data
-    version: 1,
-    migrate: (persistedState, version) => {
-      if (version === 0) {
-        // Clean up any undefined values from previous versions
-        const state = persistedState as any;
-        if (state.followStatus) {
-          state.followStatus = Object.fromEntries(
-            Object.entries(state.followStatus).filter(([_, value]) => value !== undefined)
-          );
+    {
+      name: 'follow-store',
+      partialize: (state) => ({
+        followStatus: state.followStatus,
+        followingUserIds: state.followingUserIds
+      }),
+      version: 1,
+      migrate: (persistedState, version) => {
+        if (version === 0) {
+          const state = persistedState as PersistedFollowState;
+          if (state.followStatus) {
+            state.followStatus = Object.fromEntries(
+              Object.entries(state.followStatus).filter(([, value]) => value !== undefined)
+            );
+          }
+          if (!state.followingUserIds) {
+            state.followingUserIds = [];
+          }
+          return state;
         }
-        if (!state.followingUserIds) {
-          state.followingUserIds = [];
+        return persistedState;
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log(' Store hydrated with:', {
+            followStatus: state.followStatus,
+            followingUserIds: state.followingUserIds
+          });
+          state.setHasHydrated(true);
         }
-        return state;
-      }
-      return persistedState;
-    },
-     onRehydrateStorage: () => async (state) => {
-     if (state) {
-    console.log(' Store hydrated with:', {
-      followStatus: state.followStatus,
-      followingUserIds: state.followingUserIds
-    });
-    // Just mark as hydrated - don't try to modify state here
-    state.setHasHydrated(true);
-  }
       },
     }
-  )
-);
+  ) 
+); 
