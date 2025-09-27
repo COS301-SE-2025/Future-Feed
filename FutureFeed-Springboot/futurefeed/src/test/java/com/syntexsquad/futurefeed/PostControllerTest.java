@@ -3,12 +3,13 @@ package com.syntexsquad.futurefeed;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.PostController;
 import com.syntexsquad.futurefeed.dto.PostRequest;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.UserPost;
-import com.syntexsquad.futurefeed.repository.BotPostRepository; // <-- ADD
+import com.syntexsquad.futurefeed.repository.BotPostRepository; 
 import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
-import org.junit.jupiter.api.BeforeEach; // <-- ADD
+import org.junit.jupiter.api.BeforeEach; 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,16 +24,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional; // <-- ADD
+import java.util.Optional; 
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt; // <-- ADD
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = PostController.class)
-@Import(PostControllerTest.TestSecurityConfig.class)
+@Import({PostControllerTest.TestSecurityConfig.class, PostViewMapper.class})
 public class PostControllerTest {
 
     @Autowired
@@ -45,14 +46,12 @@ public class PostControllerTest {
     private MediaService mediaService;
 
     @MockBean
-    private BotPostRepository botPostRepository; // <-- ADD: mock the repo used by the controller
-
+    private BotPostRepository botPostRepository; 
     @Autowired
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void stubBotRepo() {
-        // Controller only uses this for BotPost; returning empty keeps user-path unchanged in these tests
         when(botPostRepository.findBotByPostId(anyInt())).thenReturn(Optional.empty());
     }
 
@@ -82,7 +81,7 @@ public class PostControllerTest {
     @Test
     void testCreatePost_missingContent_shouldReturnBadRequest() throws Exception {
         PostRequest postRequest = new PostRequest();
-        postRequest.setContent(""); // invalid
+        postRequest.setContent(""); 
         postRequest.setImageUrl("https://example.com/image.jpg");
 
         mockMvc.perform(post("/api/posts")

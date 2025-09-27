@@ -90,7 +90,7 @@ interface RawComment {
   createdAt: string;
 }
 
-const API_URL = "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const BotPage = () => {
   const [user, setUser] = useState<UserProfile | null>(null);

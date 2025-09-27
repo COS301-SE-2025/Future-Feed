@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
 import { useNotifications } from "@/context/NotificationContext";
+import BotPost from "@/components/ui/BotPost";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +65,8 @@ interface ApiPost {
   createdAt: string;
   imageUrl?: string;
   user: ApiUser;
+  botId: number;
+  isBot: boolean;
 }
 interface ApiComment {
   id: number;
@@ -124,6 +127,8 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  botId: number;
+  isBot: boolean;
 }
 
 const HomePage = () => {
@@ -131,6 +136,8 @@ const HomePage = () => {
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isViewTopicsModalOpen, setIsViewTopicsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
+  const [botId, setBotId] = useState(0);
+  const [isBot, setisBot] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -425,6 +432,8 @@ const HomePage = () => {
             comments: commentsWithUsers,
             showComments,
             topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId
           };
         })
       );
@@ -689,6 +698,8 @@ const HomePage = () => {
               comments: commentsWithUsers,
               showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
               topics,
+              isBot: post.isBot,
+              botId: post.botId
             };
           } catch (postError) {
             console.error(`Error processing post ${post.id}:`, postError);
@@ -943,6 +954,8 @@ const HomePage = () => {
             comments: commentsWithUsers,
             showComments: false,
             topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId
           };
         })
       );
@@ -1234,11 +1247,15 @@ const HomePage = () => {
       comments: [],
       showComments: false,
       topics: selectedTopicIds.map((id) => topics.find((t) => t.id === id)!).filter((t) => t),
+      botId: botId,
+      isBot: isBot
     };
 
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
     setPostText("");
+    setisBot(false);
+    setBotId(0);
     const selectedTopics = selectedTopicIds.slice();
     setSelectedTopicIds([]);
     const tempImageFile = imageFile;
@@ -1328,6 +1345,8 @@ const HomePage = () => {
         comments: [],
         showComments: false,
         topics: postTopics,
+        botId: newPost.botId,
+        isBot: newPost.isBot
       };
 
       setPosts((prev) =>
@@ -1344,6 +1363,8 @@ const HomePage = () => {
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
+      setisBot(isBot);
+      setBotId(botId);
       setImageFile(tempImageFile);
       setImagePrompt(tempImagePrompt);
       setUseAIGeneration(!!tempImagePrompt);
@@ -1782,6 +1803,36 @@ const HomePage = () => {
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
+        {post.botId || post.isBot ? (
+          <BotPost
+            profilePicture={post.profilePicture}
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            topics={post.topics || []}
+          />
+          ) : (
         <Post
           username={post.username}
           handle={post.handle}
@@ -1810,6 +1861,7 @@ const HomePage = () => {
           authorId={post.authorId}
           topics={post.topics || []}
         />
+      )}
       </div>
     ));
   };
@@ -2355,6 +2407,8 @@ const HomePage = () => {
               onClick={() => {
                 setIsPostModalOpen(false);
                 setPostText("");
+                setBotId(0);
+                setisBot(false);
                 setSelectedTopicIds([]);
                 setImageFile(null);
                 setUseAIGeneration(false);

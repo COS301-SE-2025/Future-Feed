@@ -13,6 +13,7 @@ import { formatRelativeTime } from "@/lib/timeUtils";
 import { useFollowStore } from "@/store/useFollowStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
+import BotPost from "@/components/ui/BotPost";
 
 interface FollowRelation {
   id: number;
@@ -68,6 +69,8 @@ interface PostData {
   showComments: boolean;
   topics: Topic[];
   createdAt: string;
+  botId: number;
+  isBot: boolean;
 }
 
 interface Topic {
@@ -332,6 +335,8 @@ const Profile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
         console.log("No posts found for user:", userId);
@@ -405,7 +410,9 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
-              createdAt: post.createdAt
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -446,6 +453,8 @@ const Profile = () => {
           imageUrl: string | null;
           createdAt: string;
           user: UserInfo2 | null;
+          botId: number;
+          isBot: boolean;
         }[] = await res.json();
         if (!Array.isArray(resharedList) || resharedList.length === 0) {
           console.warn("No reshared posts found for user");
@@ -520,7 +529,9 @@ const Profile = () => {
                 comments: commentsWithUsers,
                 showComments: false,
                 topics: topicsRes,
-                createdAt: reshare.createdAt
+                createdAt: reshare.createdAt,
+                botId: reshare.botId,
+                isBot: reshare.isBot
               };
               return postData;
             } catch (err) {
@@ -558,6 +569,8 @@ const Profile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(commentedList) || commentedList.length === 0) {
         console.warn("No commented posts found for user:", userId);
@@ -631,7 +644,9 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
-              createdAt: post.createdAt
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -667,6 +682,8 @@ const Profile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(likedList) || likedList.length === 0) {
         console.warn("No liked posts found for user:", userId);
@@ -740,7 +757,9 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
-              createdAt: post.createdAt
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -775,6 +794,8 @@ const Profile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(bookmarkedList) || bookmarkedList.length === 0) {
         console.warn("No bookmarked posts found for user:", userId);
@@ -849,6 +870,9 @@ const Profile = () => {
               showComments: false,
               topics: topicsRes,
               createdAt: post.createdAt
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -1575,8 +1599,9 @@ const Profile = () => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    profilePicture={post.profilePicture}
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1603,6 +1628,36 @@ const Profile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics || []}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1620,8 +1675,9 @@ const Profile = () => {
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    profilePicture={post.profilePicture}
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1648,6 +1704,36 @@ const Profile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics || []}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1665,34 +1751,65 @@ const Profile = () => {
   ) : (
     commentedPosts.map((post) => (
       <div key={post.id} className="mb-4">
-        <Post
-          profilePicture={post.profilePicture}
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
-          onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!user}
-          currentUser={user}
-          authorId={post.authorId}
-          topics={post.topics || []}
-        />
+        {post.botId || post.isBot ? (
+          <BotPost
+            profilePicture={user.profilePicture}
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!user}
+            currentUser={user}
+            authorId={post.authorId}
+            topics={post.topics || []}
+          />
+          ) : (
+            <Post
+            profilePicture={user.profilePicture}
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!user}
+            currentUser={user}
+            authorId={post.authorId}
+            topics={post.topics || []}
+          />
+          )}
       </div>
     ))
   )}
@@ -1710,8 +1827,9 @@ const Profile = () => {
   ) : (
     likedPosts.map((post) => (
       <div key={post.id} className="mb-4">
-        <Post
-          profilePicture={post.profilePicture}
+        {post.botId || post.isBot ? (
+        <BotPost
+          profilePicture={user.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1738,6 +1856,36 @@ const Profile = () => {
           authorId={post.authorId}
           topics={post.topics || []}
         />
+        ) : (
+          <Post
+          profilePicture={user.profilePicture}
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={() => handleReshare(post.id)}
+          onDelete={() => handleDeletePost(post.id)}
+          onToggleComments={() => toggleComments(post.id)}
+          onNavigate={() => navigate(`/post/${post.id}`)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!user}
+          currentUser={user}
+          authorId={post.authorId}
+          topics={post.topics || []}
+        />
+        )}
       </div>
     ))
   )}
@@ -1755,8 +1903,9 @@ const Profile = () => {
   ) : (
     bookmarkedPosts.map((post) => (
       <div key={post.id} className="mb-4">
-        <Post
-          profilePicture={post.profilePicture}
+        {post.botId || post.isBot ? (
+        <BotPost
+          profilePicture={user.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1783,6 +1932,36 @@ const Profile = () => {
           authorId={post.authorId}
           topics={post.topics || []}
         />
+        ) : (
+          <Post
+          profilePicture={user.profilePicture}
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+          onReshare={() => handleReshare(post.id)}
+          onDelete={() => handleDeletePost(post.id)}
+          onToggleComments={() => toggleComments(post.id)}
+          onNavigate={() => navigate(`/post/${post.id}`)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!user}
+          currentUser={user}
+          authorId={post.authorId}
+          topics={post.topics || []}
+        />
+        )}
       </div>
     ))
   )}
