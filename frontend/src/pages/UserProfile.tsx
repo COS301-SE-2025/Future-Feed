@@ -1447,28 +1447,18 @@ const UserProfile = () => {
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-          <div className="pt-16 px-4">
-            <div className="flex justify-between items-start">
-              <div className="ml-30 mt-[-120px]">
-                <Skeleton className="h-6 w-48 mb-2" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </div>
-              <Skeleton className="h-10 w-32 mt-[-220px]" />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+          <div
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
-          <Skeleton className="my-4 h-1 w-full" />
-          <div className="grid w-full grid-cols-5">
-            {[...Array(5)].map((_, idx) => (
-              <Skeleton key={idx} className="h-10 w-full" />
-            ))}
-          </div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
