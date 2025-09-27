@@ -1485,14 +1485,14 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex flex-col md:flex-row min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <button
-    className="md:hidden fixed top-2 left-2 bg-blue-500 future-feed:bg-lime text-white p-3 rounded-full z-20 shadow-lg"
-    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-  >
-    {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-  </button>
-  {isMobileMenuOpen && (
+        className="lg:hidden fixed top-2 left-2 bg-blue-500 future-feed:bg-lime text-white p-3 rounded-full z-20 shadow-lg "
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+      </button>
+      {isMobileMenuOpen && (
     <div className="md:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center text-white">
       <PersonalSidebar />
       <Button
@@ -1518,10 +1518,10 @@ const UserProfile = () => {
       </Button>
     </div>
   )}
-      <aside className="w-full md:w-[200px] lg:w-[245px] md:ml-4 lg:ml-6 flex-shrink-0 md:sticky md:top-0 md:h-screen overflow-y-auto">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="w-full max-w-[700px] md:max-w-[900px] lg:max-w-[1100px] mx-auto mt-3 px-2 sm:px-4">
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
         <div className="relative">
           <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
@@ -1960,11 +1960,11 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full md:w-[300px] lg:w-[350px] md:mt-6 md:sticky md:top-0 md:h-screen overflow-y-auto hidden md:block">
-        <div className="w-full max-w-[320px] mt-5 md:ml-3">
+      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full max-w-[320px] mt-5 md:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhoToFollow />
         </div>
       </aside>
