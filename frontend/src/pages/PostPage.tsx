@@ -53,6 +53,7 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   botId: number;
+  isBot: boolean;
 }
 
 interface RawPost {
@@ -66,6 +67,7 @@ interface RawPost {
     displayName: string;
   } | null;
   botId: number;
+  isBot: boolean;
 }
 
 interface UserInfo {
@@ -201,6 +203,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
       comments: commentsWithUsers,
       showComments: true,
       botId: post.botId,
+      isBot: post.isBot
     });
   } catch (err) {
     console.error(`Error fetching post ${id}:`, err);
@@ -582,7 +585,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
       <PersonalSidebar />
     </aside>
     <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
-      {post.botId ? (
+      {post.botId || post.isBot ? (
         <StaticBotPost
           username={post.username}
           handle={post.handle}
