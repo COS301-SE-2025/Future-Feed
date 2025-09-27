@@ -1598,7 +1598,6 @@ const Profile = () => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  Post ID: {post.id}, botId: {post.botId}, isBot: {post.isBot}
                   {post.botId || post.isBot ? (
                   <BotPost
                     profilePicture={user.profilePicture}
@@ -1675,7 +1674,6 @@ const Profile = () => {
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
-                  Post ID: {post.id}, botId: {post.botId}, isBot: {post.isBot}
                   {post.botId || post.isBot ? (
                   <BotPost
                     profilePicture={user.profilePicture}
