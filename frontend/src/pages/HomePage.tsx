@@ -171,6 +171,7 @@ const HomePage = () => {
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<ApiUser[]>([]);
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
+  const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -1241,6 +1242,10 @@ const HomePage = () => {
 
     const tempPostId = generateTempId();
     const createdAt = new Date().toISOString();
+
+    // Track if we're generating an image
+    const isGeneratingImage = useAIGeneration;
+
     const tempPost: PostData = {
       id: tempPostId,
       username: currentUser.displayName,
@@ -1249,7 +1254,7 @@ const HomePage = () => {
       time: formatRelativeTime(createdAt),
       createdAt,
       text: postText,
-      image: imageFile ? URL.createObjectURL(imageFile) : useAIGeneration ? "Generating AI image..." : undefined,
+      image: isGeneratingImage ? "Generating AI image..." : (imageFile ? URL.createObjectURL(imageFile) : undefined),
       isLiked: false,
       isBookmarked: false,
       isReshared: false,
@@ -1264,6 +1269,12 @@ const HomePage = () => {
 
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
+
+    // Add to loading images set if generating AI image
+    if (isGeneratingImage) {
+      setLoadingImages(prev => new Set(prev).add(tempPostId));
+    }
+
     setPostText("");
     const selectedTopics = selectedTopicIds.slice();
     setSelectedTopicIds([]);
@@ -1356,6 +1367,15 @@ const HomePage = () => {
         topics: postTopics,
       };
 
+      // Remove from loading images set
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
+
       setPosts((prev) =>
         [
           formattedPost,
@@ -1366,6 +1386,16 @@ const HomePage = () => {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
       setTimeout(() => setError(null), 3000);
+
+      // Remove from loading images set on error
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
+
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setSelectedTopicIds(selectedTopics);
@@ -1835,6 +1865,8 @@ const HomePage = () => {
           currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
+          // NEW: Pass loading state for image generation
+          isImageLoading={loadingImages.has(post.id)}
         />
       </div>
     ));
