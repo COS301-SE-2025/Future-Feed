@@ -270,8 +270,6 @@ const HomePage = () => {
       console.error("Error fetching users:", err);
       setError("Failed to load users");
       setTimeout(() => setError(null), 3000);
-    } finally {
-
     }
   };
 
