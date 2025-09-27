@@ -261,7 +261,7 @@ const Notifications = () => {
             <p className="text-gray-500 text-sm mt-4 future-feed:text-lime">{formatDate(notification.createdAt)}</p>
           </div>
           {!notification.isRead && (
-            <div className="w-4 h-4 rounded-full bg-lime-500 mt-5.5 mr-5"></div>
+            <div className="w-4 h-4 rounded-full bg-lime-500 mt-5.5 mr-5 future-feed:bg-white"></div>
           )}
         </CardContent>
         

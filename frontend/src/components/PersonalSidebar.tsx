@@ -37,7 +37,7 @@ const PersonalSidebar = () => {
           <Link to="/notifications" className="flex items-center gap-3 dark:hover:text-white relative">
             <Bell size={20} /> Notifications
             {unreadCount > 0 && (
-              <span className="absolute mb-4 ml-2.5 w-3 h-3 rounded-full bg-lime-300"></span>
+              <span className="absolute mb-4 ml-2.5 w-3 h-3 rounded-full bg-lime-300 future-feed:bg-white"></span>
             )}
           </Link>
           <Link to="/settings" className="flex items-center gap-3 dark:hover:text-white">
