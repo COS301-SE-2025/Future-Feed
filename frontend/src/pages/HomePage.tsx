@@ -749,6 +749,11 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
+          console.log("No default preset found - this is normal for new users");
+          setDefaultPresetId(null);
+          return null;
+        } else if (response.status === 500) {
+          console.warn("Server error when fetching default preset - likely no default set");
           setDefaultPresetId(null);
           return null;
         }
@@ -759,7 +764,7 @@ const HomePage = () => {
       setDefaultPresetId(data.id);
       return data;
     } catch (err) {
-      console.error("Error fetching default preset:", err);
+      console.warn("Error fetching default preset (this is normal if no default is set):", err);
       setDefaultPresetId(null);
       return null;
     }
@@ -1884,7 +1889,14 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
-          fetchDefaultPreset(),
+          // Wrap fetchDefaultPreset in error handling
+          (async () => {
+            try {
+              await fetchDefaultPreset();
+            } catch (error) {
+              console.warn("Failed to fetch default preset, continuing without it:", error);
+            }
+          })(),
         ]);
       }
       setLoading(false);
@@ -1936,7 +1948,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-lime"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-lime "
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1946,7 +1958,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime dark:bg-indigo-800"
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500 dark:hover:text-gray-400 transition-colors future-feed:bg-lime dark:bg-indigo-800"
             >
               Logout
             </button>
@@ -1956,7 +1968,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors dark:hover:text-gray-400  future-feed:bg-lime dark:bg-indigo-800"
               >
                 Create Topic
               </button>
@@ -1965,7 +1977,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:hover:text-gray-400 dark:bg-indigo-800"
               >
                 View Topics
               </button>
