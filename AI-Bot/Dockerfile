@@ -1,24 +1,28 @@
 # Use a slim Python base image
 FROM python:3.11-slim
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Environment settings
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
 # Set work directory
 WORKDIR /app
 
-# Install Python dependencies
+# ---- Install only what you need ----
+# Many AI libs (transformers, sentence-transformers) bring wheels,
+# so you often don't need a full compiler toolchain. 
+# Keep it minimal: just curl + ca-certificates
+RUN apt-get update -o Acquire::Retries=5 && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---- Python dependencies ----
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# ---- Project files ----
 COPY . .
 
 # Expose FastAPI port
