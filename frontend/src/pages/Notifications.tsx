@@ -243,7 +243,7 @@ const Notifications = () => {
     return (
       <Card
         key={notification.id}
-        className="dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative future-feed:border-2 future-feed:text-white"
+        className="dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative future-feed:border-2 future-feed:text-white dark:border-2"
       >
         <CardContent 
           className="flex gap-3 items-start p-4"
