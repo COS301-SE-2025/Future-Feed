@@ -164,7 +164,6 @@ const HomePage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const { fetchNotifications } = useNotifications();
   const [presetPosts, setPresetPosts] = useState<PostData[]>([]);
   const [loadingPresetPosts, setLoadingPresetPosts] = useState(false);
@@ -176,7 +175,10 @@ const HomePage = () => {
   const [imageHeight, setImageHeight] = useState(768);
   const [imageSteps, setImageSteps] = useState(8);
   const [imageModel, setImageModel] = useState("black-forest-labs/FLUX.1-schnell");
-
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState<ApiUser[]>([]);
+  const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
+  const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -264,7 +266,6 @@ const HomePage = () => {
   };
   const fetchAllUsers = async () => {
     try {
-      setLoadingUsers(true);
       const response = await fetch(`${API_URL}/api/user/all`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -276,8 +277,6 @@ const HomePage = () => {
       console.error("Error fetching users:", err);
       setError("Failed to load users");
       setTimeout(() => setError(null), 3000);
-    } finally {
-      setLoadingUsers(false);
     }
   };
 
@@ -313,7 +312,32 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // Scroll handler
+
+  useEffect(() => {
+    if (userSearchQuery.trim() === "") {
+      setFilteredUsers(allUsers.slice(0, 5)); // Show first 5 users when search is empty
+    } else {
+      const query = userSearchQuery.toLowerCase();
+      const filtered = allUsers.filter(user =>
+        user.displayName?.toLowerCase().includes(query) ||
+        user.username?.toLowerCase().includes(query)
+      ).slice(0, 10); // Limit to 10 results
+      setFilteredUsers(filtered);
+    }
+  }, [userSearchQuery, allUsers]);
+
+  // Add click outside handler to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-search-container')) {
+        setIsUserSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -736,6 +760,11 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
+          console.log("No default preset found - this is normal for new users");
+          setDefaultPresetId(null);
+          return null;
+        } else if (response.status === 500) {
+          console.warn("Server error when fetching default preset - likely no default set");
           setDefaultPresetId(null);
           return null;
         }
@@ -746,7 +775,7 @@ const HomePage = () => {
       setDefaultPresetId(data.id);
       return data;
     } catch (err) {
-      console.error("Error fetching default preset:", err);
+      console.warn("Error fetching default preset (this is normal if no default is set):", err);
       setDefaultPresetId(null);
       return null;
     }
@@ -1166,6 +1195,7 @@ const HomePage = () => {
   }
 
   // Helper function to format rule for display
+  // Helper function to format rule for display
   const formatRule = (rule: Rule) => {
     const parts = [];
 
@@ -1180,7 +1210,7 @@ const HomePage = () => {
 
     if (rule.specificUserId) {
       const user = allUsers.find(u => u.id === rule.specificUserId);
-      parts.push(`User: ${user?.displayName || `ID ${rule.specificUserId}`}`);
+      parts.push(`User: ${user?.displayName || user?.username || `ID ${rule.specificUserId}`}`);
     }
 
     if (rule.percentage) {
@@ -1228,6 +1258,10 @@ const HomePage = () => {
 
     const tempPostId = generateTempId();
     const createdAt = new Date().toISOString();
+
+    // Track if we're generating an image
+    const isGeneratingImage = useAIGeneration;
+
     const tempPost: PostData = {
       id: tempPostId,
       username: currentUser.displayName,
@@ -1236,7 +1270,7 @@ const HomePage = () => {
       time: formatRelativeTime(createdAt),
       createdAt,
       text: postText,
-      image: imageFile ? URL.createObjectURL(imageFile) : useAIGeneration ? "Generating AI image..." : undefined,
+      image: isGeneratingImage ? "Generating AI image..." : (imageFile ? URL.createObjectURL(imageFile) : undefined),
       isLiked: false,
       isBookmarked: false,
       isReshared: false,
@@ -1253,6 +1287,12 @@ const HomePage = () => {
 
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
+
+    // Add to loading images set if generating AI image
+    if (isGeneratingImage) {
+      setLoadingImages(prev => new Set(prev).add(tempPostId));
+    }
+
     setPostText("");
     setisBot(false);
     setBotId(0);
@@ -1349,6 +1389,15 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
+      // Remove from loading images set
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
+
       setPosts((prev) =>
         [
           formattedPost,
@@ -1359,6 +1408,16 @@ const HomePage = () => {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
       setTimeout(() => setError(null), 3000);
+
+      // Remove from loading images set on error
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
+
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setSelectedTopicIds(selectedTopics);
@@ -1860,6 +1919,8 @@ const HomePage = () => {
           currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
+          // NEW: Pass loading state for image generation
+          isImageLoading={loadingImages.has(post.id)}
         />
       )}
       </div>
@@ -1880,7 +1941,14 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
-          fetchDefaultPreset(),
+          // Wrap fetchDefaultPreset in error handling
+          (async () => {
+            try {
+              await fetchDefaultPreset();
+            } catch (error) {
+              console.warn("Failed to fetch default preset, continuing without it:", error);
+            }
+          })(),
         ]);
       }
       setLoading(false);
@@ -1932,7 +2000,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-lime "
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1942,7 +2010,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500 dark:hover:text-gray-400 transition-colors future-feed:bg-lime dark:bg-indigo-800"
             >
               Logout
             </button>
@@ -1952,7 +2020,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors dark:hover:text-gray-400  future-feed:bg-lime dark:bg-indigo-800"
               >
                 Create Topic
               </button>
@@ -1961,7 +2029,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:hover:text-gray-400 dark:bg-indigo-800"
               >
                 View Topics
               </button>
@@ -2161,7 +2229,6 @@ const HomePage = () => {
                                       >
                                         <ChartNoAxesGantt className="text-lime-300" />
                                         View Feed
-
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
@@ -2256,26 +2323,76 @@ const HomePage = () => {
                                           <option className="future-feed:bg-card" value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex items-center  space-x-2 p-1">
-                                        <select
-                                          value={newRule.specificUserId || ""}
-                                          onChange={(e) =>
-                                            setNewRule({
-                                              ...newRule,
-                                              specificUserId: e.target.value ? parseInt(e.target.value) : undefined,
-                                            })
-                                          }
-                                          className="future-feed:bg-card future-feed:text-white future-feed:border-lime flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
-                                          disabled={loadingUsers}
-                                        >
-                                          <option value="">Select Specific User</option>
-                                          {allUsers.map((user) => (
-                                            <option key={user.id} value={user.id}>
-                                              {user.displayName} (@{user.username})
-                                            </option>
-                                          ))}
-                                        </select>
+
+                                      {/* NEW USER SEARCH COMPONENT */}
+                                      <div className="user-search-container relative">
+                                        <Input
+                                          placeholder="Search users..."
+                                          value={userSearchQuery}
+                                          onChange={(e) => {
+                                            setUserSearchQuery(e.target.value);
+                                            setIsUserSearchOpen(true);
+                                          }}
+                                          onFocus={() => setIsUserSearchOpen(true)}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
+                                        />
+
+                                        {isUserSearchOpen && filteredUsers.length > 0 && (
+                                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                            {filteredUsers.map((user) => (
+                                              <div
+                                                key={user.id}
+                                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                onClick={() => {
+                                                  setNewRule({
+                                                    ...newRule,
+                                                    specificUserId: user.id,
+                                                  });
+                                                  setUserSearchQuery(user.displayName || `@${user.username}`);
+                                                  setIsUserSearchOpen(false);
+                                                }}
+                                              >
+                                                <div className="flex items-center space-x-3">
+                                                  {user.profilePicture && (
+                                                    <img
+                                                      src={user.profilePicture}
+                                                      alt={user.displayName || user.username}
+                                                      className="w-6 h-6 rounded-full"
+                                                    />
+                                                  )}
+                                                  <div>
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                      {user.displayName || user.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                      @{user.username}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+
+                                        {/* Clear selection button */}
+                                        {newRule.specificUserId && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              setNewRule({
+                                                ...newRule,
+                                                specificUserId: undefined,
+                                              });
+                                              setUserSearchQuery("");
+                                            }}
+                                            className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500 hover:text-red-500"
+                                          >
+                                            <FaTimes size={12} />
+                                          </Button>
+                                        )}
                                       </div>
+
                                       <div className="flex items-center space-x-2 p-1">
                                         <Input
                                           type="number"

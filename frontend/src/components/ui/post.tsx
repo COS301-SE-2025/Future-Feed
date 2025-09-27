@@ -2,7 +2,7 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
@@ -59,6 +59,8 @@ interface PostProps {
   currentUser: UserProfile | null;
   authorId: number;
   topics: Topic[];
+  // NEW: Add loading state for image generation
+  isImageLoading?: boolean;
 }
 
 const Post: React.FC<PostProps> = ({
@@ -89,6 +91,8 @@ const Post: React.FC<PostProps> = ({
   currentUser,
   authorId,
   topics,
+  // NEW: Add loading state for image generation
+  isImageLoading = false,
 }) => {
   const [newComment, setNewComment] = React.useState("");
   const [isHovered, setIsHovered] = React.useState(false);
@@ -207,13 +211,26 @@ const Post: React.FC<PostProps> = ({
                 ))}
               </div>
             )}
-            {image && (
+            
+            {/* NEW: Image section with loading state */}
+            {isImageLoading ? (
+              <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-lime-500" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
+                </div>
+              </div>
+            ) : image ? (
               <img
                 src={image}
                 alt="Post"
                 className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
+                onError={(e) => {
+                  console.error("Failed to load post image:", image);
+                  e.currentTarget.style.display = 'none';
+                }}
               />
-            )}
+            ) : null}
 
             <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
               <Button
