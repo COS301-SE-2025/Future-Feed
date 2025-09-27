@@ -6,10 +6,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useFollowStore } from "@/store/useFollowStore"
 import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
+import { StoreDebug } from "./StoreDebug"
 //route detection for show morers
 import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
 import { useNavigate } from "react-router-dom"
+
+import { useStoreHydration } from '@/hooks/useStoreHydration';
 
  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080"
  
@@ -28,11 +31,12 @@ interface TopFollowedUser extends User {
   followerCount: number
 }
 
-interface FollowStatusResponse {
-  following: boolean
-}
+
 
 const WhoToFollow = () => {
+  const isHydrated = useStoreHydration();
+
+
   const [loadingFollow, setLoadingFollow] = useState<Record<number, boolean>>({});
   //const [statusesLoading, setStatusesLoading] = useState(false); // A
  
@@ -67,45 +71,56 @@ const WhoToFollow = () => {
 
   // Fetch follow statuses in parallel
   useEffect(() => {
-    if (topUsers.length === 0) return
+    if (topUsers.length === 0 || !isHydrated) return
 
     const fetchStatuses = async () => {
      // setStatusesLoading(true);
       try {
-        const statuses = await Promise.all(
-          topUsers.map(async (user: TopFollowedUser) => {
+       const statuses = await Promise.all(
+        topUsers.map(async (user: TopFollowedUser) => {
+          try {
             const res = await fetch(`${API_URL}/api/follow/status/${user.id}`, {
               method: "GET",
               credentials: "include",
             })
-            const json: FollowStatusResponse = await res.json()
-            return { id: user.id, status: json.following }
-          })
-        )
-        statuses.forEach(({ id, status }: { id: number; status: boolean }) => 
-          //updateFollowStatus(id, status)
-        safeUpdateStatus(id, status)
-        )
-      } catch (err) {
-        console.error("Error fetching follow statuses:", err)
-      }
-      finally {
-        //setStatusesLoading(false);
-      }
+            if (!res.ok) {
+              console.error(`HTTP ${res.status} for user ${user.id}`);
+              return { id: user.id, status: false };
+            }
+            
+            const json = await res.json();
+            console.log(`Status for user ${user.id}:`, json.isFollowing);
+            
+            // Use the correct property name - API returns {isFollowing: true}
+            return { id: user.id, status: json.isFollowing };
+          } catch (error) {
+            console.error(`Error fetching status for user ${user.id}:`, error);
+            return { id: user.id, status: false };
+          }
+        })
+      )
+      
+      statuses.forEach(({ id, status }) => {
+        safeUpdateStatus(id, Boolean(status)); // Ensure boolean
+      })
+    } catch (err) {
+      console.error("Error fetching follow statuses:", err)
     }
+  }
 
-    fetchStatuses()
-  }, [topUsers, safeUpdateStatus, API_URL])
+  fetchStatuses()
+}, [topUsers, safeUpdateStatus, isHydrated]) // Add isHydrated dependency
 
   const handleFollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      await fetch(`${API_URL}/api/follow`, {
+     const res = await fetch(`${API_URL}/api/follow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ followedId: userId }),
       })
+      if (!res.ok) throw new Error(`Follow failed: ${res.status}`);
       //safeuodate
       safeUpdateStatus(userId, true);
       // Update local state
@@ -117,6 +132,8 @@ const WhoToFollow = () => {
       }
     } catch (err) {
       console.error(`Failed to follow user ${userId}`, err)
+      //revert status on error
+      safeUpdateStatus(userId,false);
     } finally {
       setLoadingFollow((prev) => ({ ...prev, [userId]: false }))
     }
@@ -125,16 +142,19 @@ const WhoToFollow = () => {
   const handleUnfollow = async (userId: number) => {
     setLoadingFollow((prev) => ({ ...prev, [userId]: true }))
     try {
-      await fetch(`${API_URL}/api/follow/${userId}`, {
+      const res = await fetch(`${API_URL}/api/follow/${userId}`, {
         method: "DELETE",
         credentials: "include",
       })
+      if (!res.ok) throw new Error(`Unfollow failed: ${res.status}`);
       //safeuodate
       safeUpdateStatus(userId, false);
       //updateFollowStatus(userId, false)
       removeFollowingUser(userId)
     } catch (err) {
       console.error(`Failed to unfollow user ${userId}`, err)
+      //revert status
+      safeUpdateStatus(userId,true);
     } finally {
       setLoadingFollow((prev) => ({ ...prev, [userId]: false }))
     }
@@ -143,7 +163,29 @@ const WhoToFollow = () => {
   const userIds = useMemo(() => topUsers.map(user => user.id), [topUsers] );
     // Get stable statuses for all users at the top level
   const stableStatuses = useStableFollowStatus(userIds);
-
+//
+// Show loading state while hydrating
+  if (!isHydrated || isLoading) {
+    return (
+      <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
+        <CardContent className="p-4">
+          <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-24 mb-1" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+//
   return (
 
     <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-3  dark:hover:border-r-lime-500 dark:hover:border-l-lime-500 hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
@@ -210,6 +252,7 @@ const WhoToFollow = () => {
             <div className={!isExplorePage ? "" : "invisible"}>
         <p className="dark:text-slate-200 text-white  hover:underline cursor-pointer">Show more</p>
       </div>
+      <StoreDebug/>
       </Link>
             
           </div>
