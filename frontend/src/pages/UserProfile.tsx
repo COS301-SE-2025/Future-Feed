@@ -11,7 +11,8 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
-import BotPost from "@/components/ui/BotPost"
+import BotPost from "@/components/ui/BotPost";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 interface UserProfile {
   id: number;
@@ -132,6 +133,7 @@ const UserProfile = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tabLoading, setTabLoading] = useState({
     posts: false,
     refeeds: false,
@@ -1484,6 +1486,38 @@ const UserProfile = () => {
 
   return (
     <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex flex-col md:flex-row min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+      <button
+    className="md:hidden fixed top-2 left-2 bg-blue-500 future-feed:bg-lime text-white p-3 rounded-full z-20 shadow-lg"
+    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+  >
+    {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
+  </button>
+  {isMobileMenuOpen && (
+    <div className="md:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center text-white">
+      <PersonalSidebar />
+      <Button
+        variant="secondary"
+        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
+        onClick={() => navigate("/edit-profile")}
+      >
+        Edit Profile
+      </Button>
+      <Button
+        variant="secondary"
+        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
+        onClick={() => navigate("/followers?tab=following")}
+      >
+        View Following
+      </Button>
+      <Button
+        variant="secondary"
+        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
+        onClick={() => navigate("/followers?tab=followers")}
+      >
+        View Followers
+      </Button>
+    </div>
+  )}
       <aside className="w-full md:w-[200px] lg:w-[245px] md:ml-4 lg:ml-6 flex-shrink-0 md:sticky md:top-0 md:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
