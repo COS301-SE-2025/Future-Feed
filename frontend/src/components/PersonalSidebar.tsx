@@ -61,8 +61,8 @@ const PersonalSidebar = () => {
         </nav>
       </aside>
 
-      <nav className="dark:bg-indigo-950 dark:text-slate-200 fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime  dark:bg-indigo-960 border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 bg-white">
-      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-960 border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 dark:bg-indigo-950 dark:text-white">
+      {/* Fixed mobile navigation - removed duplicate nav element */}
+      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden z-50 bg-white dark:text-white">
         <Link to="/home" className="flex flex-col items-center relative">
           <Home strokeWidth={3} className="w-5 h-5" />
         </Link>
