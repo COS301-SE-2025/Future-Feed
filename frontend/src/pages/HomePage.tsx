@@ -1936,7 +1936,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-lime"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1946,7 +1946,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime dark:bg-indigo-800"
             >
               Logout
             </button>
@@ -1956,7 +1956,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime dark:bg-indigo-800"
               >
                 Create Topic
               </button>
@@ -1965,7 +1965,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:bg-indigo-800"
               >
                 View Topics
               </button>
