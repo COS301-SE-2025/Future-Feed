@@ -145,7 +145,7 @@ const StaticPost: React.FC<PostProps> = ({
                 onProfileClick();
               }}
           >
-            <AvatarImage src={profilePicture || currentUser?.profilePicture} alt={handle} />
+            <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
