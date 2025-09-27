@@ -869,6 +869,7 @@ const Profile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt
               createdAt: post.createdAt,
               botId: post.botId,
               isBot: post.isBot

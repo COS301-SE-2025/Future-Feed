@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
-import darkLogo from "../assets/Future Feed Main Dark v1.png";
+import darkLogo from "../assets/Dark mode.png";
+import futurefeedLogo from "../assets/Future Feed Main Dark v1.png";
 import googleLogo from "../assets/Google transparent.png";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -42,6 +43,12 @@ const Login: React.FC = () => {
         src={darkLogo}
         alt="Future Feed Logo - Dark"
         className="hidden h-[311px] w-[311px] dark:block"
+      />
+      {/* Future Feed mode logo */}
+      <img
+        src={futurefeedLogo}
+        alt="Future Feed Logo - Future Feed"
+        className="h-[311px] w-[311px] dark:block dark:hidden"
       />
     </div>
 
@@ -109,7 +116,7 @@ const Login: React.FC = () => {
       </div>
       
       <div className="mb-4 text-right">
-        <Link to="/forgotpassword" className="future-feed:text-lime text-sm sm:text-[15px] font-bold text-black no-underline hover:underline dark:text-slate-200">
+        <Link to="/forgotpassword" className="future-feed:text-white text-sm sm:text-[15px] font-bold text-black no-underline hover:underline dark:text-slate-200">
           Forgot password?
         </Link>
       </div>
@@ -125,7 +132,7 @@ const Login: React.FC = () => {
         
         <span className="text-center future-feed:text-lime text-sm sm:text-[16px]">
           Don't have an account?{" "}
-          <Link to="/register" className="future-feed:text-lime no-underline hover:underline text-blue-500">
+          <Link to="/register" className="future-feed:text-white no-underline hover:underline text-blue-500">
             Register here
           </Link>
         </span>

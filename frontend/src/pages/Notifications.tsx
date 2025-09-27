@@ -243,7 +243,7 @@ const Notifications = () => {
     return (
       <Card
         key={notification.id}
-        className="dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative"
+        className="dark:bg-blue-950 dark:text-white future-feed:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative"
       >
         <CardContent 
           className="flex gap-3 items-start p-4"
@@ -255,7 +255,7 @@ const Notifications = () => {
           </Avatar>
           <div className="flex-1">
             <p>
-              <span className="text-blue-400">@{notification.senderUsername}</span>{" "}
+              <span className="future-feed:text-lime text-blue-400">@{notification.senderUsername}</span>{" "}
               {notification.massage}
             </p>
             <p className="text-gray-500 text-sm mt-4">{formatDate(notification.createdAt)}</p>
@@ -302,7 +302,7 @@ const Notifications = () => {
 
       <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
-          <h1 className="future-feed:text-white text-xl dark:text-lime-500 font-bold">Notifications</h1>
+          <h1 className="future-feed:text-lime  text-xl dark:text-slate-200 font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
