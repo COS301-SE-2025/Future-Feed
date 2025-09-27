@@ -2,12 +2,12 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Loader2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Bot } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
 
-interface UserProfile {
+interface BotProfile {
   id: number;
   username: string;
   displayName: string;
@@ -56,14 +56,12 @@ interface PostProps {
     profilePicture?: string;
   }[];
   isUserLoaded: boolean;
-  currentUser: UserProfile | null;
+  currentUser: BotProfile | null;
   authorId: number;
   topics: Topic[];
-  // NEW: Add loading state for image generation
-  isImageLoading?: boolean;
 }
 
-const Post: React.FC<PostProps> = ({
+const BotPost: React.FC<PostProps> = ({
   profilePicture,
   username,
   handle,
@@ -91,8 +89,6 @@ const Post: React.FC<PostProps> = ({
   currentUser,
   authorId,
   topics,
-  // NEW: Add loading state for image generation
-  isImageLoading = false,
 }) => {
   const [newComment, setNewComment] = React.useState("");
   const [isHovered, setIsHovered] = React.useState(false);
@@ -156,21 +152,25 @@ const Post: React.FC<PostProps> = ({
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 
-                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onProfileClick();
-                }}
-              >
-                {username || "Unknown User"}
-              </h2>
               <div className="flex items-center gap-2">
-                {/* Timestamp that shifts on hover */}
+                <h2 
+                  className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onProfileClick();
+                  }}
+                >
+                  {username || "Unknown User"}
+                </h2>
+                <Bot
+                  className="ml-2 h-8 w-8 text-gray-500 dark:text-lime-400"
+                  aria-label="Bot post indicator"
+                />
+              </div>
+              <div className="flex items-center gap-2">
                 <span className={`text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap transition-all duration-200 ${isHovered && currentUser && currentUser.id === authorId ? 'mr-8' : 'mr-0'}`}>
                   {time}
                 </span>
-                {/* Delete button - appears on hover for post owner */}
                 {currentUser && currentUser.id === authorId && (
                   <Button
                     variant="ghost"
@@ -211,26 +211,13 @@ const Post: React.FC<PostProps> = ({
                 ))}
               </div>
             )}
-            
-            {/* NEW: Image section with loading state */}
-            {isImageLoading ? (
-              <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
-                <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-lime-500" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
-                </div>
-              </div>
-            ) : image ? (
+            {image && (
               <img
                 src={image}
-                alt="Post"
-                className="mt-4 rounded-lg max-w-full h-auto"
-                onError={(e) => {
-                  console.error("Failed to load post image:", image);
-                  e.currentTarget.style.display = 'none';
-                }}
+                alt="BotPost"
+                className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
               />
-            ) : null}
+            )}
 
             <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
               <Button
@@ -248,7 +235,6 @@ const Post: React.FC<PostProps> = ({
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
-
                 <span className="hidden xl:inline">Like</span>
                 <span className="ml-1">({likeCount})</span>
               </Button>
@@ -301,7 +287,7 @@ const Post: React.FC<PostProps> = ({
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
-                <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
+                <Bookmark className={cn("h-4 w-4 sm учебное пособие sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
                 <span className="hidden xl:inline">Bookmark</span>
               </Button>
             </div>
@@ -337,7 +323,7 @@ const Post: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full hover:border-white  resize-none border-2  text-xs sm:text-sm"
+                    className="w-full dark:bg-black hover:border-white dark:text-white dark:border-lime-500 resize-none border-2 border-lime-500 text-xs sm:text-sm"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -346,7 +332,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className=" text-xs sm:text-sm"
+                    className="bg-lime-500 text-white hover:bg-lime-600 text-xs sm:text-sm"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
@@ -361,4 +347,4 @@ const Post: React.FC<PostProps> = ({
   );
 };
 
-export default Post;
+export default BotPost;

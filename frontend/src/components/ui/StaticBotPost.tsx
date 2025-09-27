@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft, Share2, Bot } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,7 +53,8 @@ interface PostProps {
   currentUser: UserProfile | null;
   authorId: number;
   profilePicture?: string;
-  postId: number; // Added for share link
+  postId: number;
+  botId: number;
 }
 
 const StaticPost: React.FC<PostProps> = ({
@@ -119,7 +120,7 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 relative", className)}>
+    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-7 mb-4 relative", className)}>
       {isCopied && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
@@ -144,7 +145,7 @@ const StaticPost: React.FC<PostProps> = ({
                 onProfileClick();
               }}
           >
-            <AvatarImage src={profilePicture || currentUser?.profilePicture} alt={handle} />
+            <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -158,6 +159,10 @@ const StaticPost: React.FC<PostProps> = ({
               >
                 {username || "Unknown User"}
               </h2>
+              <Bot
+                className="ml-[-880px] h-8 w-8 text-gray-500 dark:text-lime-400"
+                aria-label="Bot post indicator"
+                />
               <div className="flex items-center gap-2">
                 <span className="future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
                   {time}

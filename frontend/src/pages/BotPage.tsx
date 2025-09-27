@@ -6,7 +6,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import Post from "@/components/ui/post";
+import BotPost from "@/components/ui/BotPost";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { FaRobot } from "react-icons/fa";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +54,7 @@ interface PostData {
   showComments: boolean;
   topics: Topic[];
   profilePicture?: string;
+  createdAt: string;
 }
 
 interface BotProfile {
@@ -89,7 +90,7 @@ interface RawComment {
   createdAt: string;
 }
 
-const API_URL = "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const BotPage = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -267,6 +268,7 @@ const BotPage = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topics ?? [],
+              createdAt: postData.createdAt,
             };
           } catch (err) {
             console.warn(`Error processing post ID ${bp.postId}:`, err);
@@ -275,7 +277,7 @@ const BotPage = () => {
         })
       );
 
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPosts(validPosts);
       if (validPosts.length === 0) {
         console.warn("No valid posts after processing.");
@@ -646,16 +648,16 @@ const BotPage = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border border-lime-300 dark:border-lime-700 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border future-feed:border-lime-300 future-feed:border-lime-700 rounded-lg p-4 animate-pulse space-y-4 dark:border-slate-200"
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 dark:bg-gray-700 bg-gray-300 future-feed:bg-gray-700 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-3/4 dark:bg-gray-700" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-full dark:bg-gray-700" />
+        <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-5/6 dark:bg-gray-700" />
       </div>
     ));
   };
@@ -671,7 +673,7 @@ const BotPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-200 flex min-h-screen dark:bg-black dark:text-white overflow-y-auto">
+      <div className="bg-gray-200 flex min-h-screen future-feed:bg-black future-feed:text-white overflow-y-auto dark:bg-blue-950 dark:text-slate-200">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -714,19 +716,19 @@ const BotPage = () => {
   if (!bot) return <div className="p-4 text-black">Bot not found.</div>;
 
   return (
-    <div className="bg-gray-200 flex flex-col lg:flex-row min-h-screen dark:bg-black text-white mx-auto ">
+    <div className="bg-gray-200 flex flex-col lg:flex-row min-h-screen future-feed:bg-black text-white mx-auto dark:bg-blue-950 dark:text-slate-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="flex-1 p-4 lg:p-6 mt-25">
         <div className="relative">
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3 border-lime-500 dark:border-lime-500">
+            <Avatar className="w-27 h-27 border-3 border-lime-500 future-feed:border-lime-500">
               <Link
                 to="/edit-bot"
-                className="flex items-center justify-center h-full w-full"
+                className="flex items-center justify-center h-full w-full dark:hover:text-white"
               >
-                <FaRobot className="w-20 h-20 text-gray-600 dark:text-gray-300" />
+                <FaRobot className="w-20 h-20 text-gray-100 rounded-full " />
               </Link>
             </Avatar>
           </div>
@@ -735,37 +737,36 @@ const BotPage = () => {
           <div className="flex justify-between items-start">
             <div className="ml-30 mt-[-120px]">
               <h1 className="text-xl font-bold">{bot.name}</h1>
-              <p className="dark:text-gray-400">Schedule: {bot.schedule}</p>
+              <p className="future-feed:text-gray-400 dark:text-slate-500">Schedule: {bot.schedule}</p>
               <p className="mt-2 text-sm">{bot.prompt || "This is an area for prompt"}</p>
             </div>
             <div className="mt-[-50px] gap-4 flex items-center">
               <Button
-                variant="outline"
-                className="-mt-30 text-white bg-lime-600 dark:hover:text-white dark:text-black dark:bg-lime-500 dark:border-lime-500 dark:hover:bg-lime-800 hover:cursor-pointer"
+                variant="secondary"
+                className="-mt-30 text-white bg-lime-600 future-feed:hover:text-white future-feed:text-black future-feed:bg-lime-500 future-feed:border-lime-500 future-feed:hover:bg-lime-800 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
                 onClick={handleExecuteBot}
               >
                 Execute Bot
               </Button>
               <Button
-                variant="outline"
-                className="-mt-30 text-white bg-lime-600 dark:hover:text-black dark:text-lime-500 dark:bg-[#1a1a1a] dark:border-lime-500 dark:hover:bg-lime-500 hover:cursor-pointer"
+                variant="secondary"
+                className="-mt-30 text-white bg-lime-600 future-feed:hover:text-black future-feed:text-lime-500 future-feed:bg-[#1a1a1a] future-feed:border-lime-500 future-feed:hover:bg-lime-500 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
                 onClick={() => navigate("/edit-bot")}
               >
                 Edit Bot
               </Button>
             </div>
           </div>
-          <div className="mt-4 flex content-between gap-2 text-sm dark:text-gray-400">
+          <div className="mt-4 flex content-between gap-2 text-sm future-feed:text-gray-400">
             <Link
               to="/followers?tab=followers"
               className="flex items-center gap-3 hover:underline cursor-pointer"
             >
-              <span className="font-medium dark:text-white">0</span> Followers ·
             </Link>
-            <span className="font-medium dark:text-white">{posts.length}</span> Posts
+            <span className="font-medium future-feed:text-white">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 bg-lime-500 dark:bg-lime-500" />
+        <Separator className="my-4 bg-lime-500 future-feed:bg-lime-500 dark:bg-slate-200" />
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -779,7 +780,7 @@ const BotPage = () => {
         ) : (
           posts.map((post) => (
             <div key={post.id} className="mb-4">
-              <Post
+              <BotPost
                 username={bot.name}
                 handle={bot.schedule}
                 time={post.time}
