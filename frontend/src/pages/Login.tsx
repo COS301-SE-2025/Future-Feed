@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
-import darkLogo from "../assets/Future Feed Main Dark v1.png";
+import darkLogo from "../assets/Dark mode.png";
+import futurefeedLogo from "../assets/Future Feed Main Dark v1.png";
 import googleLogo from "../assets/Google transparent.png";
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -42,6 +43,12 @@ const Login: React.FC = () => {
         src={darkLogo}
         alt="Future Feed Logo - Dark"
         className="hidden h-[311px] w-[311px] dark:block"
+      />
+      {/* Future Feed mode logo */}
+      <img
+        src={futurefeedLogo}
+        alt="Future Feed Logo - Future Feed"
+        className="h-[311px] w-[311px] dark:block dark:hidden"
       />
     </div>
 
