@@ -27,8 +27,12 @@ export const useUsersQuery = () => {
         method: "GET",
         credentials: "include",
       });
+      if (!res.ok) {
+        throw new Error(`Failed to fetch users: ${res.status}`);
+      }
       return res.json();
     },
+
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -43,7 +47,11 @@ export const useFollowingQuery = (userId: number | null) => {
         method: "GET",
         credentials: "include",
       });
-      return res.json();
+      if (!res.ok) {
+        throw new Error(`Failed to fetch following: ${res.status}`);
+      }
+      const data = await res.json();
+      return data;
     },
     enabled: !!userId,
     staleTime: 2 * 60 * 1000, // 2 minutes
