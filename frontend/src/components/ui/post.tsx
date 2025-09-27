@@ -224,7 +224,7 @@ const Post: React.FC<PostProps> = ({
               <img
                 src={image}
                 alt="Post"
-                className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto"
+                className="mt-4 rounded-lg max-w-full h-auto"
                 onError={(e) => {
                   console.error("Failed to load post image:", image);
                   e.currentTarget.style.display = 'none';
