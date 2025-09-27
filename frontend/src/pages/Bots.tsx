@@ -57,7 +57,6 @@ const Bots: React.FC = () => {
 
   useEffect(() => {
     fetchAllBots();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAllBots = async () => {
