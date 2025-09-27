@@ -1880,7 +1880,7 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg"
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-indigo-950 dark:text-slate-200  future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
