@@ -3,6 +3,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
+import { StoreDebug } from "@/components/StoreDebug";
+
+import { useStoreHydration } from '@/hooks/useStoreHydration';
 
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -40,6 +43,8 @@ interface User {
 }*/
 
 const Explore = () => {
+const isHydrated = useStoreHydration();
+//
 
 
   //add sep states for search
@@ -225,8 +230,30 @@ const Explore = () => {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
+      if (!res.ok) {
+      console.error(`HTTP ${res.status} for user ${userId}`);
+      return false;
+    }
+
       const data = await res.json();
-      return data.following;
+      console.log(`Full response for user ${userId}:`, data); // Debug the full response
+    console.log(`isFollowing value for user ${userId}:`, data.isFollowing);
+       // Handle undefined response - if you're following them, return true
+       const isFollowing = data.isFollowing;
+    if (isFollowing === undefined || isFollowing === null) {
+      console.warn(`Undefined follow status for user ${userId}, checking following list`);
+      
+      // Check if this user is in your following list
+      const currentFollowing = useFollowStore.getState().followingUserIds;
+
+      const fallbackFollowing = currentFollowing.includes(userId);
+      console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
+      return fallbackFollowing;
+    }
+
+
+     // return data.following;
+     return Boolean(isFollowing);//ensure and heck we return true
     } catch (err) {
       console.error("Failed to check follow status for user", userId, err);
       return false;
@@ -322,6 +349,8 @@ const Explore = () => {
         const userId = await fetchCurrentUserId();
         if (userId) {
           setCurrentUserId(userId);
+          await refetchFollowing();//try wait for following data to load first
+
           //prefetch in backgorund
           //const updateStatuses = async () => {
           //const statusEntries = await Promise.all(
@@ -333,56 +362,38 @@ const Explore = () => {
           //bulkSetFollowStatus(Object.fromEntries(statusEntries));
           //};
           // updateStatuses();
-          //only update for users not alreaady in usefollowstore
-          const currentStatuses = useFollowStore.getState().followStatus;
-          const usersToCheck = users.filter(user => !(user.id in currentStatuses));
-
-          if (usersToCheck.length > 0) {
-            const statusEntries = await Promise.all(
-              usersToCheck.map(async (user: User) => {
-                const isFollowing = await checkFollowStatus(user.id);
-                return [user.id, isFollowing] as const;
-              })
-            );
-            bulkSetFollowStatus(Object.fromEntries(statusEntries));
+          //immediately get hydrated state
+         const currentStatuses = useFollowStore.getState().followStatus;
+        const currentFollowing = useFollowStore.getState().followingUserIds;
+        
+        console.log('Current hydrated statuses:', currentStatuses);
+        console.log('Current following IDs:', currentFollowing);
+        
+        // Instead of checking each user individually, use the following list
+        const newStatuses: Record<number, boolean> = {};
+        
+        users.forEach(user => {
+          // If we don't have a status for this user, determine it
+          const shouldBeFollowing = currentFollowing.includes(user.id);
+          if (!(user.id in currentStatuses) || currentStatuses[user.id] !== shouldBeFollowing) {
+            // Use the following list to determine status
+            newStatuses[user.id] = shouldBeFollowing;
           }
+        });
+        
+        console.log('New statuses to add from following list:', newStatuses);
+        
+        // Only update if we have new statuses
+        if (Object.keys(newStatuses).length > 0) {
+          bulkSetFollowStatus(newStatuses);
         }
-
-
-
-      } catch (err) {
-        // userError = err
-        console.error("Failed to load data and user id", err);
-      } finally {
-        //if (isMounted){
-        //setLoading(false);
-        //}
       }
-
-
-
-      //const allUsers = await fetchUsers();
-
-
-      //const userId = await fetchCurrentUserId();
-
-
-
-
-
-      // setLoading(false);
-
-
-
-
-
-
-
-
-
-    };
+    } catch (err) {
+      console.error("Failed to load data:", err);
+    }
+  };
     //load only if we have users but no currenuserid
-    if (users.length > 0 && !currentUserId) {
+    if (users.length > 0 && isHydrated) {
 
       loadData();
     }
@@ -392,14 +403,28 @@ const Explore = () => {
     //isMounted = false;
     //};
 
-  }, [users]);//do it when users data changes
+  }, [users, isHydrated]);//do it when users data changes and we have hydrated 
   //handle follwoing relations
   useEffect(() => {
-    if (followingRelations.length > 0) {
+    if (followingRelations.length > 0 && isHydrated) {
       const followedUserIds = followingRelations.map(relation => relation.followedId);
       setFollowingUserIds(followedUserIds);
+    // Immediately update follow statuses based on the new following data
+    const currentStatuses = useFollowStore.getState().followStatus;
+    const newStatuses: Record<number, boolean> = {};
+    
+    followedUserIds.forEach(userId => {
+      if (currentStatuses[userId] !== true) {
+        newStatuses[userId] = true;
+      }
+    });
+    
+    if (Object.keys(newStatuses).length > 0) {
+      console.log('Updating follow statuses from relations:', newStatuses);
+      bulkSetFollowStatus(newStatuses);
     }
-  }, [followingRelations]);
+  }
+}, [followingRelations, isHydrated]);
   //
 
   useEffect(() => {
@@ -421,6 +446,7 @@ const Explore = () => {
     //setHasLoadedFollowing(true);
   }
   const renderUserCard = (user: User) => {
+      const isFollowing = followStatus[user.id] === true; // Explicitly check for true
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
@@ -460,7 +486,7 @@ const Explore = () => {
             >@{user.username}</p>
             <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
           </div>
-          {followStatus[user.id] ? (
+          {isFollowing ? (
             <Button variant={"secondary"}
               onClick={() => handleUnfollow(user.id)}
               className="min-w-[90px] px-4 py-1  rounded-full   font-semibold   hover:cursor-pointer transition-colors duration-200"
@@ -550,7 +576,7 @@ const Explore = () => {
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
-              {usersLoading ? (
+              {!isHydrated || usersLoading ? (
                 renderSkeleton()
               ) : (
                 displayedUsers.map(renderUserCard)
@@ -590,6 +616,7 @@ const Explore = () => {
         </div>
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
           <WhoToFollow />
+          <StoreDebug/>
         </div>
       </aside>
     </div>
