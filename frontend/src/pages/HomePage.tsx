@@ -2013,7 +2013,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg font-bold border border-0 bg-white"
+                                      className="text-lg   font-bold border border-0 bg-white"
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
@@ -2113,7 +2113,7 @@ const HomePage = () => {
                                               topicId: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input hover:border hover:border-lime-500 bg-background px-2 py-1 text-sm"
+                                          className="future-feed:bg-card future-feed:text-white future-feed:border-lime flex h-9 w-full rounded-md border border-input hover:border hover:border-lime-500 bg-background px-2 py-1 text-sm"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2132,14 +2132,14 @@ const HomePage = () => {
                                               sourceType: e.target.value as "user" | "bot" | undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
+                                          className="flex future-feed:bg-card future-feed:text-white future-feed:border-lime h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                         >
-                                          <option value="">Select a source type</option>
-                                          <option value="user">User Posts</option>
-                                          <option value="bot">Bot Posts</option>
+                                          <option className="future-feed:bg-card" value="">Select a source type</option>
+                                          <option className="future-feed:bg-card" value="user">User Posts</option>
+                                          <option className="future-feed:bg-card" value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex items-center space-x-2 p-1">
+                                      <div className="flex items-center  space-x-2 p-1">
                                         <select
                                           value={newRule.specificUserId || ""}
                                           onChange={(e) =>
@@ -2148,7 +2148,7 @@ const HomePage = () => {
                                               specificUserId: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
+                                          className="future-feed:bg-card future-feed:text-white future-feed:border-lime flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
                                           disabled={loadingUsers}
                                         >
                                           <option value="">Select Specific User</option>
@@ -2172,7 +2172,7 @@ const HomePage = () => {
                                               percentage: e.target.value ? parseInt(e.target.value) : undefined,
                                             })
                                           }
-                                          className="flex-1 hover:border hover:border-lime-500"
+                                          className="flex-1 hover:border future-feed:border-lime hover:border-lime-500"
                                         />
                                         <Percent size={16} className="text-gray-400" />
                                       </div>
@@ -2188,7 +2188,7 @@ const HomePage = () => {
                                         {rules[preset.id].map((rule) => (
                                           <div
                                             key={rule.id}
-                                            className="flex items-center justify-between p-2 border rounded-md bg-white"
+                                            className="future-feed:border-lime flex items-center justify-between future-feed:bg-card future-feed:text-white p-2 border rounded-md bg-white"
                                           >
                                             <div className="flex items-center flex-1">
                                               <Filter size={14} className="mr-2 text-blue-500" />
@@ -2249,12 +2249,12 @@ const HomePage = () => {
                           {presets.length > 0 && (
                             <div className="pt-4">
                               <div className="text-center">
-                                <h3 className="text-lg font-medium mb-2">Your Existing Presets</h3>
+                                <h3 className="text-lg future-feed:text-white font-medium mb-2">Your Existing Presets</h3>
                               </div>
                               <div className="space-y-2">
                                 {presets.map((preset) => (
-                                  <div key={preset.id} className="flex items-center justify-between p-2 border-2 border-l-lime-500 rounded-md">
-                                    <span>{preset.name}</span>
+                                  <div key={preset.id} className="flex items-center justify-between p-2 border-2 future-feed:border-lime border-l-lime-500 rounded-md">
+                                    <span className="future-feed:text-white">{preset.name}</span>
                                   </div>
                                 ))}
                               </div>
@@ -2283,7 +2283,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white future-feed:bg-black  dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime   dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -2313,7 +2313,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
+                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1">
