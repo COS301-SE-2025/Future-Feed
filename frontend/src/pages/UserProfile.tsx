@@ -11,6 +11,7 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
+import BotPost from "@/components/ui/BotPost"
 
 interface UserProfile {
   id: number;
@@ -58,6 +59,9 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  createdAt: string;
+  botId: number;
+  isBot: boolean;
 }
 
 interface Topic {
@@ -76,7 +80,8 @@ interface RawPost {
     displayName: string;
     profilePicture?: string;
   };
-
+  botId: number;
+  isBot: boolean;
 }
 
 interface User {
@@ -126,6 +131,7 @@ const UserProfile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [tabLoading, setTabLoading] = useState({
     posts: false,
     refeeds: false,
@@ -197,23 +203,52 @@ const UserProfile = () => {
     }
   };
 
-  const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
-  try {
-    const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-      credentials: "include",
-    });
-    if (!res.ok) {
-      console.warn(`Failed to fetch topics for post ${postId}: ${res.status}`);
+  const fetchTopics = async (): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topics: ${res.status}`);
+      const data: Topic[] = await res.json();
+      setTopics(data || []);
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching topics:", err);
+      setError("Failed to load topics.");
+      setTimeout(() => setError(null), 3000);
       return [];
     }
-    const topics: Topic[] = await res.json();
-    return topics.filter((topic): topic is Topic => !!topic && !!topic.id && !!topic.name);
-  } catch (err) {
-    console.warn(`Error fetching topics for post ${postId}:`, err);
-    return [];
-  }
-};
+  };
+
+  const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
+    try {
+      const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch topic IDs for post ${postId}`);
+      const topicIds: number[] = await res.json();
+
+      let currentTopics = topics;
+      if (!currentTopics.length) {
+        currentTopics = await fetchTopics();
+      }
+
+      console.log("all topics", currentTopics);
+
+      const postTopics = topicIds
+        .map((id) => currentTopics.find((topic) => topic.id === id))
+        .filter((topic): topic is Topic => !!topic);
+      console.log("topics", postTopics)
+      return postTopics;
+    } catch (err) {
+      console.error(`Error fetching topics for post ${postId}:`, err);
+      setError("Failed to load topics for post.");
+      setTimeout(() => setError(null), 3000);
+      return [];
+    }
+  };
 
   const fetchFollowing = async (userId: number, allUsers: User[]) => {
     try {
@@ -278,9 +313,13 @@ const UserProfile = () => {
           imageUrl: string | null;
           createdAt: string;
           user: UserInfo | null;
+          botId: number;
+          isBot: boolean;
         };
         createdAt: string;
         postId: number;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(resharedList) || resharedList.length === 0) {
         console.warn("No reshared posts found for user");
@@ -293,7 +332,7 @@ const UserProfile = () => {
         resharedList.map(async (reshare) => {
           try {
             const userInfo: UserInfo = reshare.post.user ?? (await fetchUser(reshare.userId));
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${reshare.post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${reshare.post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/has-liked/${reshare.post.id}`, { credentials: "include" }),
@@ -336,7 +375,6 @@ const UserProfile = () => {
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
             const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-
             const postData: PostData = {
               id: reshare.post.id,
               profilePicture: userInfo.profilePicture,
@@ -354,7 +392,10 @@ const UserProfile = () => {
               reshareCount,
               comments: commentsWithUsers,
               showComments: false,
-              topics: topicsRes,
+              topics: topicRes,
+              createdAt: reshare.post.createdAt,
+              isBot: reshare.post.isBot,
+              botId: reshare.post.botId
             };
             return postData;
           } catch (err) {
@@ -363,7 +404,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
+      const validReshares = resharedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setReshares(validReshares);
       setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
       profileDataCache.reshares = validReshares;
@@ -395,6 +436,8 @@ const UserProfile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        isBot: boolean;
+        botId: number;
       }[] = await com.json();
       if (!Array.isArray(commentedList) || commentedList.length === 0) {
         console.warn("No commented posts found for user:", userId);
@@ -407,7 +450,7 @@ const UserProfile = () => {
         commentedList.map(async (post) => {
           try {
             const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -467,7 +510,10 @@ const UserProfile = () => {
               reshareCount,
               comments: commentsWithUsers,
               showComments: false,
-              topics: topicsRes,
+              topics: topicRes,
+              createdAt: post.createdAt,
+              isBot: post.isBot,
+              botId: post.botId
             };
             return postData;
           } catch (err) {
@@ -476,7 +522,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validComments = commentedPosts.filter((p): p is PostData => p !== null);
+      const validComments = commentedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setCommented(validComments);
       setFetchedTabs((prev) => ({ ...prev, comments: true }));
       profileDataCache.commented = validComments;
@@ -508,6 +554,8 @@ const UserProfile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await lik.json();
       if (!Array.isArray(likedList) || likedList.length === 0) {
         console.warn("No liked posts found for user:", userId);
@@ -520,7 +568,7 @@ const UserProfile = () => {
         likedList.map(async (post) => {
           try {
             const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -580,7 +628,10 @@ const UserProfile = () => {
               reshareCount,
               comments: commentsWithUsers,
               showComments: false,
-              topics: topicsRes,
+              topics: topicRes,
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -589,7 +640,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validLikes = likedPosts.filter((p): p is PostData => p !== null);
+      const validLikes = likedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setLikedPosts(validLikes);
       setFetchedTabs((prev) => ({ ...prev, likes: true }));
       profileDataCache.likedPosts = validLikes;
@@ -611,7 +662,13 @@ const UserProfile = () => {
         credentials: "include",
       });
       if (!book.ok) throw new Error(`Failed to fetch bookmarks: ${book.status}`);
-      const bookmarkedList: { id: number; userId: number; postId: number; bookmarkedAt: string }[] = await book.json();
+      const bookmarkedList: { 
+        id: number; 
+        userId: number; 
+        postId: number; 
+        bookmarkedAt: string;
+
+       }[] = await book.json();
       if (!Array.isArray(bookmarkedList) || bookmarkedList.length === 0) {
         console.warn("No bookmarked posts found for user:", userId);
         setBookmarkedPosts([]);
@@ -642,7 +699,7 @@ const UserProfile = () => {
                 profilePicture: post.user.profilePicture || "",
               };
             }
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -702,7 +759,10 @@ const UserProfile = () => {
               reshareCount,
               comments: commentsWithUsers,
               showComments: false,
-              topics: topicsRes,
+              topics: topicRes,
+              createdAt: post.createdAt,
+              isBot: post.isBot,
+              botId: post.botId
             };
             return postData;
           } catch (err) {
@@ -711,7 +771,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null);
+      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setBookmarkedPosts(validBookmarks);
       setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
       profileDataCache.bookmarkedPosts = validBookmarks;
@@ -739,6 +799,8 @@ const UserProfile = () => {
         imageUrl: string | null;
         createdAt: string;
         user: UserInfo | null;
+        botId: number;
+        isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
         console.log("No posts found for user:", userId);
@@ -751,7 +813,7 @@ const UserProfile = () => {
         apiPosts.map(async (post) => {
           try {
             const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
-            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
+            const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
@@ -811,7 +873,10 @@ const UserProfile = () => {
               reshareCount,
               comments: commentsWithUsers,
               showComments: false,
-              topics: topicsRes,
+              topics: topicRes,
+              createdAt: post.createdAt,
+              botId: post.botId,
+              isBot: post.isBot
             };
             return postData;
           } catch (err) {
@@ -820,8 +885,8 @@ const UserProfile = () => {
           }
         })
       );
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
-      setPosts(validPosts);
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPosts(validPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
       setFetchedTabs((prev) => ({ ...prev, posts: true }));
       profileDataCache.posts = validPosts;
       if (validPosts.length === 0) {
@@ -1484,8 +1549,9 @@ const UserProfile = () => {
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    profilePicture={post.profilePicture}
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1512,6 +1578,36 @@ const UserProfile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics || []}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1531,8 +1627,9 @@ const UserProfile = () => {
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
-                    profilePicture={post.profilePicture}
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1559,6 +1656,36 @@ const UserProfile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics || []}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1578,9 +1705,10 @@ const UserProfile = () => {
             ) : (
               commentedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
-                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
@@ -1606,6 +1734,36 @@ const UserProfile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics || []}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1625,9 +1783,10 @@ const UserProfile = () => {
             ) : (
               likedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
-                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
@@ -1653,6 +1812,36 @@ const UserProfile = () => {
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics}
+                  />
+                  )}
                 </div>
               ))
             )}
@@ -1672,9 +1861,10 @@ const UserProfile = () => {
             ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
-                  <Post
+                  {post.botId || post.isBot ? (
+                  <BotPost
+                    profilePicture={user.profilePicture}
                     username={post.username}
-                    profilePicture={post.profilePicture}
                     handle={post.handle}
                     time={post.time}
                     text={post.text}
@@ -1698,8 +1888,38 @@ const UserProfile = () => {
                     isUserLoaded={!!user}
                     currentUser={user}
                     authorId={post.authorId}
-                    topics={post.topics || []}
+                    topics={post.topics}
                   />
+                  ) : (
+                    <Post
+                    profilePicture={user.profilePicture}
+                    username={post.username}
+                    handle={post.handle}
+                    time={post.time}
+                    text={post.text}
+                    image={post.image}
+                    isLiked={post.isLiked}
+                    likeCount={post.likeCount}
+                    isBookmarked={post.isBookmarked}
+                    isReshared={post.isReshared}
+                    reshareCount={post.reshareCount}
+                    commentCount={post.commentCount}
+                    onLike={() => handleLike(post.id)}
+                    onBookmark={() => handleBookmark(post.id)}
+                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                    onReshare={() => handleReshare(post.id)}
+                    onDelete={() => handleDeletePost(post.id)}
+                    onToggleComments={() => toggleComments(post.id)}
+                    onNavigate={() => navigate(`/post/${post.id}`)}
+                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    showComments={post.showComments}
+                    comments={post.comments}
+                    isUserLoaded={!!user}
+                    currentUser={user}
+                    authorId={post.authorId}
+                    topics={post.topics}
+                  />
+                  )}
                 </div>
               ))
             )}

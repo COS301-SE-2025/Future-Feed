@@ -1,10 +1,9 @@
-//import { create } from "zustand"
 import { createWithEqualityFn } from 'zustand/traditional';
-//import { shallow } from 'zustand/shallow';
+import { persist } from 'zustand/middleware';
 
 type FollowStatus = Record<number, boolean>
 
-  const API_URL = import.meta.env.VITE_API_Url || "http://localhost:8080"
+const API_URL = import.meta.env.VITE_API_Url || "http://localhost:8080"
 
 interface User {
   id: number
@@ -14,9 +13,9 @@ interface User {
   profilePicture?: string | null;
   bio?: string | null;
   name: string;
-
   dateOfBirth?: string | null
 }
+
 interface FollowRelation {
   id: number;
   followerId: number;
@@ -24,154 +23,211 @@ interface FollowRelation {
   followedAt: string;
 }
 
-
 interface FollowStore {
   followStatus: FollowStatus
   followingUserIds: number[]
-  followingUsers: User[]                             // 
+  followingUsers: User[]
+  _hasHydrated: boolean
+  setHasHydrated: (hydrated: boolean) => void 
   setFollowStatus: (userId: number, isFollowing: boolean) => void
   bulkSetFollowStatus: (statuses: Record<number, boolean>) => void
   updateFollowStatus: (userId: number, isFollowing: boolean) => void
   setFollowingUserIds: (ids: number[]) => void
-  setFollowingUsers: (users: User[]) => void         // 
-  addFollowingUser: (user: User) => void             // 
-  removeFollowingUser: (userId: number) => void      // 
+  setFollowingUsers: (users: User[]) => void
+  addFollowingUser: (user: User) => void
+  removeFollowingUser: (userId: number) => void
   followers: User[]
-setFollowers: (users: User[]) => void
-fetchFollowing: (userId: number, allUsers: User[]) => Promise<void>
-fetchFollowers: (userId: number, allUsers: User[]) => Promise<void>
-safeUpdateStatus: (userId: number, isFollowing: boolean) => void
+  setFollowers: (users: User[]) => void
+  fetchFollowing: (userId: number, allUsers: User[]) => Promise<void>
+  fetchFollowers: (userId: number, allUsers: User[]) => Promise<void>
+  safeUpdateStatus: (userId: number, isFollowing: boolean) => void
 }
 
-export const useFollowStore = createWithEqualityFn<FollowStore>((set) => ({
-  followStatus: {},
-  followingUserIds: [],
-  followingUsers: [],
-  followers: [],
-setFollowers: (users) => set(() => ({ followers: users })),
+type PersistedFollowState = {
+  followStatus: FollowStatus;
+  followingUserIds: number[];
+};
 
-fetchFollowing: async (userId, allUsers) => {
-  try {
-    const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
-      method: "GET",
-      credentials: "include",
-    });
-
-    const data: FollowRelation[] = await res.json();
-    const followedUserIds = data.map((relation) => relation.followedId);
-    console.log("Followed User IDs following:", followedUserIds);
-     const normalized = allUsers.map(u => ({
-      ...u,
-      bio: u.bio ?? null,
-      profilePicture: u.profilePicture ?? null,
-    }));
-
-    const followedUsers = normalized.filter((u) =>
-      followedUserIds.includes(u.id)
-    );
-    set(() => ({ followingUsers: followedUsers }));
-  } catch (err) {
-    console.error("Failed to fetch following users", err);
-  }
-},
-
-fetchFollowers: async (userId, allUsers) => {
-  try {
-    const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
-      method: "GET",
-      credentials: "include",
-    });
-
-    const data: FollowRelation[] = await res.json();
-    const followerUserIds = data.map((relation) => relation.followerId);
-    console.log("Follower User IDs followers:", followerUserIds);
-    const normalized = allUsers.map(u => ({
-      ...u,
-      bio: u.bio ?? null,
-      profilePicture: u.profilePicture ?? null,
-    }));
-
-    const followerUsers = normalized.filter((u) =>
-      followerUserIds.includes(u.id)
-    );
-    set(() => ({ followers: followerUsers }));
-  } catch (err) {
-    console.error("Failed to fetch followers", err);
-  }
-},
-
-  setFollowStatus: (userId, isFollowing) =>
-    set((state) => ({
-      followStatus: {
-        ...state.followStatus,
-        [userId]: isFollowing,
+export const useFollowStore = createWithEqualityFn<FollowStore>()(
+  persist(
+    (set, get) => ({
+      followStatus: {},
+      followingUserIds: [],
+      followingUsers: [],
+      followers: [],
+      _hasHydrated: false,
+      
+      setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
+      
+      cleanFollowStatus: () => {
+        const state = get();
+        const cleanFollowStatus = Object.fromEntries(
+          Object.entries(state.followStatus).filter(([, value]) => value !== undefined)
+        );
+        set({ followStatus: cleanFollowStatus });
       },
-      followingUserIds: isFollowing
-        ? [...new Set([...state.followingUserIds, userId])]
-        : state.followingUserIds.filter((id) => id !== userId),
-    })),
+      
+      setFollowers: (users) => set(() => ({ followers: users })),
 
-  updateFollowStatus: (userId, isFollowing) =>
-    set((state) => ({
-      followStatus: {
-        ...state.followStatus,
-        [userId]: isFollowing,
+      fetchFollowing: async (userId, allUsers) => {
+        try {
+          const res = await fetch(`${API_URL}/api/follow/following/${userId}`, {
+            method: "GET",
+            credentials: "include",
+          });
+
+          const data: FollowRelation[] = await res.json();
+          const followedUserIds = data.map((relation) => relation.followedId);
+          console.log("Followed User IDs following:", followedUserIds);
+          const normalized = allUsers.map(u => ({
+            ...u,
+            bio: u.bio ?? null,
+            profilePicture: u.profilePicture ?? null,
+          }));
+
+          const followedUsers = normalized.filter((u) =>
+            followedUserIds.includes(u.id)
+          );
+          set(() => ({ followingUsers: followedUsers }));
+        } catch (err) {
+          console.error("Failed to fetch following users", err);
+        }
       },
-      followingUserIds: isFollowing
-        ? [...new Set([...state.followingUserIds, userId])]
-        : state.followingUserIds.filter((id) => id !== userId),
-    })),
 
- // Modified bulkSetFollowStatus to merge rather than replace
-  bulkSetFollowStatus: (statuses) =>
-    set((state) => ({
-      followStatus: {
-        ...state.followStatus, // Keep existing statuses
-        ...statuses            // Add/update new ones
+      fetchFollowers: async (userId, allUsers) => {
+        try {
+          const res = await fetch(`${API_URL}/api/follow/followers/${userId}`, {
+            method: "GET",
+            credentials: "include",
+          });
+
+          const data: FollowRelation[] = await res.json();
+          const followerUserIds = data.map((relation) => relation.followerId);
+          console.log("Follower User IDs followers:", followerUserIds);
+          const normalized = allUsers.map(u => ({
+            ...u,
+            bio: u.bio ?? null,
+            profilePicture: u.profilePicture ?? null,
+          }));
+
+          const followerUsers = normalized.filter((u) =>
+            followerUserIds.includes(u.id)
+          );
+          set(() => ({ followers: followerUsers }));
+        } catch (err) {
+          console.error("Failed to fetch followers", err);
+        }
       },
-      followingUserIds: [
-        ...new Set([
-          ...state.followingUserIds,
-          ...Object.entries(statuses)
-            .filter(([, value]) => value)
-            .map(([id]) => Number(id))
-        ])
-      ]
-    })),
-    //safe status updayes
-   safeUpdateStatus: (userId: number, isFollowing: boolean) =>
-  set((state): Partial<FollowStore> => {
-    // Always update the status, but only update followingUserIds if needed
-    const newStatus = {
-      ...state.followStatus,
-      [userId]: isFollowing,
-    };
-    
-    const newFollowingIds = isFollowing
-      ? [...new Set([...state.followingUserIds, userId])]
-      : state.followingUserIds.filter((id) => id !== userId);
 
-    return {
-      followStatus: newStatus,
-      followingUserIds: newFollowingIds,
-    };
-  }),
-    //
+      setFollowStatus: (userId, isFollowing) =>
+        set((state) => ({
+          followStatus: {
+            ...state.followStatus,
+            [userId]: isFollowing,
+          },
+          followingUserIds: isFollowing
+            ? [...new Set([...state.followingUserIds, userId])]
+            : state.followingUserIds.filter((id) => id !== userId),
+        })),
 
-  setFollowingUserIds: (ids) => set(() => ({ followingUserIds: ids })),
+      updateFollowStatus: (userId, isFollowing) =>
+        set((state) => ({
+          followStatus: {
+            ...state.followStatus,
+            [userId]: isFollowing,
+          },
+          followingUserIds: isFollowing
+            ? [...new Set([...state.followingUserIds, userId])]
+            : state.followingUserIds.filter((id) => id !== userId),
+        })),
 
-  setFollowingUsers: (users) => set(() => ({ followingUsers: users })),
+      bulkSetFollowStatus: (statuses) =>
+        set((state) => {
+          const cleanStatuses = Object.fromEntries(
+            Object.entries(statuses).filter(([, value]) => value !== undefined)
+          );
+          
+          return {
+            followStatus: {
+              ...state.followStatus,
+              ...cleanStatuses
+            },
+            followingUserIds: [
+              ...new Set([
+                ...state.followingUserIds,
+                ...Object.entries(cleanStatuses)
+                  .filter(([, value]) => value === true)
+                  .map(([id]) => Number(id))
+              ])
+            ]
+          };
+        }),
 
-  addFollowingUser: (user) =>
-    set((state) => {
-      const alreadyExists = state.followingUsers.some((u) => u.id === user.id)
-      return {
-        followingUsers: alreadyExists ? state.followingUsers : [...state.followingUsers, user],
-      }
+      safeUpdateStatus: (userId: number, isFollowing: boolean) =>
+        set((state): Partial<FollowStore> => {
+          const newStatus = {
+            ...state.followStatus,
+            [userId]: isFollowing,
+          };
+          
+          const newFollowingIds = isFollowing
+            ? [...new Set([...state.followingUserIds, userId])]
+            : state.followingUserIds.filter((id) => id !== userId);
+
+          return {
+            followStatus: newStatus,
+            followingUserIds: newFollowingIds,
+          };
+        }),
+
+      setFollowingUserIds: (ids) => set(() => ({ followingUserIds: ids })),
+
+      setFollowingUsers: (users) => set(() => ({ followingUsers: users })),
+
+      addFollowingUser: (user) =>
+        set((state) => {
+          const alreadyExists = state.followingUsers.some((u) => u.id === user.id);
+          return {
+            followingUsers: alreadyExists ? state.followingUsers : [...state.followingUsers, user],
+          };
+        }),
+
+      removeFollowingUser: (userId) =>
+        set((state) => ({
+          followingUsers: state.followingUsers.filter((u) => u.id !== userId),
+        })),
     }),
-
-  removeFollowingUser: (userId) =>
-    set((state) => ({
-      followingUsers: state.followingUsers.filter((u) => u.id !== userId),
-    })),
-}))
+    {
+      name: 'follow-store',
+      partialize: (state) => ({
+        followStatus: state.followStatus,
+        followingUserIds: state.followingUserIds
+      }),
+      version: 1,
+      migrate: (persistedState, version) => {
+        if (version === 0) {
+          const state = persistedState as PersistedFollowState;
+          if (state.followStatus) {
+            state.followStatus = Object.fromEntries(
+              Object.entries(state.followStatus).filter(([, value]) => value !== undefined)
+            );
+          }
+          if (!state.followingUserIds) {
+            state.followingUserIds = [];
+          }
+          return state;
+        }
+        return persistedState;
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          console.log(' Store hydrated with:', {
+            followStatus: state.followStatus,
+            followingUserIds: state.followingUserIds
+          });
+          state.setHasHydrated(true);
+        }
+      },
+    }
+  ) 
+); 
