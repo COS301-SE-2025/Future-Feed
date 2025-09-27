@@ -58,6 +58,7 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  createdAt: string;
 }
 
 interface Topic {
@@ -355,6 +356,7 @@ const UserProfile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: reshare.post.createdAt,
             };
             return postData;
           } catch (err) {
@@ -363,7 +365,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validReshares = resharedPosts.filter((p): p is PostData => p !== null);
+      const validReshares = resharedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setReshares(validReshares);
       setFetchedTabs((prev) => ({ ...prev, refeeds: true }));
       profileDataCache.reshares = validReshares;
@@ -468,6 +470,7 @@ const UserProfile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt,
             };
             return postData;
           } catch (err) {
@@ -476,7 +479,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validComments = commentedPosts.filter((p): p is PostData => p !== null);
+      const validComments = commentedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setCommented(validComments);
       setFetchedTabs((prev) => ({ ...prev, comments: true }));
       profileDataCache.commented = validComments;
@@ -581,6 +584,7 @@ const UserProfile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt,
             };
             return postData;
           } catch (err) {
@@ -589,7 +593,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validLikes = likedPosts.filter((p): p is PostData => p !== null);
+      const validLikes = likedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setLikedPosts(validLikes);
       setFetchedTabs((prev) => ({ ...prev, likes: true }));
       profileDataCache.likedPosts = validLikes;
@@ -703,6 +707,7 @@ const UserProfile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt,
             };
             return postData;
           } catch (err) {
@@ -711,7 +716,7 @@ const UserProfile = () => {
           }
         })
       );
-      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null);
+      const validBookmarks = bookmarkedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setBookmarkedPosts(validBookmarks);
       setFetchedTabs((prev) => ({ ...prev, bookmarks: true }));
       profileDataCache.bookmarkedPosts = validBookmarks;
@@ -812,6 +817,7 @@ const UserProfile = () => {
               comments: commentsWithUsers,
               showComments: false,
               topics: topicsRes,
+              createdAt: post.createdAt,
             };
             return postData;
           } catch (err) {
@@ -820,8 +826,8 @@ const UserProfile = () => {
           }
         })
       );
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null);
-      setPosts(validPosts);
+      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setPosts(validPosts.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()));
       setFetchedTabs((prev) => ({ ...prev, posts: true }));
       profileDataCache.posts = validPosts;
       if (validPosts.length === 0) {
