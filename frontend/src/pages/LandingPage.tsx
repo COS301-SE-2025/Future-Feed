@@ -86,9 +86,10 @@ const LandingPage = () => {
                     <SheetTrigger className="mt-2 ml-2" asChild>
                         <AlignJustify className="future-feed:text-lime w-6 h-6"></AlignJustify>
                     </SheetTrigger>
-                    <SheetContent side="left">
+                    <SheetContent  side="left">
                         <SheetHeader>
-                            <SheetTitle>Future Feed</SheetTitle>
+                            <SheetTitle className="
+                            future-feed:text-lime">Future Feed</SheetTitle>
                             <SheetDescription>
                                 Join the Future Feed family
                             </SheetDescription>

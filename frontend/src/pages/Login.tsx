@@ -116,7 +116,7 @@ const Login: React.FC = () => {
       </div>
       
       <div className="mb-4 text-right">
-        <Link to="/forgotpassword" className="future-feed:text-lime text-sm sm:text-[15px] font-bold text-black no-underline hover:underline dark:text-slate-200">
+        <Link to="/forgotpassword" className="future-feed:text-white text-sm sm:text-[15px] font-bold text-black no-underline hover:underline dark:text-slate-200">
           Forgot password?
         </Link>
       </div>
@@ -132,7 +132,7 @@ const Login: React.FC = () => {
         
         <span className="text-center future-feed:text-lime text-sm sm:text-[16px]">
           Don't have an account?{" "}
-          <Link to="/register" className="future-feed:text-lime no-underline hover:underline text-blue-500">
+          <Link to="/register" className="future-feed:text-white no-underline hover:underline text-blue-500">
             Register here
           </Link>
         </span>
