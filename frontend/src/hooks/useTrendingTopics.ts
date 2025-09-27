@@ -1,13 +1,15 @@
 // hooks/useTrendingTopics.ts
 import { useQuery } from '@tanstack/react-query';
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 export interface TrendingTopic {
   id: number;
   name: string;
 }
 
 const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
-  const res = await fetch('http://localhost:8080/api/topics/trending', {
+  const res = await fetch(`${API_URL}/api/topics/trending`, {
     method: 'GET',
     credentials: 'include',
   });
