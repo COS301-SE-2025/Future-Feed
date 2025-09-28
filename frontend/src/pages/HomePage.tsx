@@ -751,7 +751,7 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No default preset found - this is normal for new users");
+          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {

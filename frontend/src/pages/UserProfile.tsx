@@ -237,12 +237,12 @@ const UserProfile = () => {
         currentTopics = await fetchTopics();
       }
 
-      console.log("all topics", currentTopics);
+      //console.log("all topics", currentTopics);
 
       const postTopics = topicIds
         .map((id) => currentTopics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-      console.log("topics", postTopics)
+     // console.log("topics", postTopics)
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
@@ -805,7 +805,7 @@ const UserProfile = () => {
         isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-        console.log("No posts found for user:", userId);
+       // console.log("No posts found for user:", userId);
         setPosts([]);
         setFetchedTabs((prev) => ({ ...prev, posts: true }));
         profileDataCache.posts = [];

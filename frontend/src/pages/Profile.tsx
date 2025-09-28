@@ -339,7 +339,7 @@ const Profile = () => {
         isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-        console.log("No posts found for user:", userId);
+        //console.log("No posts found for user:", userId);
         setPosts([]);
         setFetchedTabs((prev) => ({ ...prev, posts: true }));
         profileDataCache.posts = [];

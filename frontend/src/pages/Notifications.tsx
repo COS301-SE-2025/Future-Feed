@@ -122,7 +122,7 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      console.log(`Notification ${notificationId} marked as read`);
+      //console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
