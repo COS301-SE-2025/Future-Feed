@@ -35,7 +35,7 @@ const SearchUser = ({ onSearch }: SearchUserProps) => {
         onSearch(e.target.value);
 
       }}
-      className=" border-rose-gold-accent-border bg-white  rounded-full future-feed:border-lime future-feed:bg-card future-feed:text-lime dark:border-slate-200 dark:bg-blue-950 dark:text-white border-3 future-feed:placeholder:text-lime dark:placeholder:text-slate-200"
+      className=" border-rose-gold-accent-border bg-white  rounded-full future-feed:border-card future-feed:bg-card future-feed:text-lime dark:border-none dark:bg-blue-950 dark:text-white border-3 future-feed:placeholder:text-lime dark:placeholder:text-slate-200"
     />
   
   );
