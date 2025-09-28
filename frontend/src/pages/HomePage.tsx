@@ -2142,7 +2142,6 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
-                      {/* Add a welcome message when no default preset exists */}
                       {!defaultPresetId && presets.length === 0 && (
                         <div className="text-center p-8">
                           <p className="text-lg text-gray-500 mb-4">No presets found</p>
@@ -2198,7 +2197,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg   font-bold border border-0 bg-white"
+                                      className="text-lg font-bold border border-0 bg-white text-white"
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
