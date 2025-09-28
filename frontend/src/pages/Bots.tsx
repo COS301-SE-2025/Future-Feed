@@ -595,7 +595,7 @@ const Bots: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="bg-white  rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-1">
-              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-lime-500">Update Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-white">Update Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {

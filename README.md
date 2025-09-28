@@ -26,12 +26,21 @@
 ![Last Commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Future-Feed)
 
 ## Links:
+  <a href="Documentation/Specification/Architectural Specifications">Architectural Specifications</a> |
   <a href="Documentation/Specification/Requirement Specifications">Requirement Specifications</a> | 
   <a href="Documentation/Specification/Design Specifications">Design Specifications</a> | 
   <a href="https://github.com/orgs/COS301-SE-2025/projects/125/views/1"> GitHub Project Board Link</a>
   <br>
   <a href="Documentation/Specification/Manuals">Manuals</a> |
-  <a href="Documentation/Specification/Coding Standards">Coding Standards/quality</a>
+  <a href="Documentation/Specification/Coding Standards">Coding Standards/quality</a> |
+  <a href="Documentation/Specification/Testing Policy Document">Testing Policy Document</a>
+  <hr>
+  <a href="Documentation/Diagrams/Architectural Diagram">Architectural Diagram</a> |
+  <a href="Documentation/Diagrams/Deployment Model">Deployment Model</a> |
+  <a href="Documentation/Diagrams/Domain Model">Domain Model</a> |
+  <br>
+  <a href="Documentation/Diagrams/Gantt Chart">Gantt Chart</a> |
+  <a href="Documentation/Diagrams/Use Case Diagram">Use Case Diagrams</a>
 
 ### Demo links:
 <table>
@@ -90,16 +99,35 @@
         </a>
       </td>
     </tr>
+	<tr>
+      <td><strong>Demo 4 Video</strong></td>
+      <td>
+        <a href="" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
+	<tr>
+      <td><strong>Demo 4 Presentation</strong></td>
+      <td>
+        <a href="" target="_blank">
+          View Slides
+        </a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
 ## Deliverables:
-80% completion of the working prototype <br>
-Architectural Requirements & Design Documentation <br>
+100% completion of the working prototype (Deployed)<br>
+Architectural structural design & requirements <br>
+Quality Requirements and its testing <br>
 Coding Standards Document <br>
+Testing Policy document <br>
 User Manual <br>
 Technical Installation Manual <br>
-Requirements and Design Specifications <br>
+Requirements and design specifications
+
 
 <h2> Technologies Used</h2>
 
@@ -315,6 +343,9 @@ cd AI-Bot
 docker build -t my-ai-bot .
 docker run -d -p 8000:8000 --name ai-bot-container my-ai-bot
 ```
+
+#### Deployment link:
+<a href="future-feed.vercel.app"> Future Feed </a>
 
 ## Running Tests
 Unit Testing <br>
