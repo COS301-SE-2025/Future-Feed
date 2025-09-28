@@ -255,7 +255,7 @@ const isHydrated = useStoreHydration();
      // return data.following;
      return Boolean(isFollowing);//ensure and heck we return true
     } catch (err) {
-      //console.error("Failed to check follow status for user", userId, err);
+      console.error("Failed to check follow status for user", userId, err);
       return false;
     }
   };

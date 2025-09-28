@@ -605,7 +605,7 @@ const BotPage = () => {
         throw new Error(`Failed to execute bot: ${errorText}`);
       }
       const result = await res.json();
-      //console.log("Bot executed successfully:", result);
+      console.log("Bot executed successfully:", result);
       location.reload(); // Reload to reflect changes
     } catch (err) {
       console.error("Error executing bot:", err);
