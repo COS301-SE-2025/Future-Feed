@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Camera, Trash2, User } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
+
 import {
   Dialog,
   DialogTrigger,
@@ -145,13 +146,13 @@ const EditProfile: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-blue-950 dark:text-slate-200">
       <ThemeProvider>
-        <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+        <Card className=" border-rose-gold accent border dark:border-slate-200 future-feed:border-lime mt-10 relative w-full max-w-[900px] rounded-[16px] border-2  p-16 shadow-[0_0_30px_#999]  dark:shadow-none">
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
             <Link to="/profile">
               <Button
-                className="h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-lime-500 dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
+                className="h-[40px] w-[40px] rounded-full border  p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200  dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
                 variant="ghost"
               >
                 <ArrowLeft className="h-5 w-5 text-black" />
@@ -207,10 +208,10 @@ const EditProfile: React.FC = () => {
                     <img
                       src={formData.profileImage}
                       alt="Profile"
-                      className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500"
+                      className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)] "
                     />
                   ) : (
-                    <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] dark:border-lime-500">
+                    <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)] ">
                       <User className="h-12 w-12 text-white" />
                     </div>
                   )}
@@ -261,12 +262,16 @@ const EditProfile: React.FC = () => {
                 />
               </div>
 
+              <Link to={"/profile"}>
               <Button
                 type="submit"
-                className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-lime-500 hover:border-3 mt-3 cursor-pointer"
+                className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-blue-500 hover:border-3 mt-3 cursor-pointer"
+              
               >
                 Save Changes
               </Button>
+              </Link>
+              
             </form>
           </CardContent>
         </Card>
@@ -277,13 +282,13 @@ const EditProfile: React.FC = () => {
 
 const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
   <div className="relative my-[15px] flex items-center justify-center text-center">
-    <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
+    <div className="mr-2.5 h-px w-1/3 future-feed:bg-lime bg-blue-500 dark:bg-slate-200"></div>
     <span className="text-[0.9rem] font-bold">
       <Label htmlFor={htmlFor} className="mb-2 block font-bold text-[18px]">
         {label}
       </Label>
     </span>
-    <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
+    <div className="ml-2.5 h-px w-1/3 future-feed:bg-lime  bg-blue-500 dark:bg-slate-200"></div>
   </div>
 );
 
