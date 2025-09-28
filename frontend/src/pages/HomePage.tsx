@@ -280,7 +280,6 @@ const HomePage = () => {
     }
   };
 
-  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
@@ -315,18 +314,17 @@ const HomePage = () => {
 
   useEffect(() => {
     if (userSearchQuery.trim() === "") {
-      setFilteredUsers(allUsers.slice(0, 5)); // Show first 5 users when search is empty
+      setFilteredUsers(allUsers.slice(0, 5));
     } else {
       const query = userSearchQuery.toLowerCase();
       const filtered = allUsers.filter(user =>
         user.displayName?.toLowerCase().includes(query) ||
         user.username?.toLowerCase().includes(query)
-      ).slice(0, 10); // Limit to 10 results
+      ).slice(0, 10);
       setFilteredUsers(filtered);
     }
   }, [userSearchQuery, allUsers]);
 
-  // Add click outside handler to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -360,7 +358,6 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [currentPage, loadingForYou, hasMore]);
 
-  // added fetchPaginated
   const fetchPaginatedPosts = async (page: number) => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
@@ -520,12 +517,6 @@ const HomePage = () => {
     return /<!doctype html>|<html[\s>]/i.test(s);
   }
 
-  /**
-   * Robustly parse a Response that *should* be JSON, but may:
-   *  - include BOM/XSSI/log noise,
-   *  - return primitives (true/false/5),
-   *  - be mislabeled (no content-type).
-   */
   async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
     const contentType = response.headers.get("content-type") || "";
     const raw = stripBOM((await response.text()).trim());
@@ -857,7 +848,6 @@ const HomePage = () => {
         throw new Error(`Failed to set default preset: ${response.status} - ${errorText}`);
       }
 
-      // Update local state
       setDefaultPresetId(presetId);
       setPresets((prev) =>
         prev.map((p) => ({
@@ -882,7 +872,7 @@ const HomePage = () => {
     }
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
-    setIsViewingPresetFeed(true); // Set to show posts and hide presets
+    setIsViewingPresetFeed(true);
 
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
@@ -943,7 +933,7 @@ const HomePage = () => {
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
-          let isLiked: boolean = false; // Explicitly declare as boolean
+          let isLiked: boolean = false;
           if (hasLikedRes.ok) {
             try {
               const raw = await robustParse<boolean | string | { liked: boolean }>(
@@ -1038,7 +1028,6 @@ const HomePage = () => {
       const data: Preset[] = await response.json();
       setPresets(data);
 
-      // Find default preset from the list
       const defaultPreset = data.find((p) => p.defaultPreset);
       if (defaultPreset) {
         setDefaultPresetId(defaultPreset.id);
@@ -1099,7 +1088,6 @@ const HomePage = () => {
       setPresets((prev) => [...prev, data]);
       if (data.defaultPreset) {
         setDefaultPresetId(data.id);
-        // Optionally set as default via API if not handled by backend
         await setDefaultPreset(data.id);
       }
       setNewPresetName("");
@@ -1114,7 +1102,6 @@ const HomePage = () => {
   };
 
   const addRule = async (presetId: number) => {
-    // Validate that at least one filter condition is provided
     if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
       setError('At least one filter condition (topic, source type, or specific user) is required');
       setTimeout(() => {
@@ -1123,7 +1110,6 @@ const HomePage = () => {
       return;
     }
 
-    // Validate percentage if provided
     if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
       setError('Percentage must be between 1 and 100');
       setTimeout(() => {
@@ -1156,7 +1142,6 @@ const HomePage = () => {
         [presetId]: [...(prev[presetId] || []), data],
       }));
 
-      // Reset form
       setNewRule({
         topicId: undefined,
         sourceType: undefined,
@@ -1194,8 +1179,6 @@ const HomePage = () => {
     }
   }
 
-  // Helper function to format rule for display
-  // Helper function to format rule for display
   const formatRule = (rule: Rule) => {
     const parts = [];
 
@@ -1258,8 +1241,6 @@ const HomePage = () => {
 
     const tempPostId = generateTempId();
     const createdAt = new Date().toISOString();
-
-    // Track if we're generating an image
     const isGeneratingImage = useAIGeneration;
 
     const tempPost: PostData = {
@@ -1288,7 +1269,6 @@ const HomePage = () => {
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
 
-    // Add to loading images set if generating AI image
     if (isGeneratingImage) {
       setLoadingImages(prev => new Set(prev).add(tempPostId));
     }
@@ -1303,15 +1283,14 @@ const HomePage = () => {
     const tempImagePrompt = imagePrompt;
     setImagePrompt("");
     setUseAIGeneration(false);
-    setImageWidth(768);
-    setImageHeight(768);
+    setImageWidth(384);
+    setImageHeight(384);
     setImageSteps(8);
     setImageModel("black-forest-labs/FLUX.1-schnell");
 
     try {
       let res: Response;
       if (useAIGeneration) {
-        // AI image generation
         const postData = {
           content: postText,
           isBot: false,
@@ -1328,7 +1307,6 @@ const HomePage = () => {
           body: JSON.stringify(postData),
         });
       } else {
-        // File upload
         const formData = new FormData();
         formData.append("post", JSON.stringify({ content: postText }));
         if (imageFile) {
@@ -1389,7 +1367,6 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      // Remove from loading images set
       if (isGeneratingImage) {
         setLoadingImages(prev => {
           const newSet = new Set(prev);
@@ -1409,7 +1386,6 @@ const HomePage = () => {
       setError("Failed to create post. Reverting...");
       setTimeout(() => setError(null), 3000);
 
-      // Remove from loading images set on error
       if (isGeneratingImage) {
         setLoadingImages(prev => {
           const newSet = new Set(prev);
@@ -1741,7 +1717,6 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    // Optimistic update
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
@@ -1769,7 +1744,6 @@ const HomePage = () => {
         throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`);
       }
 
-      // Fetch updated bookmark status to confirm
       const bookmarksRes = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -1779,7 +1753,6 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      // Update both posts and followingPosts with confirmed bookmark status
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
@@ -1794,7 +1767,6 @@ const HomePage = () => {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      // Revert optimistic update
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
@@ -1891,38 +1863,37 @@ const HomePage = () => {
             authorId={post.authorId}
             topics={post.topics || []}
           />
-          ) : (
-        <Post
-          username={post.username}
-          handle={post.handle}
-          profilePicture={post.profilePicture}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
-          onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments || false}
-          comments={post.comments || []}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          topics={post.topics || []}
-          // NEW: Pass loading state for image generation
-          isImageLoading={loadingImages.has(post.id)}
-        />
-      )}
+        ) : (
+          <Post
+            username={post.username}
+            handle={post.handle}
+            profilePicture={post.profilePicture}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments || false}
+            comments={post.comments || []}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            topics={post.topics || []}
+            isImageLoading={loadingImages.has(post.id)}
+          />
+        )}
       </div>
     ));
   };
@@ -1941,7 +1912,6 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
-          // Wrap fetchDefaultPreset in error handling
           (async () => {
             try {
               await fetchDefaultPreset();
@@ -2000,7 +1970,9 @@ const HomePage = () => {
       </aside>
 
       <button
+
         className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -2100,7 +2072,7 @@ const HomePage = () => {
                         <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
 
                       </div>
-                      <div className="flex gap-20 mt-13"> {/* Added flex container for buttons */}
+                      <div className="flex gap-20 mt-13">
                         <Button
                           className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
                           onClick={() => navigate("/explore")}
@@ -2142,7 +2114,6 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
-                      {/* Add a welcome message when no default preset exists */}
                       {!defaultPresetId && presets.length === 0 && (
                         <div className="text-center p-8">
                           <p className="text-lg text-gray-500 mb-4">No presets found</p>
@@ -2159,7 +2130,7 @@ const HomePage = () => {
                               className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                               onClick={() => {
                                 setIsViewingPresetFeed(false);
-                                setPresetPosts([]); // Clear posts when returning to presets
+                                setPresetPosts([]);
                               }}
                             >
                               <ArrowLeft />
@@ -2198,7 +2169,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg   font-bold border border-0 bg-white"
+                                      className="text-lg font-bold border border-0 bg-white dark:text-white "
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
@@ -2239,7 +2210,7 @@ const HomePage = () => {
                                       <Dialog>
                                         <DialogTrigger asChild>
                                           <DropdownMenuItem
-                                            onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                            onSelect={(e) => e.preventDefault()}
                                             className="text-red-500 focus:text-red-700"
                                           >
                                             <Trash2 className="text-red-400" />
@@ -2323,8 +2294,6 @@ const HomePage = () => {
                                           <option className="future-feed:bg-card" value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-
-                                      {/* NEW USER SEARCH COMPONENT */}
                                       <div className="user-search-container relative">
                                         <Input
                                           placeholder="Search users..."
@@ -2373,8 +2342,6 @@ const HomePage = () => {
                                             ))}
                                           </div>
                                         )}
-
-                                        {/* Clear selection button */}
                                         {newRule.specificUserId && (
                                           <Button
                                             variant="ghost"
@@ -2474,7 +2441,7 @@ const HomePage = () => {
                             />
                             <Button
                               className="bg-blue-500"
-                              onClick={() => createPreset(false)} // Create without setting as default
+                              onClick={() => createPreset(false)}
                               disabled={isLoading}
                             >
                               {isLoading ? "Creating..." : "Create"}
@@ -2517,9 +2484,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-
-          <div className="bg-white future-feed:bg-black future-feed:border-lime   dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
-
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -2532,8 +2497,6 @@ const HomePage = () => {
                 setImagePrompt("");
                 setImageWidth(768);
                 setImageHeight(768);
-                setImageSteps(8);
-                setImageModel("black-forest-labs/FLUX.1-schnell");
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
@@ -2558,19 +2521,18 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
+                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id} className="text-center py-1">
+                    <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
                       {topic.name}
                     </option>
                   ))}
                 </select>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple topics</p>
                 </div>
               </div>
-              {/* New: Toggle between upload and AI generation */}
               <div className="mb-4">
                 <div className="flex justify-around mb-2">
                   <Button
@@ -2580,7 +2542,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded-full"
                   >
                     Upload Image
                   </Button>
@@ -2590,7 +2552,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded rounded-full"
                   >
                     Generate AI Image
                   </Button>
@@ -2598,48 +2560,17 @@ const HomePage = () => {
                 {useAIGeneration ? (
                   <div className="space-y-4">
                     <Input
-                      placeholder="Enter image prompt (e.g., 'vibrant anime-style city skyline at dusk')"
+                      placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
                     />
-                    <div className="flex space-x-2">
-                      <Input
-                        type="number"
-                        placeholder="Width (px)"
-                        value={imageWidth}
-                        onChange={(e) => setImageWidth(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Height (px)"
-                        value={imageHeight}
-                        onChange={(e) => setImageHeight(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Steps (1-12)"
-                        value={imageSteps}
-                        onChange={(e) => setImageSteps(Math.min(12, Math.max(1, Number(e.target.value) || 8)))}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                    </div>
-                    <select
-                      value={imageModel}
-                      onChange={(e) => setImageModel(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2"
-                    >
-                      <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell</option>
-                      {/* Add other models if supported by the API */}
-                    </select>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
+                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2663,7 +2594,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post

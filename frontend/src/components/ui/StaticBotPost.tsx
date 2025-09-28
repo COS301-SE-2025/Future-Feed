@@ -57,7 +57,7 @@ interface PostProps {
   botId: number;
 }
 
-const StaticPost: React.FC<PostProps> = ({
+const StaticBotPost: React.FC<PostProps> = ({
   username,
   handle,
   time,
@@ -107,7 +107,7 @@ const StaticPost: React.FC<PostProps> = ({
   const handleCopyLink = () => {
     navigator.clipboard.writeText(postUrl).then(() => {
       setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 3000); // Hide pill after 3 seconds
+      setTimeout(() => setIsCopied(false), 3000);
     }).catch((err) => {
       console.error("Failed to copy link:", err);
     });
@@ -120,51 +120,69 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-7 mb-4 relative", className)}>
+    <Card className={cn(
+      "dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-2 sm:my-4 md:my-6 mx-2 sm:mx-4",
+      "max-w-full", 
+      className
+    )}>
       {isCopied && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
         </div>
       )}
-      <CardContent className="p-1 mt-[-15px] ml-[20px]">
+      <CardContent className="p-3 sm:p-4 md:p-6">
+        {/* Back Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
+          className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 sm:mb-3"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline text-sm ml-1">Back</span>
+          <span className="sr-only sm:not-sr-only sm:inline text-sm ml-1 future-feed:text-white">
+            Back
+          </span>
         </Button>
-        <div className="flex gap-4">
+
+        {/* Main Content */}
+        <div className="flex gap-3 sm:gap-4 md:gap-6">
+          {/* Avatar */}
           <Avatar 
-            className="h-10 w-10 sm:h-12 sm:w-12 hover:cursor-pointer"
+            className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 hover:cursor-pointer flex-shrink-0"
             onClick={(e) => {
-                e.stopPropagation();
-                onProfileClick();
-              }}
+              e.stopPropagation();
+              onProfileClick();
+            }}
           >
             <AvatarImage src={profilePicture} alt={handle} />
-            <AvatarFallback>{getInitials(username)}</AvatarFallback>
+            <AvatarFallback className="text-xs sm:text-sm">
+              {getInitials(username)}
+            </AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <div className="flex justify-between items-center">
-              <h2 
-                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onProfileClick();
-                }}  
-              >
-                {username || "Unknown User"}
-              </h2>
-              <Bot
-                className="ml-[-880px] h-8 w-8 text-gray-500 dark:text-lime-400"
-                aria-label="Bot post indicator"
+
+          {/* Content Area */}
+          <div className="flex-1 min-w-0"> {/* min-w-0 prevents flex child from overflowing */}
+            {/* Header Section */}
+            <div className="flex justify-between items-start gap-2 mb-1">
+              <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
+                <h2 
+                  className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline future-feed:text-white truncate"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onProfileClick();
+                  }}  
+                >
+                  {username || "Unknown User"}
+                </h2>
+                <Bot
+                  className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-lime-400 flex-shrink-0"
+                  aria-label="Bot post indicator"
                 />
-              <div className="flex items-center gap-2">
-                <span className="future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
+              </div>
+              
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="text-xs sm:text-sm dark:text-gray-400 future-feed:text-white whitespace-nowrap">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -180,96 +198,124 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
+            {/* Handle */}
             <p 
-              className="dark:text-gray-300 text-xs sm:text-sm"
+              className="dark:text-gray-300 text-xs sm:text-sm future-feed:text-white mt-0.5"
               onClick={(e) => {
                 e.stopPropagation();
                 onProfileClick();
               }}
             >
-                {handle || "@unknown"}
+              {handle || "@unknown"}
             </p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+
+            {/* Post Text */}
+            <p className="mt-2 dark:text-white text-sm sm:text-base future-feed:text-white break-words">
+              {text}
+            </p>
+
+            {/* Image */}
             {image && (
-              <img
-                src={image}
-                alt="Post"
-                className="mt-4 rounded-lg border  future-feed:border-lime max-w-full h-auto"
-              />
+              <div className="mt-3 sm:mt-4">
+                <img
+                  src={image}
+                  alt="Post"
+                  className="rounded-lg border future-feed:border-lime w-full h-auto max-h-[400px] object-contain"
+                />
+              </div>
             )}
-            <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap justify-between mt-3 sm:mt-4 gap-1 sm:gap-2">
+              {/* Like Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLike}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
                   "hover:text-red-500 dark:hover:text-red-400"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
-                <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
-                <span className="hidden sm:inline text-sm">Like</span>
-                <span className="text-xs sm:text-sm ml-1">({likeCount})</span>
+                <Heart className={cn(
+                  "h-4 w-4 sm:h-5 sm:w-5 future-feed:text-white", 
+                  isLiked && "fill-current"
+                )} />
+                <span className="xs:inline text-xs sm:text-sm future-feed:text-white">
+                  Like
+                </span>
+                <span className="text-xs sm:text-sm ml-0.5 future-feed:text-white">
+                  ({likeCount})
+                </span>
               </Button>
               
+              {/* Comment Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
                   "hover:text-blue-500 dark:hover:text-blue-400"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline text-sm">Comment</span>
-                <span className="text-xs sm:text-sm ml-1">({commentCount})</span>
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 future-feed:text-white" />
+                <span className="xs:inline text-xs sm:text-sm">Comment</span>
+                <span className="text-xs sm:text-sm ml-0.5">({commentCount})</span>
               </Button>
               
+              {/* Reshare Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onReshare}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
                   "hover:text-green-500 dark:hover:text-green-400"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
-                <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline text-sm">Re-Feed</span>
-                <span className="text-xs sm:text-sm ml-1">({reshareCount})</span>
+                <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5 future-feed:text-white" />
+                <span className="xs:inline text-xs sm:text-sm future-feed:text-white">
+                  Re-Feed
+                </span>
+                <span className="text-xs sm:text-sm ml-0.5 future-feed:text-white">
+                  ({reshareCount})
+                </span>
               </Button>
               
+              {/* Share Button */}
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400"
+                      "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0 text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400"
                     )}
                     aria-label="Share post"
                   >
-                    <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="hidden sm:inline text-sm">Share</span>
+                    <Share2 className="h-4 w-4 sm:h-5 sm:w-5 future-feed:text-white" />
+                    <span className="xs:inline text-xs sm:text-sm future-feed:text-white">
+                      Share
+                    </span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
-                  <div className="flex items-center gap-2">
+                <PopoverContent className="w-80 max-w-[90vw] dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
+                  <div className="flex flex-col sm:flex-row items-center gap-2">
                     <input
                       type="text"
                       value={postUrl}
                       readOnly
-                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border  future-feed:border-lime"
+                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border future-feed:border-lime w-full"
                     />
                     <Button
                       onClick={handleCopyLink}
-                      className="bg-blue-500 text-white hover:bg-lime-600"
+                      className="bg-blue-500 text-white hover:bg-lime-600 w-full sm:w-auto"
                       aria-label="Copy link"
                     >
                       Copy
@@ -278,38 +324,54 @@ const StaticPost: React.FC<PostProps> = ({
                 </PopoverContent>
               </Popover>
               
+              {/* Bookmark Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onBookmark}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
                   "hover:text-yellow-500 dark:hover:text-yellow-400"
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
-                <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
-                <span className="hidden sm:inline text-sm">Bookmark</span>
+                <Bookmark className={cn(
+                  "h-4 w-4 sm:h-5 sm:w-5 future-feed:text-white", 
+                  isBookmarked && "fill-current"
+                )} />
+                <span className="xs:inline text-xs sm:text-sm future-feed:text-white">
+                  Bookmark
+                </span>
               </Button>
             </div>
             
+            {/* Comments Section */}
             {showComments && (
-              <div className="mt-4">
+              <div className="mt-3 sm:mt-4">
                 {comments.length > 0 ? (
-                  <div className="mb-4">
+                  <div className="mb-3 sm:mb-4 space-y-3 sm:space-y-4">
                     {comments.map((comment) => (
-
-                      <div key={comment.id} className="flex gap-2 mb-6 mt-10">
-                        <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
+                      <div key={comment.id} className="flex gap-2 sm:gap-3">
+                        <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-10 md:w-10 flex-shrink-0">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
-                          <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
+                          <AvatarFallback className="text-xs">
+                            {getInitials(comment.username)}
+                          </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h2 className="font-bold future-feed:text-white  dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs future-feed:text-white sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
-                          <p className="text-xs sm:text-sm dark:text-white future-feed:text-white">{comment.content}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 future-feed:text-white ">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2">
+                            <h2 className="font-bold future-feed:text-white dark:text-white text-sm sm:text-base truncate">
+                              {comment.username || "Unknown User"}
+                            </h2>
+                            <p className="text-xs future-feed:text-white sm:text-sm dark:text-gray-300 truncate">
+                              {comment.handle || "@unknown"}
+                            </p>
+                          </div>
+                          <p className="text-xs sm:text-sm dark:text-white future-feed:text-white break-words mt-1">
+                            {comment.content}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 future-feed:text-white mt-1">
                             {formatRelativeTime(comment.createdAt)}
                           </p>
                         </div>
@@ -317,22 +379,24 @@ const StaticPost: React.FC<PostProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
                     No comments yet.
                   </p>
                 )}
-                <div className="flex gap-2">
+                
+                {/* Comment Input */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <Textarea
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full mr-4 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white  future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm"
+                    className="flex-1 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm future-feed:text-white min-h-[60px] sm:min-h-[80px]"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
                   <Button
                     onClick={handleSubmitComment}
-                    className="bg-blue-500 mt-3 mr-4 text-white hover:bg-lime-600 text-xs sm:text-sm"
+                    className="bg-blue-500 text-white hover:bg-lime-600 text-xs sm:text-sm sm:self-start px-4 py-2"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
@@ -347,4 +411,4 @@ const StaticPost: React.FC<PostProps> = ({
   );
 };
 
-export default StaticPost;
+export default StaticBotPost;

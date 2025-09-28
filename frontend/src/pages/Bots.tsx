@@ -57,7 +57,6 @@ const Bots: React.FC = () => {
 
   useEffect(() => {
     fetchAllBots();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchAllBots = async () => {
@@ -320,16 +319,16 @@ const Bots: React.FC = () => {
   };
 
   const SkeletonLoader: React.FC = () => (
-    <div className="grid gap-4">
+    <div className="grid gap-4 sm:gap-6">
       {[...Array(3)].map((_, index) => (
         <Card key={index} className=" ">
-          <CardContent className="p-4 flex justify-between items-center animate-pulse">
+          <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center animate-pulse">
             <div className="w-full">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2" />
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2 sm:w-1/4" />
               <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 sm:w-1/5" />
             </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-2 sm:gap-3 items-center mt-4 sm:mt-0">
               <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-full" />
               <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
               <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -341,11 +340,11 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-200 flex flex-col future-feed:bg-black lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto ">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6 lg:mt-7">
+      <main className="flex-1 p-4 lg:p-6 lg:mt-7 lg:pt-4 lg:pl-2 min-h-screen overflow-y-auto">
         <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-rose-gold-accent-border bg-white   shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -380,7 +379,7 @@ const Bots: React.FC = () => {
                             <Card className="  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
-                                  <h3 className="text-lg font-bold">{bot.name}</h3>
+                                  <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
                                   <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
                                   <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                                 </div>
@@ -449,7 +448,7 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {activeBots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="   hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold">{bot.name}</h3>

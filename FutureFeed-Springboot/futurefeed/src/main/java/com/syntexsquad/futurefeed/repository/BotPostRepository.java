@@ -40,4 +40,6 @@ public interface BotPostRepository extends JpaRepository<BotPosts, Integer> {
         WHERE b.id = :botId
     """)
     List<BotPostDTO> findDtoByBotId(@Param("botId") Integer botId);
+
+    Optional<BotPosts> findTopByBotIdOrderByCreatedAtDesc(Integer botId);
 }
