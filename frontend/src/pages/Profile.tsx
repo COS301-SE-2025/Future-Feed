@@ -1454,41 +1454,32 @@ const Profile = () => {
 }, [profileId]);
 
   if (isLoading) {
-    return (
-      <div className=" flex min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+  return Array.from({ length: 5 }).map((_, index) => (
+      <div className="flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
         
         <main className="w-[1100px] mx-auto">
           <div className="relative">
-            <Skeleton className="mt-25 h-40 w-full" />
+            <Skeleton className="mt-2 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-          <div className="pt-16 px-4">
-            <div className="flex justify-between items-start">
-              <div className="ml-30 mt-[-120px]">
-                <Skeleton className="h-6 w-48 mb-2" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </div>
-              <Skeleton className="h-10 w-32 mt-[-220px]" />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+      <div
+        key={index}
+        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
-          <Skeleton className="my-4 h-1 w-full" />
-          <div className="grid w-full grid-cols-5">
-            {[...Array(5)].map((_, idx) => (
-              <Skeleton key={idx} className="h-10 w-full" />
-            ))}
-          </div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
@@ -1499,17 +1490,17 @@ const Profile = () => {
         </div>
       </aside>
       </div>
-    );
-  }
+    ));
+}
 
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="bg-gray-200 future-feed:bg-black future-feed:text-lime flex min-h-screen dark:bg-blue-950 dark:text-slate-200 overflow-y-auto">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="w-[1100px] mx-auto mt-3">
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
         <div className="relative">
           <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
@@ -1967,7 +1958,7 @@ const Profile = () => {
 </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
           <WhatsHappening />
         </div>

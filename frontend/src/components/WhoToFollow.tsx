@@ -167,7 +167,7 @@ const WhoToFollow = () => {
 // Show loading state while hydrating
   if (!isHydrated || isLoading) {
     return (
-      <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
+      <Card className="dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl bg-blue-500  future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500 rounded-3xl border-2 future-feed:border-lime-500 future-feed:bg-lime-600 text-white">
         <CardContent className="p-4">
           <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
           <div className="space-y-3">
@@ -188,7 +188,7 @@ const WhoToFollow = () => {
 //
   return (
 
-    <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-3  dark:hover:border-r-lime-500 dark:hover:border-l-lime-500 hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
+    <Card className="bg-blue-500 text-white   border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-2  dark:hover:border-r-lime-500 dark:hover:border-l-lime-500 hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
 
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-rose-gold-text-light text-lg mb-4">Follow Latest</h2>

@@ -114,7 +114,7 @@ const FAQS = () => {
                                 Consider what you post
                             </p>
                             <p>
-                                You are in control of how much information you share on X or any other website. Don’t post information you consider to be private, and be thoughtful about when you want to publicly share your location.
+                                You are in control of how much information you share on FUTURE FEED or any other website. Don’t post information you consider to be private, and be thoughtful about when you want to publicly share your location.
                             </p>
                             <p>
                                 Be wary of any communication that asks for your private contact information, personal information, or passwords. If you are ever unsure before you post, we recommend you ask yourself the following questions:
