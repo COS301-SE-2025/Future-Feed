@@ -57,7 +57,7 @@ interface PostProps {
   botId: number;
 }
 
-const StaticPost: React.FC<PostProps> = ({
+const StaticBotPost: React.FC<PostProps> = ({
   username,
   handle,
   time,
@@ -120,13 +120,13 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-7 mb-4 relative", className)}>
+    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-4 sm:my-6", className)}>
       {isCopied && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
         </div>
       )}
-      <CardContent className="p-1 mt-[-15px] ml-[20px]">
+      <CardContent className="p-4 sm:p-6 ">
         <Button
           variant="ghost"
           size="sm"
@@ -135,9 +135,9 @@ const StaticPost: React.FC<PostProps> = ({
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
-          <span className="hidden sm:inline text-sm ml-1">Back</span>
+          <span className="hidden sm:inline text-sm ml-1 future-feed:text-white">Back</span>
         </Button>
-        <div className="flex gap-4">
+        <div className="flex gap-4 sm:gap-6x">
           <Avatar 
             className="h-10 w-10 sm:h-12 sm:w-12 hover:cursor-pointer"
             onClick={(e) => {
@@ -149,39 +149,41 @@ const StaticPost: React.FC<PostProps> = ({
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <div className="flex justify-between items-center">
-              <h2 
-                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onProfileClick();
-                }}  
-              >
-                {username || "Unknown User"}
-              </h2>
-              <Bot
-                className="ml-[-880px] h-8 w-8 text-gray-500 dark:text-lime-400"
-                aria-label="Bot post indicator"
-                />
+            <div className="flex justify-between items-center"> 
               <div className="flex items-center gap-2">
-                <span className="future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
-                  {time}
-                </span>
-                {currentUser && currentUser.id === authorId && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={onDelete}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
-                    aria-label="Delete post"
-                  >
-                    <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                )}
+                <h2 
+                  className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline future-feed:text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onProfileClick();
+                  }}  
+                >
+                  {username || "Unknown User"}
+                </h2>
+                <Bot
+                  className="ml-2 h-8 w-8 text-lime-400"
+                  aria-label="Bot post indicator"
+                  />
+                <div className="flex items-center gap-2">
+                  <span className="ml-200 future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap">
+                    {time}
+                  </span>
+                  {currentUser && currentUser.id === authorId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onDelete}
+                      className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                      aria-label="Delete post"
+                    >
+                      <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
             <p 
-              className="dark:text-gray-300 text-xs sm:text-sm"
+              className="dark:text-gray-300 text-xs sm:text-sm future-feed:text-white"
               onClick={(e) => {
                 e.stopPropagation();
                 onProfileClick();
@@ -189,7 +191,7 @@ const StaticPost: React.FC<PostProps> = ({
             >
                 {handle || "@unknown"}
             </p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            <p className="mt-2 dark:text-white text-sm sm:text-base future-feed:text-white">{text}</p>
             {image && (
               <img
                 src={image}
@@ -197,21 +199,21 @@ const StaticPost: React.FC<PostProps> = ({
                 className="mt-4 rounded-lg border  future-feed:border-lime max-w-full h-auto"
               />
             )}
-            <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
+            <div className="flex flex-wrap justify-between mt-4 gap-2 sm:gap-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLike}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-2 px-3 py-2",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
                   "hover:text-red-500 dark:hover:text-red-400"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
-                <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
-                <span className="hidden sm:inline text-sm">Like</span>
-                <span className="text-xs sm:text-sm ml-1">({likeCount})</span>
+                <Heart className={cn("h-5 w-5 sm:h-6 sm:w-6 future-feed:text-white", isLiked && "fill-current")} />
+                <span className="hidden sm:inline text-sm future-feed:text-white">Like</span>
+                <span className="text-xs sm:text-sm ml-1 future-feed:text-white">({likeCount})</span>
               </Button>
               
               <Button
@@ -224,7 +226,7 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
-                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6 future-feed:text-white" />
                 <span className="hidden sm:inline text-sm">Comment</span>
                 <span className="text-xs sm:text-sm ml-1">({commentCount})</span>
               </Button>
@@ -240,9 +242,9 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
-                <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline text-sm">Re-Feed</span>
-                <span className="text-xs sm:text-sm ml-1">({reshareCount})</span>
+                <Repeat2 className="h-5 w-5 sm:h-6 sm:w-6 future-feed:text-white" />
+                <span className="hidden sm:inline text-sm future-feed:text-white">Re-Feed</span>
+                <span className="text-xs sm:text-sm ml-1 future-feed:text-white">({reshareCount})</span>
               </Button>
               
               <Popover>
@@ -255,8 +257,8 @@ const StaticPost: React.FC<PostProps> = ({
                     )}
                     aria-label="Share post"
                   >
-                    <Share2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="hidden sm:inline text-sm">Share</span>
+                    <Share2 className="h-5 w-5 sm:h-6 sm:w-6 future-feed:text-white" />
+                    <span className="hidden sm:inline text-sm future-feed:text-white">Share</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
@@ -289,8 +291,8 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
-                <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
-                <span className="hidden sm:inline text-sm">Bookmark</span>
+                <Bookmark className={cn("h-5 w-5 sm:h-6 sm:w-6 future-feed:text-white", isBookmarked && "fill-current")} />
+                <span className="hidden sm:inline text-sm future-feed:text-white">Bookmark</span>
               </Button>
             </div>
             
@@ -326,7 +328,7 @@ const StaticPost: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full mr-4 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white  future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm"
+                    className="lg:w-full w-full mr-4 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white  future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm future-feed:text-white "
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -347,4 +349,4 @@ const StaticPost: React.FC<PostProps> = ({
   );
 };
 
-export default StaticPost;
+export default StaticBotPost;
