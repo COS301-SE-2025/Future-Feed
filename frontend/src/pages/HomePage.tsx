@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
 import { useNotifications } from "@/context/NotificationContext";
+import BotPost from "@/components/ui/BotPost";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,6 +65,8 @@ interface ApiPost {
   createdAt: string;
   imageUrl?: string;
   user: ApiUser;
+  botId: number;
+  isBot: boolean;
 }
 interface ApiComment {
   id: number;
@@ -124,6 +127,8 @@ interface PostData {
   comments: CommentData[];
   showComments: boolean;
   topics: Topic[];
+  botId: number;
+  isBot: boolean;
 }
 
 const HomePage = () => {
@@ -131,6 +136,8 @@ const HomePage = () => {
   const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
   const [isViewTopicsModalOpen, setIsViewTopicsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
+  const [botId, setBotId] = useState(0);
+  const [isBot, setisBot] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
   const [posts, setPosts] = useState<PostData[]>([]);
@@ -157,7 +164,6 @@ const HomePage = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [allUsers, setAllUsers] = useState<ApiUser[]>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const { fetchNotifications } = useNotifications();
   const [presetPosts, setPresetPosts] = useState<PostData[]>([]);
   const [loadingPresetPosts, setLoadingPresetPosts] = useState(false);
@@ -169,7 +175,10 @@ const HomePage = () => {
   const [imageHeight, setImageHeight] = useState(768);
   const [imageSteps, setImageSteps] = useState(8);
   const [imageModel, setImageModel] = useState("black-forest-labs/FLUX.1-schnell");
-
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState<ApiUser[]>([]);
+  const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
+  const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -257,7 +266,6 @@ const HomePage = () => {
   };
   const fetchAllUsers = async () => {
     try {
-      setLoadingUsers(true);
       const response = await fetch(`${API_URL}/api/user/all`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -269,12 +277,9 @@ const HomePage = () => {
       console.error("Error fetching users:", err);
       setError("Failed to load users");
       setTimeout(() => setError(null), 3000);
-    } finally {
-      setLoadingUsers(false);
     }
   };
 
-  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
@@ -306,7 +311,31 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
 
-  // Scroll handler
+
+  useEffect(() => {
+    if (userSearchQuery.trim() === "") {
+      setFilteredUsers(allUsers.slice(0, 5));
+    } else {
+      const query = userSearchQuery.toLowerCase();
+      const filtered = allUsers.filter(user =>
+        user.displayName?.toLowerCase().includes(query) ||
+        user.username?.toLowerCase().includes(query)
+      ).slice(0, 10);
+      setFilteredUsers(filtered);
+    }
+  }, [userSearchQuery, allUsers]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-search-container')) {
+        setIsUserSearchOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -329,7 +358,6 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [currentPage, loadingForYou, hasMore]);
 
-  // added fetchPaginated
   const fetchPaginatedPosts = async (page: number) => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
@@ -425,6 +453,8 @@ const HomePage = () => {
             comments: commentsWithUsers,
             showComments,
             topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId
           };
         })
       );
@@ -487,12 +517,6 @@ const HomePage = () => {
     return /<!doctype html>|<html[\s>]/i.test(s);
   }
 
-  /**
-   * Robustly parse a Response that *should* be JSON, but may:
-   *  - include BOM/XSSI/log noise,
-   *  - return primitives (true/false/5),
-   *  - be mislabeled (no content-type).
-   */
   async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
     const contentType = response.headers.get("content-type") || "";
     const raw = stripBOM((await response.text()).trim());
@@ -689,6 +713,8 @@ const HomePage = () => {
               comments: commentsWithUsers,
               showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
               topics,
+              isBot: post.isBot,
+              botId: post.botId
             };
           } catch (postError) {
             console.error(`Error processing post ${post.id}:`, postError);
@@ -725,6 +751,11 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
+          console.log("No default preset found - this is normal for new users");
+          setDefaultPresetId(null);
+          return null;
+        } else if (response.status === 500) {
+          console.warn("Server error when fetching default preset - likely no default set");
           setDefaultPresetId(null);
           return null;
         }
@@ -735,7 +766,7 @@ const HomePage = () => {
       setDefaultPresetId(data.id);
       return data;
     } catch (err) {
-      console.error("Error fetching default preset:", err);
+      console.warn("Error fetching default preset (this is normal if no default is set):", err);
       setDefaultPresetId(null);
       return null;
     }
@@ -817,7 +848,6 @@ const HomePage = () => {
         throw new Error(`Failed to set default preset: ${response.status} - ${errorText}`);
       }
 
-      // Update local state
       setDefaultPresetId(presetId);
       setPresets((prev) =>
         prev.map((p) => ({
@@ -842,7 +872,7 @@ const HomePage = () => {
     }
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
-    setIsViewingPresetFeed(true); // Set to show posts and hide presets
+    setIsViewingPresetFeed(true);
 
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
@@ -903,7 +933,7 @@ const HomePage = () => {
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
-          let isLiked: boolean = false; // Explicitly declare as boolean
+          let isLiked: boolean = false;
           if (hasLikedRes.ok) {
             try {
               const raw = await robustParse<boolean | string | { liked: boolean }>(
@@ -943,6 +973,8 @@ const HomePage = () => {
             comments: commentsWithUsers,
             showComments: false,
             topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId
           };
         })
       );
@@ -996,7 +1028,6 @@ const HomePage = () => {
       const data: Preset[] = await response.json();
       setPresets(data);
 
-      // Find default preset from the list
       const defaultPreset = data.find((p) => p.defaultPreset);
       if (defaultPreset) {
         setDefaultPresetId(defaultPreset.id);
@@ -1057,7 +1088,6 @@ const HomePage = () => {
       setPresets((prev) => [...prev, data]);
       if (data.defaultPreset) {
         setDefaultPresetId(data.id);
-        // Optionally set as default via API if not handled by backend
         await setDefaultPreset(data.id);
       }
       setNewPresetName("");
@@ -1072,7 +1102,6 @@ const HomePage = () => {
   };
 
   const addRule = async (presetId: number) => {
-    // Validate that at least one filter condition is provided
     if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
       setError('At least one filter condition (topic, source type, or specific user) is required');
       setTimeout(() => {
@@ -1081,7 +1110,6 @@ const HomePage = () => {
       return;
     }
 
-    // Validate percentage if provided
     if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
       setError('Percentage must be between 1 and 100');
       setTimeout(() => {
@@ -1114,7 +1142,6 @@ const HomePage = () => {
         [presetId]: [...(prev[presetId] || []), data],
       }));
 
-      // Reset form
       setNewRule({
         topicId: undefined,
         sourceType: undefined,
@@ -1152,7 +1179,6 @@ const HomePage = () => {
     }
   }
 
-  // Helper function to format rule for display
   const formatRule = (rule: Rule) => {
     const parts = [];
 
@@ -1167,7 +1193,7 @@ const HomePage = () => {
 
     if (rule.specificUserId) {
       const user = allUsers.find(u => u.id === rule.specificUserId);
-      parts.push(`User: ${user?.displayName || `ID ${rule.specificUserId}`}`);
+      parts.push(`User: ${user?.displayName || user?.username || `ID ${rule.specificUserId}`}`);
     }
 
     if (rule.percentage) {
@@ -1215,6 +1241,8 @@ const HomePage = () => {
 
     const tempPostId = generateTempId();
     const createdAt = new Date().toISOString();
+    const isGeneratingImage = useAIGeneration;
+
     const tempPost: PostData = {
       id: tempPostId,
       username: currentUser.displayName,
@@ -1223,7 +1251,7 @@ const HomePage = () => {
       time: formatRelativeTime(createdAt),
       createdAt,
       text: postText,
-      image: imageFile ? URL.createObjectURL(imageFile) : useAIGeneration ? "Generating AI image..." : undefined,
+      image: isGeneratingImage ? "Generating AI image..." : (imageFile ? URL.createObjectURL(imageFile) : undefined),
       isLiked: false,
       isBookmarked: false,
       isReshared: false,
@@ -1234,11 +1262,20 @@ const HomePage = () => {
       comments: [],
       showComments: false,
       topics: selectedTopicIds.map((id) => topics.find((t) => t.id === id)!).filter((t) => t),
+      botId: botId,
+      isBot: isBot
     };
 
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
+
+    if (isGeneratingImage) {
+      setLoadingImages(prev => new Set(prev).add(tempPostId));
+    }
+
     setPostText("");
+    setisBot(false);
+    setBotId(0);
     const selectedTopics = selectedTopicIds.slice();
     setSelectedTopicIds([]);
     const tempImageFile = imageFile;
@@ -1246,15 +1283,14 @@ const HomePage = () => {
     const tempImagePrompt = imagePrompt;
     setImagePrompt("");
     setUseAIGeneration(false);
-    setImageWidth(768);
-    setImageHeight(768);
+    setImageWidth(384);
+    setImageHeight(384);
     setImageSteps(8);
     setImageModel("black-forest-labs/FLUX.1-schnell");
 
     try {
       let res: Response;
       if (useAIGeneration) {
-        // AI image generation
         const postData = {
           content: postText,
           isBot: false,
@@ -1271,7 +1307,6 @@ const HomePage = () => {
           body: JSON.stringify(postData),
         });
       } else {
-        // File upload
         const formData = new FormData();
         formData.append("post", JSON.stringify({ content: postText }));
         if (imageFile) {
@@ -1328,7 +1363,17 @@ const HomePage = () => {
         comments: [],
         showComments: false,
         topics: postTopics,
+        botId: newPost.botId,
+        isBot: newPost.isBot
       };
+
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
 
       setPosts((prev) =>
         [
@@ -1340,10 +1385,21 @@ const HomePage = () => {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
       setTimeout(() => setError(null), 3000);
+
+      if (isGeneratingImage) {
+        setLoadingImages(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(tempPostId);
+          return newSet;
+        });
+      }
+
       setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       setSelectedTopicIds(selectedTopics);
       setPostText(postText);
+      setisBot(isBot);
+      setBotId(botId);
       setImageFile(tempImageFile);
       setImagePrompt(tempImagePrompt);
       setUseAIGeneration(!!tempImagePrompt);
@@ -1661,7 +1717,6 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    // Optimistic update
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
@@ -1689,7 +1744,6 @@ const HomePage = () => {
         throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`);
       }
 
-      // Fetch updated bookmark status to confirm
       const bookmarksRes = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -1699,7 +1753,6 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      // Update both posts and followingPosts with confirmed bookmark status
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
@@ -1714,7 +1767,6 @@ const HomePage = () => {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      // Revert optimistic update
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
@@ -1782,34 +1834,66 @@ const HomePage = () => {
   const renderPosts = (posts: PostData[]) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
-        <Post
-          username={post.username}
-          handle={post.handle}
-          profilePicture={post.profilePicture}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
-          onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments || false}
-          comments={post.comments || []}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          topics={post.topics || []}
-        />
+        {post.botId || post.isBot ? (
+          <BotPost
+            profilePicture={post.profilePicture}
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            topics={post.topics || []}
+          />
+        ) : (
+          <Post
+            username={post.username}
+            handle={post.handle}
+            profilePicture={post.profilePicture}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments || false}
+            comments={post.comments || []}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            topics={post.topics || []}
+            isImageLoading={loadingImages.has(post.id)}
+          />
+        )}
       </div>
     ));
   };
@@ -1828,7 +1912,13 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
-          fetchDefaultPreset(),
+          (async () => {
+            try {
+              await fetchDefaultPreset();
+            } catch (error) {
+              console.warn("Failed to fetch default preset, continuing without it:", error);
+            }
+          })(),
         ]);
       }
       setLoading(false);
@@ -1880,7 +1970,9 @@ const HomePage = () => {
       </aside>
 
       <button
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-indigo-950 dark:text-slate-200  future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg"
+
+        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
@@ -1890,7 +1982,7 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors "
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500 dark:hover:text-gray-400 transition-colors future-feed:bg-lime dark:bg-indigo-800"
             >
               Logout
             </button>
@@ -1900,7 +1992,7 @@ const HomePage = () => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors dark:hover:text-gray-400  future-feed:bg-lime dark:bg-indigo-800"
               >
                 Create Topic
               </button>
@@ -1909,7 +2001,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:hover:text-gray-400 dark:bg-indigo-800"
               >
                 View Topics
               </button>
@@ -1980,7 +2072,7 @@ const HomePage = () => {
                         <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
 
                       </div>
-                      <div className="flex gap-20 mt-13"> {/* Added flex container for buttons */}
+                      <div className="flex gap-20 mt-13">
                         <Button
                           className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
                           onClick={() => navigate("/explore")}
@@ -2022,7 +2114,6 @@ const HomePage = () => {
                           {error}
                         </div>
                       )}
-                      {/* Add a welcome message when no default preset exists */}
                       {!defaultPresetId && presets.length === 0 && (
                         <div className="text-center p-8">
                           <p className="text-lg text-gray-500 mb-4">No presets found</p>
@@ -2039,7 +2130,7 @@ const HomePage = () => {
                               className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                               onClick={() => {
                                 setIsViewingPresetFeed(false);
-                                setPresetPosts([]); // Clear posts when returning to presets
+                                setPresetPosts([]);
                               }}
                             >
                               <ArrowLeft />
@@ -2078,7 +2169,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg   font-bold border border-0 bg-white"
+                                      className="text-lg font-bold border border-0 bg-white dark:text-white "
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
@@ -2109,7 +2200,6 @@ const HomePage = () => {
                                       >
                                         <ChartNoAxesGantt className="text-lime-300" />
                                         View Feed
-
                                       </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
@@ -2120,7 +2210,7 @@ const HomePage = () => {
                                       <Dialog>
                                         <DialogTrigger asChild>
                                           <DropdownMenuItem
-                                            onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                            onSelect={(e) => e.preventDefault()}
                                             className="text-red-500 focus:text-red-700"
                                           >
                                             <Trash2 className="text-red-400" />
@@ -2204,26 +2294,72 @@ const HomePage = () => {
                                           <option className="future-feed:bg-card" value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex items-center  space-x-2 p-1">
-                                        <select
-                                          value={newRule.specificUserId || ""}
-                                          onChange={(e) =>
-                                            setNewRule({
-                                              ...newRule,
-                                              specificUserId: e.target.value ? parseInt(e.target.value) : undefined,
-                                            })
-                                          }
-                                          className="future-feed:bg-card future-feed:text-white future-feed:border-lime flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
-                                          disabled={loadingUsers}
-                                        >
-                                          <option value="">Select Specific User</option>
-                                          {allUsers.map((user) => (
-                                            <option key={user.id} value={user.id}>
-                                              {user.displayName} (@{user.username})
-                                            </option>
-                                          ))}
-                                        </select>
+                                      <div className="user-search-container relative">
+                                        <Input
+                                          placeholder="Search users..."
+                                          value={userSearchQuery}
+                                          onChange={(e) => {
+                                            setUserSearchQuery(e.target.value);
+                                            setIsUserSearchOpen(true);
+                                          }}
+                                          onFocus={() => setIsUserSearchOpen(true)}
+                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
+                                        />
+
+                                        {isUserSearchOpen && filteredUsers.length > 0 && (
+                                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                            {filteredUsers.map((user) => (
+                                              <div
+                                                key={user.id}
+                                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                                                onClick={() => {
+                                                  setNewRule({
+                                                    ...newRule,
+                                                    specificUserId: user.id,
+                                                  });
+                                                  setUserSearchQuery(user.displayName || `@${user.username}`);
+                                                  setIsUserSearchOpen(false);
+                                                }}
+                                              >
+                                                <div className="flex items-center space-x-3">
+                                                  {user.profilePicture && (
+                                                    <img
+                                                      src={user.profilePicture}
+                                                      alt={user.displayName || user.username}
+                                                      className="w-6 h-6 rounded-full"
+                                                    />
+                                                  )}
+                                                  <div>
+                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                                      {user.displayName || user.username}
+                                                    </div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                      @{user.username}
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {newRule.specificUserId && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              setNewRule({
+                                                ...newRule,
+                                                specificUserId: undefined,
+                                              });
+                                              setUserSearchQuery("");
+                                            }}
+                                            className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500 hover:text-red-500"
+                                          >
+                                            <FaTimes size={12} />
+                                          </Button>
+                                        )}
                                       </div>
+
                                       <div className="flex items-center space-x-2 p-1">
                                         <Input
                                           type="number"
@@ -2305,7 +2441,7 @@ const HomePage = () => {
                             />
                             <Button
                               className="bg-blue-500"
-                              onClick={() => createPreset(false)} // Create without setting as default
+                              onClick={() => createPreset(false)}
                               disabled={isLoading}
                             >
                               {isLoading ? "Creating..." : "Create"}
@@ -2348,21 +2484,19 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-
-          <div className="bg-white future-feed:bg-black future-feed:border-lime   dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
-
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
                 setPostText("");
+                setBotId(0);
+                setisBot(false);
                 setSelectedTopicIds([]);
                 setImageFile(null);
                 setUseAIGeneration(false);
                 setImagePrompt("");
                 setImageWidth(768);
                 setImageHeight(768);
-                setImageSteps(8);
-                setImageModel("black-forest-labs/FLUX.1-schnell");
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
@@ -2387,19 +2521,18 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
+                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id} className="text-center py-1">
+                    <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
                       {topic.name}
                     </option>
                   ))}
                 </select>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple topics</p>
                 </div>
               </div>
-              {/* New: Toggle between upload and AI generation */}
               <div className="mb-4">
                 <div className="flex justify-around mb-2">
                   <Button
@@ -2409,7 +2542,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded-full"
                   >
                     Upload Image
                   </Button>
@@ -2419,7 +2552,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded rounded-full"
                   >
                     Generate AI Image
                   </Button>
@@ -2427,48 +2560,17 @@ const HomePage = () => {
                 {useAIGeneration ? (
                   <div className="space-y-4">
                     <Input
-                      placeholder="Enter image prompt (e.g., 'vibrant anime-style city skyline at dusk')"
+                      placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
                     />
-                    <div className="flex space-x-2">
-                      <Input
-                        type="number"
-                        placeholder="Width (px)"
-                        value={imageWidth}
-                        onChange={(e) => setImageWidth(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Height (px)"
-                        value={imageHeight}
-                        onChange={(e) => setImageHeight(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Steps (1-12)"
-                        value={imageSteps}
-                        onChange={(e) => setImageSteps(Math.min(12, Math.max(1, Number(e.target.value) || 8)))}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                    </div>
-                    <select
-                      value={imageModel}
-                      onChange={(e) => setImageModel(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2"
-                    >
-                      <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell</option>
-                      {/* Add other models if supported by the API */}
-                    </select>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
+                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2492,7 +2594,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
