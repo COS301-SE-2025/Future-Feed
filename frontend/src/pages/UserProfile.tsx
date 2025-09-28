@@ -1543,9 +1543,6 @@ const UserProfile = () => {
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
             </Link>
-            <Link to="/followers?tab=bots" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200">0</span> Bots ·
-            </Link>
             <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
           </div>
         </div>
@@ -1950,7 +1947,7 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block mr-3">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
