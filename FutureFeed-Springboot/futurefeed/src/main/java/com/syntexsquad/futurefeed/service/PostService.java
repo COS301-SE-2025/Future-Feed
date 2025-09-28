@@ -108,9 +108,11 @@ public class PostService {
         } catch (Exception e) {
             log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
         }
+        
         if (em != null) {
             em.clear();
         }
+        
         return saved;
     }
 
