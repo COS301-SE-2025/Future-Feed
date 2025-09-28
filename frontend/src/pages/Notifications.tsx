@@ -330,7 +330,7 @@ const Notifications = () => {
         </div>
 
         {showSearch && (
-          <div className="px-3 mb-4">
+          <div className="px-3 mt-2">
             <SearchBar
               notifications={notifications}
               onNotificationFilter={handleNotificationFilter}
