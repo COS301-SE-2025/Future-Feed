@@ -61,7 +61,7 @@ const WhatsHappening = () => {
             <>
               {trendingTopics.map((topic) => (
                 <div key={topic.id}>
-                  <p className="dark:text-slate-200">Trending Worldwide</p>
+                  <p className="dark:text-slate-200">Trending on FF</p>
                   <p className="font-semibold">#{topic.name}</p>
                 </div>
               ))}

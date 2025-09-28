@@ -2047,7 +2047,7 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts available.</p>
+                      <p className="text-lg future-feed:text-lime  dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
@@ -2067,7 +2067,7 @@ const HomePage = () => {
 
                       <div className="flex flex-col justify-center items-center mt-10 gap-12">
                         <SmilePlus size={50} color="#3B82F6" />
-                        <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
+                        <p className="dark:text-white text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
 
                       </div>
                       <div className="flex gap-20 mt-13">
@@ -2141,7 +2141,7 @@ const HomePage = () => {
                             renderSkeletonPosts()
                           ) : presetPosts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10">
-                              <p className="text-lg dark:text-white text-gray-400">No posts available for this preset yet.</p>
+                              <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
                             </div>
                           ) : (
                             renderPosts(presetPosts)
