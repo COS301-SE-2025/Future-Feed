@@ -1303,8 +1303,8 @@ const HomePage = () => {
     const tempImagePrompt = imagePrompt;
     setImagePrompt("");
     setUseAIGeneration(false);
-    setImageWidth(768);
-    setImageHeight(768);
+    setImageWidth(384);
+    setImageHeight(384);
     setImageSteps(8);
     setImageModel("black-forest-labs/FLUX.1-schnell");
 
@@ -2593,35 +2593,11 @@ const HomePage = () => {
                 {useAIGeneration ? (
                   <div className="space-y-4">
                     <Input
-                      placeholder="Enter image prompt (e.g., 'vibrant anime-style city skyline at dusk')"
+                      placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
                       className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
                     />
-                    <div className="flex space-x-2">
-                      <Input
-                        type="number"
-                        placeholder="Width (px)"
-                        value={imageWidth}
-                        onChange={(e) => {
-                          const value = Number(e.target.value) || 768;
-                          // Ensure multiple of 16
-                          setImageWidth(Math.round(value / 16) * 16);
-                        }}
-                        className="w-1/2 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Height (px)"
-                        value={imageHeight}
-                        onChange={(e) => {
-                          const value = Number(e.target.value) || 768;
-                          // Ensure multiple of 16
-                          setImageHeight(Math.round(value / 16) * 16);
-                        }}
-                        className="w-1/2 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                    </div>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
