@@ -644,23 +644,6 @@ const BotPage = () => {
     );
   };
 
-  const renderSkeletonPosts = () => {
-    return Array.from({ length: 5 }).map((_, index) => (
-      <div
-        key={index}
-        className="mb-4 border future-feed:border-lime-300 future-feed:border-lime-700 rounded-lg p-4 animate-pulse space-y-4 dark:border-slate-200"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 dark:bg-gray-700 bg-gray-300 future-feed:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-3/4 dark:bg-gray-700" />
-          </div>
-        </div>
-        <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-full dark:bg-gray-700" />
-        <div className="h-4 bg-gray-300 future-feed:bg-gray-700 rounded w-5/6 dark:bg-gray-700" />
-      </div>
-    ));
-  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -672,55 +655,53 @@ const BotPage = () => {
   }, [botId]);
 
   if (loading) {
-    return (
-      <div className="bg-gray-200 flex min-h-screen future-feed:bg-black future-feed:text-white overflow-y-auto dark:bg-blue-950 dark:text-slate-200">
+  return Array.from({ length: 5 }).map((_, index) => (
+      <div className="flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:p-6">
+        
+        <main className="w-[1100px] mx-auto">
           <div className="relative">
-            <Skeleton className="mt-25 h-40 w-full" />
+            <Skeleton className="mt-2 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-          <div className="pt-16 px-4">
-            <div className="flex justify-between items-start">
-              <div className="ml-30 mt-[-120px]">
-                <Skeleton className="h-6 w-48 mb-2" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-64 mt-2" />
-              </div>
-              <Skeleton className="h-10 w-32 mt-[-220px]" />
-            </div>
-            <div className="mt-4 flex gap-2">
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-4 w-24" />
-            </div>
+      <div
+        key={index}
+        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
-          <Skeleton className="my-4 h-1 w-full" />
-          <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhoToFollow />
-          </div>
-        </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
       </div>
-    );
-  }
+    ));
+}
 
   if (!bot) return <div className="p-4 text-black">Bot not found.</div>;
 
   return (
-    <div className="bg-gray-200 flex flex-col lg:flex-row min-h-screen future-feed:bg-black text-white mx-auto dark:bg-blue-950 dark:text-slate-200">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6 mt-25">
+      <main className="flex-1 p-4 lg:pt-30 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto pt-30">
         <div className="relative">
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-27 h-27 border-3 border-lime-500 future-feed:border-lime-500">
@@ -811,7 +792,7 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
           <WhatsHappening />
         </div>
