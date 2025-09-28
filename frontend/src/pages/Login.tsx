@@ -31,7 +31,7 @@ const Login: React.FC = () => {
       <ThemeProvider>
           
       
-      <div className="mt-10 flex justify-center">
+      <div className=" flex justify-center">
       {/* Light mode logo */}
       <img
         src={lightLogo}
@@ -48,7 +48,7 @@ const Login: React.FC = () => {
       <img
         src={futurefeedLogo}
         alt="Future Feed Logo - Future Feed"
-        className="h-[311px] w-[311px] dark:block dark:hidden"
+        className="h-[311px] w-[311px] dark:block dark:hidden hidden"
       />
     </div>
 
