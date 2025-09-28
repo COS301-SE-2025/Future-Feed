@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - 111-demo3dev
-      - '**' #Run on all branches for feature branch pushes
+      - '**'
   pull_request:
     branches:
       - main
@@ -17,7 +17,10 @@ jobs:
     steps:
       - name: Branch protection checks
         run: |
-          if [ "${{ github.event_name }}" == "push" ] && [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]]; then 
+          if [ "${{ github.event_name }}" == "push" ] && \
+             [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]] && \
+             [ -z "${{ github.event.head_commit.message }}" ] || \
+             [[ "${{ github.event.head_commit.message }}" != *"Merge pull request"* ]]; then
             echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
             exit 1
           fi
