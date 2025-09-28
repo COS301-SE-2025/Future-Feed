@@ -2393,7 +2393,7 @@ const HomePage = () => {
                                           >
                                             <div className="flex items-center flex-1">
                                               <Filter size={14} className="mr-2 text-blue-500" />
-                                              <span className="text-sm">{formatRule(rule)}</span>
+                                              <span className="text-sm dark:text-indigo-900">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2511,7 +2511,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none"
                 rows={8}
               />
               <div className="mb-4">
@@ -2542,7 +2542,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded-full"
+                    className="w-40 dark:text-black text-black rounded-full"
                   >
                     Upload Image
                   </Button>
@@ -2552,7 +2552,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded rounded-full"
+                    className="w-40 dark:text-black text-black rounded rounded-full"
                   >
                     Generate AI Image
                   </Button>
@@ -2563,7 +2563,7 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
+                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
@@ -2652,14 +2652,14 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white">All Topics</h2>
+            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
-                <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
+                <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2">
+                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2 future-feed:text-black">
                       {topic.name}
                     </li>
                   ))}
@@ -2667,7 +2667,7 @@ const HomePage = () => {
               )}
               <Button
                 onClick={() => setIsViewTopicsModalOpen(false)}
-                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
+                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 future-feed:border-lime-500"
               >
                 Close
               </Button>
