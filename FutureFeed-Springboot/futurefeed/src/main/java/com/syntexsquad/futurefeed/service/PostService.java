@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,8 +140,11 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    @Cacheable(value = "paginatedPosts", key = "#page + '-' + #size")
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public Page<Post> getPaginatedPosts(int page, int size) {
+        if (em != null) {
+            em.clear();
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return postRepository.findAll(pageable);
     }
