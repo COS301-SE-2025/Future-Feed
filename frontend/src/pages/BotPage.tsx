@@ -701,37 +701,38 @@ const BotPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-30 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto pt-30">
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
         <div className="relative">
+          <div className="mt-25 dark:bg-slate-200 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3 border-lime-500 future-feed:border-lime-500">
+            <Avatar className="w-27 h-27 border-3 border-black dark:border-white future-feed:border-lime-500">
               <Link
                 to="/edit-bot"
                 className="flex items-center justify-center h-full w-full dark:hover:text-white"
               >
-                <FaRobot className="w-20 h-20 text-gray-100 rounded-full " />
+                <FaRobot className="w-20 h-20 text-black dark:text-gray-100 rounded-full " />
               </Link>
             </Avatar>
           </div>
         </div>
         <div className="pt-16 px-4">
           <div className="flex justify-between items-start">
-            <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl font-bold">{bot.name}</h1>
+            <div className="ml-30 mt-[-120px] text-gray-700 dark:text-slate-200">
+              <h1 className="text-xl font-bold ">{bot.name}</h1>
               <p className="future-feed:text-gray-400 dark:text-slate-500">Schedule: {bot.schedule}</p>
               <p className="mt-2 text-sm">{bot.prompt || "This is an area for prompt"}</p>
             </div>
             <div className="mt-[-50px] gap-4 flex items-center">
               <Button
                 variant="secondary"
-                className="-mt-30 text-white bg-lime-600 future-feed:hover:text-white future-feed:text-black future-feed:bg-lime-500 future-feed:border-lime-500 future-feed:hover:bg-lime-800 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
+                className="bg-white border-rose-gold-accent-border -mt-30 future-feed:hover:text-white future-feed:text-black future-feed:bg-lime-500 future-feed:border-lime-500 future-feed:hover:bg-lime-800 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
                 onClick={handleExecuteBot}
               >
                 Execute Bot
               </Button>
               <Button
                 variant="secondary"
-                className="-mt-30 text-white bg-lime-600 future-feed:hover:text-black future-feed:text-lime-500 future-feed:bg-[#1a1a1a] future-feed:border-lime-500 future-feed:hover:bg-lime-500 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
+                className="bg-white border-rose-gold-accent-border -mt-30 future-feed:hover:text-black future-feed:text-lime-500 future-feed:bg-[#1a1a1a] future-feed:border-lime-500 future-feed:hover:bg-lime-500 hover:cursor-pointer dark:hover:bg-slate-200 dark:hover:text-black"
                 onClick={() => navigate("/edit-bot")}
               >
                 Edit Bot
@@ -744,10 +745,10 @@ const BotPage = () => {
               className="flex items-center gap-3 hover:underline cursor-pointer"
             >
             </Link>
-            <span className="font-medium future-feed:text-white">{posts.length}</span> Posts
+            <span className="font-medium future-feed:text-white text-gray-700">{posts.length} Posts</span> 
           </div>
         </div>
-        <Separator className="my-4 bg-lime-500 future-feed:bg-lime-500 dark:bg-slate-200" />
+        <Separator className="my-4 bg-blue-500 future-feed:bg-lime-500 dark:bg-slate-200" />
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -792,7 +793,7 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block mr-3">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
           <WhatsHappening />
         </div>
