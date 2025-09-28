@@ -340,11 +340,11 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="bg-gray-200 flex flex-col future-feed:bg-black lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto ">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6 lg:mt-7">
+      <main className="flex-1 p-4 lg:p-6 lg:mt-7 lg:pt-4 lg:pl-2 min-h-screen overflow-y-auto">
         <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-rose-gold-accent-border bg-white   shadow-none">
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -448,7 +448,7 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {activeBots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="   hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold">{bot.name}</h3>
