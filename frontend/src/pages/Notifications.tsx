@@ -301,7 +301,7 @@ const Notifications = () => {
       </aside>
 
       <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
+        <div className="flex justify-between items-center px-4 py-3 sticky future-feed:border-lime top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
           <h1 className="future-feed:text-lime  text-xl dark:text-slate-200 font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
