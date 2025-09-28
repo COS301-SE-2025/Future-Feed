@@ -379,7 +379,7 @@ const Bots: React.FC = () => {
                             <Card className="  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
-                                  <h3 className="text-lg font-bold">{bot.name}</h3>
+                                  <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
                                   <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
                                   <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                                 </div>
