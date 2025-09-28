@@ -69,10 +69,12 @@ const PersonalSidebar = () => {
         <Link to="/profile" className="flex items-center gap-3 dark:hover:text-blue-500 hover:text-blue-200">
           <User strokeWidth={3} className="w-5 h-5" />
         </Link>
+
         <Link to="/bots" className="flex items-center gap-3 dark:hover:text-white hover:text-blue-200">
             <Bot strokeWidth={3} className="w-5 h-5" />
           </Link>
         <Link to="/notifications" className="flex items-center gap-3 relative hover:text-blue-200">
+
           <Bell strokeWidth={3} className="w-5 h-5" />
           {unreadCount > 0 && (
             <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-lime-300 future-feed:bg-white"></span>
