@@ -280,7 +280,6 @@ const HomePage = () => {
     }
   };
 
-  //modified fetch topics for posts
   const fetchTopicsForPost = async (postId: number): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics/post/${postId}`, {
@@ -315,18 +314,17 @@ const HomePage = () => {
 
   useEffect(() => {
     if (userSearchQuery.trim() === "") {
-      setFilteredUsers(allUsers.slice(0, 5)); // Show first 5 users when search is empty
+      setFilteredUsers(allUsers.slice(0, 5));
     } else {
       const query = userSearchQuery.toLowerCase();
       const filtered = allUsers.filter(user =>
         user.displayName?.toLowerCase().includes(query) ||
         user.username?.toLowerCase().includes(query)
-      ).slice(0, 10); // Limit to 10 results
+      ).slice(0, 10);
       setFilteredUsers(filtered);
     }
   }, [userSearchQuery, allUsers]);
 
-  // Add click outside handler to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -360,7 +358,6 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [currentPage, loadingForYou, hasMore]);
 
-  // added fetchPaginated
   const fetchPaginatedPosts = async (page: number) => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch posts: currentUser is not loaded");
@@ -520,12 +517,6 @@ const HomePage = () => {
     return /<!doctype html>|<html[\s>]/i.test(s);
   }
 
-  /**
-   * Robustly parse a Response that *should* be JSON, but may:
-   *  - include BOM/XSSI/log noise,
-   *  - return primitives (true/false/5),
-   *  - be mislabeled (no content-type).
-   */
   async function robustParse<T extends ApiResponse>(response: Response, endpointForLogs: string): Promise<T> {
     const contentType = response.headers.get("content-type") || "";
     const raw = stripBOM((await response.text()).trim());
@@ -857,7 +848,6 @@ const HomePage = () => {
         throw new Error(`Failed to set default preset: ${response.status} - ${errorText}`);
       }
 
-      // Update local state
       setDefaultPresetId(presetId);
       setPresets((prev) =>
         prev.map((p) => ({
@@ -882,7 +872,7 @@ const HomePage = () => {
     }
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
-    setIsViewingPresetFeed(true); // Set to show posts and hide presets
+    setIsViewingPresetFeed(true);
 
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
@@ -943,7 +933,7 @@ const HomePage = () => {
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
-          let isLiked: boolean = false; // Explicitly declare as boolean
+          let isLiked: boolean = false;
           if (hasLikedRes.ok) {
             try {
               const raw = await robustParse<boolean | string | { liked: boolean }>(
@@ -1038,7 +1028,6 @@ const HomePage = () => {
       const data: Preset[] = await response.json();
       setPresets(data);
 
-      // Find default preset from the list
       const defaultPreset = data.find((p) => p.defaultPreset);
       if (defaultPreset) {
         setDefaultPresetId(defaultPreset.id);
@@ -1099,7 +1088,6 @@ const HomePage = () => {
       setPresets((prev) => [...prev, data]);
       if (data.defaultPreset) {
         setDefaultPresetId(data.id);
-        // Optionally set as default via API if not handled by backend
         await setDefaultPreset(data.id);
       }
       setNewPresetName("");
@@ -1114,7 +1102,6 @@ const HomePage = () => {
   };
 
   const addRule = async (presetId: number) => {
-    // Validate that at least one filter condition is provided
     if (!newRule.topicId && !newRule.sourceType && !newRule.specificUserId) {
       setError('At least one filter condition (topic, source type, or specific user) is required');
       setTimeout(() => {
@@ -1123,7 +1110,6 @@ const HomePage = () => {
       return;
     }
 
-    // Validate percentage if provided
     if (newRule.percentage !== undefined && (newRule.percentage < 1 || newRule.percentage > 100)) {
       setError('Percentage must be between 1 and 100');
       setTimeout(() => {
@@ -1156,7 +1142,6 @@ const HomePage = () => {
         [presetId]: [...(prev[presetId] || []), data],
       }));
 
-      // Reset form
       setNewRule({
         topicId: undefined,
         sourceType: undefined,
@@ -1194,8 +1179,6 @@ const HomePage = () => {
     }
   }
 
-  // Helper function to format rule for display
-  // Helper function to format rule for display
   const formatRule = (rule: Rule) => {
     const parts = [];
 
@@ -1258,8 +1241,6 @@ const HomePage = () => {
 
     const tempPostId = generateTempId();
     const createdAt = new Date().toISOString();
-
-    // Track if we're generating an image
     const isGeneratingImage = useAIGeneration;
 
     const tempPost: PostData = {
@@ -1288,7 +1269,6 @@ const HomePage = () => {
     setPosts([tempPost, ...posts]);
     setIsPostModalOpen(false);
 
-    // Add to loading images set if generating AI image
     if (isGeneratingImage) {
       setLoadingImages(prev => new Set(prev).add(tempPostId));
     }
@@ -1311,7 +1291,6 @@ const HomePage = () => {
     try {
       let res: Response;
       if (useAIGeneration) {
-        // AI image generation
         const postData = {
           content: postText,
           isBot: false,
@@ -1328,7 +1307,6 @@ const HomePage = () => {
           body: JSON.stringify(postData),
         });
       } else {
-        // File upload
         const formData = new FormData();
         formData.append("post", JSON.stringify({ content: postText }));
         if (imageFile) {
@@ -1389,7 +1367,6 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      // Remove from loading images set
       if (isGeneratingImage) {
         setLoadingImages(prev => {
           const newSet = new Set(prev);
@@ -1409,7 +1386,6 @@ const HomePage = () => {
       setError("Failed to create post. Reverting...");
       setTimeout(() => setError(null), 3000);
 
-      // Remove from loading images set on error
       if (isGeneratingImage) {
         setLoadingImages(prev => {
           const newSet = new Set(prev);
@@ -1741,7 +1717,6 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    // Optimistic update
     setPosts((prevPosts) =>
       prevPosts.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
@@ -1769,7 +1744,6 @@ const HomePage = () => {
         throw new Error(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post: ${errorText}`);
       }
 
-      // Fetch updated bookmark status to confirm
       const bookmarksRes = await fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, {
         credentials: "include",
         headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
@@ -1779,7 +1753,6 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      // Update both posts and followingPosts with confirmed bookmark status
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
@@ -1794,7 +1767,6 @@ const HomePage = () => {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      // Revert optimistic update
       setPosts((prevPosts) =>
         prevPosts.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
@@ -1919,7 +1891,6 @@ const HomePage = () => {
             currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
-            // NEW: Pass loading state for image generation
             isImageLoading={loadingImages.has(post.id)}
           />
         )}
@@ -1941,7 +1912,6 @@ const HomePage = () => {
         await Promise.all([
           fetchTopics(),
           fetchNotifications(user.id),
-          // Wrap fetchDefaultPreset in error handling
           (async () => {
             try {
               await fetchDefaultPreset();
@@ -2158,7 +2128,7 @@ const HomePage = () => {
                               className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                               onClick={() => {
                                 setIsViewingPresetFeed(false);
-                                setPresetPosts([]); // Clear posts when returning to presets
+                                setPresetPosts([]);
                               }}
                             >
                               <ArrowLeft />
@@ -2238,7 +2208,7 @@ const HomePage = () => {
                                       <Dialog>
                                         <DialogTrigger asChild>
                                           <DropdownMenuItem
-                                            onSelect={(e) => e.preventDefault()} // Prevent dropdown from closing
+                                            onSelect={(e) => e.preventDefault()}
                                             className="text-red-500 focus:text-red-700"
                                           >
                                             <Trash2 className="text-red-400" />
@@ -2322,8 +2292,6 @@ const HomePage = () => {
                                           <option className="future-feed:bg-card" value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-
-                                      {/* NEW USER SEARCH COMPONENT */}
                                       <div className="user-search-container relative">
                                         <Input
                                           placeholder="Search users..."
@@ -2372,8 +2340,6 @@ const HomePage = () => {
                                             ))}
                                           </div>
                                         )}
-
-                                        {/* Clear selection button */}
                                         {newRule.specificUserId && (
                                           <Button
                                             variant="ghost"
@@ -2473,7 +2439,7 @@ const HomePage = () => {
                             />
                             <Button
                               className="bg-blue-500"
-                              onClick={() => createPreset(false)} // Create without setting as default
+                              onClick={() => createPreset(false)}
                               disabled={isLoading}
                             >
                               {isLoading ? "Creating..." : "Create"}
