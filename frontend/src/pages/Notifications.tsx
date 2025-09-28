@@ -339,7 +339,7 @@ const Notifications = () => {
           </div>
         )}
 
-        <Tabs defaultValue="all" className="w-full p-3" onValueChange={handleTabChange}>
+        <Tabs defaultValue="all" className="w-full p-2" onValueChange={handleTabChange}>
           <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
             <TabsTrigger value="all" className="rounded-2xl">All</TabsTrigger>
             <TabsTrigger value="interactions" className="rounded-2xl">Interactions</TabsTrigger>
