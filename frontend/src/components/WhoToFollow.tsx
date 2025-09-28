@@ -167,7 +167,7 @@ const WhoToFollow = () => {
 // Show loading state while hydrating
   if (!isHydrated || isLoading) {
     return (
-      <Card className="bg-green dark:bg-black dark:border-lime-500 dark:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
+      <Card className="bg-green future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500 rounded-3xl border-2 border-lime-500 bg-lime-600 text-white">
         <CardContent className="p-4">
           <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
           <div className="space-y-3">
