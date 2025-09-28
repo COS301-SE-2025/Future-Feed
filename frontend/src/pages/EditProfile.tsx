@@ -257,7 +257,7 @@ const EditProfile: React.FC = () => {
                   placeholder="Bio..."
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                  className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
                 />
               </div>
 
