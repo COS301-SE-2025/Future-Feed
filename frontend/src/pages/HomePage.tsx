@@ -2167,7 +2167,7 @@ const HomePage = () => {
                                           )
                                         );
                                       }}
-                                      className="text-lg font-bold border border-0 bg-white text-white"
+                                      className="text-lg font-bold border border-0 bg-white dark:text-white "
                                     />
                                   </CardTitle>
                                   <DropdownMenu>
