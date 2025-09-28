@@ -1303,8 +1303,8 @@ const HomePage = () => {
     const tempImagePrompt = imagePrompt;
     setImagePrompt("");
     setUseAIGeneration(false);
-    setImageWidth(768);
-    setImageHeight(768);
+    setImageWidth(384);
+    setImageHeight(384);
     setImageSteps(8);
     setImageModel("black-forest-labs/FLUX.1-schnell");
 
@@ -1891,38 +1891,38 @@ const HomePage = () => {
             authorId={post.authorId}
             topics={post.topics || []}
           />
-          ) : (
-        <Post
-          username={post.username}
-          handle={post.handle}
-          profilePicture={post.profilePicture}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onToggleComments={() => toggleComments(post.id)}
-          onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments || false}
-          comments={post.comments || []}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          topics={post.topics || []}
-          // NEW: Pass loading state for image generation
-          isImageLoading={loadingImages.has(post.id)}
-        />
-      )}
+        ) : (
+          <Post
+            username={post.username}
+            handle={post.handle}
+            profilePicture={post.profilePicture}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onToggleComments={() => toggleComments(post.id)}
+            onNavigate={() => navigate(`/post/${post.id}`)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments || false}
+            comments={post.comments || []}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            topics={post.topics || []}
+            // NEW: Pass loading state for image generation
+            isImageLoading={loadingImages.has(post.id)}
+          />
+        )}
       </div>
     ));
   };
@@ -2100,7 +2100,7 @@ const HomePage = () => {
                         <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
 
                       </div>
-                      <div className="flex gap-20 mt-13"> {/* Added flex container for buttons */}
+                      <div className="flex gap-20 mt-13">
                         <Button
                           className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
                           onClick={() => navigate("/explore")}
@@ -2517,9 +2517,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-
-          <div className="bg-white future-feed:bg-black future-feed:border-lime   dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
-
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -2532,8 +2530,6 @@ const HomePage = () => {
                 setImagePrompt("");
                 setImageWidth(768);
                 setImageHeight(768);
-                setImageSteps(8);
-                setImageModel("black-forest-labs/FLUX.1-schnell");
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
@@ -2558,19 +2554,18 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500"
+                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
-                    <option key={topic.id} value={topic.id} className="text-center py-1">
+                    <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
                       {topic.name}
                     </option>
                   ))}
                 </select>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Hold Ctrl/Cmd to select multiple topics</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple topics</p>
                 </div>
               </div>
-              {/* New: Toggle between upload and AI generation */}
               <div className="mb-4">
                 <div className="flex justify-around mb-2">
                   <Button
@@ -2580,7 +2575,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded-full"
                   >
                     Upload Image
                   </Button>
@@ -2590,7 +2585,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-[45%] dark:text-white text-black dark:border-slate-200"
+                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded rounded-full"
                   >
                     Generate AI Image
                   </Button>
@@ -2598,48 +2593,17 @@ const HomePage = () => {
                 {useAIGeneration ? (
                   <div className="space-y-4">
                     <Input
-                      placeholder="Enter image prompt (e.g., 'vibrant anime-style city skyline at dusk')"
+                      placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
                     />
-                    <div className="flex space-x-2">
-                      <Input
-                        type="number"
-                        placeholder="Width (px)"
-                        value={imageWidth}
-                        onChange={(e) => setImageWidth(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Height (px)"
-                        value={imageHeight}
-                        onChange={(e) => setImageHeight(Number(e.target.value) || 768)}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                      <Input
-                        type="number"
-                        placeholder="Steps (1-12)"
-                        value={imageSteps}
-                        onChange={(e) => setImageSteps(Math.min(12, Math.max(1, Number(e.target.value) || 8)))}
-                        className="w-1/3 dark:bg-blue-950 dark:text-white dark:border-slate-200"
-                      />
-                    </div>
-                    <select
-                      value={imageModel}
-                      onChange={(e) => setImageModel(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2"
-                    >
-                      <option value="black-forest-labs/FLUX.1-schnell">FLUX.1-schnell</option>
-                      {/* Add other models if supported by the API */}
-                    </select>
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white"
+                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2663,7 +2627,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
