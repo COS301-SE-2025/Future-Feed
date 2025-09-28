@@ -37,7 +37,7 @@ const PersonalSidebar = () => {
           <Link to="/notifications" className="flex items-center gap-3 dark:hover:text-white relative">
             <Bell size={20} /> Notifications
             {unreadCount > 0 && (
-              <span className="absolute mb-4 ml-2.5 w-3 h-3 rounded-full bg-lime-300"></span>
+              <span className="absolute mb-4 ml-2.5 w-3 h-3 rounded-full bg-lime-300 future-feed:bg-white"></span>
             )}
           </Link>
           <Link to="/settings" className="flex items-center gap-3 dark:hover:text-white">
@@ -61,27 +61,29 @@ const PersonalSidebar = () => {
         </nav>
       </aside>
 
-      <nav className="dark:bg-indigo-950 dark:text-slate-200 fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime  dark:bg-indigo-960 border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden dark:slate-100 z-50 bg-white">
-        <Link to="/home" className="flex flex-col items-center relative">
+      {/* Fixed mobile navigation - removed duplicate nav element */}
+      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 border-3 rounded-full border-blue-200 text-blue-500 dark:border-slate-200 p-2 lg:hidden z-50 bg-white dark:text-white ">
+        <Link to="/home" className="flex flex-col items-center relative hover:text-blue-200">
           <Home strokeWidth={3} className="w-5 h-5" />
         </Link>
-        <Link to="/profile" className="flex items-center gap-3 dark:hover:text-blue-500">
+        <Link to="/profile" className="flex items-center gap-3 dark:hover:text-blue-500 hover:text-blue-200">
           <User strokeWidth={3} className="w-5 h-5" />
         </Link>
-        <Link to="/bots" className="flex items-center gap-3 dark:hover:text-white">
-            <Bot  strokeWidth={3} className="w-5 h-5" />
-          </Link>
 
-        <Link to="/notifications" className="flex items-center gap-3 hover:text-blue-500 relative">
+        <Link to="/bots" className="flex items-center gap-3 dark:hover:text-white hover:text-blue-200">
+            <Bot strokeWidth={3} className="w-5 h-5" />
+          </Link>
+        <Link to="/notifications" className="flex items-center gap-3 relative hover:text-blue-200">
+
           <Bell strokeWidth={3} className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-lime-300"></span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-lime-300 future-feed:bg-white"></span>
           )}
         </Link>
-        <Link to="/settings" className="flex items-center gap-3 hover:text-blue-500">
+        <Link to="/settings" className="flex items-center gap-3 hover:text-blue-200 hover:text-blue-200">
           <Settings strokeWidth={3} className="w-5 h-5" />
         </Link>
-        <Link to="/explore" className="flex flex-col items-center">
+        <Link to="/explore" className="flex flex-col items-center hover:text-blue-200">
           <Search strokeWidth={3} className="w-5 h-5" />
         </Link>
       </nav>

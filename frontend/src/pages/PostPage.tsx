@@ -6,6 +6,10 @@ import WhoToFollow from "@/components/WhoToFollow";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 import StaticPost from "@/components/ui/StaticPost";
+import StaticBotPost from "@/components/ui/StaticBotPost";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 interface UserProfile {
   id: number;
@@ -51,6 +55,8 @@ interface PostData {
   reshareCount: number;
   comments: CommentData[];
   showComments: boolean;
+  botId: number;
+  isBot: boolean;
 }
 
 interface RawPost {
@@ -63,6 +69,8 @@ interface RawPost {
     username: string;
     displayName: string;
   } | null;
+  botId: number;
+  isBot: boolean;
 }
 
 interface UserInfo {
@@ -197,6 +205,8 @@ const fetchPost = async (id: number, currentUserId: number) => {
       reshareCount,
       comments: commentsWithUsers,
       showComments: true,
+      botId: post.botId,
+      isBot: post.isBot
     });
   } catch (err) {
     console.error(`Error fetching post ${id}:`, err);
@@ -507,23 +517,96 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (loading) {
     return (
-      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
+      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="w-[1100px] mx-auto p-4">
-          <Skeleton className="h-40 w-full mb-4" />
-          <Skeleton className="h-4 w-3/4 mb-2" />
-          <Skeleton className="h-4 w-1/2" />
+        <main className="flex-1 max-w-full mx-auto p-4">
+          <Card className="dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4">
+            <CardContent className="p-1 mt-[-15px] ml-[20px]">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled
+                className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline text-sm ml-1">Back</span>
+              </Button>
+              <div className="flex gap-4">
+                <Skeleton className="h-10 w-10 sm:h-12 sm:w-12 rounded-full" />
+                <div className="flex-1">
+                  <div className="flex justify-between items-center">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-16" />
+                  </div>
+                  <Skeleton className="h-3 w-24 mt-1 mb-3" />
+                  <div className="space-y-2 mb-4">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                  </div>
+                  <Skeleton className="h-64 w-full rounded-lg mb-4" />
+                  <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Skeleton className="h-8 w-8 rounded" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                  </div>
+                  <div className="mt-4">
+                    <div className="flex gap-2 mb-6 mt-10">
+                      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mb-6">
+                      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full" />
+                      <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-20" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Skeleton className="h-16 flex-1 rounded-lg" />
+                      <Skeleton className="h-10 w-20 rounded-lg mt-3" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </main>
         <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-            <WhoToFollow />
-          </div>
-        </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+          <WhoToFollow />
+        </div>
+      </aside>
       </div>
     );
   }
@@ -573,11 +656,39 @@ const fetchPost = async (id: number, currentUserId: number) => {
   }
 
   return (
-    <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
-        <PersonalSidebar />
-      </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-6 lg:pl-2 min-h-screen overflow-y-auto">
+  <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
+    <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+      <PersonalSidebar />
+    </aside>
+    <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
+      {post.botId || post.isBot ? (
+        <StaticBotPost
+          username={post.username}
+          handle={post.handle}
+          time={post.time}
+          text={post.text}
+          image={post.image}
+          isLiked={post.isLiked}
+          likeCount={post.likeCount}
+          isBookmarked={post.isBookmarked}
+          isReshared={post.isReshared}
+          reshareCount={post.reshareCount}
+          commentCount={post.commentCount}
+          onLike={() => handleLike(post.id)}
+          onBookmark={() => handleBookmark(post.id)}
+          onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
+          onReshare={() => handleReshare(post.id)}
+          onDelete={() => handleDeletePost(post.id)}
+          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          showComments={post.showComments}
+          comments={post.comments}
+          isUserLoaded={!!currentUser}
+          currentUser={currentUser}
+          authorId={post.authorId}
+          postId={post.id}
+          botId={post.botId}
+        />
+      ) : (
         <StaticPost
           username={post.username}
           handle={post.handle}
@@ -603,17 +714,18 @@ const fetchPost = async (id: number, currentUserId: number) => {
           authorId={post.authorId}
           postId={post.id}
         />
-      </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhoToFollow />
-        </div>
-      </aside>
-    </div>
-  );
+      )}
+    </main>
+    <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <WhatsHappening />
+      </div>
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <WhoToFollow />
+      </div>
+    </aside>
+  </div>
+);
 };
 
 export default PostPage;

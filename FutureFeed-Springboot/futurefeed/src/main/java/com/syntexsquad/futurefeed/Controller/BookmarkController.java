@@ -1,5 +1,7 @@
 package com.syntexsquad.futurefeed.Controller;
 import com.syntexsquad.futurefeed.dto.BookmarkDto;
+import com.syntexsquad.futurefeed.dto.PostDTO;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.model.Bookmark;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.BookmarkService;
@@ -13,9 +15,11 @@ import java.util.List;
 public class BookmarkController {
 
     private final BookmarkService bookmarkService;
+    private final PostViewMapper postViewMapper;
 
-    public BookmarkController(BookmarkService bookmarkService) {
+    public BookmarkController(BookmarkService bookmarkService, PostViewMapper postViewMapper) {
         this.bookmarkService = bookmarkService;
+        this.postViewMapper = postViewMapper;
     }
 
     @PostMapping("/{userId}/{postId}")
@@ -43,8 +47,8 @@ public class BookmarkController {
     }
 
     @GetMapping("/my-bookmarks/{userId}")
-    public ResponseEntity<List<Post>> getBookmarkedPosts(@PathVariable Integer userId) {
-        return ResponseEntity.ok(bookmarkService.getBookmarkedPostsByUserId(userId));
+    public ResponseEntity<List<PostDTO>> getBookmarkedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(postViewMapper.toDtoList(bookmarkService.getBookmarkedPostsByUserId(userId)));
     }
 
 }

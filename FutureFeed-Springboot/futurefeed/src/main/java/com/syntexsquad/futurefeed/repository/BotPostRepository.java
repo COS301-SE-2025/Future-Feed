@@ -20,6 +20,14 @@ public interface BotPostRepository extends JpaRepository<BotPosts, Integer> {
     Optional<Bot> findBotByPostId(Integer postId);
 
     @Query("""
+        SELECT bp.post.id, b
+        FROM BotPosts bp
+        JOIN bp.bot b
+        WHERE bp.post.id IN :postIds
+    """)
+    List<Object[]> findBotsByPostIds(@Param("postIds") List<Integer> postIds);
+
+    @Query("""
         SELECT new com.syntexsquad.futurefeed.dto.BotPostDTO(
             bp.id,
             b.id,
@@ -32,4 +40,6 @@ public interface BotPostRepository extends JpaRepository<BotPosts, Integer> {
         WHERE b.id = :botId
     """)
     List<BotPostDTO> findDtoByBotId(@Param("botId") Integer botId);
+
+    Optional<BotPosts> findTopByBotIdOrderByCreatedAtDesc(Integer botId);
 }
