@@ -228,13 +228,11 @@ R10 Analytics and Insights
 </a>
 
 ## Use Case
-<div class="display: flex; justify-content: center; align-items: center;">
-	<img src="https://github.com/COS301-SE-2025/Future-Feed/blob/main/Documentation/Diagrams/Use%20case.png" alt="Use Case Diagram" width="500"/>
-</div>
+<a href="https://github.com/COS301-SE-2025/Future-Feed/tree/main/Documentation/Diagrams/Use%20Case%20Diagram" alt="Use Case Diagram" width="500"> Use Case </a>
 
 
 ## Domain Model
-NEEDS TO BE FIXED
+<a href="https://github.com/COS301-SE-2025/Future-Feed/tree/main/Documentation/Diagrams/Domain%20Model"> Domain Model </a>
 
 ## 6. Technology Choices:
 
