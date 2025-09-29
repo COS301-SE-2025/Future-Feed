@@ -237,12 +237,12 @@ const UserProfile = () => {
         currentTopics = await fetchTopics();
       }
 
-      console.log("all topics", currentTopics);
+      //console.log("all topics", currentTopics);
 
       const postTopics = topicIds
         .map((id) => currentTopics.find((topic) => topic.id === id))
         .filter((topic): topic is Topic => !!topic);
-      console.log("topics", postTopics)
+     // console.log("topics", postTopics)
       return postTopics;
     } catch (err) {
       console.error(`Error fetching topics for post ${postId}:`, err);
@@ -805,7 +805,7 @@ const UserProfile = () => {
         isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-        console.log("No posts found for user:", userId);
+       // console.log("No posts found for user:", userId);
         setPosts([]);
         setFetchedTabs((prev) => ({ ...prev, posts: true }));
         profileDataCache.posts = [];
@@ -1947,14 +1947,17 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block mr-3">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhoToFollow />
-        </div>
-      </aside>
+      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 }

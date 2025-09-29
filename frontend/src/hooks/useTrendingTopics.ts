@@ -19,7 +19,7 @@ const fetchTrendingTopics = async (): Promise<TrendingTopic[]> => {
   }
   
   const data = await res.json();
-  console.log('Trending topics fetched:', data); // Debug log
+ // console.log('Trending topics fetched:', data); // Debug log
   return data;
 };
 

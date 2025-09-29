@@ -26,10 +26,7 @@ public class BotScheduler {
     @Autowired
     private BotPostRepository botPostRepository;
 
-    /**
-     * Runs every 5 minutes and decides whether a bot should post or not.
-     */
-    @Scheduled(fixedRate = 300000) // every 5 minutes
+    @Scheduled(fixedRate = 300000) 
     public void runScheduledBots() {
         List<Bot> bots = botService.getAllBots();
 

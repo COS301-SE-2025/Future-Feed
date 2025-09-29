@@ -145,7 +145,7 @@ const FollowerFollowing = () => {
 
         const allUsers = await fetchUsers();
         setUsers(allUsers);
-        console.log("Fetched all users:", allUsers);
+        //console.log("Fetched all users:", allUsers);
 
         await fetchFollowing(currentUser.id, allUsers);
         setFollowingLoading(false);

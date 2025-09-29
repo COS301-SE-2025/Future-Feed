@@ -4,6 +4,10 @@ import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,17 +21,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import java.util.List;
 
 @Service
 public class PostService {
 
     private static final Logger log = LoggerFactory.getLogger(PostService.class);
-
+    @PersistenceContext
+    private EntityManager em;
     private final PostRepository postRepository;
     private final AppUserRepository appUserRepository;
     private final LikeRepository likerepository;
@@ -102,7 +109,11 @@ public class PostService {
         } catch (Exception e) {
             log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
         }
-
+        
+        if (em != null) {
+            em.clear();
+        }
+        
         return saved;
     }
 
@@ -129,8 +140,11 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    @Cacheable(value = "paginatedPosts", key = "#page + '-' + #size")
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public Page<Post> getPaginatedPosts(int page, int size) {
+        if (em != null) {
+            em.clear();
+        }
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return postRepository.findAll(pageable);
     }
