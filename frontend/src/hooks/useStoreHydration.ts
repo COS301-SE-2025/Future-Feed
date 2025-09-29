@@ -9,7 +9,7 @@ export const useStoreHydration = () => {
   useEffect(() => {
     if (hasHydrated) {
       setIsHydrated(true);
-      console.log(' Store hydration completed');
+      //console.log(' Store hydration completed');
     }
   }, [hasHydrated]);
 
