@@ -102,7 +102,7 @@
 	<tr>
       <td><strong>Demo 4 Video</strong></td>
       <td>
-        <a href="" target="_blank">
+        <a href="https://drive.google.com/file/d/1Av0EfE_bU0YIJPLbl2K7q0Z5vorHyRgY/view?usp=sharing" target="_blank">
           Watch Video
         </a>
       </td>
@@ -110,7 +110,7 @@
 	<tr>
       <td><strong>Demo 4 Presentation</strong></td>
       <td>
-        <a href="" target="_blank">
+        <a href="https://docs.google.com/presentation/d/1_ghPP420YPyrLVd1dpM-0Gn-v4dCJQRu/edit?usp=sharing&ouid=116757895640693664974&rtpof=true&sd=true" target="_blank">
           View Slides
         </a>
       </td>
