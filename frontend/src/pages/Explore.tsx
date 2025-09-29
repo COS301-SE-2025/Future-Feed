@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
-import { StoreDebug } from "@/components/StoreDebug";
+
 
 import { useStoreHydration } from '@/hooks/useStoreHydration';
 
@@ -610,15 +610,17 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhoToFollow />
-          <StoreDebug/>
-        </div>
-      </aside>
+      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 };

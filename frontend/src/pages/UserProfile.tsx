@@ -1947,14 +1947,17 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block mr-3">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhoToFollow />
-        </div>
-      </aside>
+      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 }
