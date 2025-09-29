@@ -3,7 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
-import { StoreDebug } from "@/components/StoreDebug";
+
 
 import { useStoreHydration } from '@/hooks/useStoreHydration';
 
@@ -236,18 +236,18 @@ const isHydrated = useStoreHydration();
     }
 
       const data = await res.json();
-      console.log(`Full response for user ${userId}:`, data); // Debug the full response
-    console.log(`isFollowing value for user ${userId}:`, data.isFollowing);
+      ////console.log(`Full response for user ${userId}:`, data); // Debug the full response
+    //console.log(`isFollowing value for user ${userId}:`, data.isFollowing);
        // Handle undefined response - if you're following them, return true
        const isFollowing = data.isFollowing;
     if (isFollowing === undefined || isFollowing === null) {
-      console.warn(`Undefined follow status for user ${userId}, checking following list`);
+      //console.warn(`Undefined follow status for user ${userId}, checking following list`);
       
       // Check if this user is in your following list
       const currentFollowing = useFollowStore.getState().followingUserIds;
 
       const fallbackFollowing = currentFollowing.includes(userId);
-      console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
+      //console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
       return fallbackFollowing;
     }
 
@@ -366,8 +366,8 @@ const isHydrated = useStoreHydration();
          const currentStatuses = useFollowStore.getState().followStatus;
         const currentFollowing = useFollowStore.getState().followingUserIds;
         
-        console.log('Current hydrated statuses:', currentStatuses);
-        console.log('Current following IDs:', currentFollowing);
+        //('Current hydrated statuses:', currentStatuses);
+       // console.log('Current following IDs:', currentFollowing);
         
         // Instead of checking each user individually, use the following list
         const newStatuses: Record<number, boolean> = {};
@@ -381,7 +381,7 @@ const isHydrated = useStoreHydration();
           }
         });
         
-        console.log('New statuses to add from following list:', newStatuses);
+       // console.log('New statuses to add from following list:', newStatuses);
         
         // Only update if we have new statuses
         if (Object.keys(newStatuses).length > 0) {
@@ -420,7 +420,7 @@ const isHydrated = useStoreHydration();
     });
     
     if (Object.keys(newStatuses).length > 0) {
-      console.log('Updating follow statuses from relations:', newStatuses);
+     // console.log('Updating follow statuses from relations:', newStatuses);
       bulkSetFollowStatus(newStatuses);
     }
   }
@@ -439,7 +439,7 @@ const isHydrated = useStoreHydration();
   const loadFollowingData = async (userId: number) => {
     await refetchFollowing();
     setHasLoadedFollowing(true);
-    console.log(userId, "has loaded following");
+    console.log(userId);
     //setfollowingloading(true);
     //await fetchFollowing(userId, users);
     //setfollowingloading(false);
@@ -610,15 +610,17 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhoToFollow />
-          <StoreDebug/>
-        </div>
-      </aside>
+      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 };

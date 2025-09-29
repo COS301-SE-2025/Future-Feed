@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useTrendingTopics } from "@/hooks/useTrendingTopics";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect } from "react";
+
 
 const WhatsHappening = () => {
 
@@ -15,20 +15,10 @@ const WhatsHappening = () => {
     data: trendingTopics, 
     isLoading, 
     error,
-    isError,
-    status // Add status for debugging
+    isError
   } = useTrendingTopics();
 
   // Debug logs
-  useEffect(() => {
-    console.log('Trending topics query status:', {
-      status,
-      isLoading,
-      isError,
-      error,
-      data: trendingTopics
-    });
-  }, [status, isLoading, isError, error, trendingTopics]);
 
 
   return (
@@ -61,7 +51,7 @@ const WhatsHappening = () => {
             <>
               {trendingTopics.map((topic) => (
                 <div key={topic.id}>
-                  <p className="dark:text-slate-200">Trending Worldwide</p>
+                  <p className="dark:text-slate-200">Trending on FF</p>
                   <p className="font-semibold">#{topic.name}</p>
                 </div>
               ))}

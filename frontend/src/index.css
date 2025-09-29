@@ -130,6 +130,9 @@
 .future-feed .future-feed\:border-lime {
   border-color: #84cc16 !important; /* border-lime-500 */
 }
+.future-feed .future-feed\:border-card {
+    border-color: #1a1a1a !important; /* bg-[#1a1a1a] */
+}
 .future-feed .future-feed\:border-pink {
   border-color: pink !important; /* border-lime-500 */
 }

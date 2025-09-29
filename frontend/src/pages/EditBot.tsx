@@ -38,7 +38,7 @@ const EditBot: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      console.log("Saving bot settings:", formData);
+      //console.log("Saving bot settings:", formData);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/bots");
     } catch (err) {
@@ -48,7 +48,7 @@ const EditBot: React.FC = () => {
 
   const handleDeleteBot = async () => {
     try {
-      console.log("Deleting bot:", formData.botName);
+      //console.log("Deleting bot:", formData.botName);
       await new Promise((resolve) => setTimeout(resolve, 1000));
       navigate("/bots");
     } catch (err) {

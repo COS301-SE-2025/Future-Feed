@@ -62,7 +62,7 @@ const Login: React.FC = () => {
       <Button
         type="button"
         onClick={() => {
-          console.log(import.meta.env.VITE_API_URL);
+          //console.log(import.meta.env.VITE_API_URL);
           window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
         }}
         className="text-black mb-6 flex h-14 sm:h-[50px] w-full items-center justify-center rounded-2xl sm:rounded-[25px] border border-black bg-white p-4 sm:p-5 text-lg sm:text-[20px] font-bold shadow-[2px_2px_4px_#888] cursor-pointer  transition-colors"

@@ -2,8 +2,12 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.util.UsernameGenerator;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -23,6 +27,9 @@ import java.util.UUID;
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
 
     private final AppUserRepository userRepository;
+
+    @Autowired
+    private UsernameGenerator usernameGenerator;
 
     public CustomOAuth2UserService(AppUserRepository userRepository) {
         this.userRepository = userRepository;
@@ -65,6 +72,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
+        String uniqueUsername = usernameGenerator.generateUniqueUsername(name);
 
         if (email == null) {
             throw new OAuth2AuthenticationException("Email not present in Google response.");
@@ -73,7 +81,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         AppUser user = userRepository.findByEmail(email)
                 .orElseGet(() -> {
                     AppUser newUser = new AppUser();
-                    newUser.setUsername(name);
+                    newUser.setUsername(uniqueUsername);
                     newUser.setEmail(email);
                     newUser.setPassword(UUID.randomUUID().toString());
                     newUser.setDisplayName(name);

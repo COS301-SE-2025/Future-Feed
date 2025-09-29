@@ -73,35 +73,82 @@ public class FeedPresetService {
         return ruleRepo.findByPresetId(presetId);
     }
 
+//    public List<Post> generateFeedForPreset(Integer presetId) {
+//        List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
+//        Set<Post> resultFeed = new HashSet<>();
+//
+//        for (PresetRule rule : rules) {
+//            List<Post> filteredPosts = new ArrayList<>();
+//
+//            if (rule.getTopicId() != null) {
+//                List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
+//                List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
+//                filteredPosts.addAll(postRepository.findAllById(postIds));
+//            }
+//
+//            if ("user".equalsIgnoreCase(rule.getSourceType())) {
+//                filteredPosts = filteredPosts.stream()
+//                        .filter(p -> p instanceof UserPost)
+//                        .collect(Collectors.toList());
+//            } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
+//                filteredPosts = filteredPosts.stream()
+//                        .filter(p -> p instanceof BotPost)
+//                        .collect(Collectors.toList());
+//            }
+//
+//            if (rule.getSpecificUserId() != null) {
+//                filteredPosts = filteredPosts.stream()
+//                        .filter(p -> (p instanceof UserPost) && ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
+//                        .collect(Collectors.toList());
+//            }
+//
+//            int limit = (rule.getPercentage() != null && rule.getPercentage() > 0)
+//                    ? (filteredPosts.size() * rule.getPercentage()) / 100
+//                    : filteredPosts.size();
+//
+//            resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
+//        }
+//
+//        return new ArrayList<>(resultFeed);
+//    }
+
     public List<Post> generateFeedForPreset(Integer presetId) {
         List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
         Set<Post> resultFeed = new HashSet<>();
 
         for (PresetRule rule : rules) {
-            List<Post> filteredPosts = new ArrayList<>();
+            List<Post> filteredPosts;
 
+            // 🔹 Start with topic-based filter OR all posts if no topic
             if (rule.getTopicId() != null) {
                 List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
                 List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
-                filteredPosts.addAll(postRepository.findAllById(postIds));
+                filteredPosts = postRepository.findAllById(postIds);
+            } else {
+                filteredPosts = postRepository.findAll(); // <-- fallback
             }
 
+            // 🔹 Apply sourceType filter
             if ("user".equalsIgnoreCase(rule.getSourceType())) {
                 filteredPosts = filteredPosts.stream()
-                        .filter(p -> p instanceof UserPost)
+                        .filter(p -> "USER".equalsIgnoreCase(p.getPostType()))
                         .collect(Collectors.toList());
             } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
                 filteredPosts = filteredPosts.stream()
-                        .filter(p -> p instanceof BotPost)
+                        .filter(p -> "BOT".equalsIgnoreCase(p.getPostType()))
                         .collect(Collectors.toList());
             }
 
+
+            // 🔹 Apply specific user filter
             if (rule.getSpecificUserId() != null) {
                 filteredPosts = filteredPosts.stream()
-                        .filter(p -> (p instanceof UserPost) && ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
+                        .filter(p -> (p instanceof UserPost) &&
+                                ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
                         .collect(Collectors.toList());
             }
 
+            // 🔹 Apply percentage limit
             int limit = (rule.getPercentage() != null && rule.getPercentage() > 0)
                     ? (filteredPosts.size() * rule.getPercentage()) / 100
                     : filteredPosts.size();

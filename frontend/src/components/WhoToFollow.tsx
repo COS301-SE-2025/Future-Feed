@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useFollowStore } from "@/store/useFollowStore"
 import { useStableFollowStatus } from "@/hooks/useStableFollowingStatus"
-import { StoreDebug } from "./StoreDebug"
+
 //route detection for show morers
 import { useLocation } from "react-router-dom"
 import { Link } from "react-router-dom"
@@ -89,7 +89,7 @@ const WhoToFollow = () => {
             }
             
             const json = await res.json();
-            console.log(`Status for user ${user.id}:`, json.isFollowing);
+           // console.log(`Status for user ${user.id}:`, json.isFollowing);
             
             // Use the correct property name - API returns {isFollowing: true}
             return { id: user.id, status: json.isFollowing };
@@ -252,7 +252,7 @@ const WhoToFollow = () => {
             <div className={!isExplorePage ? "" : "invisible"}>
         <p className="dark:text-slate-200 text-white  hover:underline cursor-pointer">Show more</p>
       </div>
-      <StoreDebug/>
+     
       </Link>
             
           </div>

@@ -122,7 +122,7 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      console.log(`Notification ${notificationId} marked as read`);
+      //console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
@@ -330,7 +330,7 @@ const Notifications = () => {
         </div>
 
         {showSearch && (
-          <div className="px-3 mb-4">
+          <div className="px-3 mt-2">
             <SearchBar
               notifications={notifications}
               onNotificationFilter={handleNotificationFilter}
@@ -339,7 +339,7 @@ const Notifications = () => {
           </div>
         )}
 
-        <Tabs defaultValue="all" className="w-full p-3" onValueChange={handleTabChange}>
+        <Tabs defaultValue="all" className="w-full p-2" onValueChange={handleTabChange}>
           <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
             <TabsTrigger value="all" className="rounded-2xl">All</TabsTrigger>
             <TabsTrigger value="interactions" className="rounded-2xl">Interactions</TabsTrigger>
@@ -406,14 +406,17 @@ const Notifications = () => {
         </Tabs>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
-          <WhoToFollow />
-        </div>
-      </aside>
+     <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 };

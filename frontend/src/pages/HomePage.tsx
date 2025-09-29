@@ -751,7 +751,7 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No default preset found - this is normal for new users");
+          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -2049,7 +2049,7 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts available.</p>
+                      <p className="text-lg future-feed:text-lime  dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
@@ -2069,7 +2069,7 @@ const HomePage = () => {
 
                       <div className="flex flex-col justify-center items-center mt-10 gap-12">
                         <SmilePlus size={50} color="#3B82F6" />
-                        <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
+                        <p className="dark:text-white text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
 
                       </div>
                       <div className="flex gap-20 mt-13">
@@ -2143,7 +2143,7 @@ const HomePage = () => {
                             renderSkeletonPosts()
                           ) : presetPosts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10">
-                              <p className="text-lg dark:text-white text-gray-400">No posts available for this preset yet.</p>
+                              <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
                             </div>
                           ) : (
                             renderPosts(presetPosts)
@@ -2393,7 +2393,7 @@ const HomePage = () => {
                                           >
                                             <div className="flex items-center flex-1">
                                               <Filter size={14} className="mr-2 text-blue-500" />
-                                              <span className="text-sm">{formatRule(rule)}</span>
+                                              <span className="text-sm dark:text-indigo-900">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2470,13 +2470,16 @@ const HomePage = () => {
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+        <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
+           
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
             <WhoToFollow />
           </div>
+        
         </aside>
       </div>
       {isPostModalOpen && (
@@ -2511,7 +2514,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none"
                 rows={8}
               />
               <div className="mb-4">
@@ -2542,7 +2545,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded-full"
+                    className="w-40 dark:text-black text-black rounded-full"
                   >
                     Upload Image
                   </Button>
@@ -2552,7 +2555,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-white text-black dark:border-slate-200 rounded rounded-full"
+                    className="w-40 dark:text-black text-black rounded rounded-full"
                   >
                     Generate AI Image
                   </Button>
@@ -2563,7 +2566,7 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5"
+                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
@@ -2652,14 +2655,14 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white">All Topics</h2>
+            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
-                <p className="text-sm text-lime dark:text-gray-400">No topics available.</p>
+                <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2">
+                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2 future-feed:text-black">
                       {topic.name}
                     </li>
                   ))}
@@ -2667,7 +2670,7 @@ const HomePage = () => {
               )}
               <Button
                 onClick={() => setIsViewTopicsModalOpen(false)}
-                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 "
+                className="mt-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500 future-feed:border-lime-500"
               >
                 Close
               </Button>
