@@ -450,8 +450,8 @@ const isHydrated = useStoreHydration();
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border-3 border dark:border-slate-200  rounded-2xl">
-          <CardContent className="flex border border-3 gap-3 items-start p-4">
+        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border border dark:border-slate-200  rounded-2xl">
+          <CardContent className="flex border border gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/2" />
@@ -465,7 +465,7 @@ const isHydrated = useStoreHydration();
     }
 
     return (
-      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border-3 dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar 
             className="w-14 h-14 border-4 border-slate-300 hover:cursor-pointer"
@@ -538,7 +538,7 @@ const isHydrated = useStoreHydration();
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
 
 
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border-3 justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
+        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-2">
             <SearchUser onSearch={debouncedSearch} />

@@ -22,7 +22,7 @@ const WhatsHappening = () => {
 
 
   return (
-    <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl text-white border-3 dark:hover:border-r-lime-500 dark:hover:border-l-lime-500 hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
+    <Card className="bg-blue-500 border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl text-white border-2 dark:hover:border-r-lime-500 dark:hover:border-l-lime-500 hover:border-5 hover:border-r-lime-300 hover:border-l-lime-300 transition-[border-width,border-right-color] duration-800 ease-out-in">
       <CardContent className="p-4">
         <h2 className="font-bold text-lg mb-4">Trending Topics </h2>
         <div className="space-y-3 text-sm">
