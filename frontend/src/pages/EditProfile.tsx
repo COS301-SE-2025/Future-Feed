@@ -146,9 +146,11 @@ const EditProfile: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-blue-950 dark:text-slate-200">
+
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black future-feed:bg-black  dark:text-white">
       <ThemeProvider>
-        <Card className=" border-rose-gold accent border dark:border-slate-200 future-feed:border-lime mt-10 relative w-full max-w-[900px] rounded-[16px] border-2  p-16 shadow-[0_0_30px_#999]  dark:shadow-none">
+        <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
             <Link to="/profile">
               <Button
@@ -198,7 +200,7 @@ const EditProfile: React.FC = () => {
             </DialogContent>
           </Dialog>
           <CardHeader>
-            <CardTitle className="text-center text-4xl">Edit Profile</CardTitle>
+            <CardTitle className="text-center future-feed:text-white text-4xl">Edit Profile</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col items-center">
@@ -258,7 +260,7 @@ const EditProfile: React.FC = () => {
                   placeholder="Bio..."
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                  className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
                 />
               </div>
 

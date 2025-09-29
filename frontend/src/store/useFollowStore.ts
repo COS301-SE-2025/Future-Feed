@@ -78,7 +78,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
 
           const data: FollowRelation[] = await res.json();
           const followedUserIds = data.map((relation) => relation.followedId);
-          console.log("Followed User IDs following:", followedUserIds);
+          //console.log("Followed User IDs following:", followedUserIds);
           const normalized = allUsers.map(u => ({
             ...u,
             bio: u.bio ?? null,
@@ -103,7 +103,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
 
           const data: FollowRelation[] = await res.json();
           const followerUserIds = data.map((relation) => relation.followerId);
-          console.log("Follower User IDs followers:", followerUserIds);
+         // console.log("Follower User IDs followers:", followerUserIds);
           const normalized = allUsers.map(u => ({
             ...u,
             bio: u.bio ?? null,
@@ -221,10 +221,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-          console.log(' Store hydrated with:', {
-            followStatus: state.followStatus,
-            followingUserIds: state.followingUserIds
-          });
+        
           state.setHasHydrated(true);
         }
       },

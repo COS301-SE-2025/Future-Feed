@@ -751,7 +751,7 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          console.log("No default preset found - this is normal for new users");
+          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -2049,7 +2049,7 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg dark:text-white">No posts available.</p>
+                      <p className="text-lg future-feed:text-lime  dark:text-white">No posts available.</p>
                       <Button
                         className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
@@ -2069,7 +2069,7 @@ const HomePage = () => {
 
                       <div className="flex flex-col justify-center items-center mt-10 gap-12">
                         <SmilePlus size={50} color="#3B82F6" />
-                        <p className="dark:text-white text-xl text-blue-500">No posts from followed users.</p>
+                        <p className="dark:text-white text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
 
                       </div>
                       <div className="flex gap-20 mt-13">
@@ -2143,7 +2143,7 @@ const HomePage = () => {
                             renderSkeletonPosts()
                           ) : presetPosts.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-10">
-                              <p className="text-lg dark:text-white text-gray-400">No posts available for this preset yet.</p>
+                              <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
                             </div>
                           ) : (
                             renderPosts(presetPosts)
@@ -2470,13 +2470,16 @@ const HomePage = () => {
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block ">
+        <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
+           
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
             <WhoToFollow />
           </div>
+        
         </aside>
       </div>
       {isPostModalOpen && (
