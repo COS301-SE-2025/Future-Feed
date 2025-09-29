@@ -147,9 +147,9 @@ const EditProfile: React.FC = () => {
 
   return (
 
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black future-feed:bg-black  dark:text-white">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-blue-950 future-feed:bg-black  dark:text-white">
       <ThemeProvider>
-        <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+        <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2  bg-white p-16 shadow-[0_0_30px_#999]  dark:shadow-none">
 
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
             <Link to="/profile">
@@ -157,7 +157,7 @@ const EditProfile: React.FC = () => {
                 className="h-[40px] w-[40px] rounded-full border  p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200  dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
                 variant="ghost"
               >
-                <ArrowLeft className="h-5 w-5 text-black" />
+                <ArrowLeft className="future-feed:text-lime future-border-lime h-5 w-5 text-black" />
               </Button>
             </Link>
           </div>
