@@ -2476,7 +2476,7 @@ const HomePage = () => {
            
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        
+        {/*  */}
             <WhoToFollow />
           </div>
         
