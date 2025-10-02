@@ -2498,8 +2498,8 @@ const HomePage = () => {
                 setImageFile(null);
                 setUseAIGeneration(false);
                 setImagePrompt("");
-                setImageWidth(768);
-                setImageHeight(768);
+                setImageWidth(384);
+                setImageHeight(384);
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
