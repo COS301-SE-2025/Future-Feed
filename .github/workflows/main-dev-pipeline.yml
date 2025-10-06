@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - feature/homePage
   pull_request:
     branches:
       - main
@@ -13,15 +14,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Branch protection checks
+      - name: Prevent direct pushes to protected branches
+        if: >
+          github.event_name == 'push' && 
+          (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') &&
+          (github.event.head_commit.message == null || 
+          !contains(github.event.head_commit.message, 'Merge pull request'))
         run: |
-          if [ "${{ github.event_name }}" == "push" ] && \
-             [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]] && \
-             [ -z "${{ github.event.head_commit.message }}" ] || \
-             [[ "${{ github.event.head_commit.message }}" != *"Merge pull request"* ]]; then
-            echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
-            exit 1
-          fi
+          echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
+          exit 1
       - uses: actions/checkout@v4
       - name: Setup Node.js
         uses: actions/setup-node@v4
