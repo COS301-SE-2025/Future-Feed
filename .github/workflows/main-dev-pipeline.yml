@@ -15,10 +15,10 @@ jobs:
     steps:
       - name: Branch protection checks
         run: |
+          # Only block direct pushes, not pull request merges
           if [ "${{ github.event_name }}" == "push" ] && \
              [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]] && \
-             [ -z "${{ github.event.head_commit.message }}" ] || \
-             [[ "${{ github.event.head_commit.message }}" != *"Merge pull request"* ]]; then
+             [ "${{ github.event.after }}" != "${{ github.event.before }}" ]; then
             echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
             exit 1
           fi
