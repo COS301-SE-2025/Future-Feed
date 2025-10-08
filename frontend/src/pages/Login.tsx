@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,13 +7,80 @@ import { Label } from "@/components/ui/label";
 import futurefeedLogo from "../assets/white logo.png";
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in with:", { username, password });
+
+    if (isRegister) {
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      const body = {
+        username,
+        password,
+        email,
+        displayName,
+        profilePicture,
+        dateOfBirth,
+      };
+
+      try {
+        const res = await fetch("http://localhost:8080/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+          console.log("Registration successful");
+          // Optionally toggle to login or navigate
+          setIsRegister(false);
+        } else {
+          console.error("Registration failed");
+        }
+      } catch (err) {
+        console.error("Error during registration:", err);
+      }
+    } else {
+      const params = new URLSearchParams();
+      params.append("username", username);
+      params.append("password", password);
+
+      try {
+        const res = await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          credentials: "include",
+          body: params.toString(),
+        });
+
+        if (res.ok) {
+          console.log("Login successful");
+          // Optionally navigate to dashboard or home
+          navigate("/home"); // Adjust route as needed
+        } else {
+          console.error("Login failed");
+        }
+      } catch (err) {
+        console.error("Error during login:", err);
+      }
+    }
   };
 
   const handleToggle = () => {
@@ -105,9 +172,9 @@ const Login: React.FC = () => {
                     <Input
                       type="text"
                       id="display-name"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      placeholder="Enter your username"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Enter your display name"
                       required
                       className="mt-2 h-12 rounded-full text-lg px-4"
                     />
@@ -117,8 +184,8 @@ const Login: React.FC = () => {
                     <Input
                       type="email"
                       id="email"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       required
                       className="mt-2 h-12 rounded-full text-lg px-4"
@@ -129,8 +196,8 @@ const Login: React.FC = () => {
                     <Input
                       type="date"
                       id="dob"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
                       required
                       className="mt-2 h-12 rounded-full text-lg px-4"
                     />
@@ -138,10 +205,12 @@ const Login: React.FC = () => {
                   <div>
                     <Label htmlFor="profilePic" className="font-bold">Profile Picture</Label>
                     <Input
-                      type="file"
+                      type="text"
                       id="profilePic"
-                      accept="image/*"
-                      className="mt-2 h-12 rounded-full text-lg px-4 flex items-center"
+                      value={profilePicture}
+                      onChange={(e) => setProfilePicture(e.target.value)}
+                      placeholder="Enter profile picture URL"
+                      className="mt-2 h-12 rounded-full text-lg px-4"
                     />
                   </div>
                 </>
@@ -164,8 +233,8 @@ const Login: React.FC = () => {
                   <Input
                     type="password"
                     id="confirm-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"
                     required
                     className="mt-2 h-12 rounded-full text-lg px-4"
