@@ -219,10 +219,10 @@ const WhoToFollow = () => {
                       onClick={() => navigate(`/profile/${user.id}`)}  
                     >
                       <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                      <AvatarFallback>{user.username}</AvatarFallback>
+                      <AvatarFallback className="font-bold">{user.username}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="font-semibold hover:cursor-pointer hover:underline" onClick={() => navigate(`/profile/${user.id}`)}  >{user.username}</p>
+                      <p className="font-bold hover:cursor-pointer hover:underline" onClick={() => navigate(`/profile/${user.id}`)}  >{user.username}</p>
                       <p className="dark:text-slate-200 hover:cursor-pointer hover:underline" onClick={() => navigate(`/profile/${user.id}`)}  >@{user.name}</p>
                     </div>
                   </div>
@@ -238,7 +238,7 @@ const WhoToFollow = () => {
                     </Button>
                   ) : (
                     <Button
-                      className="w-[90px] bg-white text-blue-500  rounded-full  font-semibold hover:cursor-pointer"
+                      className="w-[90px]    rounded-full  font-semibold hover:cursor-pointer"
                       onClick={() => handleFollow(user.id)}
                     >
                       Follow
