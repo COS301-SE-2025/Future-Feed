@@ -530,17 +530,17 @@ const isHydrated = useStoreHydration();
   //
 
   return (
-    <div className="flex future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
-      <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
+      <aside className="  lg:w-[245px] lg:ml-6   flex-shrink-0 lg:sticky  lg:top-[30px] lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
       <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
 
 
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
+        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
             <Link to="/settings">
               <Settings size={20} className="dark:text-slate-200" />
@@ -565,7 +565,7 @@ const isHydrated = useStoreHydration();
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 rounded-2xl  capitalize  "
+                className="flex-1   capitalize  "
               >
                 {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
@@ -610,7 +610,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:mt-[16px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
            
