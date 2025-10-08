@@ -610,7 +610,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px]    lg:top-[30px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px]    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

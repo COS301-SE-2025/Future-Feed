@@ -76,7 +76,7 @@ const LandingPage = () => {
     }, []);
 
     return (
-        <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-gray-200 text-white-800 overflow-hidden ">
+        <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-ffgrey text-white-800 overflow-hidden ">
 
             <ThemeProvider>
             
@@ -84,10 +84,10 @@ const LandingPage = () => {
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="mt-2 ml-2" asChild>
-                        <AlignJustify className="future-feed:text-lime w-6 h-6"></AlignJustify>
+                        <AlignJustify className="future-feed:text-lime  w-6 h-6"></AlignJustify>
                     </SheetTrigger>
                     <SheetContent  side="left">
-                        <SheetHeader>
+                        <SheetHeader >
                             <SheetTitle className="
                             future-feed:text-lime">Future Feed</SheetTitle>
                             <SheetDescription>
@@ -105,8 +105,8 @@ const LandingPage = () => {
                             </div>
                         </div>
                         <SheetFooter>
-                            <SheetClose asChild>
-                                <Button  className="">Close</Button>
+                            <SheetClose  asChild>
+                                <Button  >Close</Button>
                             </SheetClose>
                         </SheetFooter>
                     </SheetContent>
