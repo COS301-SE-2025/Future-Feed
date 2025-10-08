@@ -531,11 +531,11 @@ const isHydrated = useStoreHydration();
 
   return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
-      <aside className="  lg:w-[245px] lg:ml-6   flex-shrink-0 lg:sticky  lg:top-[30px] lg:h-screen overflow-y-auto">
+      <aside className="  lg:w-[245px] lg:ml-6    flex-shrink-0 lg:sticky  lg:top-[30px] lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
 
 
         <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
@@ -604,14 +604,14 @@ const isHydrated = useStoreHydration();
           </TabsContent>
         </Tabs>
 
-        <div className="w-full  px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full  px-4 mt-7 py-2  space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px]  lg:top-[30px] lg:h-screen  hidden lg:block mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+      <aside className="w-full lg:w-[350px]    lg:top-[30px] lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            
           </div>
