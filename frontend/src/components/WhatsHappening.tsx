@@ -22,7 +22,7 @@ const WhatsHappening = () => {
 
 
   return (
-    <Card className="bg-white border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200 rounded-3xl text-black border-2 drop-shadow-xl/50   transition-[border-width,border-right-color] duration-800 ease-out-in">
+    <Card className="bg-white border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime dark:bg-indigo-950 dark:text-slate-200 border dark:border-slate-200  text-black border-2 drop-shadow-xl   transition-[border-width,border-right-color] duration-800 ease-out-in">
       <CardContent className="p-4">
         <h2 className="font-bold text-lg mb-4">Trending Topics </h2>
         <div className="space-y-3 text-sm">

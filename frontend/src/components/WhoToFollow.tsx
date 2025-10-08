@@ -167,7 +167,7 @@ const WhoToFollow = () => {
 // Show loading state while hydrating
   if (!isHydrated || isLoading) {
     return (
-      <Card className="dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl bg-blue-500  future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500 rounded-3xl border-2 future-feed:border-lime-500 future-feed:bg-lime-600 text-white">
+      <Card className="dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200  bg-blue-500  future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500  border-2 future-feed:border-lime-500 future-feed:bg-lime-600 text-white">
         <CardContent className="p-4">
           <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
           <div className="space-y-3">
@@ -188,7 +188,7 @@ const WhoToFollow = () => {
 //
   return (
 
-    <Card className="bg-white drop-shadow-xl/50 text-black  border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200 rounded-3xl border-2   transition-[border-width,border-right-color] duration-800 ease-out-in">
+    <Card className="bg-white drop-shadow-xl text-black  border-rose-gold-accent-border future-feed:bg-black future-feed:text-lime future-feed:border-lime  dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200  border-2   transition-[border-width,border-right-color] duration-800 ease-out-in">
 
       <CardContent className="p-4 min-h-[200px]">
         <h2 className="font-bold text-rose-gold-text-light text-lg mb-4">Follow Latest</h2>
@@ -228,7 +228,7 @@ const WhoToFollow = () => {
                   </div>
 
                   {loadingFollow[user.id] ? (
-                    <Skeleton className="h-8 w-16 rounded-2xl" />
+                    <Skeleton className="h-8 w-16 rounded-md" />
                   ) : isFollowing ? (
                     <Button variant={"secondary"}
                       className="w-[90px] rounded-full  font-semibold  hover:cursor-pointer"
