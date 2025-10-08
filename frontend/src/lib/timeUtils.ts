@@ -15,7 +15,7 @@ export const formatRelativeTime = (date: string): string => {
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
+  //
   if(diffDays >= 30){
     return postDate.toLocaleDateString('en-US', {
       year:'numeric',
