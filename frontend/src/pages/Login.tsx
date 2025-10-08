@@ -98,6 +98,54 @@ const Login: React.FC = () => {
                   className="mt-2 h-12 rounded-full text-lg px-4"
                 />
               </div>
+              {isRegister && (
+                <>
+                  <div>
+                    <Label htmlFor="display-name" className="font-bold">Display Name</Label>
+                    <Input
+                      type="text"
+                      id="display-name"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter your username"
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="font-bold">Email</Label>
+                    <Input
+                      type="email"
+                      id="email"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dob" className="font-bold">Date of Birth</Label>
+                    <Input
+                      type="date"
+                      id="dob"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="profilePic" className="font-bold">Profile Picture</Label>
+                    <Input
+                      type="file"
+                      id="profilePic"
+                      accept="image/*"
+                      className="mt-2 h-12 rounded-full text-lg px-4 flex items-center"
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <Label htmlFor="password" className="font-bold">Password</Label>
                 <Input
@@ -109,14 +157,28 @@ const Login: React.FC = () => {
                   required
                   className="mt-2 h-12 rounded-full text-lg px-4"
                 />
-                {!isRegister && (
-                  <div className="text-right mt-2">
-                    <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
-                      Forgot Password?
-                    </Link>
-                  </div>
-                )}
               </div>
+              {isRegister && (
+                <div>
+                  <Label htmlFor="confirm-password" className="font-bold">Confirm Password</Label>
+                  <Input
+                    type="password"
+                    id="confirm-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    required
+                    className="mt-2 h-12 rounded-full text-lg px-4"
+                  />
+                </div>
+              )}
+              {!isRegister && (
+                <div className="text-right mt-2">
+                  <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                    Forgot Password?
+                  </Link>
+                </div>
+              )}
               <Button
                 type="submit"
                 className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700"
