@@ -27,6 +27,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +97,7 @@ public class BookmarkIT {
         UserPost p = new UserPost();
         p.setContent(content);
         p.setUser(user);
-        p.setCreatedAt(LocalDateTime.now());
+        p.setCreatedAt(Instant.now());
         return postRepo.save(p);
     }
 

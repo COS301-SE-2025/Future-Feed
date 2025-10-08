@@ -6,6 +6,7 @@ import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.BotPostRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -89,9 +90,8 @@ public class PostViewMapper {
         dto.setId(post.getId());
         dto.setContent(post.getContent());
         dto.setImageUrl(post.getImageUrl());
-        dto.setCreatedAt(post.getCreatedAt() != null
-                ? post.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                : null);
+        Instant created = post.getCreatedAt(); 
+        dto.setCreatedAt(created != null ? DateTimeFormatter.ISO_INSTANT.format(created) : null);
         return dto;
     }
 

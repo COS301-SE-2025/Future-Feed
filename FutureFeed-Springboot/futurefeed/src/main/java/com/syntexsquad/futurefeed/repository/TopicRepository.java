@@ -1,4 +1,5 @@
 package com.syntexsquad.futurefeed.repository;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +26,7 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
         GROUP BY t.id
         ORDER BY COUNT(p.id) DESC
     """)
-    List<Topic> findTrendingTopics(@Param("since") LocalDateTime since, Pageable pageable);
+    List<Topic> findTrendingTopics(@Param("since") Instant since, Pageable pageable);
 
     @Query("""
         SELECT p
