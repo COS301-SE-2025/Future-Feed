@@ -145,7 +145,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className={`relative z-10 flex w-full lg:w-1/2 items-center justify-center p-8 transition-transform duration-500 ${isRegister ? "translate-x-0" : "translate-x-full"}`}>
-        <Card className="w-full max-w-md rounded-xl shadow-lg border-0">
+        <Card className="w-full max-w-md rounded-xl shadow-lg border-0 bg-white">
           <CardHeader>
             <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
           </CardHeader>
