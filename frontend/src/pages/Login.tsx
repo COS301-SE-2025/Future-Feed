@@ -17,6 +17,19 @@ const Login: React.FC = () => {
   const [profilePicture, setProfilePicture] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === "string") {
+          setProfilePicture(reader.result); // Store Base64 string
+        }
+      };
+      reader.readAsDataURL(file); // Convert file to Base64
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -31,7 +44,7 @@ const Login: React.FC = () => {
         password,
         email,
         displayName,
-        profilePicture,
+        profilePicture, // Base64 string
         dateOfBirth,
       };
 
@@ -47,7 +60,6 @@ const Login: React.FC = () => {
 
         if (res.ok) {
           console.log("Registration successful");
-          // Optionally toggle to login or navigate
           setIsRegister(false);
         } else {
           console.error("Registration failed");
@@ -72,8 +84,7 @@ const Login: React.FC = () => {
 
         if (res.ok) {
           console.log("Login successful");
-          // Optionally navigate to dashboard or home
-          navigate("/home"); // Adjust route as needed
+          navigate("/home");
         } else {
           console.error("Login failed");
         }
@@ -205,11 +216,10 @@ const Login: React.FC = () => {
                   <div>
                     <Label htmlFor="profilePic" className="font-bold">Profile Picture</Label>
                     <Input
-                      type="text"
+                      type="file"
                       id="profilePic"
-                      value={profilePicture}
-                      onChange={(e) => setProfilePicture(e.target.value)}
-                      placeholder="Enter profile picture URL"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
                       className="mt-2 h-12 rounded-full text-lg px-4"
                     />
                   </div>
