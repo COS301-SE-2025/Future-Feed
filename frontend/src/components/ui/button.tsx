@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          " shadow-lg hover:bg-blue-300   shadow-blue-300  text-white bg-blue-500 border-rose-gold-accent-border shadow-lg  future-feed:bg-lime  future-feed:text-black dark:hover:text-slate-200 dark:hover:border-slate-200 border  dark:hover:bg-indigo-950  dark:bg-slate-200 dark:text-black  shadow-xs future-feed:border-black ",
+          " shadow-lg    shadow-blue-300  text-white bg-blue-500 border-rose-gold-accent-border shadow-lg  future-feed:bg-lime  future-feed:text-black dark:hover:text-slate-200 dark:hover:border-slate-200 border  dark:hover:bg-indigo-950  dark:bg-slate-200 dark:text-black  shadow-xs future-feed:border-black ",
         destructive:
           "bg-destructive text-white shadow-xs hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "future-feed:border-black  future-feed:bg-lime future-feed:hover:bg-black future-feed:hover:text-lime  future-feed:text-black border  shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "future-feed:border-lime border border-rose-gold-accent-border future-feed:bg-black future-feed:text-white dark:hover:bg-slate-200 dark:hover:text-black dark:bg-indigo-950 dark:text-slate-200 dark:border-slate-200 border bg-secondary text-blue-500 shadow-xs hover:bg-secondary/80",
+          "drop-shadow-xl future-feed:border-lime border border-rose-gold-accent-border future-feed:bg-black future-feed:text-white dark:hover:bg-slate-200 dark:hover:text-black dark:bg-indigo-950 dark:text-slate-200 dark:border-slate-200 border bg-secondary text-black shadow-xs hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

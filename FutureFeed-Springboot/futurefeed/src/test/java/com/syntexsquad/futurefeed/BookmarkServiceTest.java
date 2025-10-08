@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,7 +23,7 @@ public class BookmarkServiceTest {
     private AppUserRepository userRepo;
     private PostRepository postRepo;
     private BookmarkService bookmarkService;
-    private NotificationService notificationService; // NEW
+    private NotificationService notificationService;
 
     private final Integer userId = 1;
     private final Integer postId = 10;
@@ -35,8 +35,7 @@ public class BookmarkServiceTest {
         bookmarkRepo = mock(BookmarkRepository.class);
         userRepo = mock(AppUserRepository.class);
         postRepo = mock(PostRepository.class);
-        notificationService = mock(NotificationService.class); // NEW
-
+        notificationService = mock(NotificationService.class);
 
         bookmarkService = new BookmarkService(bookmarkRepo, userRepo, postRepo, notificationService);
 
@@ -47,13 +46,12 @@ public class BookmarkServiceTest {
         testPost = new UserPost();
         testPost.setId(postId);
         testPost.setContent("Test content");
-        testPost.setCreatedAt(LocalDateTime.now());
+        testPost.setCreatedAt(Instant.now()); // <-- Instant
 
         when(userRepo.findById(userId)).thenReturn(Optional.of(testUser));
         when(postRepo.findById(postId)).thenReturn(Optional.of(testPost));
     }
 
-    // ===== ADD BOOKMARK =====
     @Test
     void testAddBookmark_savesNewBookmark() {
         when(bookmarkRepo.findByUserAndPost(testUser, testPost)).thenReturn(Optional.empty());
@@ -91,7 +89,6 @@ public class BookmarkServiceTest {
         assertThrows(RuntimeException.class, () -> bookmarkService.addBookmark(userId, postId));
     }
 
-    // ===== REMOVE BOOKMARK =====
     @Test
     void testRemoveBookmark_deletesExisting() {
         Bookmark existing = new Bookmark(testUser, testPost);
@@ -123,7 +120,6 @@ public class BookmarkServiceTest {
         assertThrows(RuntimeException.class, () -> bookmarkService.removeBookmark(userId, postId));
     }
 
-    // ===== GET USER BOOKMARKS =====
     @Test
     void testGetUserBookmarks_returnsList() {
         List<Bookmark> bookmarks = List.of(new Bookmark(testUser, testPost));
@@ -140,7 +136,6 @@ public class BookmarkServiceTest {
         assertThrows(RuntimeException.class, () -> bookmarkService.getUserBookmarks(userId));
     }
 
-    // ===== GET USER BOOKMARK DTOS =====
     @Test
     void testGetUserBookmarkDtos_mapsCorrectly() {
         Bookmark bookmark = new Bookmark(testUser, testPost);
@@ -153,7 +148,7 @@ public class BookmarkServiceTest {
         assertEquals(postId, dto.getPostId());
         assertEquals(testPost.getContent(), dto.getContent());
         assertEquals("USER_POST", dto.getType());
-        assertEquals(testPost.getCreatedAt(), dto.getCreatedAt());
+        assertEquals(testPost.getCreatedAt(), dto.getCreatedAt()); // Instant
     }
 
     @Test
@@ -162,7 +157,6 @@ public class BookmarkServiceTest {
         assertThrows(RuntimeException.class, () -> bookmarkService.getUserBookmarkDtos(userId));
     }
 
-    // ===== IS BOOKMARKED =====
     @Test
     void testIsBookmarked_true() {
         when(bookmarkRepo.findByUserAndPost(testUser, testPost))

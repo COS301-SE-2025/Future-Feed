@@ -1,67 +1,56 @@
 package com.syntexsquad.futurefeed.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class RegisterRequest {
     private String username;
-    private String email;
     private String password;
+    private String email;
     private String displayName;
     private String profilePicture;
-    private LocalDate dateOfBirth;
-    private String dob;
+    private LocalDate dateOfBirth; 
 
-    // Getters and setters
-    public String getUsername() {
-        return username;
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = trimOrNull(username); }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = trimOrNull(email); }
+
+    public String getDisplayName() { return displayName; }
+    public void setDisplayName(String displayName) { this.displayName = displayName; }
+
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
+
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public void setDateOfBirth(LocalDate dateOfBirth) { this.dateOfBirth = dateOfBirth; }
+
+    public void setDateOfBirth(String dob) {
+        this.dateOfBirth = parseIsoDateOrNull(dob);
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setDob(String dob) {
+        this.dateOfBirth = parseIsoDateOrNull(dob);
     }
 
-    public String getEmail() {
-        return email;
-    }
-    public String getDob() {
-        return dob;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
+    private static LocalDate parseIsoDateOrNull(String s) {
+        if (s == null) return null;
+        s = s.trim();
+        if (s.isEmpty()) return null;
+        try {
+            return LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE); 
+        } catch (Exception ignore) {
+            return null; 
+        }
     }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getDisplayName() {
-        return displayName;
-    }
-
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
-    }
-
-    public String getProfilePicture() {
-        return profilePicture;
-    }
-
-    public void setProfilePicture(String profilePicture) {
-        this.profilePicture = profilePicture;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
+    private static String trimOrNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
     }
 }

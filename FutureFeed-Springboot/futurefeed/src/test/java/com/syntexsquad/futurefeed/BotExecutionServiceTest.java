@@ -12,10 +12,15 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 import org.springframework.http.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class BotExecutionServiceTest {
@@ -53,7 +58,7 @@ public class BotExecutionServiceTest {
 
         Post savedPost = new BotPost();
         savedPost.setId(100);
-        savedPost.setCreatedAt(LocalDateTime.now());
+        savedPost.setCreatedAt(Instant.now());
         when(postRepository.save(any(Post.class))).thenReturn(savedPost);
         when(botPostService.linkBotToPost(1, 100)).thenReturn(null);
 
@@ -172,7 +177,7 @@ public class BotExecutionServiceTest {
 
             Post savedPost = new BotPost();
             savedPost.setId(101);
-            savedPost.setCreatedAt(LocalDateTime.now());
+            savedPost.setCreatedAt(Instant.now());
             when(postRepository.save(any(Post.class))).thenReturn(savedPost);
             when(botPostService.linkBotToPost(1, 101)).thenReturn(null);
 

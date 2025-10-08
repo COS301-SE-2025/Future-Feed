@@ -3,15 +3,13 @@ package com.syntexsquad.futurefeed.service;
 import com.syntexsquad.futurefeed.dto.RegisterRequest;
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Map;
-import java.util.Optional;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class AppUserService {
@@ -38,9 +36,11 @@ public class AppUserService {
         if (request.getDateOfBirth() == null || request.getDateOfBirth().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Date of birth cannot be in the future.");
         }
-
         if (userRepo.findByUsername(request.getUsername()).isPresent()) {
             throw new IllegalArgumentException("Username already taken.");
+        }
+        if (userRepo.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already registered.");
         }
 
         AppUser user = new AppUser();
@@ -51,6 +51,7 @@ public class AppUserService {
         user.setProfilePicture(request.getProfilePicture());
         user.setDateOfBirth(request.getDateOfBirth());
         user.setRole("USER");
+        user.setAuthProvider(AppUser.AuthProvider.LOCAL);
 
         userRepo.save(user);
     }
@@ -100,12 +101,13 @@ public class AppUserService {
         return userRepo.findByEmail(email).orElseGet(() -> {
             AppUser newUser = new AppUser();
             newUser.setEmail(email);
-            newUser.setUsername(generateUsernameFromEmail(email));
+            newUser.setUsername(uniqueUsernameFromEmail(email));
             newUser.setDisplayName((String) attributes.getOrDefault("name", "User"));
             newUser.setProfilePicture((String) attributes.getOrDefault("picture", null));
-            newUser.setDateOfBirth(LocalDate.of(2000, 1, 1)); // Default if unknown
-            newUser.setPassword(""); // Not used in OAuth
+            newUser.setDateOfBirth(LocalDate.of(2000, 1, 1));
+            newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
             newUser.setRole("USER");
+            newUser.setAuthProvider(AppUser.AuthProvider.GOOGLE);
             return userRepo.save(newUser);
         });
     }
@@ -120,8 +122,15 @@ public class AppUserService {
         return userRepo.findByUsernameContainingIgnoreCaseOrDisplayNameContainingIgnoreCase(keyword, keyword);
     }
 
-    private String generateUsernameFromEmail(String email) {
-        return email.split("@")[0] + "_" + System.currentTimeMillis(); // ensures uniqueness
+    private String uniqueUsernameFromEmail(String email) {
+        String base = email.substring(0, email.indexOf('@'))
+                .replaceAll("[^a-zA-Z0-9._-]", "_");
+        String candidate = base;
+        int i = 1;
+        while (userRepo.existsByUsername(candidate)) {
+            candidate = base + "_" + i++;
+        }
+        return candidate;
     }
 
     @Cacheable(value = "userById", key = "#id")

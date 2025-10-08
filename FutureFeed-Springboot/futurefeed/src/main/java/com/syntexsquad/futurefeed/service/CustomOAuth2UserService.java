@@ -2,98 +2,69 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import com.syntexsquad.futurefeed.util.UsernameGenerator;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.userinfo.*;
+import org.springframework.security.oauth2.core.*;
+import org.springframework.security.oauth2.core.user.*;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
-public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
-    private final AppUserRepository userRepository;
+    private final AppUserRepository repo;
+    private final PasswordEncoder encoder;
 
-    @Autowired
-    private UsernameGenerator usernameGenerator;
-
-    public CustomOAuth2UserService(AppUserRepository userRepository) {
-        this.userRepository = userRepository;
+    public CustomOAuth2UserService(AppUserRepository repo, PasswordEncoder encoder) {
+        this.repo = repo;
+        this.encoder = encoder;
     }
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate = new DefaultOAuth2UserService();
-        OAuth2User oAuth2User = delegate.loadUser(userRequest);
+    public OAuth2User loadUser(OAuth2UserRequest req) throws OAuth2AuthenticationException {
+        OAuth2User o = super.loadUser(req);
 
-        // DEBUG: Log user attributes from Google
-        System.out.println("OAuth2 user attributes:");
-        oAuth2User.getAttributes().forEach((key, value) ->
-            System.out.println(" - " + key + ": " + value)
-        );
-
-        // DEBUG: Access current request and session
-        ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs != null) {
-            HttpServletRequest request = attrs.getRequest();
-            HttpSession session = request.getSession(false);
-
-            if (session != null) {
-                System.out.println("Session ID: " + session.getId());
-                System.out.println("Session attributes:");
-                Enumeration<String> names = session.getAttributeNames();
-                while (names.hasMoreElements()) {
-                    String name = names.nextElement();
-                    Object value = session.getAttribute(name);
-                    System.out.println(" - " + name + ": " + value);
-                }
-            } else {
-                System.out.println("No session found!");
-            }
-        } else {
-            System.out.println("No request attributes found!");
+        String email = (String) o.getAttributes().get("email");
+        if (email == null || email.isBlank()) {
+            throw new OAuth2AuthenticationException(new OAuth2Error("invalid_user"), "Email not provided by provider");
         }
+        String name  = (String) o.getAttributes().getOrDefault("name", "User");
+        String pic   = (String) o.getAttributes().get("picture");
 
-        // Load user info
-        String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
-        String picture = oAuth2User.getAttribute("picture");
-        String uniqueUsername = usernameGenerator.generateUniqueUsername(name);
+        AppUser user = repo.findByEmail(email).orElseGet(() -> {
+            AppUser nu = new AppUser();
+            nu.setEmail(email);
+            nu.setUsername(uniqueUsernameFromEmail(email));
+            nu.setDisplayName(name);
+            nu.setProfilePicture(pic);
+            nu.setDateOfBirth(LocalDate.of(2000, 1, 1));
+            nu.setPassword(encoder.encode(UUID.randomUUID().toString()));
+            nu.setRole("USER");
+            nu.setAuthProvider(AppUser.AuthProvider.GOOGLE);
+            return repo.save(nu);
+        });
 
-        if (email == null) {
-            throw new OAuth2AuthenticationException("Email not present in Google response.");
-        }
-
-        AppUser user = userRepository.findByEmail(email)
-                .orElseGet(() -> {
-                    AppUser newUser = new AppUser();
-                    newUser.setUsername(uniqueUsername);
-                    newUser.setEmail(email);
-                    newUser.setPassword(UUID.randomUUID().toString());
-                    newUser.setDisplayName(name);
-                    newUser.setProfilePicture(picture);
-                    newUser.setAuthProvider(AppUser.AuthProvider.GOOGLE);
-                    return userRepository.save(newUser);
-                });
+        Map<String, Object> attrs = new HashMap<>(o.getAttributes());
+        attrs.put("id", user.getId());
 
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
-                oAuth2User.getAttributes(),
-                "sub" // You can switch to "email" if needed
+            List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
+            attrs,
+            "email"
         );
+    }
+
+    private String uniqueUsernameFromEmail(String email) {
+        String base = email.substring(0, email.indexOf('@'))
+                .replaceAll("[^a-zA-Z0-9._-]", "_");
+        String candidate = base;
+        int i = 1;
+        while (repo.existsByUsername(candidate)) {
+            candidate = base + "_" + i++;
+        }
+        return candidate;
     }
 }

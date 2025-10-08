@@ -12,6 +12,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class BotExecutionService {
             post.setContent(output);
             post.setBot(bot);
             post.setUser(bot.getOwner());
-            post.setCreatedAt(LocalDateTime.now());
+            post.setCreatedAt(Instant.now());
 
             Post savedPost = postRepository.save(post);
 

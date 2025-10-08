@@ -1,146 +1,269 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import lightLogo from "../assets/Future feed transparent-Photoroom.png";
-import darkLogo from "../assets/Dark mode.png";
-import futurefeedLogo from "../assets/Future Feed Main Dark v1.png";
-import googleLogo from "../assets/Google transparent.png";
-import { ThemeProvider } from "@/components/theme-provider";
-
-interface FormData {
-  username: string;
-  password: string;
-}
+import futurefeedLogo from "../assets/white logo.png";
 
 const Login: React.FC = () => {
-  const [formData, setFormData] = useState<FormData>({
-    username: "",
-    password: "",
-  });
+  const navigate = useNavigate();
+  const [isRegister, setIsRegister] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData({ ...formData, [id]: value });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (isRegister) {
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      const body = {
+        username,
+        password,
+        email,
+        displayName,
+        profilePicture,
+        dateOfBirth,
+      };
+
+      try {
+        const res = await fetch("http://localhost:8080/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(body),
+        });
+
+        if (res.ok) {
+          console.log("Registration successful");
+          // Optionally toggle to login or navigate
+          setIsRegister(false);
+        } else {
+          console.error("Registration failed");
+        }
+      } catch (err) {
+        console.error("Error during registration:", err);
+      }
+    } else {
+      const params = new URLSearchParams();
+      params.append("username", username);
+      params.append("password", password);
+
+      try {
+        const res = await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          credentials: "include",
+          body: params.toString(),
+        });
+
+        if (res.ok) {
+          console.log("Login successful");
+          // Optionally navigate to dashboard or home
+          navigate("/home"); // Adjust route as needed
+        } else {
+          console.error("Login failed");
+        }
+      } catch (err) {
+        console.error("Error during login:", err);
+      }
+    }
+  };
+
+  const handleToggle = () => {
+    setIsRegister(!isRegister);
   };
 
   return (
-    <div className="future-feed:bg-black flex min-h-screen flex-col items-center bg-gray-200 font-['Cambay',Arial,sans-serif] dark:bg-blue-950 dark:text-slate-200">
-      <ThemeProvider>
-          
-      
-      <div className=" flex justify-center">
-      {/* Light mode logo */}
-      <img
-        src={lightLogo}
-        alt="Future Feed Logo - Light"
-        className="h-[311px] w-[311px] dark:hidden"
-      />
-      {/* Dark mode logo */}
-      <img
-        src={darkLogo}
-        alt="Future Feed Logo - Dark"
-        className="hidden h-[311px] w-[311px] dark:block"
-      />
-      {/* Future Feed mode logo */}
-      <img
-        src={futurefeedLogo}
-        alt="Future Feed Logo - Future Feed"
-        className="h-[311px] w-[311px] dark:block dark:hidden hidden"
-      />
-    </div>
-
-<Card className="mb-8 mt-5 w-full max-w-[828px] rounded-[20px] border-2 border-rose-gold-accent-border bg-white px-4 sm:px-10 py-6 sm:py-8 shadow-[2px_2px_20px_#000000] outline">
-  <CardHeader>
-    <CardTitle className="text-center future-feed:text-lime text-3xl sm:text-[40px]">Login</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <form className="px-2 sm:px-12">
-      {/* Google Login Button - Improved for mobile */}
-      <Button
-        type="button"
-        onClick={() => {
-          //console.log(import.meta.env.VITE_API_URL);
-          window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
-        }}
-        className="text-black mb-6 flex h-14 sm:h-[50px] w-full items-center justify-center rounded-2xl sm:rounded-[25px] border border-black bg-white p-4 sm:p-5 text-lg sm:text-[20px] font-bold shadow-[2px_2px_4px_#888] cursor-pointer  transition-colors"
-      >
-        <span className="whitespace-nowrap">Continue with:</span>
-        <img src={googleLogo} alt="Google Login" className="ml-4 sm:ml-8 h-8 sm:h-[37px] w-16 sm:w-[80px]" />
-      </Button>
-
-      <div className="mb-6">
-        <div className="relative my-4 sm:my-[15px] flex items-center justify-center text-center">
-          <div className="mr-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
-          <span className="text-[0.9rem] font-bold">
-            <Label htmlFor="username" className="mb-2 block future-feed:text-lime text-left text-xl sm:text-[24px] font-bold">
-              Username
-            </Label>
-          </span>
-          <div className="ml-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
+    <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex overflow-hidden transition-all duration-500">
+      <div className={`absolute inset-0 transition-transform duration-500 ${!isRegister ? "translate-x-full" : ""}`}>
+        <div
+          className="absolute inset-0 bg-[#0a1d34]"
+          style={{
+            clipPath: "polygon(50% 0, 100% 0, 100% 100%, 65% 100%)",
+          }}
+        ></div>
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#0a1d34] via-[#102c4c] to-[#0a1d34] opacity-90"
+          style={{
+            clipPath: "polygon(50% 0, 100% 0, 100% 100%, 65% 100%)",
+          }}
+        ></div>
+        <div className="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 flex justify-center">
+          <img
+            src={futurefeedLogo}
+            alt="Future Feed Logo"
+            className="h-[400px] w-auto"
+          />
         </div>
-        
-        <Input
-          type="text"
-          id="username"
-          placeholder="Enter your username"
-          required
-          value={formData.username}
-          onChange={handleChange}
-          className="h-14 sm:h-[50px] rounded-2xl sm:rounded-[25px] border border-black bg-[#e0e0e0] p-4 sm:p-5 dark:text-slate-200 dark:placeholder:text-slate-100 text-base sm:text-lg"
-        />
       </div>
-      
-      <div className="mb-6">
-        <div className="relative my-4 sm:my-[15px] flex items-center justify-center text-center">
-          <div className="mr-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
-          <span className="text-[0.9rem] font-bold">
-            <Label htmlFor="password" className="mb-2 block future-feed:text-lime text-left text-xl sm:text-[24px] font-bold">
-              Password
-            </Label>
-          </span>
-          <div className="ml-2.5 h-px w-1/3 bg-blue-500 future-feed:bg-lime dark:bg-slate-200"></div>
+
+      <div className={`absolute inset-0 transition-transform duration-500 ${isRegister ? "translate-x-full" : ""}`}>
+        <div
+          className="absolute inset-0 bg-[#0a1d34]"
+          style={{
+            clipPath: "polygon(0 0, 50% 0, 35% 100%, 0% 100%)",
+          }}
+        ></div>
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-[#0a1d34] via-[#102c4c] to-[#0a1d34] opacity-90"
+          style={{
+            clipPath: "polygon(0 0, 50% 0, 35% 100%, 0% 100%)",
+          }}
+        ></div>
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 -translate-x-1/2 flex justify-center">
+          <img
+            src={futurefeedLogo}
+            alt="Future Feed Logo"
+            className="h-[400px] w-auto"
+          />
         </div>
-        
-        <Input
-          type="password"
-          id="password"
-          placeholder="Enter your password"
-          required
-          value={formData.password}
-          onChange={handleChange}
-          className="h-14 sm:h-[50px] rounded-2xl sm:rounded-[25px] border border-black bg-[#e0e0e0] p-4 sm:p-5 dark:text-slate-200 dark:placeholder:text-slate-100 text-base sm:text-lg"
-        />
       </div>
-      
-      <div className="mb-4 text-right">
-        <Link to="/forgotpassword" className="future-feed:text-white text-sm sm:text-[15px] font-bold text-black no-underline hover:underline dark:text-slate-200">
-          Forgot password?
-        </Link>
+
+      <div className={`relative z-10 flex w-full lg:w-1/2 items-center justify-center p-8 transition-transform duration-500 ${isRegister ? "translate-x-0" : "translate-x-full"}`}>
+        <Card className="w-full max-w-md rounded-xl shadow-lg border-0">
+          <CardHeader>
+            <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-7">
+              {!isRegister && (
+                <Button
+                  type="button"
+                  className="w-full py-3 text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
+                >
+                  <img
+                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                    alt="Google Logo"
+                    className="mr-2 h-6 w-6"
+                  />
+                  Continue with Google
+                </Button>
+              )}
+              <div>
+                <Label htmlFor="username" className="font-bold">Username</Label>
+                <Input
+                  type="text"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Enter your username"
+                  required
+                  className="mt-2 h-12 rounded-full text-lg px-4"
+                />
+              </div>
+              {isRegister && (
+                <>
+                  <div>
+                    <Label htmlFor="display-name" className="font-bold">Display Name</Label>
+                    <Input
+                      type="text"
+                      id="display-name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Enter your display name"
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email" className="font-bold">Email</Label>
+                    <Input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dob" className="font-bold">Date of Birth</Label>
+                    <Input
+                      type="date"
+                      id="dob"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      required
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="profilePic" className="font-bold">Profile Picture</Label>
+                    <Input
+                      type="text"
+                      id="profilePic"
+                      value={profilePicture}
+                      onChange={(e) => setProfilePicture(e.target.value)}
+                      placeholder="Enter profile picture URL"
+                      className="mt-2 h-12 rounded-full text-lg px-4"
+                    />
+                  </div>
+                </>
+              )}
+              <div>
+                <Label htmlFor="password" className="font-bold">Password</Label>
+                <Input
+                  type="password"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  required
+                  className="mt-2 h-12 rounded-full text-lg px-4"
+                />
+              </div>
+              {isRegister && (
+                <div>
+                  <Label htmlFor="confirm-password" className="font-bold">Confirm Password</Label>
+                  <Input
+                    type="password"
+                    id="confirm-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter your password"
+                    required
+                    className="mt-2 h-12 rounded-full text-lg px-4"
+                  />
+                </div>
+              )}
+              {!isRegister && (
+                <div className="text-right mt-2">
+                  <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                    Forgot Password?
+                  </Link>
+                </div>
+              )}
+              <Button
+                type="submit"
+                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700"
+              >
+                {isRegister ? "Register" : "Login"}
+              </Button>
+              <p className="text-center text-sm mt-4">
+                {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
+                <Link to="#" onClick={handleToggle} className="text-blue-600 hover:underline">
+                  {isRegister ? "Login" : "Register"}
+                </Link>
+              </p>
+            </form>
+          </CardContent>
+        </Card>
       </div>
-      
-      <div className="flex flex-col items-center justify-center py-4 sm:py-6">
-        {/* Login Button - Improved for mobile */}
-        <Button
-          type="submit"
-          className="mb-6 h-16 sm:h-[67px] w-40 sm:w-[186px] rounded-2xl sm:rounded-[25px] border border-black bg-white text-xl sm:text-[24px] font-bold text-black shadow-[2px_2px_4px_#888] hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-blue-500 hover:border-2 cursor-pointer transition-all"
-        >
-          Login
-        </Button>
-        
-        <span className="text-center future-feed:text-lime text-sm sm:text-[16px]">
-          Don't have an account?{" "}
-          <Link to="/register" className="future-feed:text-white no-underline hover:underline text-blue-500">
-            Register here
-          </Link>
-        </span>
-      </div>
-    </form>
-  </CardContent>
-</Card>
-      </ThemeProvider>
     </div>
   );
 };

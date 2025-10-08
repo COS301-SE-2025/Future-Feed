@@ -171,8 +171,8 @@ const HomePage = () => {
   const [defaultPresetId, setDefaultPresetId] = useState<number | null>(null);
   const [useAIGeneration, setUseAIGeneration] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
-  const [imageWidth, setImageWidth] = useState(768);
-  const [imageHeight, setImageHeight] = useState(768);
+  const [imageWidth, setImageWidth] = useState(384);
+  const [imageHeight, setImageHeight] = useState(384);
   const [imageSteps, setImageSteps] = useState(8);
   const [imageModel, setImageModel] = useState("black-forest-labs/FLUX.1-schnell");
   const [userSearchQuery, setUserSearchQuery] = useState("");
@@ -2498,8 +2498,8 @@ const HomePage = () => {
                 setImageFile(null);
                 setUseAIGeneration(false);
                 setImagePrompt("");
-                setImageWidth(768);
-                setImageHeight(768);
+                setImageWidth(384);
+                setImageHeight(384);
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"
