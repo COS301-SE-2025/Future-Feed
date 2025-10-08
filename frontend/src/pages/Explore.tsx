@@ -450,7 +450,7 @@ const isHydrated = useStoreHydration();
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border border dark:border-slate-200  rounded-2xl">
+        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border border dark:border-slate-200  ">
           <CardContent className="flex border border gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -465,7 +465,7 @@ const isHydrated = useStoreHydration();
     }
 
     return (
-      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border dark:bg-indigo-950 dark:text-white dark:border-slate-200  rounded-2xl">
+      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border dark:bg-indigo-950 dark:text-white dark:border-slate-200  ">
         <CardContent className="flex gap-3 items-start p-4">
           <Avatar 
             className="w-14 h-14 border-4 border-slate-300 hover:cursor-pointer"
@@ -508,7 +508,7 @@ const isHydrated = useStoreHydration();
 
   const renderSkeleton = () =>
     Array.from({ length: 4 }).map((_, idx) => (
-      <Card key={idx} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 dark:border-slate-200  rounded-2xl">
+      <Card key={idx} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 dark:border-slate-200  ">
         <CardContent className="flex gap-3 items-start p-4">
           <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -530,17 +530,17 @@ const isHydrated = useStoreHydration();
   //
 
   return (
-    <div className="flex future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
-      <aside className="  lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
+      <aside className="  lg:w-[245px] lg:ml-6    flex-shrink-0 lg:sticky  lg:top-[30px] lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 sm:p6 p-4 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
 
 
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200  z-10">
+        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
             <Link to="/settings">
               <Settings size={20} className="dark:text-slate-200" />
@@ -565,7 +565,7 @@ const isHydrated = useStoreHydration();
               <TabsTrigger
                 key={tab}
                 value={tab}
-                className="flex-1 rounded-2xl  capitalize  "
+                className="flex-1   capitalize  "
               >
                 {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
               </TabsTrigger>
@@ -604,14 +604,14 @@ const isHydrated = useStoreHydration();
           </TabsContent>
         </Tabs>
 
-        <div className="w-full  px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full  px-4 mt-7 py-2  space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+      <aside className="w-full lg:w-[350px]    lg:top-[30px] lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            
           </div>
