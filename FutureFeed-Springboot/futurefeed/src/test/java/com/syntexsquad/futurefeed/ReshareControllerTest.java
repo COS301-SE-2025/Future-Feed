@@ -6,26 +6,55 @@ import com.syntexsquad.futurefeed.dto.ReshareRequest;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.service.CustomOAuth2UserService;
 import com.syntexsquad.futurefeed.service.ReshareService;
-import com.syntexsquad.futurefeed.config.SecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = ReshareController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = true) 
+@Import(ReshareControllerTest.TestSecurity.class) 
 public class ReshareControllerTest {
+
+    @TestConfiguration
+    static class TestSecurity {
+        @Bean
+        SecurityFilterChain testFilterChain(HttpSecurity http) throws Exception {
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/reshares/**").authenticated()
+                    .anyRequest().permitAll()
+                )
+                .formLogin(Customizer.withDefaults()); 
+            return http.build();
+        }
+
+        @Bean
+        UserDetailsService userDetailsService() {
+            UserDetails user = User.withUsername("user").password("{noop}password").roles("USER").build();
+            return new InMemoryUserDetailsManager(user);
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -34,7 +63,7 @@ public class ReshareControllerTest {
     private ReshareService reshareService;
 
     @MockBean
-    private CustomOAuth2UserService customOAuth2UserService;  // Required by SecurityConfig
+    private CustomOAuth2UserService customOAuth2UserService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -92,10 +121,10 @@ public class ReshareControllerTest {
     @WithMockUser
     public void myReshares_ShouldReturnListOfReshares() throws Exception {
         List<Reshare> reshares = new ArrayList<>();
-        Reshare reshare = new Reshare();
-        reshare.setUserId(1);
-        reshare.setPostId(10);
-        reshares.add(reshare);
+        Reshare r = new Reshare();
+        r.setUserId(1);
+        r.setPostId(10);
+        reshares.add(r);
 
         when(reshareService.getResharesByUser()).thenReturn(reshares);
 
@@ -114,6 +143,6 @@ public class ReshareControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isFound()) 
-            .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("http")));
+            .andExpect(header().string("Location", org.hamcrest.Matchers.startsWith("http://localhost/login")));
     }
 }

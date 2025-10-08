@@ -2,7 +2,6 @@ package com.syntexsquad.futurefeed;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntexsquad.futurefeed.Controller.FollowController;
-import com.syntexsquad.futurefeed.config.SecurityConfig;
 import com.syntexsquad.futurefeed.dto.FollowRequest;
 import com.syntexsquad.futurefeed.dto.FollowStatusResponse;
 import com.syntexsquad.futurefeed.model.Follower;
@@ -10,11 +9,19 @@ import com.syntexsquad.futurefeed.service.CustomOAuth2UserService;
 import com.syntexsquad.futurefeed.service.FollowService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.*;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
@@ -25,8 +32,30 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = FollowController.class)
-@Import(SecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = true) 
+@Import(FollowControllerTest.TestSecurity.class) 
 public class FollowControllerTest {
+
+    @TestConfiguration
+    static class TestSecurity {
+        @Bean
+        SecurityFilterChain testFilterChain(HttpSecurity http) throws Exception {
+            http
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/follow/**").authenticated()
+                    .anyRequest().permitAll()
+                )
+                .formLogin(Customizer.withDefaults()); 
+            return http.build();
+        }
+
+        @Bean
+        UserDetailsService userDetailsService() {
+            UserDetails user = User.withUsername("user").password("{noop}password").roles("USER").build();
+            return new InMemoryUserDetailsManager(user);
+        }
+    }
 
     @Autowired
     private MockMvc mockMvc;
@@ -140,7 +169,7 @@ public class FollowControllerTest {
         mockMvc.perform(post("/api/follow")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-            .andExpect(status().isFound()) // 302
-            .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("http")));
+            .andExpect(status().isFound()) 
+            .andExpect(header().string("Location", org.hamcrest.Matchers.startsWith("http://localhost/login")));
     }
 }

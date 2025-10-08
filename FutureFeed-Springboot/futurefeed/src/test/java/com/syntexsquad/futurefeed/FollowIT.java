@@ -40,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-//@Transactional
 public class FollowIT {
 
     @Autowired private MockMvc mockMvc;
