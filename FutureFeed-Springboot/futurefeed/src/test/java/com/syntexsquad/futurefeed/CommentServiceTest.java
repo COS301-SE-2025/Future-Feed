@@ -16,7 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -55,21 +55,23 @@ public class CommentServiceTest {
 
         UserPost userPost = new UserPost();
         userPost.setId(postId);
-        userPost.setUser(postOwner); 
+        userPost.setUser(postOwner);
 
         Comment saved = new Comment();
         saved.setId(100);
         saved.setPostId(postId);
         saved.setUserId(mockUser.getId());
         saved.setContent(content);
-        saved.setCreatedAt(LocalDateTime.now());
+        saved.setCreatedAt(Instant.now());
 
+        // Service checks, fetches and flushes
         when(postRepository.existsById(postId)).thenReturn(true);
-        when(postRepository.findById(postId)).thenReturn(Optional.of(userPost)); 
+        when(postRepository.getReferenceById(postId)).thenReturn(userPost);        // NEW
+        when(postRepository.findById(postId)).thenReturn(Optional.of(userPost));   // for notifications
         when(appUserRepository.findByEmail("user@example.com")).thenReturn(Optional.of(mockUser));
-        when(commentRepository.save(any(Comment.class))).thenReturn(saved);
+        when(commentRepository.saveAndFlush(any(Comment.class))).thenReturn(saved); // NEW (saveAndFlush)
 
-        // Mock OAuth2 security context
+        // Mock OAuth2 security context (email lookup)
         try (MockedStatic<SecurityContextHolder> mockedStatic = mockStatic(SecurityContextHolder.class)) {
             SecurityContext securityContext = mock(SecurityContext.class);
             OAuth2AuthenticationToken authToken = mock(OAuth2AuthenticationToken.class);
@@ -109,9 +111,11 @@ public class CommentServiceTest {
         comment2.setUserId(3);
         comment2.setContent("Second");
 
-        when(commentRepository.findByPostId(1)).thenReturn(Arrays.asList(comment1, comment2));
+        // Service now calls the fetch-join method
+        when(commentRepository.findByPostIdWithUser(1))
+                .thenReturn(Arrays.asList(comment1, comment2));
 
-        List<Comment> comments = commentService.getCommentsForPost(1);
+        var comments = commentService.getCommentsForPost(1);
 
         assertEquals(2, comments.size());
         assertEquals("First", comments.get(0).getContent());
@@ -120,9 +124,10 @@ public class CommentServiceTest {
 
     @Test
     void testGetCommentsForPost_shouldReturnEmptyList() {
-        when(commentRepository.findByPostId(999)).thenReturn(Collections.emptyList());
+        when(commentRepository.findByPostIdWithUser(999))
+                .thenReturn(Collections.emptyList());
 
-        List<Comment> comments = commentService.getCommentsForPost(999);
+        var comments = commentService.getCommentsForPost(999);
 
         assertNotNull(comments);
         assertTrue(comments.isEmpty());

@@ -20,7 +20,7 @@ const PersonalSidebar = () => {
 
   return (
     <>
-      <aside className="drop-shadow-xl bg-white text-black border-rose-gold-accent-border border h-fit future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-100 w-[200px] p-6  ml-4 rounded-lg border-2 shadow-md hidden lg:block">
+      <aside className="drop-shadow-xl bg-white text-black border-rose-gold-accent-border border h-fit future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-100 w-[200px] p-6 ml-4 rounded-lg border-2 shadow-md hidden lg:block mt-5">
         <div className="text-2xl text-blue-500 future-feed:text-lime font-bold mb-6 dark:text-slate-200">Future Feed</div>
         <nav className="future-feed:text-lime font-bold flex flex-col space-y-4 text-lg dark:text-slate-200">
           <Link to="/home" className="flex items-center gap-3 dark:hover:text-white">

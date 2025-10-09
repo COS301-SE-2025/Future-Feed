@@ -12,7 +12,22 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
     List<Comment> findByPost(Post post);
 
-    @Query("SELECT c FROM Comment c WHERE c.post.id = :postId")
+    // JPQL fetch-join ensures user is initialized; stable order prevents "jumping" in UI
+    @Query("""
+        SELECT c FROM Comment c
+        JOIN FETCH c.user u
+        WHERE c.post.id = :postId
+        ORDER BY c.id ASC
+    """)
+    List<Comment> findByPostIdWithUser(@Param("postId") Integer postId);
+
+    // Keep native version if something else uses it
+    @Query(value = """
+        SELECT id, content, created_at, post_id, user_id
+        FROM comments
+        WHERE post_id = :postId
+        ORDER BY id ASC
+    """, nativeQuery = true)
     List<Comment> findByPostId(@Param("postId") Integer postId);
 
     @Query("SELECT c FROM Comment c WHERE c.user.id = :userId")
@@ -20,4 +35,3 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
     boolean existsByUser_IdAndPost_Id(Integer userId, Integer postId);
 }
-
