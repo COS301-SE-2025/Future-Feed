@@ -340,7 +340,7 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -376,7 +376,7 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {bots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="   dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
