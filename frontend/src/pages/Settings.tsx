@@ -52,14 +52,12 @@ const Settings = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
-
-
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-4 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+      <main className="flex-1 p-2 overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Settings</h1>
         </div>
         {/* Command Box */}
-      <Command className=" border-rose-gold-accent-border future-feed:border-lime rounded-2xl border dark:border-slate-200  shadow-md w-full">
+      <Command className=" border-rose-gold-accent-border future-feed:border-lime rounded-2xl border dark:border-slate-200 shadow-md w-[664px]">
         <CommandInput placeholder=" Search..." />
         <CommandList >
           <CommandEmpty>No results found.</CommandEmpty>
@@ -137,7 +135,7 @@ const Settings = () => {
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky     lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-[41px] ">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
