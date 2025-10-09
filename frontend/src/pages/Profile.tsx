@@ -1481,7 +1481,7 @@ const Profile = () => {
         <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
       </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
+        <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
           <WhatsHappening />
         </div>

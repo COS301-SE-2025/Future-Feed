@@ -341,7 +341,7 @@ const Bots: React.FC = () => {
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="flex-1 p-4 lg:p-6 lg:mt-7 lg:pt-4 lg:pl-2 min-h-screen overflow-y-auto">
@@ -519,7 +519,7 @@ const Bots: React.FC = () => {
           </CardContent>
         </Card>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
            
