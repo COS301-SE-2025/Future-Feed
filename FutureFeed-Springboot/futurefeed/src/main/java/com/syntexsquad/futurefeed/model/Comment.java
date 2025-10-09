@@ -1,8 +1,8 @@
 package com.syntexsquad.futurefeed.model;
-
+import java.time.Instant; 
 import jakarta.persistence.*;
 import lombok.Data;
-
+import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -25,9 +25,10 @@ public class Comment {
     @Column(columnDefinition = "text", nullable = false)
     private String content;
 
-    @Column(name = "created_at", columnDefinition = "timestamp default CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt = LocalDateTime.now();
-
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private Instant createdAt;
+    
     @Transient
     public Integer getPostId() {
         return post != null ? post.getId() : null;
