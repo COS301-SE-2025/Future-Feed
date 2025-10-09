@@ -2470,7 +2470,7 @@ const HomePage = () => {
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block ">
+        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky  lg:top-0 lg:h-screen  hidden lg:block ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
            

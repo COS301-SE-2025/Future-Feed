@@ -289,7 +289,7 @@ const FollowerFollowing = () => {
           </TabsContent>
         </Tabs>
 
-        <div className="w-full dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
+        <div className="w-full lg:sticky  dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
