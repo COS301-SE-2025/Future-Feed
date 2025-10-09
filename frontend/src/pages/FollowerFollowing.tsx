@@ -256,12 +256,6 @@ const FollowerFollowing = () => {
             >
               Following ({followingUsers.length})
             </TabsTrigger>
-            <TabsTrigger
-              value="bots"
-              className="flex-1 rounded-2xl "
-            >
-              Bots
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="followers">
