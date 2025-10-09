@@ -1519,7 +1519,7 @@ const Profile = () => {
         <PersonalSidebar />
       </aside>
       <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
-        <Card className="mb-5 ">
+        <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
           <div className="mt-10 w-full" />
