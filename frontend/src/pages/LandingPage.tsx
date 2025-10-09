@@ -97,7 +97,7 @@ const LandingPage = () => {
                         <div className="grid flex-1 auto-rows-min gap-6 px-4">
                             <div className="grid gap-3">
                                 <Label className="hover:underline cursor-pointer" htmlFor="sheet-create">New to Future Feed?</Label>
-                                <Link to="/register"><Button variant="secondary" className="hover:bg-blue-500 hover:text-white hover:cursor-pointer w-full ">Create Account</Button></Link>
+                                <Link to="/login"><Button variant="secondary" className="hover:bg-blue-500 hover:text-white hover:cursor-pointer w-full ">Create Account</Button></Link>
                             </div>
                             <div className="grid gap-3">
                                 <Label className=":hover:underline cursor-pointer" htmlFor="sheet-login">Already a member of the Future Feed family?</Label>
