@@ -1462,7 +1462,7 @@ const Profile = () => {
         
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
-            <Skeleton className="mt-25 h-40 w-full" />
+            <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>

@@ -39,7 +39,7 @@ const RegisterPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 future-feed:bg-black dark:bg-blue-950 dark:text-slate-200">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-white future-feed:bg-black dark:bg-blue-950 dark:text-slate-200">
             
       <div className="mt-10 flex justify-center">
       {/* Light mode logo */}

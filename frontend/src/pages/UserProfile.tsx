@@ -1436,13 +1436,13 @@ const UserProfile = () => {
   if (loading) {
     return (
       <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
-        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
           <PersonalSidebar />
         </aside>
         
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
-            <Skeleton className="mt-25 h-40 w-full" />
+            <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>

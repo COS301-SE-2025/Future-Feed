@@ -593,14 +593,7 @@ const isHydrated = useStoreHydration();
                   .filter(u => followingUserIds.includes(u.id))
                   .map(renderUserCard)
               )}
-
-
-
-
-
-
             </div>
-
           </TabsContent>
         </Tabs>
 
