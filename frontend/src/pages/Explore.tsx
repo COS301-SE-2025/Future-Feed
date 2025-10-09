@@ -559,7 +559,7 @@ const isHydrated = useStoreHydration();
               loadFollowingData(currentUserId);
             }
           }}
-          className="w-full p-2 future-feed:text-lime">
+          className="w-full p-0 future-feed:text-lime">
           <TabsList className="w-full future-feed:text-lime  flex justify-around ">
             {["accounts", "accounts following"].map((tab) => (
               <TabsTrigger
@@ -610,7 +610,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px]    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

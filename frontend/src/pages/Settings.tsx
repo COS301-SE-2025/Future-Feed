@@ -18,14 +18,6 @@ import {
   CommandShortcut,
 } from "@/components/ui/command"
 
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 
 import { useNavigate } from "react-router-dom"
 //add theme in settings for mobile devices
@@ -164,7 +156,7 @@ const Settings = () => {
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px]    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky     lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

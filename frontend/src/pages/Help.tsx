@@ -1,20 +1,14 @@
-import { useNavigate } from "react-router-dom";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-//extend with accordions
+
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
-
+import PersonalSidebar from "@/components/PersonalSidebar";
+import WhoToFollow from "@/components/WhoToFollow";
+import WhatsHappening from "@/components/WhatsHappening";
 
 import LoginHelp from "../assets/loginhelp.mp4";
 import HowToLoginMobile from "../assets/howtologinmobile.mp4";
@@ -25,43 +19,26 @@ import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
 import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
 
 const Help = () => {
-  const navigate = useNavigate();
+ 
 
-  return (
-    <div className="bg-gray-200 future-feed:bg-black p-6 dark:text-slate-300 min-h-screen dark:bg-blue-950">
-      <h1 className="font-bold text-2xl future-feed:text-lime  dark:text-slate-200 dark:text-slate-200 text-right">Help Centre</h1>
+ return (
+    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
+      <aside className="  lg:w-[245px] lg:ml-6 py-5   flex-shrink-0 lg:sticky  lg:top-[50px] lg:h-screen overflow-y-auto">
+        <PersonalSidebar />
+      </aside>
 
-      <div className=" bg-white border-rose-gold-accent-border future-feed:border-lime future-feed:bg-black flex border dark:border-slate-200 rounded-2xl justify-between items-center my-3 px-4 py-3 sticky top-0 dark:bg-blue-950 ">
-        {/* Breadcrumb */}
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild onClick={() => navigate("/profile")} className="cursor-pointer">
-                <span>Profile</span>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
+      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
 
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild onClick={() => navigate("/settings")} className="cursor-pointer">
-                <span>Settings</span>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
 
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Help Center</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-
-      {/* Videos Section */}
+        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-4 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+          <h1 className="text-xl dark:text-slate-200 font-bold">Help Center</h1>
+        </div>
+        {/* Videos Section */}
       {/* split into mobile and desktop to include more videos w a cleaner UI hopefully*/ }
-      <div className="flex flex-col gap-8 mt-6 mx-auto max-w-2xl">
+      <div className="drop-shadow-xl flex flex-col gap-2 p-3 rounded-lg w-full    bg-white">
   {/* Mobile Section */}
   <h2 className="text-xl future-feed:text-lime font-bold dark:text-slate-200">Mobile Devices</h2>
-  <Accordion type="single" collapsible className="w-full">
+  <Accordion type="single" collapsible className="w-full ">
     <AccordionItem value="mobile-login">
       <AccordionTrigger>How to Log In</AccordionTrigger>
       <AccordionContent>
@@ -138,9 +115,29 @@ const Help = () => {
       </AccordionContent>
     </AccordionItem>
   </Accordion>
-</div>
+  </div>
 
+        
+
+        <div className="w-full  px-4 mt-7 py-2  space-y-6 block lg:hidden">
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
+      </main>
+
+      <aside className="w-full lg:w-[350px]    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
+            <WhatsHappening />
+           
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
+  
   );
 };
 
