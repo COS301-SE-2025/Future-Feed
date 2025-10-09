@@ -1511,7 +1511,7 @@ const UserProfile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-8">
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
       <Card className="mb-5 ">
         <CardContent className="ml-[-10px]">
           <div className="relative">
@@ -1530,7 +1530,7 @@ const UserProfile = () => {
             <div className="ml-30 mt-[-110px]">
               <h1 className="text-2xl text-black  font-bold">{user.displayName || user.username}</h1>
               <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
-              <p className="mt-4 text-xl text-slate-700">{user.bio}</p>
+              <p className="mt-4 text-xl text-black">{user.bio}</p>
             </div>
             
             <Link to="/edit-profile" className="flex items-center gap-3 hover:bg-blue-300 mr-0">
@@ -1541,7 +1541,7 @@ const UserProfile = () => {
           </div>
           <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200">{followingUsers ? followingUsers.length : 0}</span> Following ·
+              <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·

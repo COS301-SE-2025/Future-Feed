@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -14,6 +13,7 @@ import { useFollowStore } from "@/store/useFollowStore";
 import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
 import BotPost from "@/components/ui/BotPost";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface FollowRelation {
   id: number;
@@ -1500,11 +1500,13 @@ const Profile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
-        <div className="relative">
-          <div className="mt-25 dark:bg-slate-200 w-full" />
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <Card className="mb-5 ">
+          <CardContent className="ml-[-10px]">
+            <div className="relative">
+          <div className="mt-10 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3  ">
+            <Avatar className="w-20 h-20">
               <div className="flex items-center gap-3 dark:hover:text-white">
                 <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -1514,10 +1516,10 @@ const Profile = () => {
         </div>
         <div className="pt-16 px-4">
           <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl future-feed:text-white font-bold">{user.displayName || user.username}</h1>
-              <p className="dark:text-slate-500">@{user.username}</p>
-              <p className="mt-2 text-sm">{user.bio}</p>
+            <div className="ml-30 mt-[-110px]">
+              <h1 className="text-xl text-black font-bold">{user.displayName || user.username}</h1>
+              <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
+              <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
             {currentUserId && currentUserId !== user.id ? (
               followStatus[user.id] ? (
@@ -1525,7 +1527,7 @@ const Profile = () => {
                   variant="secondary"
                   onClick={() => handleUnfollow(user.id)}
                   disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-100px] min-w-[90px] px-4 py-1 rounded-full font-semibold bg-white dark:bg-slate-200 dark:hover:bg-slate-300 dark:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
+                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
                 >
                   {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
                 </Button>
@@ -1533,7 +1535,7 @@ const Profile = () => {
                 <Button
                   onClick={() => handleFollow(user.id)}
                   disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-100px] min-w-[90px] px-4 py-1 rounded-full font-semibold bg-blue-500 dark:bg-slate-200 dark:hover:bg-slate-300 dark:hover:text-black future-feed:bg-lime future-feed:text-black future-feed:hover:bg-lime-600 border-rose-gold-accent-border dark:border-slate-200 future-feed:border-lime hover:cursor-pointer transition-colors duration-200"
+                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
                 >
                   {followingId === user.id ? "Following..." : "Follow"}
                 </Button>
@@ -1547,19 +1549,20 @@ const Profile = () => {
             </Link>
             )}
           </div>
-          <div className="mt-4 flex gap-4 text-sm text-gray-400 dark:text-slate-500 future-feed:text-lime">
-              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followingUsers.length}</span> Following  ·
-              <span className="font-medium dark:text-slate-200 future-feed:text-white">{followers.length}</span> Followers  ·
-            <span className="font-medium dark:text-slate-200 future-feed:text-white">{posts.length}</span> Posts
+          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+              <span className="font-medium">{followingUsers.length}</span> Following  ·
+              <span className="font-medium">{followers.length}</span> Followers  ·
+            <span className="font-medium">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 bg-blue-500 dark:bg-slate-200 future-feed:bg-lime" />
+          </CardContent>
+        </Card>
         <Tabs
           defaultValue="posts"
-          className="w-full"
+          className="w-full p-0"
           onValueChange={(value) => handleTabChange(value, user.id, currentUserId || user.id)}
         >
-          <TabsList className="grid w-full dark:bg-blue-950 future-feed:bg-black grid-cols-5">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
             <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="posts">
               Posts
             </TabsTrigger>
@@ -1958,11 +1961,11 @@ const Profile = () => {
 </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6 sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
           <WhoToFollow />
         </div>
       </aside>
