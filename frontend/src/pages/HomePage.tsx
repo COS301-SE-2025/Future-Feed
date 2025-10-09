@@ -2387,7 +2387,6 @@ const HomePage = () => {
                                                   )}
                                                   <div>
                                                     <div className="text-sm font-medium dark:text-white">{user.displayName}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</div>
                                                   </div>
                                                 </div>
                                               ))}
