@@ -1440,7 +1440,7 @@ const UserProfile = () => {
           <PersonalSidebar />
         </aside>
         
-        <main className="w-[1100px] mx-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
             <Skeleton className="mt-25 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -1460,11 +1460,11 @@ const UserProfile = () => {
         <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
       </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
           <WhoToFollow />
         </div>
       </aside>

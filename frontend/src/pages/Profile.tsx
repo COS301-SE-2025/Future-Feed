@@ -1454,22 +1454,21 @@ const Profile = () => {
 }, [profileId]);
 
   if (isLoading) {
-  return Array.from({ length: 5 }).map((_, index) => (
-      <div className="flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+  return (
+      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
         
-        <main className="w-[1100px] mx-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
-            <Skeleton className="mt-2 h-40 w-full" />
+            <Skeleton className="mt-25 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
               <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-      <div
-        key={index}
-        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+          <div
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1481,16 +1480,16 @@ const Profile = () => {
         <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
       </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
           <WhoToFollow />
         </div>
       </aside>
       </div>
-    ));
+    );
 }
 
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
