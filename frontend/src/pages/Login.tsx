@@ -165,14 +165,17 @@ const Login: React.FC = () => {
                   onClick={() => {
                     window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
                   }}
-                  className="w-full py-3 sm:py-3 text-sm sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
+                  className="w-full lg:h-10 py-4 sm:py-3 text-base sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
-                  <span className="whitespace-nowrap mr-2">Continue with:</span>
-                  <img
+                  <span className="whitespace-nowrap mr-2 gap-3">Continue with:         
+                  
+                  </span>
+                   <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                     alt="Google Logo"
-                    className="h-5 w-5 hidden lg:inline"
+                    className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
                   />
+                  
                 </Button>
               )}
 
@@ -188,7 +191,7 @@ const Login: React.FC = () => {
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Enter your username"
                   required
-                  className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                  className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
 
@@ -206,7 +209,7 @@ const Login: React.FC = () => {
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Enter your display name"
                       required
-                      className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                      className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                     />
                   </div>
 
@@ -221,7 +224,7 @@ const Login: React.FC = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
                       required
-                      className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                      className="mt-2 h-9 sm:h-12 rounded-full text-base px-4"
                     />
                   </div>
 
@@ -235,7 +238,7 @@ const Login: React.FC = () => {
                       value={dateOfBirth}
                       onChange={(e) => setDateOfBirth(e.target.value)}
                       required
-                      className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                      className="mt-2 h-9 sm:h-12 rounded-full text-base px-4"
                     />
                   </div>
 
@@ -248,7 +251,7 @@ const Login: React.FC = () => {
                       id="profilePic"
                       accept="image/*"
                       onChange={handleProfilePictureChange}
-                      className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                      className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                     />
                   </div>
                 </>
@@ -266,7 +269,7 @@ const Login: React.FC = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   required
-                  className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                  className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
 
@@ -283,7 +286,7 @@ const Login: React.FC = () => {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter your password"
                     required
-                    className="mt-2 h-11 sm:h-12 rounded-full text-base px-4"
+                    className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                   />
                 </div>
               )}
@@ -300,7 +303,7 @@ const Login: React.FC = () => {
               {/* SUBMIT */}
               <Button
                 type="submit"
-                className="w-full py-2.5 sm:py-3 text-base sm:text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
+                className="lg:h-10 w-full py-2.5 sm:py-3 text-base sm:text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
               >
                 {isRegister ? "Register" : "Login"}
               </Button>
