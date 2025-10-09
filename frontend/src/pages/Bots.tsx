@@ -583,7 +583,7 @@ const Bots: React.FC = () => {
                 />
                 <Button
                   type="submit"
-                  className="text-white hover:bg-lime-600 cursor-pointer"
+                  className="text-white hover:bg-blue-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Create Bot
