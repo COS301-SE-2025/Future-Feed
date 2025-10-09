@@ -10,6 +10,8 @@ import com.syntexsquad.futurefeed.repository.BookmarkRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -36,11 +38,43 @@ public class BookmarkService {
     }
 
     private AppUser getAuthenticatedUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email = auth.getName();
-        return userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    if (authentication == null || !authentication.isAuthenticated()) {
+        throw new RuntimeException("User not authenticated");
     }
+
+    // --- Case 1: OAuth2 login (e.g., Google) ---
+    if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+        OAuth2User oAuth2User = oauthToken.getPrincipal();
+        String email = (String) oAuth2User.getAttributes().get("email");
+
+        if (email == null) {
+            throw new RuntimeException("Email not found in OAuth2 attributes");
+        }
+
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated OAuth2 user not found in DB"));
+    }
+
+    // --- Case 2: Manual login (form login / username-password) ---
+    Object principal = authentication.getPrincipal();
+    String usernameOrEmail;
+
+    if (principal instanceof org.springframework.security.core.userdetails.User userDetails) {
+        usernameOrEmail = userDetails.getUsername(); // Spring stores username here
+    } else if (principal instanceof String strPrincipal) {
+        usernameOrEmail = strPrincipal;
+    } else {
+        throw new RuntimeException("Unsupported authentication principal type: " + principal.getClass());
+    }
+
+    // Try lookup by email first, fallback to username
+    return userRepo.findByEmail(usernameOrEmail)
+            .or(() -> userRepo.findByUsername(usernameOrEmail))
+            .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
+}
+
 
     public List<Post> getBookmarkedPosts() {
         AppUser user = getAuthenticatedUser();

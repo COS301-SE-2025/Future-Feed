@@ -77,8 +77,16 @@ public class PostService {
             }
         }
 
+       
         if (email == null) {
-            throw new RuntimeException("Email not found in authentication context");
+          Object principal = authentication.getPrincipal();
+            if (principal instanceof org.springframework.security.core.userdetails.User userDetails) {
+                email = userDetails.getUsername(); // Spring stores username here
+            } else if (principal instanceof String strPrincipal) {
+                email = strPrincipal;
+            } else {
+                throw new RuntimeException("Unsupported authentication principal type: " + principal.getClass());
+            }
         }
 
         AppUser user = appUserRepository.findByEmail(email)
