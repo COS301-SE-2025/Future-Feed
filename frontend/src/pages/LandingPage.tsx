@@ -219,9 +219,9 @@ const LandingPage = () => {
                             Express yourself in <br /> more ways imaginable
                         </h1>
                         <p className="mt-4 text-lg dark:text-slate-200">
-                            Share a feed to friends in chatboxes <br />
-                            Share feeds generated from bots <br />
-                            Have your very own personal AI bot
+                            Create your very own custom presets <br />
+                            Have your very own personal AI bot <br/>
+                            Be the architect of your own digital consumption
 
                         </p>
                     </motion.div >

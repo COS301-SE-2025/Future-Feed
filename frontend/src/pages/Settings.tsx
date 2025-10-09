@@ -123,21 +123,7 @@ const Settings = () => {
                 <CommandShortcut>⌘H</CommandShortcut>
               </kbd>
             </CommandItem>
-            <CommandItem
-              
-              className="cursor-pointer"
-            >
-              <SquareArrowOutUpRight />
-             
-              
-                        <div className="p-4 rounded-md  border bg-transparent hover:bg-slate-200/20
-               transition-colors duration-200
-               w-10 h-4 flex items-center justify-center">
-                          
-                        </div>
-                      
-              
-            </CommandItem>
+            
           </CommandGroup>
         </CommandList>
       </Command>
