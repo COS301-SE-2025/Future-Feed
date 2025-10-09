@@ -296,13 +296,13 @@ const Notifications = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
-      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
+      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-4 pl-2 lg:ml-[260px] min-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200 z-10 future-feed:border-2 future-feed:border-lime future-feed:text-lime">
-          <h1 className="text-xl dark:text-white font-bold">Notifications</h1>
+      <main className="flex-1 p-4 pl-4 lg:ml-[260px] min-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10 ">
+          <h1 className="text-xl dark:text-white font-bold ">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">

@@ -538,7 +538,7 @@ const isHydrated = useStoreHydration();
       <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
 
 
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+        <div className="future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
