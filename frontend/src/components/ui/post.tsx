@@ -218,17 +218,16 @@ const Post: React.FC<PostProps> = ({
                   <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
                 </div>
               </div>
-            ) : image ? (
-              <img
-                src={image}
-                alt="Post"
-                className="mt-4 rounded-lg max-w-full h-auto"
-                onError={(e) => {
-                  console.error("Failed to load post image:", image);
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : null}
+            ) : image && (
+              <div className="mt-4 w-full max-w-full overflow-hidden rounded-xl">
+                <img
+                  src={image}
+                  alt="Post"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50 dark:bg-gray-900"
+                  loading="lazy"
+                />
+              </div>
+            )}
 
             <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
               <Button
