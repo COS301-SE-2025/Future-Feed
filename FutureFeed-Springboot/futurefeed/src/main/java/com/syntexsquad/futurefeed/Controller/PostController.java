@@ -10,6 +10,8 @@ import com.syntexsquad.futurefeed.moderation.ModerationResult;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.http.*;
@@ -28,14 +30,19 @@ import java.util.regex.Pattern;
 @RequestMapping(value = "/api/posts", produces = MediaType.APPLICATION_JSON_VALUE)
 public class PostController {
 
+    private static final Logger log = LoggerFactory.getLogger(PostController.class);
+
     private final PostService postService;
     private final MediaService mediaService;
     private final ObjectMapper objectMapper;
-    private final ModerationClient moderationClient;
+    private final ModerationClient moderationClient; 
     private final PostViewMapper postViewMapper;
 
     @Value("${fastapi.base-url:http://localhost:8000}")
     private String fastapiBaseUrl;
+
+    @Value("${app.moderation.required:false}")
+    private boolean moderationRequired;
 
     public PostController(PostService postService,
                           MediaService mediaService,
@@ -68,7 +75,6 @@ public class PostController {
         try { Files.deleteIfExists(p); } catch (Exception ignored) {}
     }
 
-    // ---------- GET endpoints ----------
     @GetMapping("/{id}")
     public ResponseEntity<?> getPostById(@PathVariable Integer id) {
         try {
@@ -165,7 +171,7 @@ public class PostController {
             return createPostInternal(postRequest, mediaFile);
         } catch (IOException e) {
             return ResponseEntity.badRequest()
-                    .body(Map.of("error", "BadRequest", "message", "Invalid JSON in 'post': " + e.getMessage()));
+                    .body(Map.of("error", "BadRequest", "message", "Invalid JSON in 'post'"));
         }
     }
 
@@ -175,28 +181,87 @@ public class PostController {
 
         try {
             if (file != null && !file.isEmpty()) {
+                byte[] originalBytes;
+                try {
+                    originalBytes = file.getBytes();
+                } catch (IOException io) {
+                    log.error("Reading uploaded file failed: {}", io.toString());
+                    return ResponseEntity.internalServerError().body(Map.of(
+                            "error", "UploadFailed",
+                            "message", "Could not read uploaded media"
+                    ));
+                }
+
+                String originalName = Optional.ofNullable(file.getOriginalFilename()).orElse("upload.bin");
+                String contentType  = Optional.ofNullable(file.getContentType()).orElse("application/octet-stream");
+
                 if (moderationClient != null) {
-                    tempPath = Files.createTempFile("upload-", "-" + file.getOriginalFilename());
-                    file.transferTo(tempPath.toFile());
-                    ModerationResult mod = moderationClient.moderatePost(
-                            postRequest.getContent(), links, List.of(tempPath.toString()), true);
-                    if (!mod.isSafe()) {
+                    try {
+                        tempPath = Files.createTempFile("upload-", "-" + originalName);
+                        Files.write(tempPath, originalBytes);
+
+                        ModerationResult mod = moderationClient.moderatePost(
+                                postRequest.getContent(), links, List.of(tempPath.toString()), true);
+
+                        if (!mod.isSafe()) {
+                            tryDeleteQuietly(tempPath);
+                            tempPath = null;
+                            return ResponseEntity.unprocessableEntity().body(Map.of(
+                                    "error", "ContentRejected",
+                                    "message", Optional.ofNullable(mod.getMessageToUser()).orElse("Content rejected by moderation."),
+                                    "labels", mod.getLabels()
+                            ));
+                        }
+                    } catch (Exception modErr) {
+                        log.warn("Image moderation unavailable: {}", modErr.toString());
+                        if (moderationRequired) {
+                            tryDeleteQuietly(tempPath);
+                            tempPath = null;
+                            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                                    "error", "ModerationUnavailable",
+                                    "message", "Moderation service is temporarily unavailable"
+                            ));
+                        }
+                    } finally {
                         tryDeleteQuietly(tempPath);
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(Map.of("error", "ContentRejected", "message", mod.getMessageToUser(), "labels", mod.getLabels()));
+                        tempPath = null;
                     }
                 }
-                String mediaUrl = mediaService.uploadFile(file);
-                postRequest.setImageUrl(mediaUrl);
-                tryDeleteQuietly(tempPath);
-                tempPath = null;
+
+                try {
+                    MultipartFile forwardFile = new BytesMultipartFile(
+                            "media", originalName, contentType, originalBytes
+                    );
+                    String mediaUrl = mediaService.uploadFile(forwardFile);
+                    postRequest.setImageUrl(mediaUrl);
+                } catch (Exception uploadErr) {
+                    log.error("Media upload failed: {}", uploadErr.toString());
+                    return ResponseEntity.internalServerError().body(Map.of(
+                            "error", "UploadFailed",
+                            "message", "Could not store media"
+                    ));
+                }
             }
+
             else if (hasText(postRequest.getImagePrompt())) {
                 if (moderationClient != null) {
-                    ModerationResult preGen = moderationClient.moderatePost(postRequest.getContent(), links, List.of(), true);
-                    if (!preGen.isSafe()) {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(Map.of("error", "ContentRejected", "message", preGen.getMessageToUser(), "labels", preGen.getLabels()));
+                    try {
+                        ModerationResult preGen = moderationClient.moderatePost(postRequest.getContent(), links, List.of(), true);
+                        if (!preGen.isSafe()) {
+                            return ResponseEntity.unprocessableEntity().body(Map.of(
+                                    "error", "ContentRejected",
+                                    "message", Optional.ofNullable(preGen.getMessageToUser()).orElse("Content rejected by moderation."),
+                                    "labels", preGen.getLabels()
+                            ));
+                        }
+                    } catch (Exception modErr) {
+                        log.warn("Text moderation unavailable (preGen): {}", modErr.toString());
+                        if (moderationRequired) {
+                            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                                    "error", "ModerationUnavailable",
+                                    "message", "Moderation service is temporarily unavailable"
+                            ));
+                        }
                     }
                 }
 
@@ -205,50 +270,86 @@ public class PostController {
                 byte[] png = Base64.getDecoder().decode(b64);
 
                 if (moderationClient != null) {
-                    tempPath = Files.createTempFile("gen-", ".png");
-                    Files.write(tempPath, png);
-                    ModerationResult postGen = moderationClient.moderatePost(
-                            postRequest.getContent(), links, List.of(tempPath.toString()), true);
-                    if (!postGen.isSafe()) {
+                    try {
+                        tempPath = Files.createTempFile("gen-", ".png");
+                        Files.write(tempPath, png);
+                        ModerationResult postGen = moderationClient.moderatePost(
+                                postRequest.getContent(), links, List.of(tempPath.toString()), true);
+                        if (!postGen.isSafe()) {
+                            tryDeleteQuietly(tempPath);
+                            tempPath = null;
+                            return ResponseEntity.unprocessableEntity().body(Map.of(
+                                    "error", "ImageRejected",
+                                    "message", Optional.ofNullable(postGen.getMessageToUser()).orElse("Generated image rejected by moderation."),
+                                    "labels", postGen.getLabels()
+                            ));
+                        }
+                    } catch (Exception modErr) {
+                        log.warn("Image moderation unavailable (postGen): {}", modErr.toString());
+                        if (moderationRequired) {
+                            tryDeleteQuietly(tempPath);
+                            tempPath = null;
+                            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                                    "error", "ModerationUnavailable",
+                                    "message", "Moderation service is temporarily unavailable"
+                            ));
+                        }
+                    } finally {
                         tryDeleteQuietly(tempPath);
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                .body(Map.of("error", "ImageRejected", "message", postGen.getMessageToUser(), "labels", postGen.getLabels()));
+                        tempPath = null;
                     }
                 }
 
-                MultipartFile genFile = new BytesMultipartFile("media", "generated.png", "image/png", png);
-                String mediaUrl = mediaService.uploadFile(genFile);
-                postRequest.setImageUrl(mediaUrl);
-                tryDeleteQuietly(tempPath);
-                tempPath = null;
+                try {
+                    MultipartFile genFile = new BytesMultipartFile("media", "generated.png", "image/png", png);
+                    String mediaUrl = mediaService.uploadFile(genFile);
+                    postRequest.setImageUrl(mediaUrl);
+                } catch (Exception uploadErr) {
+                    log.error("Generated image upload failed: {}", uploadErr.toString());
+                    return ResponseEntity.internalServerError().body(Map.of(
+                            "error", "UploadFailed",
+                            "message", "Could not store generated media"
+                    ));
+                }
             }
             else if (moderationClient != null) {
-                ModerationResult mod = moderationClient.moderatePost(postRequest.getContent(), links, List.of(), true);
-                if (!mod.isSafe()) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(Map.of("error", "ContentRejected", "message", mod.getMessageToUser(), "labels", mod.getLabels()));
+                try {
+                    ModerationResult mod = moderationClient.moderatePost(postRequest.getContent(), links, List.of(), true);
+                    if (!mod.isSafe()) {
+                        return ResponseEntity.unprocessableEntity().body(Map.of(
+                                "error", "ContentRejected",
+                                "message", Optional.ofNullable(mod.getMessageToUser()).orElse("Content rejected by moderation."),
+                                "labels", mod.getLabels()
+                        ));
+                    }
+                } catch (Exception modErr) {
+                    log.warn("Text moderation unavailable: {}", modErr.toString());
+                    if (moderationRequired) {
+                        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of(
+                                "error", "ModerationUnavailable",
+                                "message", "Moderation service is temporarily unavailable"
+                        ));
+                    }
                 }
             }
 
+            // Create the post
             Post post = postService.createPost(postRequest);
             return ResponseEntity.ok(postViewMapper.toDto(post));
 
         } catch (RestClientResponseException e) {
             tryDeleteQuietly(tempPath);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "ImageService", "message", e.getResponseBodyAsString()));
+                    .body(Map.of("error", "ImageService", "message", "Upstream image service error"));
         } catch (RuntimeException ex) {
             tryDeleteQuietly(tempPath);
+            log.error("Post creation failed: {}", ex.toString());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .contentType(MediaType.TEXT_PLAIN)
                     .body("Server error: " + ex.getMessage());
-        } catch (Exception e) {
-            tryDeleteQuietly(tempPath);
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", "ModerationUnavailable", "message", e.getMessage()));
         }
     }
 
-    /** Calls FastAPI /generate-image and returns base64 string */
     private String callImageGen(String prompt, Integer width, Integer height, Integer steps, String model) {
         try {
             String url = fastapiBaseUrl + "/generate-image";
@@ -271,7 +372,7 @@ public class PostController {
             JsonNode root = objectMapper.readTree(resp.getBody());
             return root.get("b64").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Image generation failed: " + e.getMessage(), e);
+            throw new RuntimeException("Image generation failed", e);
         }
     }
 
@@ -302,5 +403,3 @@ public class PostController {
         }
     }
 }
-
-    
