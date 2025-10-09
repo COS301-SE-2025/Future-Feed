@@ -68,9 +68,17 @@ interface RawPost {
     id: number;
     username: string;
     displayName: string;
+    profilePicture?: string;
   } | null;
   botId: number;
   isBot: boolean;
+}
+
+interface UserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
 }
 
 interface UserInfo {
@@ -146,8 +154,32 @@ const fetchPost = async (id: number, currentUserId: number) => {
     if (!postRes.ok) {
       throw new Error(`Failed to fetch post ${id}: ${postRes.status}`);
     }
+    
     const post: RawPost = await postRes.json();
-    const userInfo: UserInfo = post.user ?? (await fetchUser(currentUserId));
+    console.log("Fetched post:", post.user?.id);
+    let userInfo: UserInfo;
+    if (post.isBot || post.botId) {
+      if (!post.botId) {
+        throw new Error("Bot post missing botId");
+      }
+      const botRes = await fetch(`${API_URL}/api/bots/${post.botId}`, { credentials: "include" });
+      if (!botRes.ok) {
+        throw new Error(`Failed to fetch bot ${post.botId}: ${botRes.status}`);
+      }
+      const botData = await botRes.json();
+      userInfo = {
+        id: botData.id || post.botId,
+        username: botData.name, 
+        displayName: botData.name, 
+        profilePicture: undefined,
+      };
+    } else if(post.user?.id == currentUserId){
+      userInfo = await fetchCurrentUser() as UserInfo;
+    }
+    else {
+      userInfo = await fetchUser(post.user?.id || 0);
+    }
+    console.log("Using userInfo:", userInfo);
     const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
       fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
       fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
@@ -176,7 +208,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
           createdAt: comment.createdAt,
           username: commentUserInfo.displayName,
           handle: `@${commentUserInfo.username}`,
-          profilePicture: comment.profilePicture || "/default-profile.png", // Provide default
+          profilePicture: commentUserInfo.profilePicture,
         });
       } catch (err) {
         console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
@@ -191,8 +223,8 @@ const fetchPost = async (id: number, currentUserId: number) => {
     setPost({
       id: post.id,
       username: userInfo.displayName,
-      handle: `@${userInfo.username}`,
-      profilePicture: userInfo.profilePicture || "/default-profile.png", // Provide default
+      handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+      profilePicture: userInfo.profilePicture,
       time: formatRelativeTime(post.createdAt),
       text: post.content,
       image: post.imageUrl || undefined,
@@ -521,8 +553,8 @@ const fetchPost = async (id: number, currentUserId: number) => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 max-w-full mx-auto p-4">
-          <Card className="dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+          <Card className="dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 mt-0">
             <CardContent className="p-1 mt-[-15px] ml-[20px]">
               <Button
                 variant="ghost"
@@ -599,11 +631,11 @@ const fetchPost = async (id: number, currentUserId: number) => {
             </CardContent>
           </Card>
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
           <WhoToFollow />
         </div>
       </aside>
@@ -660,7 +692,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
     <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
       <PersonalSidebar />
     </aside>
-    <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
+    <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[-10px]">
       {post.botId || post.isBot ? (
         <StaticBotPost
           username={post.username}
@@ -690,6 +722,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
         />
       ) : (
         <StaticPost
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -716,11 +749,11 @@ const fetchPost = async (id: number, currentUserId: number) => {
         />
       )}
     </main>
-    <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+    <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
         <WhatsHappening />
       </div>
-      <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+      <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
         <WhoToFollow />
       </div>
     </aside>
