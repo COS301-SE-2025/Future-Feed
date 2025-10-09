@@ -534,11 +534,8 @@ const isHydrated = useStoreHydration();
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-
-      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
-
-
-        <div className="future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+      <main className="flex-1 p-2 overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
@@ -603,7 +600,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            
