@@ -2048,7 +2048,7 @@ const HomePage = () => {
 
       <button
 
-        className="lg:hidden fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+        className="lg:hidden -translate-y-[15px] fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
