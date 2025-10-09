@@ -875,7 +875,7 @@ const BotPage = () => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           <div className="relative">
             <Skeleton className="h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -912,7 +912,7 @@ const BotPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
         <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
@@ -938,7 +938,7 @@ const BotPage = () => {
                     disabled={isExecuting}
                   >
                     {isExecuting ? (
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      <Loader2 className="w-5 h-5 animate-spin ml-1" />
                     ) : null}
                     {isExecuting ? "Executing..." : "Execute Bot"}
                   </Button>
@@ -1008,7 +1008,7 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
+      <aside className="w-full lg:w-[350px] lg:sticky  lg:h-screen hidden lg:block mr-6.5">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
