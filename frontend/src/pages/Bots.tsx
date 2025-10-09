@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -9,6 +9,7 @@ import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
+import { Settings } from "lucide-react";
 
 interface Bot {
   id: number;
@@ -340,43 +341,44 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
-      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:p-6 lg:mt-7 lg:pt-4 lg:pl-2 min-h-screen overflow-y-auto">
-        <Card className="max-w-[1100px] mx-auto rounded-2xl border-2 border-rose-gold-accent-border bg-white   shadow-none">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-2xl text-black future-feed:text-lime  dark:text-slate-200">Bots Management</CardTitle>
-              <Button onClick={() => setIsCreateModalOpen(true)} className=" text-white  cursor-pointer">
-                <FaPlus className="mr-2" /> Create Bot
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {error && (
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        {error && (
               <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
                 <p>{error}</p>
               </div>
             )}
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-2   mb-4">
-                <TabsTrigger className="" value="all">My Bots</TabsTrigger>
-                <TabsTrigger className="" value="active">Active Bots</TabsTrigger>
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 rounded-2xl z-10 future-feed:border-2 future-feed:border-lime future-feed:text-lime">
+          <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
+          <div className="flex justify-between items-center gap-4">
+              <Button onClick={() => setIsCreateModalOpen(true)} className=" text-white  cursor-pointer">
+                <FaPlus className="mr-2" /> Create Bot
+              </Button>
+              <Link to="/settings">
+                <Settings size={20} className="dark:text-slate-200" />
+              </Link>
+            </div>
+        </div>
+        <Tabs defaultValue="all" className="w-full p-2">
+              <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
+                <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
+                <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
               </TabsList>
               {loading.allBots ? (
                 <SkeletonLoader />
               ) : (
                 <>
-                  <TabsContent value="all">
+                  <TabsContent value="all" className="space-y-4">
                     {bots.length === 0 ? (
                       <div className="text-center text-gray-400">No bots created yet.</div>
                     ) : (
                       <div className="grid gap-4">
                         {bots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                            <Card className="mt-2  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
@@ -385,14 +387,14 @@ const Bots: React.FC = () => {
                                 </div>
                                 <div className="flex gap-3 items-center">
                                   <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
+                                    <span className={`text-sm font-medium ${bot.isActive ? "text-blue-500" : "text-black"}`}>
                                       {bot.isActive ? "On" : "Off"}
                                     </span>
                                     <Switch
                                       checked={bot.isActive}
                                       onCheckedChange={() => toggleBotActivation(bot.id)}
                                       disabled={loading.toggling.has(bot.id)}
-                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                      className="hover:cursor-pointer w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
                                       onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
@@ -400,15 +402,15 @@ const Bots: React.FC = () => {
                                       }}
                                     >
                                       <span
-                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+                                        className={`absolute h-6 w-6 rounded-full bg-black shadow-lg transform transition-transform duration-300 ease-in-out ${
                                           bot.isActive ? "translate-x-8" : "translate-x-1"
-                                        } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
+                                        } ${bot.isActive ? "bg-blue-500" : "bg-gray-200"}`}
                                       />
                                     </Switch>
                                   </div>
                                   <Button
                                     variant="outline"
-                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
+                                    className="hover:cursor-pointer hover:bg-blue-500 transition-colors hover:text-white"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -441,7 +443,7 @@ const Bots: React.FC = () => {
                       </div>
                     )}
                   </TabsContent>
-                  <TabsContent value="active">
+                  <TabsContent value="active" className="space-y-4">
                     {activeBots.length === 0 ? (
                       <div className="text-center text-gray-400">No active bots.</div>
                     ) : (
@@ -516,16 +518,12 @@ const Bots: React.FC = () => {
                 </>
               )}
             </Tabs>
-          </CardContent>
-        </Card>
       </main>
-      <aside className="w-full lg:w-[350px] lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
-           
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
             <WhoToFollow />
           </div>
         
