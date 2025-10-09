@@ -701,7 +701,7 @@ const BotPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1 lg:p-2  min-h-screen overflow-y-auto mt-[10px]">
         <Card className="mb-5 ">
           <CardContent className="ml-[-10px]">
             <div className="relative">
@@ -793,7 +793,7 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky  lg:h-screen  hidden lg:block mr-6.5 ">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
