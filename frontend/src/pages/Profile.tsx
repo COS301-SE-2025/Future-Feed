@@ -1455,7 +1455,7 @@ const Profile = () => {
 
   if (isLoading) {
   return (
-      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -1495,7 +1495,7 @@ const Profile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
