@@ -167,7 +167,7 @@ const WhoToFollow = () => {
 // Show loading state while hydrating
   if (!isHydrated || isLoading) {
     return (
-      <Card className="dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200  bg-blue-500  future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500  border-2 future-feed:border-lime-500 future-feed:bg-lime-600 text-white">
+      <Card className="dark:bg-indigo-950 dark:border-slate-200 dark:text-slate-200  bg-white  future-feed:bg-black future-feed:border-lime-500 future-feed:text-lime-500  border-2 future-feed:border-lime-500 future-feed:bg-lime-600 text-white">
         <CardContent className="p-4">
           <h2 className="font-bold text-lg mb-4">Follow Latest</h2>
           <div className="space-y-3">
@@ -215,7 +215,7 @@ const WhoToFollow = () => {
                 <div key={user.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar 
-                      className="w-10 h-10 border border-lime-500 hover:cursor-pointer"
+                      className="w-10 h-10 border-none  hover:cursor-pointer"
                       onClick={() => navigate(`/profile/${user.id}`)}  
                     >
                       <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />

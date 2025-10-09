@@ -341,8 +341,13 @@ const Bots: React.FC = () => {
   );
 
   return (
+<<<<<<< HEAD
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
+=======
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
+>>>>>>> 3ff96cbacf5f7eff2f51df400d6cc49eed02a0a0
         <PersonalSidebar />
       </aside>
       <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
@@ -378,7 +383,11 @@ const Bots: React.FC = () => {
                       <div className="grid gap-4">
                         {bots.map((bot) => (
                           <Link to={`/bot/${bot.id}`} key={bot.id}>
+<<<<<<< HEAD
                             <Card className="mt-2  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+=======
+                            <Card className="   dark:hover:bg-gray-800 transition-colors">
+>>>>>>> 3ff96cbacf5f7eff2f51df400d6cc49eed02a0a0
                               <CardContent className="p-4 flex justify-between items-center">
                                 <div>
                                   <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>

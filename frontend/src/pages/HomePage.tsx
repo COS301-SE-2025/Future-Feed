@@ -1983,8 +1983,10 @@ const HomePage = () => {
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
+        <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white ">
 
-        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime flex flex-col gap-2 hidden lg:flex">
+        </div>
+        <div className="ml-4 mt-8 flex flex-col hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
             className="w-[200px] future-feed:text-lime future-feed:border-lime"
