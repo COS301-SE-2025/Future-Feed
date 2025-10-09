@@ -41,7 +41,6 @@ public abstract class Post {
     @JsonIgnore
     private List<Like> likes = new ArrayList<>();
 
-    // ⚠️ IMPORTANT: make this read-only to avoid duplication
     @Column(name = "post_type", insertable = false, updatable = false)
     private String postType;
 
@@ -56,4 +55,8 @@ public abstract class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<PostTopic> postTopics = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<Bookmark> bookmarks = new ArrayList<>();
 }
