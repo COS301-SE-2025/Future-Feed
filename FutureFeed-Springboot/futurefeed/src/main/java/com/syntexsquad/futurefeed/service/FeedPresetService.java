@@ -2,8 +2,21 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.FeedPresetDTO;
 import com.syntexsquad.futurefeed.dto.PresetRuleDTO;
-import com.syntexsquad.futurefeed.model.*;
-import com.syntexsquad.futurefeed.repository.*;
+import com.syntexsquad.futurefeed.model.AppUser;
+import com.syntexsquad.futurefeed.model.BotPost;
+import com.syntexsquad.futurefeed.model.FeedPreset;
+import com.syntexsquad.futurefeed.model.PresetRule;
+import com.syntexsquad.futurefeed.model.Post;
+import com.syntexsquad.futurefeed.model.PostTopic;
+import com.syntexsquad.futurefeed.model.UserPost;
+import com.syntexsquad.futurefeed.repository.AppUserRepository;
+import com.syntexsquad.futurefeed.repository.FeedPresetRepository;
+import com.syntexsquad.futurefeed.repository.PostRepository;
+import com.syntexsquad.futurefeed.repository.PostTopicRepository;
+import com.syntexsquad.futurefeed.repository.PresetRuleRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -47,6 +60,8 @@ public class FeedPresetService {
         throw new RuntimeException("User not authenticated");
     }
 
+    // Preset CRUD 
+
     public FeedPreset createPreset(FeedPresetDTO dto) {
         FeedPreset preset = new FeedPreset();
         preset.setName(dto.getName());
@@ -58,6 +73,60 @@ public class FeedPresetService {
     public List<FeedPreset> getUserPresets() {
         return presetRepo.findByUserId(getAuthenticatedUser().getId());
     }
+
+    public FeedPreset updatePreset(Integer presetId, FeedPresetDTO dto) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to update this preset");
+        }
+
+        preset.setName(dto.getName());
+        preset.setDefaultPreset(dto.isDefaultPreset());
+        return presetRepo.save(preset);
+    }
+
+    public void deletePreset(Integer presetId) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
+            throw new RuntimeException("Not authorized to delete this preset");
+        }
+
+        ruleRepo.deleteByPresetId(presetId);
+        presetRepo.delete(preset);
+    }
+
+    public void setDefaultPreset(Integer presetId) {
+        FeedPreset preset = presetRepo.findById(presetId)
+                .orElseThrow(() -> new RuntimeException("Preset not found"));
+
+        Integer userId = getAuthenticatedUser().getId();
+        if (!preset.getUserId().equals(userId)) {
+            throw new RuntimeException("Not authorized to update this preset");
+        }
+
+        List<FeedPreset> userPresets = presetRepo.findByUserId(userId);
+        for (FeedPreset p : userPresets) {
+            if (p.isDefaultPreset()) {
+                p.setDefaultPreset(false);
+                presetRepo.save(p);
+            }
+        }
+
+        preset.setDefaultPreset(true);
+        presetRepo.save(preset);
+    }
+
+    public FeedPreset getDefaultPreset() {
+        Integer userId = getAuthenticatedUser().getId();
+        return presetRepo.findByUserIdAndDefaultPresetTrue(userId)
+                .orElseThrow(() -> new RuntimeException("No default preset found for this user"));
+    }
+
+    //Rule CRUD
 
     public PresetRule createRule(PresetRuleDTO dto) {
         PresetRule rule = new PresetRule();
@@ -73,128 +142,10 @@ public class FeedPresetService {
         return ruleRepo.findByPresetId(presetId);
     }
 
-//    public List<Post> generateFeedForPreset(Integer presetId) {
-//        List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
-//        Set<Post> resultFeed = new HashSet<>();
-//
-//        for (PresetRule rule : rules) {
-//            List<Post> filteredPosts = new ArrayList<>();
-//
-//            if (rule.getTopicId() != null) {
-//                List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
-//                List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
-//                filteredPosts.addAll(postRepository.findAllById(postIds));
-//            }
-//
-//            if ("user".equalsIgnoreCase(rule.getSourceType())) {
-//                filteredPosts = filteredPosts.stream()
-//                        .filter(p -> p instanceof UserPost)
-//                        .collect(Collectors.toList());
-//            } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
-//                filteredPosts = filteredPosts.stream()
-//                        .filter(p -> p instanceof BotPost)
-//                        .collect(Collectors.toList());
-//            }
-//
-//            if (rule.getSpecificUserId() != null) {
-//                filteredPosts = filteredPosts.stream()
-//                        .filter(p -> (p instanceof UserPost) && ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
-//                        .collect(Collectors.toList());
-//            }
-//
-//            int limit = (rule.getPercentage() != null && rule.getPercentage() > 0)
-//                    ? (filteredPosts.size() * rule.getPercentage()) / 100
-//                    : filteredPosts.size();
-//
-//            resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
-//        }
-//
-//        return new ArrayList<>(resultFeed);
-//    }
-
-    public List<Post> generateFeedForPreset(Integer presetId) {
-        List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
-        Set<Post> resultFeed = new HashSet<>();
-
-        for (PresetRule rule : rules) {
-            List<Post> filteredPosts;
-
-            // 🔹 Start with topic-based filter OR all posts if no topic
-            if (rule.getTopicId() != null) {
-                List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
-                List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
-                filteredPosts = postRepository.findAllById(postIds);
-            } else {
-                filteredPosts = postRepository.findAll(); // <-- fallback
-            }
-
-            // 🔹 Apply sourceType filter
-            if ("user".equalsIgnoreCase(rule.getSourceType())) {
-                filteredPosts = filteredPosts.stream()
-                        .filter(p -> "USER".equalsIgnoreCase(p.getPostType()))
-                        .collect(Collectors.toList());
-            } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
-                filteredPosts = filteredPosts.stream()
-                        .filter(p -> "BOT".equalsIgnoreCase(p.getPostType()))
-                        .collect(Collectors.toList());
-            }
-
-
-            // 🔹 Apply specific user filter
-            if (rule.getSpecificUserId() != null) {
-                filteredPosts = filteredPosts.stream()
-                        .filter(p -> (p instanceof UserPost) &&
-                                ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
-                        .collect(Collectors.toList());
-            }
-
-            // 🔹 Apply percentage limit
-            int limit = (rule.getPercentage() != null && rule.getPercentage() > 0)
-                    ? (filteredPosts.size() * rule.getPercentage()) / 100
-                    : filteredPosts.size();
-
-            resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
-        }
-
-        return new ArrayList<>(resultFeed);
-    }
-
-    // --- Update preset ---
-    public FeedPreset updatePreset(Integer presetId, FeedPresetDTO dto) {
-        FeedPreset preset = presetRepo.findById(presetId)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
-
-        // only allow owner to update
-        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
-            throw new RuntimeException("Not authorized to update this preset");
-        }
-
-        preset.setName(dto.getName());
-        preset.setDefaultPreset(dto.isDefaultPreset());
-        return presetRepo.save(preset);
-    }
-
-    // --- Delete preset ---
-    public void deletePreset(Integer presetId) {
-        FeedPreset preset = presetRepo.findById(presetId)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
-
-        if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
-            throw new RuntimeException("Not authorized to delete this preset");
-        }
-
-        // optionally delete rules belonging to preset first
-        ruleRepo.deleteByPresetId(presetId);
-
-        presetRepo.delete(preset);
-    }
-
-    // --- Update rule ---
     public PresetRule updateRule(Integer ruleId, PresetRuleDTO dto) {
         PresetRule rule = ruleRepo.findById(ruleId)
                 .orElseThrow(() -> new RuntimeException("Rule not found"));
 
-        // validate preset ownership
         FeedPreset preset = presetRepo.findById(rule.getPresetId())
                 .orElseThrow(() -> new RuntimeException("Preset not found"));
         if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
@@ -205,11 +156,9 @@ public class FeedPresetService {
         rule.setSourceType(dto.getSourceType());
         rule.setSpecificUserId(dto.getSpecificUserId());
         rule.setPercentage(dto.getPercentage());
-
         return ruleRepo.save(rule);
     }
 
-    // --- Delete rule ---
     public void deleteRule(Integer ruleId) {
         PresetRule rule = ruleRepo.findById(ruleId)
                 .orElseThrow(() -> new RuntimeException("Rule not found"));
@@ -224,34 +173,60 @@ public class FeedPresetService {
         ruleRepo.delete(rule);
     }
 
-    public void setDefaultPreset(Integer presetId) {
-        FeedPreset preset = presetRepo.findById(presetId)
-                .orElseThrow(() -> new RuntimeException("Preset not found"));
+    public List<Post> generateFeedForPreset(Integer presetId) {
+        List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
+        Set<Post> resultFeed = new HashSet<>();
 
-        Integer userId = getAuthenticatedUser().getId();
-        if (!preset.getUserId().equals(userId)) {
-            throw new RuntimeException("Not authorized to update this preset");
-        }
+        for (PresetRule rule : rules) {
+            List<Post> filteredPosts;
 
-        // Unset existing default for this user
-        List<FeedPreset> userPresets = presetRepo.findByUserId(userId);
-        for (FeedPreset p : userPresets) {
-            if (p.isDefaultPreset()) {
-                p.setDefaultPreset(false);
-                presetRepo.save(p);
+            if (rule.getTopicId() != null) {
+                List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
+                List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
+                filteredPosts = postRepository.findAllById(postIds);
+            } else {
+                filteredPosts = postRepository.findAll();
             }
+
+            if ("user".equalsIgnoreCase(rule.getSourceType())) {
+                filteredPosts = filteredPosts.stream()
+                        .filter(p -> "USER".equalsIgnoreCase(p.getPostType()))
+                        .collect(Collectors.toList());
+            } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
+                filteredPosts = filteredPosts.stream()
+                        .filter(p -> "BOT".equalsIgnoreCase(p.getPostType()))
+                        .collect(Collectors.toList());
+            }
+
+            if (rule.getSpecificUserId() != null) {
+                filteredPosts = filteredPosts.stream()
+                        .filter(p -> (p instanceof UserPost)
+                                && ((UserPost) p).getUser() != null
+                                && ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
+                        .collect(Collectors.toList());
+            }
+
+            int limit = (rule.getPercentage() != null && rule.getPercentage() > 0)
+                    ? (filteredPosts.size() * rule.getPercentage()) / 100
+                    : filteredPosts.size();
+
+            resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
         }
 
-        // Set new default
-        preset.setDefaultPreset(true);
-        presetRepo.save(preset);
+        return new ArrayList<>(resultFeed);
     }
 
+    public Page<Post> generateFeedForPreset(Integer presetId, int page, int size) {
+        List<Post> all = generateFeedForPreset(presetId);
 
-    public FeedPreset getDefaultPreset() {
-        Integer userId = getAuthenticatedUser().getId();
-        return presetRepo.findByUserIdAndDefaultPresetTrue(userId)
-                .orElseThrow(() -> new RuntimeException("No default preset found for this user"));
+        all.sort(Comparator
+                .comparing(Post::getCreatedAt, Comparator.nullsLast(Comparator.naturalOrder()))
+                .reversed());
+
+        int from = Math.min(page * size, all.size());
+        int to = Math.min(from + size, all.size());
+        List<Post> slice = (from <= to) ? all.subList(from, to) : List.of();
+
+        return new PageImpl<>(slice, PageRequest.of(page, size), all.size());
     }
-
 }
