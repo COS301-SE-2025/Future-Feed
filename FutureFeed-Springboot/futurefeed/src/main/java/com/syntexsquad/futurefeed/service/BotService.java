@@ -27,19 +27,45 @@ public class BotService {
         this.appUserRepository = appUserRepository;
     }
 
-    private AppUser getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+   private AppUser getAuthenticatedUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            OAuth2User oAuth2User = oauthToken.getPrincipal();
-            Object emailAttr = oAuth2User.getAttributes().get("email");
-            if (emailAttr != null) {
-                return appUserRepository.findByEmail(emailAttr.toString())
-                        .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
-            }
-        }
-        throw new RuntimeException("Could not extract authenticated user from security context");
+    if (authentication == null || !authentication.isAuthenticated()) {
+        throw new RuntimeException("User not authenticated");
     }
+
+    // --- Case 1: OAuth2 login (e.g., Google) ---
+    if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+        OAuth2User oAuth2User = oauthToken.getPrincipal();
+        String email = (String) oAuth2User.getAttributes().get("email");
+
+        if (email == null) {
+            throw new RuntimeException("Email not found in OAuth2 attributes");
+        }
+
+        return appUserRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated OAuth2 user not found in DB"));
+    }
+
+    // --- Case 2: Manual login (form-based) ---
+    Object principal = authentication.getPrincipal();
+    String usernameOrEmail;
+
+    if (principal instanceof com.syntexsquad.futurefeed.security.AppUserDetails appUserDetails) {
+        usernameOrEmail = appUserDetails.getUsername();
+    } else if (principal instanceof org.springframework.security.core.userdetails.User userDetails) {
+        usernameOrEmail = userDetails.getUsername();
+    } else if (principal instanceof String strPrincipal) {
+        usernameOrEmail = strPrincipal;
+    } else {
+        throw new RuntimeException("Unsupported authentication principal type: " + principal.getClass());
+    }
+
+    // Try lookup by email first, fallback to username
+    return appUserRepository.findByEmail(usernameOrEmail)
+            .or(() -> appUserRepository.findByUsername(usernameOrEmail))
+            .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
+}
 
     public List<Bot> getAllBots() {
         return botRepository.findAll();
