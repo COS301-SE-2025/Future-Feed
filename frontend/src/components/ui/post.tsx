@@ -166,11 +166,9 @@ const Post: React.FC<PostProps> = ({
                 {username || "Unknown User"}
               </h2>
               <div className="flex items-center gap-2">
-                {/* Timestamp that shifts on hover */}
                 <span className={`text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap transition-all duration-200 ${isHovered && currentUser && currentUser.id === authorId ? 'mr-8' : 'mr-0'}`}>
                   {time}
                 </span>
-                {/* Delete button - appears on hover for post owner */}
                 {currentUser && currentUser.id === authorId && (
                   <Button
                     variant="ghost"
@@ -204,7 +202,7 @@ const Post: React.FC<PostProps> = ({
                 {topics.map((topic) => (
                   <span
                     key={topic.id}
-                    className="inline-block border dark:border-lime-400 bg-lime-300 dark:bg-lime-900 text-black dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
+                    className="inline-block border dark:border-lime-400 bg-blue-500 dark:bg-lime-900 text-white dark:text-lime-200 text-xs sm:text-sm px-2 rounded-xl"
                   >
                     {topic.name}
                   </span>
