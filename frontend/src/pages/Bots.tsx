@@ -15,13 +15,12 @@ interface Bot {
   id: number;
   name: string;
   prompt: string;
-  createdAt: string; // ISO or yyyy-mm-dd (we normalize to yyyy-mm-dd)
+  createdAt: string;
   schedule: "hourly" | "daily" | "weekly" | "monthly";
   contextSource: string;
   isActive: boolean;
 }
 
-// Server shape for /api/bots endpoints
 interface ApiBot {
   id: number;
   ownerId: number;
@@ -29,7 +28,7 @@ interface ApiBot {
   prompt: string;
   schedule: Bot["schedule"];
   contextSource: string | null;
-  createdAt: string; // ISO string
+  createdAt: string;
   isActive: boolean;
 }
 
@@ -108,7 +107,7 @@ const Bots: React.FC = () => {
               createdAt: bot.createdAt.split("T")[0],
               schedule: bot.schedule,
               contextSource: bot.contextSource || "",
-              isActive: bot.isActive, // fallback
+              isActive: bot.isActive,
             } as Bot;
           }
         })
@@ -128,7 +127,6 @@ const Bots: React.FC = () => {
   const toggleBotActivation = async (botId: number) => {
     setLoading((prev) => ({ ...prev, toggling: new Set([...prev.toggling, botId]) }));
     try {
-      // Get current status
       const activeRes = await fetch(`${API_URL}/api/bots/${botId}/active`, {
         method: "GET",
         credentials: "include",
@@ -136,7 +134,6 @@ const Bots: React.FC = () => {
       if (!activeRes.ok) throw new Error(`Failed to fetch active status for bot ${botId}`);
       const currentIsActive: boolean = await activeRes.json();
 
-      // Toggle using appropriate endpoint
       const toggleRes = await fetch(
         `${API_URL}/api/bots/${botId}/${currentIsActive ? "deactivate" : "activate"}`,
         {
@@ -150,7 +147,6 @@ const Bots: React.FC = () => {
         throw new Error(`Failed to ${currentIsActive ? "deactivate" : "activate"} bot: ${errorText || toggleRes.status}`);
       }
 
-      // Update state in one pass and derive activeBots from bots
       setBots((prev) => {
         const next = prev.map((b) => (b.id === botId ? { ...b, isActive: !currentIsActive } : b));
         setActiveBots(next.filter((b) => b.isActive));
@@ -341,199 +337,206 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
-      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto mt-5">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
+      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
-        {error && (
-              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                <p>{error}</p>
-              </div>
-            )}
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 rounded-2xl z-10 future-feed:border-2 future-feed:border-lime future-feed:text-lime">
-          <h1 className="text-xl text-black font-bold">Bots Management</h1>
-          <div className="flex justify-between items-center gap-4">
-              <Button onClick={() => setIsCreateModalOpen(true)} className=" text-white  cursor-pointer">
-                <FaPlus className="mr-2" /> Create Bot
-              </Button>
-              <Link to="/settings">
-                <Settings size={20} className="text-black" />
-              </Link>
-            </div>
-        </div>
-        <Tabs defaultValue="all" className="w-full p-2">
-              <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
-                <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
-                <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
-              </TabsList>
-              {loading.allBots ? (
-                <SkeletonLoader />
-              ) : (
-                <>
-                  <TabsContent value="all" className="space-y-4">
-                    {bots.length === 0 ? (
-                      <div className="text-center text-gray-400">No bots created yet.</div>
-                    ) : (
-                      <div className="grid gap-4">
-                        {bots.map((bot) => (
-                          <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="mt-2  hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                              <CardContent className="p-4 flex justify-between items-center">
-                                <div>
-                                  <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
-                                  <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
-                                </div>
-                                <div className="flex gap-3 items-center">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-medium ${bot.isActive ? "text-blue-500" : "text-black"}`}>
-                                      {bot.isActive ? "On" : "Off"}
-                                    </span>
-                                    <Switch
-                                      checked={bot.isActive}
-                                      onCheckedChange={() => toggleBotActivation(bot.id)}
-                                      disabled={loading.toggling.has(bot.id)}
-                                      className="hover:cursor-pointer w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBotActivation(bot.id);
-                                      }}
-                                    >
-                                      <span
-                                        className={`absolute h-6 w-6 rounded-full bg-black shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                          bot.isActive ? "translate-x-8" : "translate-x-1"
-                                        } ${bot.isActive ? "bg-blue-500" : "bg-gray-200"}`}
-                                      />
-                                    </Switch>
-                                  </div>
-                                  <Button
-                                    variant="outline"
-                                    className="hover:cursor-pointer hover:bg-blue-500 transition-colors hover:text-white"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setEditingBot(bot);
-                                      setNewBotName(bot.name);
-                                      setNewBotDescription(bot.prompt);
-                                      setNewBotSchedule(bot.schedule);
-                                      setNewBotContextSource(bot.contextSource);
-                                      setIsEditModalOpen(true);
-                                    }}
-                                  >
-                                    <FaEdit />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      deleteBot(bot.id);
-                                    }}
-                                  >
-                                    <FaTrash />
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                  <TabsContent value="active" className="space-y-4">
-                    {activeBots.length === 0 ? (
-                      <div className="text-center text-gray-400">No active bots.</div>
-                    ) : (
-                      <div className="grid gap-4">
-                        {activeBots.map((bot) => (
-                          <Link to={`/bot/${bot.id}`} key={bot.id}>
-                            <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                              <CardContent className="p-4 flex justify-between items-center">
-                                <div>
-                                  <h3 className="text-lg font-bold">{bot.name}</h3>
-                                  <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
-                                  <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
-                                </div>
-                                <div className="flex gap-3 items-center">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
-                                      {bot.isActive ? "On" : "Off"}
-                                    </span>
-                                    <Switch
-                                      checked={bot.isActive}
-                                      onCheckedChange={() => toggleBotActivation(bot.id)}
-                                      disabled={loading.toggling.has(bot.id)}
-                                      className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleBotActivation(bot.id);
-                                      }}
-                                    >
-                                      <span
-                                        className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                          bot.isActive ? "translate-x-8" : "translate-x-1"
-                                        } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
-                                      />
-                                    </Switch>
-                                  </div>
-                                  <Button
-                                    variant="outline"
-                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setEditingBot(bot);
-                                      setNewBotName(bot.name);
-                                      setNewBotDescription(bot.prompt);
-                                      setNewBotSchedule(bot.schedule);
-                                      setNewBotContextSource(bot.contextSource);
-                                      setIsEditModalOpen(true);
-                                    }}
-                                  >
-                                    <FaEdit />
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    className="dark: dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      deleteBot(bot.id);
-                                    }}
-                                  >
-                                    <FaTrash />
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-                </>
-              )}
-            </Tabs>
-      </main>
-      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-            <WhoToFollow />
-          </div>
-        
-        </aside>
 
+      <main className="flex-1 p-4 pl-4 lg:ml-[260px] min-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
+          <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
+          <div className="flex justify-between items-center gap-4">
+            <Button onClick={() => setIsCreateModalOpen(true)} className="text-white cursor-pointer">
+              <FaPlus className="mr-2" /> Create Bot
+            </Button>
+            <Link to="/settings">
+              <Settings size={20} className="text-black dark:text-white" />
+            </Link>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Tabs Section */}
+        <Tabs defaultValue="all" className="w-full p-2">
+          <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
+            <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
+            <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
+          </TabsList>
+          
+          {loading.allBots ? (
+            <SkeletonLoader />
+          ) : (
+            <>
+              <TabsContent value="all" className="space-y-4">
+                {bots.length === 0 ? (
+                  <div className="text-center text-gray-400 dark:text-gray-500 mt-4">No bots created yet.</div>
+                ) : (
+                  <div className="grid gap-4 mt-4">
+                    {bots.map((bot) => (
+                      <Link to={`/bot/${bot.id}`} key={bot.id}>
+                        <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl future-feed:border-2">
+                          <CardContent className="p-4 flex justify-between items-center">
+                            <div>
+                              <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                              <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex gap-3 items-center">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-medium ${bot.isActive ? "text-blue-500" : "text-gray-400"}`}>
+                                  {bot.isActive ? "On" : "Off"}
+                                </span>
+                                <Switch
+                                  checked={bot.isActive}
+                                  onCheckedChange={() => toggleBotActivation(bot.id)}
+                                  disabled={loading.toggling.has(bot.id)}
+                                  className="hover:cursor-pointer w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleBotActivation(bot.id);
+                                  }}
+                                >
+                                  <span
+                                    className={`absolute h-6 w-6 rounded-full bg-black shadow-lg transform transition-transform duration-300 ease-in-out ${
+                                      bot.isActive ? "translate-x-8" : "translate-x-1"
+                                    } ${bot.isActive ? "bg-blue-500" : "bg-gray-200"}`}
+                                  />
+                                </Switch>
+                              </div>
+                              <Button
+                                variant="outline"
+                                className="hover:cursor-pointer hover:bg-blue-500 transition-colors hover:text-white dark:border-slate-200"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setEditingBot(bot);
+                                  setNewBotName(bot.name);
+                                  setNewBotDescription(bot.prompt);
+                                  setNewBotSchedule(bot.schedule);
+                                  setNewBotContextSource(bot.contextSource);
+                                  setIsEditModalOpen(true);
+                                }}
+                              >
+                                <FaEdit />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors dark:border-slate-200"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  deleteBot(bot.id);
+                                }}
+                              >
+                                <FaTrash />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+              <TabsContent value="active" className="space-y-4">
+                {activeBots.length === 0 ? (
+                  <div className="text-center text-gray-400 dark:text-gray-500 mt-4">No active bots.</div>
+                ) : (
+                  <div className="grid gap-4 mt-4">
+                    {activeBots.map((bot) => (
+                      <Link to={`/bot/${bot.id}`} key={bot.id}>
+                        <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl future-feed:border-2">
+                          <CardContent className="p-4 flex justify-between items-center">
+                            <div>
+                              <h3 className="text-lg font-bold">{bot.name}</h3>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                              <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div className="flex gap-3 items-center">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
+                                  {bot.isActive ? "On" : "Off"}
+                                </span>
+                                <Switch
+                                  checked={bot.isActive}
+                                  onCheckedChange={() => toggleBotActivation(bot.id)}
+                                  disabled={loading.toggling.has(bot.id)}
+                                  className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    toggleBotActivation(bot.id);
+                                  }}
+                                >
+                                  <span
+                                    className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+                                      bot.isActive ? "translate-x-8" : "translate-x-1"
+                                    } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
+                                  />
+                                </Switch>
+                              </div>
+                              <Button
+                                variant="outline"
+                                className="dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors dark:border-slate-200"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setEditingBot(bot);
+                                  setNewBotName(bot.name);
+                                  setNewBotDescription(bot.prompt);
+                                  setNewBotSchedule(bot.schedule);
+                                  setNewBotContextSource(bot.contextSource);
+                                  setIsEditModalOpen(true);
+                                }}
+                              >
+                                <FaEdit />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors dark:border-slate-200"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  deleteBot(bot.id);
+                                }}
+                              >
+                                <FaTrash />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+      </main>
+
+      {/* Right Sidebar - Same position and styling as notifications */}
+      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-6.5">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhoToFollow />
+        </div>
+      </aside>
+
+      {/* Modals */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
-          <Card className="  rounded-2xl p-6 w-full max-w-md border-2 ">
+          <Card className="rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-slate-200">Create New Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime dark:text-slate-200">Create New Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -555,33 +558,33 @@ const Bots: React.FC = () => {
                   placeholder="Bot Name"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
-                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <Input
                   placeholder="Bot Prompt"
                   value={newBotDescription}
                   onChange={(e) => setNewBotDescription(e.target.value)}
-                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className=" future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 >
-                  <option className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="hourly">Hourly</option>
-                  <option  className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="daily">Daily</option>
-                  <option className ="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="weekly">Weekly</option>
-                  <option className="future-feed:text-lime future-feed:bg-black  dark:bg-indigo-950 dark:text-white" value="monthly">Monthly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="hourly">Hourly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="daily">Daily</option>
+                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="weekly">Weekly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="monthly">Monthly</option>
                 </select>
                 <Input
                   placeholder="Context Source (URL)"
                   value={newBotContextSource}
                   onChange={(e) => setNewBotContextSource(e.target.value)}
-                  className=" dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
                 />
                 <Button
                   type="submit"
-                  className=" text-white hover:bg-lime-600 cursor-pointer"
+                  className="text-white hover:bg-lime-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Create Bot
@@ -594,9 +597,9 @@ const Bots: React.FC = () => {
 
       {isEditModalOpen && editingBot && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
-          <Card className="bg-white  rounded-2xl p-6 w-full max-w-md border-2 ">
+          <Card className="bg-white rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-1">
-              <CardTitle className="text-xl text-blue-500 future-feed:text-lime  dark:text-white">Update Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime dark:text-white">Update Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -619,18 +622,18 @@ const Bots: React.FC = () => {
                   placeholder="Bot Name"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
-                  className=" dark:text-white"
+                  className="dark:text-white"
                 />
                 <Input
                   placeholder="Bot Prompt"
                   value={newBotDescription}
                   onChange={(e) => setNewBotDescription(e.target.value)}
-                  className=" dark:text-white"
+                  className="dark:text-white"
                 />
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className=" dark:text-white border p-2 rounded-md"
+                  className="dark:text-white border p-2 rounded-md"
                 >
                   <option value="hourly">Hourly</option>
                   <option value="daily">Daily</option>
@@ -641,12 +644,12 @@ const Bots: React.FC = () => {
                   placeholder="Context Source (URL)"
                   value={newBotContextSource}
                   onChange={(e) => setNewBotContextSource(e.target.value)}
-                  className=" dark:text-white"
+                  className="dark:text-white"
                 />
                 <Button
                   type="submit"
                   variant={"secondary"}
-                  className=" text-white hover:bg-lime-600 cursor-pointer"
+                  className="text-white hover:bg-lime-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Update Bot
