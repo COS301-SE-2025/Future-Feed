@@ -1,7 +1,5 @@
 import { Home, User, Bell, Settings, Search, LogOut, Bot } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { ModeToggle } from "./mode-toggle";
-import { ThemeProvider } from "@/components/theme-provider";
 import { useNotifications } from "@/context/NotificationContext";
 
 const PersonalSidebar = () => {
@@ -52,12 +50,6 @@ const PersonalSidebar = () => {
           >
             <LogOut  size={20} /> Logout
           </button>
-          <ThemeProvider>
-            <div className="pe-9 flex items-center gap-2">
-              <ModeToggle />
-              <span className="dark:hover:text-white dark:lime-500 hover:cursor-pointer">Theme</span>
-            </div>
-          </ThemeProvider>
         </nav>
       </aside>
 

@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft, Share2, Bot } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, ArrowLeft, Share2 } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import { FaRobot } from "react-icons/fa";
 
 interface UserProfile {
   id: number;
@@ -130,13 +131,13 @@ const StaticBotPost: React.FC<PostProps> = ({
           Link copied!
         </div>
       )}
-      <CardContent className="p-3 sm:p-4 md:p-6">
+      <CardContent className="p-3 sm:p-4 md:p-6 mt-[-30px]">
         {/* Back Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 sm:mb-3"
+          className="text-gray-500 dark:text-white hover:text-blue-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 sm:mb-3 hover:cursor-pointer"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
@@ -157,7 +158,10 @@ const StaticBotPost: React.FC<PostProps> = ({
           >
             <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback className="text-xs sm:text-sm">
-              {getInitials(username)}
+              <FaRobot
+                className=" h-8 w-8 text-gray-500"
+                aria-label="Bot post profile"
+              />
             </AvatarFallback>
           </Avatar>
 
@@ -175,10 +179,10 @@ const StaticBotPost: React.FC<PostProps> = ({
                 >
                   {username || "Unknown User"}
                 </h2>
-                <Bot
-                  className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-lime-400 flex-shrink-0"
-                  aria-label="Bot post indicator"
-                />
+                <FaRobot
+                    className=" h-8 w-8 text-gray-500 ml-2 mb-2"
+                    aria-label="Bot post indicator"
+                  />
               </div>
               
               <div className="flex items-center gap-1 flex-shrink-0">
@@ -235,7 +239,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
-                  "hover:text-red-500 dark:hover:text-red-400"
+                  "hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
@@ -275,7 +279,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0",
                   isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
-                  "hover:text-green-500 dark:hover:text-green-400"
+                  "hover:text-green-500 dark:hover:text-green-400 hover:cursor-pointer"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
@@ -295,7 +299,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0 text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400"
+                      "flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 min-w-0 text-gray-500 dark:text-white hover:text-green-500 hover:cursor-pointer"
                     )}
                     aria-label="Share post"
                   >
@@ -315,7 +319,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                     />
                     <Button
                       onClick={handleCopyLink}
-                      className="bg-blue-500 text-white hover:bg-lime-600 w-full sm:w-auto"
+                      className="bg-blue-500 text-white hover:bg-blue-600 w-full sm:w-auto hover:cursor-pointer"
                       aria-label="Copy link"
                     >
                       Copy

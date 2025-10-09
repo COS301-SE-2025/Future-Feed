@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Camera, Trash2, User } from "lucide-react";
-import { ThemeProvider } from "@/components/theme-provider";
 
 import {
   Dialog,
@@ -148,7 +147,6 @@ const EditProfile: React.FC = () => {
   return (
 
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black future-feed:bg-black  dark:text-white">
-      <ThemeProvider>
         <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
 
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
@@ -277,7 +275,6 @@ const EditProfile: React.FC = () => {
             </form>
           </CardContent>
         </Card>
-      </ThemeProvider>
     </div>
   );
 };
