@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { Link, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import Post from "@/components/ui/post";
@@ -13,6 +12,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import BotPost from "@/components/ui/BotPost";
 import { FaBars, FaTimes } from "react-icons/fa";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface UserProfile {
   id: number;
@@ -1440,7 +1440,7 @@ const UserProfile = () => {
           <PersonalSidebar />
         </aside>
         
-        <main className="w-[1100px] mx-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
             <Skeleton className="mt-25 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -1460,11 +1460,11 @@ const UserProfile = () => {
         <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
       </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky lg:top-0 lg:h-screen overflow-y-auto hidden lg:block">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-3">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
           <WhoToFollow />
         </div>
       </aside>
@@ -1511,11 +1511,13 @@ const UserProfile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
-        <div className="relative">
-          <div className="mt-25 dark:bg-slate-200 w-full" />
+      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+      <Card className="mb-5 ">
+        <CardContent className="ml-[-10px]">
+          <div className="relative">
+          <div className="mt-10 w-full" />
           <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-27 h-27 border-3  ">
+            <Avatar className="w-20 h-20 ">
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                 <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -1525,20 +1527,21 @@ const UserProfile = () => {
         </div>
         <div className="pt-16 px-4">
           <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-120px]">
-              <h1 className="text-xl future-feed:text-white  font-bold">{user.displayName || user.username}</h1>
-              <p className="dark:text-slate-500">@{user.username}</p>
-              <p className="mt-2 text-sm">{user.bio || "This is my bio"}</p>
+            <div className="ml-30 mt-[-110px]">
+              <h1 className="text-2xl text-black  font-bold">{user.displayName || user.username}</h1>
+              <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
+              <p className="mt-4 text-xl text-black">{user.bio}</p>
             </div>
-            <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="secondary" className="bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
+            
+            <Link to="/edit-profile" className="flex items-center gap-3 hover:bg-blue-300 mr-0">
+              <Button variant={"secondary"} className=" mt-[-190px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700">
                 Edit Profile
               </Button>
             </Link>
           </div>
-          <div className=" text-gray-400 mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200">{followingUsers ? followingUsers.length : 0}</span> Following ·
+              <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
               <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
@@ -1546,9 +1549,11 @@ const UserProfile = () => {
             <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
           </div>
         </div>
-        <Separator className="my-4 future-feed:bg-lime bg-blue-500 dark:bg-slate-200" />
-        <Tabs defaultValue="posts" className="w-full" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="grid w-full  dark:bg-blue-950 grid-cols-5 ">
+        </CardContent>
+
+      </Card>
+        <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>
@@ -1947,12 +1952,12 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:mt-6  lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
            
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
         
             <WhoToFollow />
           </div>

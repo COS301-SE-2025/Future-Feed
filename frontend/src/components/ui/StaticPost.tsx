@@ -125,12 +125,12 @@ const StaticPost: React.FC<PostProps> = ({
           Link copied!
         </div>
       )}
-      <CardContent className="p-1 mt-[-15px] ml-[20px]">
+      <CardContent className="p-5 pr-2 mt-[-15px] ml-[20px] mr-[20px]">
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
+          className="text-gray-500 dark:text-white hover:text-blue-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 hover:cursor-pointer"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
@@ -144,7 +144,7 @@ const StaticPost: React.FC<PostProps> = ({
                 onProfileClick();
               }}
           >
-            <AvatarImage src={profilePicture || currentUser?.profilePicture} alt={handle} />
+            <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
@@ -186,11 +186,14 @@ const StaticPost: React.FC<PostProps> = ({
             </p>
             <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
             {image && (
-              <img
-                src={image}
-                alt="Post"
-                className="mt-4 rounded-lg border  future-feed:border-lime max-w-full h-auto"
-              />
+              <div className="mt-4 w-full max-w-full overflow-hidden rounded-xl">
+                <img
+                  src={image}
+                  alt="Post"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50 dark:bg-gray-900"
+                  loading="lazy"
+                />
+              </div>
             )}
             <div className="flex justify-between mt-4 space-x-1 sm:space-x-2 mb-[-12px] ml-[-70px] lg:mr-20 lg:ml-10">
               <Button
@@ -200,7 +203,7 @@ const StaticPost: React.FC<PostProps> = ({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
-                  "hover:text-red-500 dark:hover:text-red-400"
+                  "hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
@@ -215,7 +218,7 @@ const StaticPost: React.FC<PostProps> = ({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
-                  "hover:text-blue-500 dark:hover:text-blue-400"
+                  "hover:text-blue-500 dark:hover:text-blue-400 hover:cursor-pointer"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
@@ -231,7 +234,7 @@ const StaticPost: React.FC<PostProps> = ({
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
                   isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
-                  "hover:text-green-500 dark:hover:text-green-400"
+                  "hover:text-green-500 dark:hover:text-green-400 hover:cursor-pointer"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
@@ -246,7 +249,7 @@ const StaticPost: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400"
+                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 dark:text-white hover:text-green-500 dark:hover:text-lime-400 hover:cursor-pointer"
                     )}
                     aria-label="Share post"
                   >
@@ -264,7 +267,7 @@ const StaticPost: React.FC<PostProps> = ({
                     />
                     <Button
                       onClick={handleCopyLink}
-                      className="bg-blue-500 text-white hover:bg-lime-600"
+                      className="bg-blue-500 text-white hover:bg-lime-600 hover:cursor-pointer"
                       aria-label="Copy link"
                     >
                       Copy
@@ -278,7 +281,7 @@ const StaticPost: React.FC<PostProps> = ({
                 size="sm"
                 onClick={onBookmark}
                 className={cn(
-                  "flex items-center gap-1 px-2 py-1 sm:px-3",
+                  "flex items-center gap-1 px-2 py-1 sm:px-3 hover:cursor-pointer",
                   isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
                   "hover:text-yellow-500 dark:hover:text-yellow-400"
                 )}

@@ -17,7 +17,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -176,7 +177,7 @@ public class TopicService {
     }
 
     public List<Topic> getTrendingTopics(int limit, int hoursBack) {
-        LocalDateTime since = LocalDateTime.now().minusHours(hoursBack);
+        Instant since = Instant.now().minus(Duration.ofHours(hoursBack));
         return topicRepository.findTrendingTopics(since, PageRequest.of(0, limit));
     }
 

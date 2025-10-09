@@ -530,8 +530,8 @@ const isHydrated = useStoreHydration();
   //
 
   return (
-    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
-      <aside className="  lg:w-[245px] lg:ml-6    flex-shrink-0 lg:sticky  lg:top-[30px] lg:h-screen overflow-y-auto">
+    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-gray-200 dark:bg-blue-950 dark:text-white">
+      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
@@ -610,7 +610,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

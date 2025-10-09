@@ -22,7 +22,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+//import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional; 
 
@@ -65,7 +66,7 @@ public class PostControllerTest {
         post.setId(1);
         post.setContent(postRequest.getContent());
         post.setImageUrl(postRequest.getImageUrl());
-        post.setCreatedAt(LocalDateTime.now());
+        post.setCreatedAt(Instant.now());
 
         when(postService.createPost(any(PostRequest.class))).thenReturn(post);
 

@@ -22,8 +22,6 @@ import {
 import { useNavigate } from "react-router-dom"
 //add theme in settings for mobile devices
 //plus it makes sense to have it in settings
-import { ThemeProvider } from "@/components/theme-provider"
-import { ModeToggle } from "@/components/mode-toggle"
 
 const Settings = () => {
   const navigate = useNavigate()
@@ -132,14 +130,11 @@ const Settings = () => {
               <SquareArrowOutUpRight />
              
               
-               <ThemeProvider >
                         <div className="p-4 rounded-md  border bg-transparent hover:bg-slate-200/20
                transition-colors duration-200
                w-10 h-4 flex items-center justify-center">
-                          <ModeToggle  />
                           
                         </div>
-                      </ThemeProvider>
                       
               
             </CommandItem>

@@ -12,6 +12,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -31,12 +34,14 @@ public class BookmarkService {
         this.postRepo = postRepo;
         this.notificationService = notificationService;
     }
+
     private AppUser getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
     public List<Post> getBookmarkedPosts() {
         AppUser user = getAuthenticatedUser();
         List<Bookmark> bookmarks = bookmarkRepo.findByUser(user);
@@ -46,6 +51,7 @@ public class BookmarkService {
                 .distinct()
                 .toList();
     }
+
     public boolean addBookmark(Integer userId, Integer postId) {
         AppUser user = userRepo.findById(userId).orElseThrow();
         Post post = postRepo.findById(postId).orElseThrow();
@@ -86,7 +92,7 @@ public class BookmarkService {
                             recipientId,
                             user.getId(),
                             "BOOKMARK REMOVED",
-                             " removed your post from bookmarks",
+                            " removed your post from bookmarks",
                             user.getUsername() + "",
                             postId
                     );
@@ -114,6 +120,7 @@ public class BookmarkService {
         return bookmarks.stream()
                 .map(bookmark -> {
                     Post post = bookmark.getPost();
+
                     return new BookmarkDto(
                             post.getId(),
                             post.getContent(),
@@ -138,5 +145,4 @@ public class BookmarkService {
                 .distinct()
                 .toList();
     }
-
 }

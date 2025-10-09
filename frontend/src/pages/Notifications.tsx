@@ -168,7 +168,7 @@ const Notifications = () => {
 
   const handlePostNavigation = (notification: Notification) => {
     const interactionTypes = ["LIKE", "COMMENT", "BOOKMARK", "RESHARE"];
-    
+
     if (interactionTypes.includes(notification.type) && notification.postId) {
       navigate(`/post/${notification.postId}`);
       if (!notification.isRead && currentUserId) {
@@ -245,7 +245,7 @@ const Notifications = () => {
         key={notification.id}
         className="dark:bg-indigo-950 dark:text-white future-feed:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative future-feed:border-2 future-feed:text-white dark:border-2"
       >
-        <CardContent 
+        <CardContent
           className="flex gap-3 items-start p-4"
           onClick={() => handlePostNavigation(notification)}
         >
@@ -264,7 +264,7 @@ const Notifications = () => {
             <div className="w-4 h-4 rounded-full bg-lime-500 mt-5.5 mr-5 future-feed:bg-white"></div>
           )}
         </CardContent>
-        
+
         <Button
           variant="ghost"
           size="icon"
@@ -296,28 +296,28 @@ const Notifications = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-gray-200 future-feed:bg-black dark:text-white mx-auto">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto border-r dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-4 pl-2 min-h-screen overflow-y-auto">
+      <main className="flex-1 p-4 pl-2 lg:ml-[260px] min-h-screen overflow-y-auto">
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border rounded-2xl dark:border-slate-200 z-10 future-feed:border-2 future-feed:border-lime future-feed:text-lime">
           <h1 className="text-xl dark:text-white font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4"/>
+                <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="dark:bg-blue-950 dark:border-slate-200">
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => setShowSearch(!showSearch)}
                 className="flex items-center cursor-pointer"
               >
                 <Search className="mr-2 text-lime-400" />
                 {showSearch ? "Hide Search" : "Show Search"}
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => currentUserId && markAllAsRead(currentUserId)}
                 disabled={unreadCount === 0}
                 className="flex items-center cursor-pointer"
@@ -366,9 +366,9 @@ const Notifications = () => {
             <Card className="dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl mt-4">
               <CardContent className="p-4 text-center">
                 <p className="text-red-500">Error: {error}</p>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  variant="ghost"
+                  size="icon"
                   onClick={() => setError(null)}
                   className="absolute top-2 right-2"
                 >
@@ -406,17 +406,17 @@ const Notifications = () => {
         </Tabs>
       </main>
 
-     <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky   lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            <WhatsHappening />
-           
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        
-            <WhoToFollow />
-          </div>
-        
-        </aside>
+      <aside className="w-full lg:w-[350px] lg:sticky   lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+
+          <WhoToFollow />
+        </div>
+
+      </aside>
     </div>
   );
 };

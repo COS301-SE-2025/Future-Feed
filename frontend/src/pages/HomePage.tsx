@@ -11,8 +11,8 @@ import { FaBars, FaImage, FaTimes } from "react-icons/fa";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Filter, Percent, SmilePlus, ArrowLeft, ChartNoAxesGantt, SaveAll, Trash2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Filter, SmilePlus, ArrowLeft, ChartNoAxesGantt, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
 import { useNotifications } from "@/context/NotificationContext";
 import BotPost from "@/components/ui/BotPost";
 import {
@@ -33,7 +33,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 interface Preset {
   id: number;
   userId: number;
@@ -171,14 +170,15 @@ const HomePage = () => {
   const [defaultPresetId, setDefaultPresetId] = useState<number | null>(null);
   const [useAIGeneration, setUseAIGeneration] = useState(false);
   const [imagePrompt, setImagePrompt] = useState("");
-  const [imageWidth, setImageWidth] = useState(768);
-  const [imageHeight, setImageHeight] = useState(768);
+  const [imageWidth, setImageWidth] = useState(384);
+  const [imageHeight, setImageHeight] = useState(384);
   const [imageSteps, setImageSteps] = useState(8);
   const [imageModel, setImageModel] = useState("black-forest-labs/FLUX.1-schnell");
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<ApiUser[]>([]);
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
+  const [isCreatePresetModalOpen, setIsCreatePresetModalOpen] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -200,6 +200,12 @@ const HomePage = () => {
     config: { tension: 220, friction: 30 },
   });
 
+  const createPresetModalProps = useSpring({
+    opacity: isCreatePresetModalOpen ? 1 : 0,
+    transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 250, friction: 35 },
+  });
+
   interface PostUser {
     id: number;
     username?: string;
@@ -210,6 +216,50 @@ const HomePage = () => {
   const generateTempId = () => {
     setTempIdCounter((prev) => prev - 1);
     return tempIdCounter - 1;
+  };
+
+  const fetchBot = async (botId: number, postBot?: { username?: string; displayName?: string; profilePicture?: string }) => {
+    if (!botId) {
+      console.warn("Invalid botId provided");
+      return {
+        username: "unknownbot",
+        displayName: "Unknown Bot",
+        profilePicture: undefined,
+      };
+    }
+    if (postBot && postBot.username && postBot.displayName) {
+      const bot = {
+        username: postBot.username,
+        displayName: postBot.displayName,
+        profilePicture: postBot.profilePicture,
+      };
+      console.debug(`Using provided bot data for bot ${botId}:`, bot);
+      return bot;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/bot/${botId}`, {
+        credentials: "include",
+        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
+      });
+      if (!res.ok) throw new Error(`Failed to fetch bot ${botId}: ${res.status}`);
+      const botData = await res.json();
+      const validBot = {
+        username: botData.username || `bot${botId}`,
+        displayName: botData.displayName || `Bot ${botId}`,
+        profilePicture: botData.profilePicture,
+      };
+      console.debug(`Fetched bot data for bot ${botId}:`, validBot);
+      return validBot;
+    } catch (err) {
+      console.warn(`Failed to fetch bot ${botId}:`, err);
+      const fallback = {
+        username: `bot${botId}`,
+        displayName: `Bot ${botId}`,
+        profilePicture: undefined,
+      };
+      return fallback;
+    }
   };
 
   const fetchUser = async (userId: number, postUser?: PostUser) => {
@@ -418,7 +468,12 @@ const HomePage = () => {
             })
           );
 
-          const postUser = await fetchUser(post.user.id, post.user);
+          let postUser;
+          if (post.isBot && post.botId) {
+            postUser = await fetchBot(post.botId, post.user);
+          } else {
+            postUser = await fetchUser(post.user.id, post.user);
+          }
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
@@ -771,34 +826,7 @@ const HomePage = () => {
       return null;
     }
   };
-  const updatePreset = async (presetId: number, name: string, defaultPreset: boolean) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`${API_URL}/api/presets/${presetId}`, {
-        method: "PUT",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`
-        },
-        body: JSON.stringify({ name, defaultPreset }),
-      });
-      if (!response.ok) throw new Error(`Failed to update preset: ${response.status}`);
-      setPresets((prev) =>
-        prev.map((p) => (p.id === presetId ? { ...p, name, defaultPreset } : p))
-      );
-      if (defaultPreset) {
-        setDefaultPresetId(presetId);
-      }
-      setError(null);
-    } catch (err) {
-      console.error("Error updating preset:", err);
-      setError("Failed to update preset.");
-      setTimeout(() => setError(null), 3000);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
   const deletePreset = async (presetId: number) => {
     try {
       setIsLoading(true);
@@ -929,7 +957,12 @@ const HomePage = () => {
             })
           );
 
-          const postUser = await fetchUser(post.user.id, post.user);
+          let postUser;
+          if (post.isBot && post.botId) {
+            postUser = await fetchBot(post.botId, post.user); // post.user might have partial bot data
+          } else {
+            postUser = await fetchUser(post.user.id, post.user);
+          }
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
@@ -1151,7 +1184,7 @@ const HomePage = () => {
       setError('');
     } catch (err) {
       console.debug(err);
-      setError("Couldn't add rule");
+      setError("Rule percentage exceeded .");
       setTimeout(() => {
         setError('');
       }, 3000);
@@ -1184,23 +1217,23 @@ const HomePage = () => {
 
     if (rule.topicId) {
       const topic = topics.find(t => t.id === rule.topicId);
-      parts.push(`Topic: ${topic?.name || `ID ${rule.topicId}`}`);
+      parts.push(`Topic : ${topic?.name || `${rule.topicId}`}`);
     }
 
     if (rule.sourceType) {
-      parts.push(`Source: ${rule.sourceType}`);
+      parts.push(`Source : ${rule.sourceType}`);
     }
 
     if (rule.specificUserId) {
       const user = allUsers.find(u => u.id === rule.specificUserId);
-      parts.push(`User: ${user?.displayName || user?.username || `ID ${rule.specificUserId}`}`);
+      parts.push(`User ${user?.displayName || user?.username || `${rule.specificUserId}`}`);
     }
 
     if (rule.percentage) {
       parts.push(`${rule.percentage}%`);
     }
 
-    return parts.join(' | ');
+    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 '); // Using non-breaking spaces
   };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1948,10 +1981,10 @@ const HomePage = () => {
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
 
-        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime  flex flex-col gap-2 hidden lg:flex">
+        <div className="p-4 mt-6 border-t dark:border-slate-200 border-blue-500 future-feed:border-lime flex flex-col gap-2 hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
             className="w-[200px] future-feed:text-lime future-feed:border-lime"
@@ -1961,7 +1994,7 @@ const HomePage = () => {
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 future-feed:text-lime  future-feed:border-lime "
+            className="w-[200px] mt-3 future-feed:text-lime future-feed:border-lime"
             variant={"secondary"}
           >
             View Topics
@@ -2012,12 +2045,7 @@ const HomePage = () => {
       <div
         className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
       >
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
-          {error && (
-            <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-              <p>{error}</p>
-            </div>
-          )}
+        <main className="mt-1 flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {loading ? (
             renderSkeletonPosts()
           ) : !currentUser ? (
@@ -2027,10 +2055,12 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
-                onClick={() => setIsPostModalOpen(true)}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
               >
-                <h1 className=" future-feed:text-lime  text-xl dark:text-slate-200 font-bold text-black">What's on your mind?</h1>
+                <h1 className="future-feed:text-lime text-xl dark:text-slate-200 font-bold text-black">
+                  {activeTab === "Presets" ? "Create a new preset" : "What's on your mind?"}
+                </h1>
               </div>
               <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
@@ -2091,184 +2121,151 @@ const HomePage = () => {
 
                     </div>
                   ) : (
-                    renderPosts(followingPosts)
+                    <div className="mt-5">
+                      {renderPosts(followingPosts)}
+                    </div>
                   )}
                 </TabsContent>
                 <TabsContent value="Presets">
-                  <Tabs defaultValue="Your Presets" className={`w-full p-2 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
-                    <TabsList className="w-full h-[30px] flex justify-around rounded-2xl mt-2 mb-2 border dark:border-slate-200 dark:bg-blue-950 sticky top-[68px] z-10 overflow-x-auto">
-                      {["Your Presets", "Create Presets"].map((tab) => (
-                        <TabsTrigger
-                          key={tab}
-                          value={tab}
-                          className="flex-1 min-w-[100px] rounded-2xl text-sm lg:text-base"
+                  {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mx-4 my-2">
+                      {error}
+                    </div>
+                  )}
+                  {!defaultPresetId && presets.length === 0 && !isLoading && (
+                    <div className="text-center p-8">
+                      <p className="text-lg text-gray-500 mb-4">No presets found</p>
+                      <p className="text-sm text-gray-400">Create your first preset to customize your feed!</p>
+                    </div>
+                  )}
+                  {isViewingPresetFeed ? (
+                    <>
+                      <div className="flex items-center gap-2 p-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setIsViewingPresetFeed(false);
+                            setPresetPosts([]);
+                            setSelectedPreset(null);
+                          }}
+                          className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                         >
-                          {tab.replace(/^\w/, (c) => c.toUpperCase())}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-
-                    <TabsContent value="Your Presets" className="p-0">
-                      {error && (
-                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                          {error}
-                        </div>
-                      )}
-                      {!defaultPresetId && presets.length === 0 && (
-                        <div className="text-center p-8">
-                          <p className="text-lg text-gray-500 mb-4">No presets found</p>
-                          <p className="text-sm text-gray-400">
-                            Create your first preset to customize your feed!
-                          </p>
-                        </div>
-                      )}
-                      {isViewingPresetFeed ? (
-                        <>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              className="mb-4 bg-blue-500 text-white hover:bg-white hover:text-blue-500"
-                              onClick={() => {
-                                setIsViewingPresetFeed(false);
-                                setPresetPosts([]);
-                              }}
-                            >
-                              <ArrowLeft />
-                            </Button>
-                            <div className="mt-1 ml-3 text-lg text-gray-400">
-                              Back to Presets
-                            </div>
-                          </div>
-                          {loadingPresetPosts ? (
-                            renderSkeletonPosts()
-                          ) : presetPosts.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-10">
-                              <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
-                            </div>
-                          ) : (
-                            renderPosts(presetPosts)
-                          )}
-                        </>
-                      ) : isLoading ? (
-                        <div className="flex justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 dark:border-slate-200"></div>
+                          <ArrowLeft className="h-4 w-4 mr-1" />
+                          Back to Presets
+                        </Button>
+                      </div>
+                      {loadingPresetPosts ? (
+                        renderSkeletonPosts()
+                      ) : presetPosts.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-10">
+                          <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        renderPosts(presetPosts)
+                      )}
+                    </>
+                  ) : isLoading ? (
+                    <div className="flex justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {presets.length > 0 && (
+                        <div className="mt-6 space-y-4">
                           {presets.map((preset) => (
-                            <Card key={preset.id} className="hover:bg-slate-100">
-                              <CardHeader className="pb-2">
+                            <Card key={preset.id} className="w-full dark:bg-indigo-950 dark:border-slate-200 dark:text-white">
+                              <CardHeader>
                                 <div className="flex justify-between items-center">
-                                  <CardTitle>
+                                  <CardTitle className="text-2xl font-bold dark:text-white">
                                     <Input
                                       value={preset.name}
                                       onChange={(e) => {
                                         setPresets((prev) =>
-                                          prev.map((p) =>
-                                            p.id === preset.id ? { ...p, name: e.target.value } : p
-                                          )
+                                          prev.map((p) => (p.id === preset.id ? { ...p, name: e.target.value } : p))
                                         );
                                       }}
-                                      className="text-lg font-bold border border-0 bg-white dark:text-white "
+                                      className="border-0 bg-transparent text-lg font-bold dark:text-white text-black"
                                     />
                                   </CardTitle>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <DropdownMenuTrigger asChild>
-                                              <Button variant="outline" size="sm">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                              </Button>
-                                            </DropdownMenuTrigger>
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p>Preset Actions</p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start">
-                                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem
-                                        onClick={() => {
-                                          setSelectedPreset(preset.id);
-                                          fetchPresetPosts(preset.id);
-                                        }}
-                                      >
-                                        <ChartNoAxesGantt className="text-lime-300" />
-                                        View Feed
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => updatePreset(preset.id, preset.name, preset.defaultPreset || false)}
-                                      >
-                                        <SaveAll className="text-lime-300" />
-                                        Save
-                                      </DropdownMenuItem>
-                                      <Dialog>
-                                        <DialogTrigger asChild>
-                                          <DropdownMenuItem
-                                            onSelect={(e) => e.preventDefault()}
-                                            className="text-red-500 focus:text-red-700"
-                                          >
-                                            <Trash2 className="text-red-400" />
-                                            Delete
-                                          </DropdownMenuItem>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                          <DialogHeader>
-                                            <DialogTitle>Delete Preset</DialogTitle>
-                                            <DialogDescription>
-                                              Are you sure you want to delete {preset.name} ? This action cannot be undone.
-                                            </DialogDescription>
-                                          </DialogHeader>
-                                          <DialogFooter>
-                                            <Button variant="outline" onClick={() => { }}>
-                                              Cancel
-                                            </Button>
-                                            <Button
-                                              variant="destructive"
-                                              onClick={() => deletePreset(preset.id)}
+                                  <div className="flex items-center space-x-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {selectedPreset === preset.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                          <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-600">
+                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          onClick={() => {
+                                            setSelectedPreset(preset.id);
+                                            fetchPresetPosts(preset.id);
+                                          }}
+                                        >
+                                          <ChartNoAxesGantt className="mr-2 h-4 w-4 text-lime-400" />
+                                          View Feed
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => setDefaultPreset(preset.id)}
+                                          disabled={preset.defaultPreset}
+                                        >
+                                          {preset.defaultPreset ? "Default Preset" : "Set as Default"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <Dialog>
+                                          <DialogTrigger asChild>
+                                            <DropdownMenuItem
+                                              onSelect={(e) => e.preventDefault()}
+                                              className="text-red-500 focus:text-red-700"
                                             >
-                                              Delete
-                                            </Button>
-                                          </DialogFooter>
-                                        </DialogContent>
-                                      </Dialog>
-                                      <DropdownMenuItem
-                                        onClick={() => setDefaultPreset(preset.id)}
-                                        disabled={preset.id === defaultPresetId}
-                                      >
-                                        {preset.id === defaultPresetId ? "Default" : "Set Default"}
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                                              <Trash2 className="mr-2 h-4 w-4 text-red-400" />
+                                              Delete Preset
+                                            </DropdownMenuItem>
+                                          </DialogTrigger>
+                                          <DialogContent className="dark:bg-gray-800 dark:border-gray-600">
+                                            <DialogHeader>
+                                              <DialogTitle className="dark:text-white">Delete Preset</DialogTitle>
+                                              <DialogDescription className="dark:text-gray-400">
+                                                Are you sure you want to delete "{preset.name}" Preset ? This action cannot be undone.
+                                              </DialogDescription>
+                                            </DialogHeader>
+                                            <DialogFooter>
+                                              <Button variant="outline" type="button">Cancel</Button>
+                                              <Button
+                                                variant="destructive"
+                                                onClick={() => {
+                                                  deletePreset(preset.id);
+                                                }}
+                                              >
+                                                Delete
+                                              </Button>
+                                            </DialogFooter>
+                                          </DialogContent>
+                                        </Dialog>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
                                 </div>
                               </CardHeader>
-                              <CardContent>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => setSelectedPreset(selectedPreset === preset.id ? null : preset.id)}
-                                  className="mb-1 bg-blue-500 text-white dark:bg-white dark:text-black hover:text-white hover:bg-gray-500 rounded rounded-full"
-                                >
-                                  {selectedPreset === preset.id ? "Hide Rules" : "Show Rules"}
-                                </Button>
+                              <CardContent className="">
                                 {selectedPreset === preset.id && (
-                                  <div className="mt-3 space-y-3">
-                                    <div className="space-y-2">
-                                      <div className="flex items-center space-x-2 p-1">
+                                  <div className="space-y-4">
+                                    <div className="space-y-3">
+                                      <div className="flex flex-col space-y-2">
                                         <select
                                           value={newRule.topicId || ""}
-                                          onChange={(e) =>
-                                            setNewRule({
-                                              ...newRule,
-                                              topicId: e.target.value ? parseInt(e.target.value) : undefined,
-                                            })
-                                          }
-                                          className="future-feed:bg-card future-feed:text-white future-feed:border-lime flex h-9 w-full rounded-md border border-input hover:border hover:border-lime-500 bg-background px-2 py-1 text-sm"
+                                          onChange={(e) => setNewRule({ ...newRule, topicId: e.target.value ? Number(e.target.value) : undefined })}
+                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2278,122 +2275,95 @@ const HomePage = () => {
                                           ))}
                                         </select>
                                       </div>
-                                      <div className="flex items-center space-x-2 p-1">
+                                      <div className="flex flex-col space-y-2">
                                         <select
                                           value={newRule.sourceType || ""}
-                                          onChange={(e) =>
-                                            setNewRule({
-                                              ...newRule,
-                                              sourceType: e.target.value as "user" | "bot" | undefined,
-                                            })
-                                          }
-                                          className="flex future-feed:bg-card future-feed:text-white future-feed:border-lime h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
+                                          onChange={(e) => setNewRule({ ...newRule, sourceType: e.target.value as 'user' | 'bot' | undefined })}
+                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
                                         >
-                                          <option className="future-feed:bg-card" value="">Select a source type</option>
-                                          <option className="future-feed:bg-card" value="user">User Posts</option>
-                                          <option className="future-feed:bg-card" value="bot">Bot Posts</option>
+                                          <option value="">Select Source</option>
+                                          <option value="user">User Posts</option>
+                                          <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="user-search-container relative">
-                                        <Input
-                                          placeholder="Search users..."
-                                          value={userSearchQuery}
-                                          onChange={(e) => {
-                                            setUserSearchQuery(e.target.value);
-                                            setIsUserSearchOpen(true);
-                                          }}
-                                          onFocus={() => setIsUserSearchOpen(true)}
-                                          className="flex h-9 w-full rounded-md border border-input bg-background px-2 py-1 text-sm hover:border hover:border-lime-500"
-                                        />
-
-                                        {isUserSearchOpen && filteredUsers.length > 0 && (
-                                          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                            {filteredUsers.map((user) => (
-                                              <div
-                                                key={user.id}
-                                                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                                onClick={() => {
-                                                  setNewRule({
-                                                    ...newRule,
-                                                    specificUserId: user.id,
-                                                  });
-                                                  setUserSearchQuery(user.displayName || `@${user.username}`);
-                                                  setIsUserSearchOpen(false);
-                                                }}
-                                              >
-                                                <div className="flex items-center space-x-3">
+                                      <div className="flex flex-col space-y-2">
+                                        <div className="relative">
+                                          <Input
+                                            placeholder="Search users..."
+                                            value={userSearchQuery}
+                                            onChange={(e) => {
+                                              setUserSearchQuery(e.target.value);
+                                              setIsUserSearchOpen(true);
+                                            }}
+                                            onFocus={() => setIsUserSearchOpen(true)}
+                                            className="dark:bg-gray-800 dark:border-gray-600 dark:text-white pr-10 bg-gray-300 text-black rounded-xl h-8"
+                                          />
+                                          {newRule.specificUserId && (
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => {
+                                                setNewRule({ ...newRule, specificUserId: undefined });
+                                                setUserSearchQuery("");
+                                              }}
+                                              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                            >
+                                              <FaTimes size={12} className="text-red-500" />
+                                            </Button>
+                                          )}
+                                          {isUserSearchOpen && filteredUsers.length > 0 && (
+                                            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                              {filteredUsers.map((user) => (
+                                                <div
+                                                  key={user.id}
+                                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3"
+                                                  onClick={() => {
+                                                    setNewRule({ ...newRule, specificUserId: user.id });
+                                                    setUserSearchQuery(`${user.displayName} (@${user.username})`);
+                                                    setIsUserSearchOpen(false);
+                                                  }}
+                                                >
                                                   {user.profilePicture && (
-                                                    <img
-                                                      src={user.profilePicture}
-                                                      alt={user.displayName || user.username}
-                                                      className="w-6 h-6 rounded-full"
-                                                    />
+                                                    <img src={user.profilePicture} alt={user.displayName} className="w-6 h-6 rounded-full" />
                                                   )}
                                                   <div>
-                                                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                      {user.displayName || user.username}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                                      @{user.username}
-                                                    </div>
+                                                    <div className="text-sm font-medium dark:text-white">{user.displayName}</div>
+                                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</div>
                                                   </div>
                                                 </div>
-                                              </div>
-                                            ))}
-                                          </div>
-                                        )}
-                                        {newRule.specificUserId && (
-                                          <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                              setNewRule({
-                                                ...newRule,
-                                                specificUserId: undefined,
-                                              });
-                                              setUserSearchQuery("");
-                                            }}
-                                            className="absolute right-1 top-1 h-7 w-7 p-0 text-gray-500 hover:text-red-500"
-                                          >
-                                            <FaTimes size={12} />
-                                          </Button>
-                                        )}
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
                                       </div>
-
-                                      <div className="flex items-center space-x-2 p-1">
+                                      <div className="flex items-center space-x-2">
                                         <Input
                                           type="number"
                                           min="1"
                                           max="100"
-                                          placeholder="Percentage (1-100)"
+                                          placeholder="Percentage (1-100)%"
                                           value={newRule.percentage || ""}
-                                          onChange={(e) =>
-                                            setNewRule({
-                                              ...newRule,
-                                              percentage: e.target.value ? parseInt(e.target.value) : undefined,
-                                            })
-                                          }
-                                          className="flex-1 hover:border future-feed:border-lime hover:border-lime-500"
+                                          onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
+                                          className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
                                         />
-                                        <Percent size={16} className="text-gray-400" />
+
                                       </div>
                                       <Button
-                                        className="w-full bg-blue-500 hover:bg-gray-500 p-1 rounded rounded-full"
+                                        className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-8"
                                         onClick={() => addRule(preset.id)}
-                                        size="sm"
-                                      >Add Rule
+                                        disabled={!newRule.topicId && !newRule.sourceType && !newRule.specificUserId}
+                                      >
+                                        Add Rule
                                       </Button>
                                     </div>
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
+                                        <h4 className="text-sm font-medium dark:text-white">Rules</h4>
                                         {rules[preset.id].map((rule) => (
-                                          <div
-                                            key={rule.id}
-                                            className="future-feed:border-lime flex items-center justify-between future-feed:bg-card future-feed:text-white p-2 border rounded-md bg-white"
-                                          >
-                                            <div className="flex items-center flex-1">
-                                              <Filter size={14} className="mr-2 text-blue-500" />
-                                              <span className="text-sm dark:text-indigo-900">{formatRule(rule)}</span>
+                                          <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                            <div className="flex items-center space-x-2 px-3">
+                                              <Filter className="h-4 w-4 text-white" />
+                                              <span className="text-sm dark:text-white text-white">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2401,13 +2371,13 @@ const HomePage = () => {
                                               onClick={() => deleteRule(preset.id, rule.id)}
                                               className="text-red-500 hover:text-red-700"
                                             >
-                                              <FaTimes size={12} />
+                                              <FaTimes size={14} />
                                             </Button>
                                           </div>
                                         ))}
                                       </div>
                                     ) : (
-                                      <p className="text-sm text-gray-500">No rules added yet.</p>
+                                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No rules added yet.</p>
                                     )}
                                   </div>
                                 )}
@@ -2416,70 +2386,65 @@ const HomePage = () => {
                           ))}
                         </div>
                       )}
-                    </TabsContent>
-
-                    <TabsContent value="Create Presets">
-                      <Card className="w-full">
-                        <CardHeader>
-                          <div className="text-center">
-                            <CardTitle>Create a New Feed Preset</CardTitle>
-                            <CardDescription>Create a named preset to organize your filtering rules</CardDescription>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          {error && (
-                            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                              {error}
-                            </div>
-                          )}
-                          <div className="flex space-x-2">
-                            <Input
-                              placeholder="Preset name (e.g., Tech & Bots)"
-                              value={newPresetName}
-                              onChange={(e) => setNewPresetName(e.target.value)}
-                              className="flex-1"
-                            />
+                    </div>
+                  )}
+                  {isCreatePresetModalOpen && (
+                    <animated.div
+                      style={createPresetModalProps}
+                      className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
+                    >
+                      <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-md  border-2 dark:border-slate-200 flex flex-col relative">
+                        <button
+                          onClick={() => {
+                            setIsCreatePresetModalOpen(false);
+                            setNewPresetName("");
+                          }}
+                          className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+                          title="Close modal"
+                        >
+                          <FaTimes className="w-6 h-6" />
+                        </button>
+                        <div className="text-center mb-5">
+                          <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
+                        </div>
+                        <div className="flex flex space-x-4">
+                          <Input
+                            placeholder="Preset name (e.g., Tech & Bots)"
+                            value={newPresetName}
+                            onChange={(e) => setNewPresetName(e.target.value)}
+                            className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                          />
+                          <div className="flex justify-end">
                             <Button
-                              className="bg-blue-500"
-                              onClick={() => createPreset(false)}
-                              disabled={isLoading}
+                              onClick={() => {
+                                createPreset(false);
+                                setIsCreatePresetModalOpen(false);
+                              }}
+                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                              disabled={!newPresetName.trim() || isLoading}
                             >
                               {isLoading ? "Creating..." : "Create"}
                             </Button>
                           </div>
-                          {presets.length > 0 && (
-                            <div className="pt-4">
-                              <div className="text-center">
-                                <h3 className="text-lg future-feed:text-white font-medium mb-2">Your Existing Presets</h3>
-                              </div>
-                              <div className="space-y-2">
-                                {presets.map((preset) => (
-                                  <div key={preset.id} className="flex items-center justify-between p-2 border-2 future-feed:border-lime border-l-lime-500 rounded-md">
-                                    <span className="future-feed:text-white">{preset.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
-                    </TabsContent>
-                  </Tabs>
+                        </div>
+                      </div>
+                    </animated.div>
+                  )}
                 </TabsContent>
               </Tabs>
             </>
           )}
         </main>
-        <aside className="w-full lg:w-[350px] lg:mt-6 lg:sticky  lg:top-0 lg:h-screen  hidden lg:block ">
+        <aside className="w-full lg:w-[350px] lg:sticky  lg:top-0 lg:h-screen  hidden lg:block ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
-           
+
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        
+            {/*  */}
             <WhoToFollow />
           </div>
-        
+
         </aside>
       </div>
       {isPostModalOpen && (
@@ -2498,8 +2463,8 @@ const HomePage = () => {
                 setImageFile(null);
                 setUseAIGeneration(false);
                 setImagePrompt("");
-                setImageWidth(768);
-                setImageHeight(768);
+                setImageWidth(384);
+                setImageHeight(384);
               }}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
               title="Close modal"

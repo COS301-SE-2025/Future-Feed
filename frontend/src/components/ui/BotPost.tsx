@@ -2,10 +2,11 @@ import * as React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Bot } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Trash2, Repeat2} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import { FaRobot } from "react-icons/fa";
 
 interface BotProfile {
   id: number;
@@ -147,7 +148,12 @@ const BotPost: React.FC<PostProps> = ({
                 onError={() => console.error(`Failed to load profile picture for ${handle}:`, profilePicture)}
               />
             ) : (
-              <AvatarFallback>{getInitials(username)}</AvatarFallback>
+              <AvatarFallback>
+                  <FaRobot
+                    className=" h-8 w-8 text-gray-500"
+                    aria-label="Bot post profile"
+                  />
+                </AvatarFallback>
             )}
           </Avatar>
           <div className="flex-1">
@@ -162,8 +168,8 @@ const BotPost: React.FC<PostProps> = ({
                 >
                   {username || "Unknown User"}
                 </h2>
-                <Bot
-                  className="ml-2 h-8 w-8 text-gray-500 text-lime-400"
+                <FaRobot
+                  className="ml-2 h-8 w-8 text-gray-500"
                   aria-label="Bot post indicator"
                 />
               </div>
