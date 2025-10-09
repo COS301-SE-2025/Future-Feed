@@ -230,7 +230,7 @@ const FollowerFollowing = () => {
       <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         
 
-        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
+        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 py-3  top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
           <Avatar className=" w-24 h-24 border-4 ">
              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -256,12 +256,7 @@ const FollowerFollowing = () => {
             >
               Following ({followingUsers.length})
             </TabsTrigger>
-            <TabsTrigger
-              value="bots"
-              className="flex-1 rounded-2xl "
-            >
-              Bots
-            </TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="followers">
@@ -284,9 +279,6 @@ const FollowerFollowing = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="bots">
-            <p className="p-4 dark:text-gray-400">You are currently not following any bots</p>
-          </TabsContent>
         </Tabs>
 
         <div className="w-full lg:sticky  dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
