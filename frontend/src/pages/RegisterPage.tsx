@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import lightLogo from "../assets/Future feed transparent-Photoroom.png";
 import darkLogo from "../assets/Dark mode.png";
 import futurefeedLogo from "../assets/Future Feed Main Dark v1.png";
-import { ThemeProvider } from "@/components/theme-provider"
 
 interface FormData {
   profilePic: File | null;
@@ -41,7 +40,6 @@ const RegisterPage: React.FC = () => {
 
   return (
     <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 future-feed:bg-black dark:bg-blue-950 dark:text-slate-200">
-      <ThemeProvider>
             
       <div className="mt-10 flex justify-center">
       {/* Light mode logo */}
@@ -228,7 +226,6 @@ const RegisterPage: React.FC = () => {
           </form>
         </CardContent>
       </Card>
-      </ThemeProvider>
     </div>
   );
 };

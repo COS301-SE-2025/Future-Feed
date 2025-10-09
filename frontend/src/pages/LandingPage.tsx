@@ -7,8 +7,6 @@ import Notificationsmobile from "../assets/home12.png"
 import Help_mobile from "../assets/helpmobilenew.png"
 import Settingsmobile from "../assets/settingsmobile.png"
 import Editprofilemobile from "../assets/home14.png"
-import { ThemeProvider } from "@/components/theme-provider"
-// import { ModeToggle } from "@/components/mode-toggle"
 import { Link } from "react-router-dom";
 import { useRef, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -77,10 +75,6 @@ const LandingPage = () => {
 
     return (
         <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-ffgrey text-white-800 overflow-hidden ">
-
-            <ThemeProvider>
-            
-            
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="mt-2 ml-2" asChild>
@@ -251,7 +245,6 @@ const LandingPage = () => {
                     </motion.div>
                 </div>
             </div>
-            </ThemeProvider>
         </div>
     )
 }
