@@ -19,7 +19,7 @@ function Command({
     <CommandPrimitive
       data-slot="command"
       className={cn(
-        "future-feed:bg-black   future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 bg-popover dark:text-slate-200 text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
+        "future-feed:bg-black drop-shadow-xl   future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 bg-popover dark:text-slate-200 text-popover-foreground flex h-full w-full flex-col overflow-hidden rounded-md",
         className
       )}
       {...props}
@@ -42,7 +42,7 @@ function CommandDialog({
 }) {
   return (
     <Dialog {...props}>
-      <DialogHeader className="sr-only">
+      <DialogHeader className="sr-only font-bold">
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription>{description}</DialogDescription>
       </DialogHeader>
@@ -116,7 +116,7 @@ function CommandGroup({
     <CommandPrimitive.Group
       data-slot="command-group"
       className={cn(
-        "future-feed:text-lime dark:text-slate-300 [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
+        " future-feed:text-lime dark:text-slate-300 [&_[cmdk-group-heading]]:text-muted-foreground overflow-hidden p-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium",
         className
       )}
       {...props}

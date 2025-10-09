@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import futurefeedLogo from "../assets/white logo.png";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
@@ -16,6 +18,19 @@ const Login: React.FC = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (typeof reader.result === "string") {
+          setProfilePicture(reader.result); // Store Base64 string
+        }
+      };
+      reader.readAsDataURL(file); // Convert file to Base64
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,12 +46,12 @@ const Login: React.FC = () => {
         password,
         email,
         displayName,
-        profilePicture,
+        profilePicture, // Base64 string
         dateOfBirth,
       };
 
       try {
-        const res = await fetch("http://localhost:8080/api/auth/register", {
+        const res = await fetch(`${API_URL}/api/auth/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -47,7 +62,6 @@ const Login: React.FC = () => {
 
         if (res.ok) {
           console.log("Registration successful");
-          // Optionally toggle to login or navigate
           setIsRegister(false);
         } else {
           console.error("Registration failed");
@@ -61,7 +75,7 @@ const Login: React.FC = () => {
       params.append("password", password);
 
       try {
-        const res = await fetch("http://localhost:8080/api/auth/login", {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -72,8 +86,7 @@ const Login: React.FC = () => {
 
         if (res.ok) {
           console.log("Login successful");
-          // Optionally navigate to dashboard or home
-          navigate("/home"); // Adjust route as needed
+          navigate("/home");
         } else {
           console.error("Login failed");
         }
@@ -134,7 +147,7 @@ const Login: React.FC = () => {
       </div>
 
       <div className={`relative z-10 flex w-full lg:w-1/2 items-center justify-center p-8 transition-transform duration-500 ${isRegister ? "translate-x-0" : "translate-x-full"}`}>
-        <Card className="w-full max-w-md rounded-xl shadow-lg border-0">
+        <Card className="w-full max-w-md rounded-xl shadow-lg border-0 bg-white">
           <CardHeader>
             <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
           </CardHeader>
@@ -143,14 +156,18 @@ const Login: React.FC = () => {
               {!isRegister && (
                 <Button
                   type="button"
+                  onClick={() => {
+                    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+                  }}
                   className="w-full py-3 text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
+                  <span className="whitespace-nowrap">Continue with:</span>
                   <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                     alt="Google Logo"
                     className="mr-2 h-6 w-6"
                   />
-                  Continue with Google
+
                 </Button>
               )}
               <div>
@@ -205,11 +222,10 @@ const Login: React.FC = () => {
                   <div>
                     <Label htmlFor="profilePic" className="font-bold">Profile Picture</Label>
                     <Input
-                      type="text"
+                      type="file"
                       id="profilePic"
-                      value={profilePicture}
-                      onChange={(e) => setProfilePicture(e.target.value)}
-                      placeholder="Enter profile picture URL"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
                       className="mt-2 h-12 rounded-full text-lg px-4"
                     />
                   </div>
@@ -250,7 +266,7 @@ const Login: React.FC = () => {
               )}
               <Button
                 type="submit"
-                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
               >
                 {isRegister ? "Register" : "Login"}
               </Button>
