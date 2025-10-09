@@ -1455,13 +1455,8 @@ const Profile = () => {
 
   if (isLoading) {
   return (
-<<<<<<< HEAD
-      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
-        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
-=======
       <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
->>>>>>> 3ff96cbacf5f7eff2f51df400d6cc49eed02a0a0
           <PersonalSidebar />
         </aside>
         
