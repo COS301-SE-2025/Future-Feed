@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import futurefeedLogo from "../assets/white logo.png";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
@@ -49,7 +51,7 @@ const Login: React.FC = () => {
       };
 
       try {
-        const res = await fetch("http://localhost:8080/api/auth/register", {
+        const res = await fetch(`${API_URL}/api/auth/register`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -73,7 +75,7 @@ const Login: React.FC = () => {
       params.append("password", password);
 
       try {
-        const res = await fetch("http://localhost:8080/api/auth/login", {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
@@ -154,14 +156,18 @@ const Login: React.FC = () => {
               {!isRegister && (
                 <Button
                   type="button"
+                  onClick={() => {
+                    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+                  }}
                   className="w-full py-3 text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
+                  <span className="whitespace-nowrap">Continue with:</span>
                   <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                     alt="Google Logo"
                     className="mr-2 h-6 w-6"
                   />
-                  Continue with Google
+
                 </Button>
               )}
               <div>
@@ -260,7 +266,7 @@ const Login: React.FC = () => {
               )}
               <Button
                 type="submit"
-                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
               >
                 {isRegister ? "Register" : "Login"}
               </Button>
