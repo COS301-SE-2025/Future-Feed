@@ -21,6 +21,11 @@ public class FeedPresetController {
 
     private final FeedPresetService presetService;
 
+    /**
+     * Optional field injection keeps the existing single-arg constructor
+     * so your @WebMvcTest(controllers=FeedPresetController.class) still works
+     * without needing to mock PostViewMapper.
+     */
     @Autowired(required = false)
     private PostViewMapper postViewMapper;
 
@@ -48,6 +53,10 @@ public class FeedPresetController {
         return ResponseEntity.ok(presetService.getRulesForPreset(presetId));
     }
 
+    /**
+     * UNCHANGED: legacy endpoint used by your tests.
+     * Returns List<Post> (entities), not DTOs.
+     */
     @GetMapping("/feed/{presetId}")
     public ResponseEntity<?> generateFeed(@PathVariable Integer presetId) {
         try {
@@ -59,6 +68,11 @@ public class FeedPresetController {
         }
     }
 
+    /**
+     * NEW: paginated + mapped endpoint.
+     * Returns page object with List<PostDTO> in "content".
+     * Does not interfere with existing tests.
+     */
     @GetMapping("/feed/{presetId}/paginated")
     public ResponseEntity<Map<String, Object>> generateFeedPaginated(
             @PathVariable Integer presetId,
@@ -72,12 +86,14 @@ public class FeedPresetController {
             if (postViewMapper != null) {
                 content = postViewMapper.toDtoList(pageObj.getContent());
             } else {
+                // Fallback for environments without mapper bean
                 content = pageObj.getContent().stream().map(p -> {
                     PostDTO dto = new PostDTO();
                     dto.setId(p.getId());
                     dto.setContent(p.getContent());
                     dto.setImageUrl(p.getImageUrl());
                     dto.setCreatedAt(p.getCreatedAt() == null ? null : p.getCreatedAt().toString());
+                    dto.setIsBot("BOT".equalsIgnoreCase(p.getPostType()));
                     return dto;
                 }).toList();
             }
