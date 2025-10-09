@@ -521,8 +521,7 @@ const Bots: React.FC = () => {
         </Tabs>
       </main>
 
-      {/* Right Sidebar - Same position and styling as notifications */}
-      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-6.5">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-7.5">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
