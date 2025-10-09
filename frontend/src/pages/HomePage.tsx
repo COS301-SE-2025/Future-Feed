@@ -1989,14 +1989,14 @@ const HomePage = () => {
         <div className="ml-4 mt-8 flex flex-col hidden lg:flex">
           <Button
             onClick={() => setIsTopicModalOpen(true)}
-            className="w-[200px] future-feed:text-lime future-feed:border-lime"
+            className="w-[200px] bg-white future-feed:text-lime future-feed:border-lime"
             variant={"secondary"}
           >
             Create Topic
           </Button>
           <Button
             onClick={() => setIsViewTopicsModalOpen(true)}
-            className="w-[200px] mt-3 future-feed:text-lime future-feed:border-lime"
+            className="w-[200px] bg-white mt-3 future-feed:text-lime future-feed:border-lime"
             variant={"secondary"}
           >
             View Topics
