@@ -57,7 +57,7 @@ const Settings = () => {
           <h1 className="text-xl dark:text-slate-200 font-bold">Settings</h1>
         </div>
         {/* Command Box */}
-      <Command className=" border-rose-gold-accent-border future-feed:border-lime rounded-2xl border dark:border-slate-200 shadow-md w-[664px]">
+      <Command className=" border-rose-gold-accent-border future-feed:border-lime rounded-2xl border dark:border-slate-200 shadow-md w-[792px]">
         <CommandInput placeholder=" Search..." />
         <CommandList >
           <CommandEmpty>No results found.</CommandEmpty>

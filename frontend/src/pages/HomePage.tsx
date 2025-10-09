@@ -2027,7 +2027,7 @@ const HomePage = () => {
         setIsErrorDialogOpen(false);
         setErrorMessage('');
         setErrorData(null);
-      }, 5000);
+      }, 4000);
 
       return () => clearTimeout(timer);
     }
