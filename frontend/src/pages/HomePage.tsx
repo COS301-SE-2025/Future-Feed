@@ -209,7 +209,7 @@ const HomePage = () => {
     config: { tension: 250, friction: 35 },
   });
 
-  interface ErrorResponse{
+  interface ErrorResponse {
     error: string;
     message: string;
     labels?: string[];
@@ -2021,6 +2021,17 @@ const HomePage = () => {
     }
   }, [currentUser, activeTab, selectedPreset]);
 
+  useEffect(() => {
+    if (isErrorDialogOpen) {
+      const timer = setTimeout(() => {
+        setIsErrorDialogOpen(false);
+        setErrorMessage('');
+        setErrorData(null);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isErrorDialogOpen]);
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
@@ -2713,7 +2724,7 @@ const HomePage = () => {
           </DialogHeader>
           <DialogFooter>
             <Button
-            className="text-red-500 bg-white"
+              className="text-red-500 bg-white"
               variant="outline"
               onClick={() => {
                 setIsErrorDialogOpen(false);
