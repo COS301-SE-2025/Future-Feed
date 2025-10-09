@@ -688,10 +688,10 @@ const fetchPost = async (id: number, currentUserId: number) => {
   }
 
   return (
-  <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-gray-200">
+  <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
     <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
-      <PersonalSidebar />
-    </aside>
+        <PersonalSidebar />
+      </aside>
     <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[-10px]">
       {post.botId || post.isBot ? (
         <StaticBotPost
@@ -749,14 +749,14 @@ const fetchPost = async (id: number, currentUserId: number) => {
         />
       )}
     </main>
-    <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
-      <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        <WhatsHappening />
-      </div>
-      <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-        <WhoToFollow />
-      </div>
-    </aside>
+    <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+          <WhoToFollow />
+        </div>
+      </aside>
   </div>
 );
 };

@@ -223,14 +223,14 @@ const FollowerFollowing = () => {
   );
 
   return (
-    <div className="bg-gray-200 future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
-       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
-          <PersonalSidebar />
-        </aside>
+    <div className="bg-white  future-feed:bg-black flex min-h-screen dark:bg-blue-950 dark:text-slate-200">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        <PersonalSidebar />
+      </aside>
       <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
         
 
-        <div className="future-feed:border-black  text-gray-400 flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border rounded-2xl dark:border-slate-200 z-10">
+        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
           <Avatar className=" w-24 h-24 border-4 ">
              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -294,10 +294,14 @@ const FollowerFollowing = () => {
           <WhoToFollow />
         </div>
       </main >
-      <div className=" dark:bg-blue-950 px-4 mt-7 py-6 space-y-6">
-         <RightSidebar />
-
-      </div>
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+          <WhoToFollow />
+        </div>
+      </aside>
      
     </div>
   )
