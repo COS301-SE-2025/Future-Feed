@@ -342,7 +342,7 @@ const Bots: React.FC = () => {
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
-      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto">
+      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:h-screen overflow-y-auto mt-5">
         <PersonalSidebar />
       </aside>
       <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
@@ -352,13 +352,13 @@ const Bots: React.FC = () => {
               </div>
             )}
         <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 rounded-2xl z-10 future-feed:border-2 future-feed:border-lime future-feed:text-lime">
-          <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
+          <h1 className="text-xl text-black font-bold">Bots Management</h1>
           <div className="flex justify-between items-center gap-4">
               <Button onClick={() => setIsCreateModalOpen(true)} className=" text-white  cursor-pointer">
                 <FaPlus className="mr-2" /> Create Bot
               </Button>
               <Link to="/settings">
-                <Settings size={20} className="dark:text-slate-200" />
+                <Settings size={20} className="text-black" />
               </Link>
             </div>
         </div>
