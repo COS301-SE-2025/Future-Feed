@@ -6,12 +6,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
-import GRP1 from "../assets/GRP1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import BotPost from "@/components/ui/BotPost";
-import { FaBars, FaTimes } from "react-icons/fa";
+import { FaBars, FaTimes, FaUser } from "react-icons/fa";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -1667,8 +1666,11 @@ const UserProfile = () => {
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-20 h-20 ">
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
-                <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
+                <AvatarFallback className="bg-white text-gray-600 dark:bg-slate-200 dark:text-black h-18 w-20 rounded-full flex items-center justify-center text-4xl">
+                  <FaUser>
+                  </FaUser>
+                </AvatarFallback>
               </Link>
             </Avatar>
           </div>
