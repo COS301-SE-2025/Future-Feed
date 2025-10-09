@@ -63,59 +63,83 @@ public class PostService {
         return postRepository.existsById(postId);
     }
 
-    @Transactional
-    @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
-    public Post createPost(PostRequest postRequest) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = null;
+@Transactional
+@CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
+public Post createPost(PostRequest postRequest) {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            OAuth2User oAuth2User = oauthToken.getPrincipal();
-            Object emailAttr = oAuth2User.getAttributes().get("email");
-            if (emailAttr != null) {
-                email = emailAttr.toString();
-            }
-        }
-
-        if (email == null) {
-            throw new RuntimeException("Email not found in authentication context");
-        }
-
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Post saved;
-        if (Boolean.TRUE.equals(postRequest.getIsBot())) {
-            BotPost botPost = new BotPost();
-            botPost.setContent(postRequest.getContent());
-            botPost.setImageUrl(postRequest.getImageUrl());
-            botPost.setUser(user);
-            saved = postRepository.save(botPost);
-        } else {
-            UserPost userPost = new UserPost();
-            userPost.setContent(postRequest.getContent());
-            userPost.setImageUrl(postRequest.getImageUrl());
-            userPost.setUser(user);
-            saved = postRepository.save(userPost);
-        }
-
-        postRepository.flush();
-        log.info("[post] created id={} isBot={} content.len={}", saved.getId(), postRequest.getIsBot(),
-                saved.getContent() == null ? 0 : saved.getContent().length());
-
-        try {
-            log.info("[post] autoTagIfMissing -> postId={}", saved.getId());
-            topicService.autoTagIfMissing(saved.getId());
-        } catch (Exception e) {
-            log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
-        }
-        
-        if (em != null) {
-            em.clear();
-        }
-        
-        return saved;
+    if (authentication == null || !authentication.isAuthenticated()) {
+        throw new RuntimeException("User not authenticated");
     }
+
+    String emailOrUsername = null;
+
+    // --- Case 1: OAuth2 login (e.g., Google) ---
+    if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
+        OAuth2User oAuth2User = oauthToken.getPrincipal();
+        Object emailAttr = oAuth2User.getAttributes().get("email");
+        if (emailAttr != null) {
+            emailOrUsername = emailAttr.toString();
+        }
+    }
+    // --- Case 2: Manual login (username/password) ---
+    else {
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.User userDetails) {
+            emailOrUsername = userDetails.getUsername();
+        } else if (principal instanceof String strPrincipal) {
+            emailOrUsername = strPrincipal;
+        }
+    }
+
+    if (emailOrUsername == null) {
+        throw new RuntimeException("Email or username not found in authentication context");
+    }
+
+    // Create a final reference for use in lambda
+    final String finalEmailOrUsername = emailOrUsername;
+
+    // --- Try finding user by email, fallback to username ---
+    AppUser user = appUserRepository.findByEmail(finalEmailOrUsername)
+            .or(() -> appUserRepository.findByUsername(finalEmailOrUsername))
+            .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
+
+    // ... rest of your method remains the same
+
+
+    // --- Create post (Bot or User type) ---
+    Post saved;
+    if (Boolean.TRUE.equals(postRequest.getIsBot())) {
+        BotPost botPost = new BotPost();
+        botPost.setContent(postRequest.getContent());
+        botPost.setImageUrl(postRequest.getImageUrl());
+        botPost.setUser(user);
+        saved = postRepository.save(botPost);
+    } else {
+        UserPost userPost = new UserPost();
+        userPost.setContent(postRequest.getContent());
+        userPost.setImageUrl(postRequest.getImageUrl());
+        userPost.setUser(user);
+        saved = postRepository.save(userPost);
+    }
+
+    postRepository.flush();
+    log.info("[post] created id={} isBot={} content.len={}", saved.getId(), postRequest.getIsBot(),
+            saved.getContent() == null ? 0 : saved.getContent().length());
+
+    try {
+        log.info("[post] autoTagIfMissing -> postId={}", saved.getId());
+        topicService.autoTagIfMissing(saved.getId());
+    } catch (Exception e) {
+        log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
+    }
+
+    if (em != null) {
+        em.clear();
+    }
+
+    return saved;
+}
 
     @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
     public boolean deletePost(Integer id) {
