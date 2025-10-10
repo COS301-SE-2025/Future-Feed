@@ -2419,12 +2419,6 @@ const HomePage = () => {
                       {error}
                     </div>
                   )}
-                  {!defaultPresetId && presets.length === 0 && !isLoading && (
-                    <div className="text-center p-8">
-                      <p className="text-lg text-gray-500 mb-4">No presets found</p>
-                      <p className="text-sm text-gray-400">Create your first preset to customize your feed!</p>
-                    </div>
-                  )}
                   {isViewingPresetFeed ? (
                     <>
                       <div className="flex items-center gap-2 p-4">

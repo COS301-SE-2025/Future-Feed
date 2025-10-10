@@ -334,7 +334,7 @@ const Post: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full hover:border-white  resize-none border-2  text-xs sm:text-sm"
+                    className="w-full hover:border-white  resize-none border-2  text-xs sm:text-sm border-blue-500"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -343,7 +343,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className=" text-xs sm:text-sm"
+                    className=" text-xs sm:text-sm bg-blue-500"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
