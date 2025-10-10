@@ -33,6 +33,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+interface PaginatedResponse<T> {
+  content: T[];
+  totalPages: number;
+  // Optional: Add if present in full response, e.g.,
+  // totalElements?: number;
+  // numberOfElements?: number;
+  // first?: boolean;
+  // last?: boolean;
+}
+
 interface Preset {
   id: number;
   userId: number;
@@ -928,8 +939,9 @@ const HomePage = () => {
       if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-      const pageData = await robustParse<any>(postsRes, `presets/feed/${presetId}/paginated`);
+      const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
+      // Rest unchanged (e.g., totalPages usage)
 
       // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
@@ -1097,8 +1109,9 @@ const HomePage = () => {
 
       if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
 
-      const pageData = await robustParse<any>(postsRes, `presets/feed/${presetId}/paginated`);
+      const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
+      // Rest unchanged
 
       if (apiPosts.length === 0) {
         return 0;
@@ -2359,7 +2372,9 @@ const HomePage = () => {
                       </Button>
                     </div>
                   ) : (
-                    renderPosts(posts)
+                    <div className="mt-5">
+                      {renderPosts(posts)}
+                    </div>
                   )}
                 </TabsContent>
                 <TabsContent value="Following">
