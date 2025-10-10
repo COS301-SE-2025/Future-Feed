@@ -4,37 +4,37 @@ import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class PostService {
 
     private static final Logger log = LoggerFactory.getLogger(PostService.class);
+
     @PersistenceContext
     private EntityManager em;
+
     private final PostRepository postRepository;
     private final AppUserRepository appUserRepository;
     private final LikeRepository likerepository;
@@ -67,22 +67,7 @@ public class PostService {
     @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
     public Post createPost(PostRequest postRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String email = null;
-
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            OAuth2User oAuth2User = oauthToken.getPrincipal();
-            Object emailAttr = oAuth2User.getAttributes().get("email");
-            if (emailAttr != null) {
-                email = emailAttr.toString();
-            }
-        }
-
-        if (email == null) {
-            throw new RuntimeException("Email not found in authentication context");
-        }
-
-        AppUser user = appUserRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        AppUser user = resolveCurrentUser(authentication); 
 
         Post saved;
         if (Boolean.TRUE.equals(postRequest.getIsBot())) {
@@ -100,7 +85,9 @@ public class PostService {
         }
 
         postRepository.flush();
-        log.info("[post] created id={} isBot={} content.len={}", saved.getId(), postRequest.getIsBot(),
+        log.info("[post] created id={} isBot={} content.len={}",
+                saved.getId(),
+                postRequest.getIsBot(),
                 saved.getContent() == null ? 0 : saved.getContent().length());
 
         try {
@@ -109,12 +96,88 @@ public class PostService {
         } catch (Exception e) {
             log.warn("[post] autoTag failed postId={} err={}", saved.getId(), e.toString(), e);
         }
-        
-        if (em != null) {
-            em.clear();
-        }
-        
+
+        if (em != null) em.clear();
         return saved;
+    }
+
+    private AppUser resolveCurrentUser(Authentication auth) {
+        if (auth == null) {
+            throw new RuntimeException("Not authenticated");
+        }
+
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            OAuth2User o = oauth.getPrincipal();
+            if (o != null) {
+                Map<String, Object> attrs = o.getAttributes();
+                Object emailAttr = attrs == null ? null : attrs.get("email");
+                if (emailAttr != null) {
+                    String email = String.valueOf(emailAttr);
+                    return appUserRepository.findByEmail(email)
+                            .orElseThrow(() -> new RuntimeException("User not found (email=" + email + ")"));
+                }
+            }
+        }
+
+        Object principal = auth.getPrincipal();
+        try {
+            Class<?> audClass = Class.forName("com.syntexsquad.futurefeed.security.AppUserDetails");
+            if (audClass.isInstance(principal)) {
+                Object aud = principal;
+
+                try {
+                    Integer id = (Integer) audClass.getMethod("getId").invoke(aud);
+                    if (id != null) {
+                        Optional<AppUser> byId = appUserRepository.findById(id);
+                        if (byId.isPresent()) return byId.get();
+                    }
+                } catch (NoSuchMethodException ignored) { /* skip */ }
+
+                try {
+                    String email = String.valueOf(audClass.getMethod("getEmail").invoke(aud));
+                    if (email != null && !email.isBlank()) {
+                        Optional<AppUser> byEmail = appUserRepository.findByEmail(email);
+                        if (byEmail.isPresent()) return byEmail.get();
+                    }
+                } catch (NoSuchMethodException ignored) { /* skip */ }
+
+                try {
+                    String username = String.valueOf(audClass.getMethod("getUsername").invoke(aud));
+                    if (username != null && !username.isBlank()) {
+                        return appUserRepository.findByEmail(username)
+                                .or(() -> appUserRepository.findByUsername(username))
+                                .orElseThrow(() -> new RuntimeException("User not found (username=" + username + ")"));
+                    }
+                } catch (NoSuchMethodException ignored) { /* skip */ }
+            }
+        } catch (ClassNotFoundException ignored) {
+        } catch (Exception reflectErr) {
+            log.warn("resolveCurrentUser: AppUserDetails reflection error: {}", reflectErr.toString());
+        }
+
+        if (principal instanceof UserDetails ud) {
+            String name = ud.getUsername();
+            if (name != null && !name.isBlank()) {
+                return appUserRepository.findByEmail(name)
+                        .or(() -> appUserRepository.findByUsername(name))
+                        .orElseThrow(() -> new RuntimeException("User not found (principal=" + name + ")"));
+            }
+        }
+
+        if (principal instanceof String s && !s.isBlank()) {
+            return appUserRepository.findByEmail(s)
+                    .or(() -> appUserRepository.findByUsername(s))
+                    .orElseThrow(() -> new RuntimeException("User not found (principal=" + s + ")"));
+        }
+
+        String fallback = auth.getName();
+        if (fallback != null && !fallback.isBlank()) {
+            return appUserRepository.findByEmail(fallback)
+                    .or(() -> appUserRepository.findByUsername(fallback))
+                    .orElseThrow(() -> new RuntimeException("User not found (name=" + fallback + ")"));
+        }
+
+        throw new RuntimeException("User not found");
     }
 
     @CacheEvict(value = {"posts", "post", "userPosts"}, allEntries = true)
@@ -142,9 +205,7 @@ public class PostService {
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public Page<Post> getPaginatedPosts(int page, int size) {
-        if (em != null) {
-            em.clear();
-        }
+        if (em != null) em.clear();
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return postRepository.findAll(pageable);
     }

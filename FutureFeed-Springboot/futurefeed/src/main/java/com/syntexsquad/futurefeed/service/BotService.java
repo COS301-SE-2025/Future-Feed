@@ -7,17 +7,25 @@ import com.syntexsquad.futurefeed.model.Bot;
 import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.util.PromptValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class BotService {
+
+    private static final Logger log = LoggerFactory.getLogger(BotService.class);
 
     private final BotRepository botRepository;
     private final AppUserRepository appUserRepository;
@@ -27,20 +35,86 @@ public class BotService {
         this.appUserRepository = appUserRepository;
     }
 
-    private AppUser getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    private Optional<AppUser> tryGetCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return Optional.empty();
 
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            OAuth2User oAuth2User = oauthToken.getPrincipal();
-            Object emailAttr = oAuth2User.getAttributes().get("email");
-            if (emailAttr != null) {
-                return appUserRepository.findByEmail(emailAttr.toString())
-                        .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            OAuth2User principal = oauth.getPrincipal();
+            if (principal != null) {
+                Map<String, Object> attrs = principal.getAttributes();
+                Object emailAttr = attrs == null ? null : attrs.get("email");
+                if (emailAttr != null) {
+                    String email = String.valueOf(emailAttr);
+                    Optional<AppUser> byEmail = appUserRepository.findByEmail(email);
+                    if (byEmail.isPresent()) return byEmail;
+                }
             }
         }
-        throw new RuntimeException("Could not extract authenticated user from security context");
+
+        Object principal = auth.getPrincipal();
+
+        try {
+            Class<?> audClass = Class.forName("com.syntexsquad.futurefeed.security.AppUserDetails");
+            if (audClass.isInstance(principal)) {
+                Object aud = principal;
+                try {
+                    Integer id = (Integer) audClass.getMethod("getId").invoke(aud);
+                    if (id != null) {
+                        Optional<AppUser> byId = appUserRepository.findById(id);
+                        if (byId.isPresent()) return byId;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+                try {
+                    String email = String.valueOf(audClass.getMethod("getEmail").invoke(aud));
+                    if (email != null && !email.isBlank()) {
+                        Optional<AppUser> byEmail = appUserRepository.findByEmail(email);
+                        if (byEmail.isPresent()) return byEmail;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+                try {
+                    String username = String.valueOf(audClass.getMethod("getUsername").invoke(aud));
+                    if (username != null && !username.isBlank()) {
+                        Optional<AppUser> byName = appUserRepository.findByEmail(username)
+                                .or(() -> appUserRepository.findByUsername(username));
+                        if (byName.isPresent()) return byName;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+            }
+        } catch (ClassNotFoundException ignored) {
+        } catch (Exception reflectErr) {
+            log.warn("tryGetCurrentUser (BotService): AppUserDetails reflection error: {}", reflectErr.toString());
+        }
+
+        if (principal instanceof UserDetails ud) {
+            String name = ud.getUsername();
+            if (name != null && !name.isBlank()) {
+                Optional<AppUser> byName = appUserRepository.findByEmail(name)
+                        .or(() -> appUserRepository.findByUsername(name));
+                if (byName.isPresent()) return byName;
+            }
+        }
+
+        if (principal instanceof String s && !s.isBlank()) {
+            Optional<AppUser> byName = appUserRepository.findByEmail(s)
+                    .or(() -> appUserRepository.findByUsername(s));
+            if (byName.isPresent()) return byName;
+        }
+
+        String fallback = auth.getName();
+        if (fallback != null && !fallback.isBlank()) {
+            Optional<AppUser> byName = appUserRepository.findByEmail(fallback)
+                    .or(() -> appUserRepository.findByUsername(fallback));
+            if (byName.isPresent()) return byName;
+        }
+
+        return Optional.empty();
     }
 
+    private AppUser getAuthenticatedUser() {
+        return tryGetCurrentUser()
+                .orElseThrow(() -> new RuntimeException("Could not extract authenticated user from security context"));
+    }
     public List<Bot> getAllBots() {
         return botRepository.findAll();
     }
@@ -68,7 +142,7 @@ public class BotService {
     }
 
     public BotResponseDTO updateBot(Integer botId, BotRequestDTO dto) {
-        PromptValidator.validatePrompt(dto.getPrompt()); 
+        PromptValidator.validatePrompt(dto.getPrompt());
 
         AppUser user = getAuthenticatedUser();
 
