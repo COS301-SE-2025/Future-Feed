@@ -210,7 +210,7 @@ const BotPost: React.FC<PostProps> = ({
                 {topics.map((topic) => (
                   <span
                     key={topic.id}
-                    className="inline-block border dark:border-lime-400 bg-lime-300 dark:bg-lime-900 text-black dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
+                    className="inline-block border dark:border-lime-400 bg-blue-300 dark:bg-lime-900 text-black dark:text-lime-200 text-xs sm:text-sm px-2 rounded-md"
                   >
                     {topic.name}
                   </span>
@@ -329,7 +329,7 @@ const BotPost: React.FC<PostProps> = ({
                     placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full dark:bg-black hover:border-white dark:text-white dark:border-lime-500 resize-none border-2 border-lime-500 text-xs sm:text-sm"
+                    className="w-full dark:bg-black hover:border-white dark:text-white dark:border-lime-500 resize-none border-2 border-blue-500 text-xs sm:text-sm"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -338,7 +338,7 @@ const BotPost: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className="bg-lime-500 text-white hover:bg-lime-600 text-xs sm:text-sm"
+                    className="bg-blue-500 text-white hover:bg-blue-600 text-xs sm:text-sm"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
