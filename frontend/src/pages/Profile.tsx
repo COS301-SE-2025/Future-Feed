@@ -157,6 +157,7 @@ const Profile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([])
   const navigate = useNavigate();
+  const [seconds, setSeconds] = useState(3);
 
   const fetchCurrentUser = async () => {
     try {
@@ -1536,14 +1537,7 @@ const Profile = () => {
       </div>
     );
 }
-
-  if (!user) return <div className="p-4 text-black">User does not exist.</div>;
-
-  if (!currentUser || !currentUserId) {
-    const navigate = useNavigate();
-    const [seconds, setSeconds] = useState(3);
-
-    useEffect(() => {
+useEffect(() => {
       if (seconds > 0) {
         const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
         return () => clearTimeout(timer);
@@ -1552,6 +1546,9 @@ const Profile = () => {
       }
     }, [seconds, navigate]);
 
+  if (!user) return <div className="p-4 text-black">User does not exist.</div>;
+
+  if (!currentUser || !currentUserId) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
         <div className="text-center space-y-4">

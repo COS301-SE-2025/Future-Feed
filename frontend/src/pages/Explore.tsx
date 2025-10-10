@@ -4,7 +4,6 @@ import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
 
-
 import { useStoreHydration } from '@/hooks/useStoreHydration';
 
 import WhoToFollow from "@/components/WhoToFollow";
@@ -22,7 +21,6 @@ import { useQueryClient } from "@tanstack/react-query";
 //import { update } from "@react-spring/web";
 //introduce debounce
 import { debounce } from "@/utils/debounce";
-
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -43,21 +41,19 @@ interface User {
 }*/
 
 const Explore = () => {
-const isHydrated = useStoreHydration();
-//
-
+  const isHydrated = useStoreHydration();
+  //
 
   //add sep states for search
   const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
   //monitor sesrch query and check is search is active
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const navigate = useNavigate();
   //
   //  const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
   // State to manage current user ID and following user IDs
-  const [hasLoadedFolllowing, setHasLoadedFollowing] = useState(false);
+  const [hasLoadedFollowing, setHasLoadedFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
   // const [loading, setLoading] = useState(true);
@@ -65,7 +61,8 @@ const isHydrated = useStoreHydration();
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
-
+  const [seconds, setSeconds] = useState(3);
+  const navigate = useNavigate();
   //
   //cachce fetching for users in tabs
   const queryClient = useQueryClient();
@@ -403,7 +400,7 @@ const isHydrated = useStoreHydration();
     //isMounted = false;
     //};
 
-  }, [users, isHydrated]);//do it when users data changes and we have hydrated 
+  }, [users, isHydrated, bulkSetFollowStatus, refetchFollowing]);//do it when users data changes and we have hydrated 
   //handle follwoing relations
   useEffect(() => {
     if (followingRelations.length > 0 && isHydrated) {
@@ -424,7 +421,7 @@ const isHydrated = useStoreHydration();
       bulkSetFollowStatus(newStatuses);
     }
   }
-}, [followingRelations, isHydrated]);
+}, [followingRelations, isHydrated, bulkSetFollowStatus, setFollowingUserIds]);
   //
 
   useEffect(() => {
@@ -434,7 +431,19 @@ const isHydrated = useStoreHydration();
     } else if (!isSearchActive && users.length > 0) {
       setDisplayedUsers(users);
     }
-  }, [activeTab, isSearchActive, users]);
+  }, [activeTab, isSearchActive, users, handleSearch, searchQuery]);
+
+  useEffect(() => {
+    if (currentUserId != null) {
+      return;
+    }
+    if (seconds > 0) {
+      const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      navigate("/login", { replace: true });
+    }
+  }, [currentUserId, seconds, navigate]);
 
   const loadFollowingData = async (userId: number) => {
     await refetchFollowing();
@@ -447,18 +456,6 @@ const isHydrated = useStoreHydration();
   }
 
   if (!currentUserId) {
-    const navigate = useNavigate();
-    const [seconds, setSeconds] = useState(3);
-
-    useEffect(() => {
-      if (seconds > 0) {
-        const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        navigate("/login", { replace: true });
-      }
-    }, [seconds, navigate]);
-
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
         <div className="text-center space-y-4">
@@ -586,13 +583,13 @@ const isHydrated = useStoreHydration();
           value={activeTab}
           onValueChange={(val) => {
             setActiveTab(val);
-            if (val === "accounts following" && !hasLoadedFolllowing && currentUserId !== null) {
+            if (val === "following" && !hasLoadedFollowing && currentUserId !== null) {
               loadFollowingData(currentUserId);
             }
           }}
           className="w-full p-0 future-feed:text-lime">
           <TabsList className="w-full future-feed:text-lime  flex justify-around ">
-            {["accounts", "accounts following"].map((tab) => (
+            {["accounts", "following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -615,7 +612,7 @@ const isHydrated = useStoreHydration();
             </div>
           </TabsContent>
 
-          <TabsContent value="accounts following">
+          <TabsContent value="following">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
               {followingLoading ? (
                 renderSkeleton()

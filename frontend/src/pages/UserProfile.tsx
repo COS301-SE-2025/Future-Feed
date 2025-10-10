@@ -167,6 +167,7 @@ const UserProfile = () => {
     likes: false,
     bookmarks: false,
   });
+  const [seconds, setSeconds] = useState(3);
 
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -1619,11 +1620,7 @@ const UserProfile = () => {
     );
   }
 
-  if (!user) {
-    const navigate = useNavigate();
-    const [seconds, setSeconds] = useState(3);
-
-    useEffect(() => {
+  useEffect(() => {
       if (seconds > 0) {
         const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
         return () => clearTimeout(timer);
@@ -1632,6 +1629,7 @@ const UserProfile = () => {
       }
     }, [seconds, navigate]);
 
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
         <div className="text-center space-y-4">

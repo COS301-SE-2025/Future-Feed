@@ -47,10 +47,11 @@ const Notifications = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [userProfiles, setUserProfiles] = useState<Map<number, UserInfo>>(new Map());
   const [showSearch, setShowSearch] = useState(false);
+  const [user, setUser] = useState<UserInfo | null>(null);
+  const [seconds, setSeconds] = useState(3);
   const navigate = useNavigate();
   const notificationTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
-  const [user, setUser] = useState<UserInfo | null>(null);
 
   const fetchCurrentUser = async () => {
     try {
@@ -68,7 +69,6 @@ const Notifications = () => {
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
-      navigate("/login");
       setUser(null);
       return null;
     } finally {
@@ -125,11 +125,34 @@ const Notifications = () => {
     };
 
     initializeNotifications();
-  }, [currentUserId, fetchNotifications]);
+  }, [currentUserId, fetchNotifications, fetchCurrentUser]);
 
   useEffect(() => {
     setFilteredNotifications(notifications);
   }, [notifications]);
+
+  useEffect(() => {
+    const fetchUserProfiles = async () => {
+      const uniqueUserIds = Array.from(new Set(notifications.map((n) => n.senderUserId)));
+      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
+      const users = await Promise.all(userPromises);
+      const userMap = new Map(users.map((user) => [user.id, user]));
+      setUserProfiles(userMap);
+    };
+
+    if (notifications.length > 0) {
+      fetchUserProfiles();
+    }
+  }, [notifications, fetchUser]);
+
+  useEffect(() => {
+    if (!user && seconds > 0) {
+      const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (!user && seconds === 0) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, seconds, navigate]);
 
   const markAsRead = async (notificationId: number) => {
     if (!currentUserId) {
@@ -159,7 +182,6 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      //console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
@@ -317,33 +339,7 @@ const Notifications = () => {
     );
   };
 
-  useEffect(() => {
-    const fetchUserProfiles = async () => {
-      const uniqueUserIds = Array.from(new Set(notifications.map((n) => n.senderUserId)));
-      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
-      const users = await Promise.all(userPromises);
-      const userMap = new Map(users.map((user) => [user.id, user]));
-      setUserProfiles(userMap);
-    };
-
-    if (notifications.length > 0) {
-      fetchUserProfiles();
-    }
-  }, [notifications]);
-
   if (!user) {
-    const navigate = useNavigate();
-    const [seconds, setSeconds] = useState(3);
-
-    useEffect(() => {
-      if (seconds > 0) {
-        const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        navigate("/login", { replace: true });
-      }
-    }, [seconds, navigate]);
-
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
         <div className="text-center space-y-4">
@@ -368,8 +364,8 @@ const Notifications = () => {
       </aside>
 
       <main className="flex-1 p-4 pl-4 lg:ml-[270px] min-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10 ">
-          <h1 className="text-xl dark:text-white font-bold ">Notifications</h1>
+        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
+          <h1 className="text-xl dark:text-white font-bold">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
@@ -473,16 +469,13 @@ const Notifications = () => {
         </Tabs>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky   lg:top-0 lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-6.5">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
-
         </div>
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-
           <WhoToFollow />
         </div>
-
       </aside>
     </div>
   );
