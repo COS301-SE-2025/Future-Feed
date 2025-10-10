@@ -63,7 +63,6 @@ const Notifications = () => {
       userCache.set(userId, userInfo);
       return userInfo;
     } catch (err) {
-      navigate("/login")
       console.warn(`Error fetching user ${userId}:`, err);
       const userInfo: UserInfo = {
         id: userId,
@@ -85,7 +84,6 @@ const Notifications = () => {
       } else {
         setError("User not authenticated. Please log in.");
         setLoading(false);
-        navigate("/login");
       }
     };
 

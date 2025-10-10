@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
 
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
 import { Button } from "@/components/ui/button"
@@ -47,7 +47,7 @@ const FollowerFollowing = () => {
   const { followingUsers, fetchFollowers, fetchFollowing, followers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+
   const [followersLoading, setFollowersLoading] = useState(true);
   const [followingLoading, setFollowingLoading] = useState(true);
   const location = useLocation();
@@ -161,8 +161,6 @@ const FollowerFollowing = () => {
         useFollowStore.getState().bulkSetFollowStatus(Object.fromEntries(statusEntries));
 
 
-      } else{
-        navigate("/login")
       }
     };
 

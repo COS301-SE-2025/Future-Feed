@@ -13,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: number;
@@ -134,7 +133,6 @@ const BotPage = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
-  const navigate = useNavigate();
 
   const fetchUser = async (
     userId: number
@@ -152,7 +150,6 @@ const BotPage = () => {
       };
     } catch (err) {
       console.warn(`Error fetching user ${userId}:`, err);
-      navigate("/login")
       return {
         id: userId,
         username: `user${userId}`,
@@ -770,7 +767,6 @@ const BotPage = () => {
     } catch (err) {
       console.error("Error fetching bot info:", err);
       setError("Failed to load bot info. Please log in again.");
-      navigate("/login")
       setBot(null);
       return null;
     } finally {
@@ -909,9 +905,7 @@ const BotPage = () => {
     );
   }
 
-  if (!bot) return 
-    navigate("/login");
-    <div className="p-4 text-black dark:text-white">Bot not found.</div>;
+  if (!bot) return <div className="p-4 text-black dark:text-white">Bot not found.</div>;
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">

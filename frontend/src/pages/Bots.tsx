@@ -11,7 +11,6 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 interface Bot {
   id: number;
@@ -56,7 +55,6 @@ const Bots: React.FC = () => {
     allBots: false,
     toggling: new Set<number>(),
   });
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchAllBots();
@@ -73,7 +71,6 @@ const Bots: React.FC = () => {
       if (!res.ok) {
         const errorText = await res.text();
         if (res.status === 401) {
-          navigate("/login")
           throw new Error("Unauthorized: Please log in to view bots.");
         } else if (res.status === 404) {
           throw new Error("Bots endpoint not found. Please check the server configuration.");
@@ -193,9 +190,7 @@ const Bots: React.FC = () => {
       if (!res.ok) {
         const errorText = await res.text();
         if (res.status === 401) {
-          navigate("/login")
-          return
-          
+          throw new Error("Unauthorized: Please log in to create a bot.");
         } else if (res.status === 400 && errorText.includes("Prompt flagged as unsafe")) {
           throw new Error(`${errorText} Please use a different prompt.`);
         } else {
@@ -256,7 +251,7 @@ const Bots: React.FC = () => {
       if (!res.ok) {
         const errorText = await res.text();
         if (res.status === 401) {
-          navigate("/login");
+          throw new Error("Unauthorized: Please log in to update a bot.");
         } else if (res.status === 400 && errorText.includes("Prompt flagged as unsafe")) {
           throw new Error(`${errorText} Please use a different prompt.`);
         } else {
