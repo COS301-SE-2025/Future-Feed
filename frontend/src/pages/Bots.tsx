@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -338,11 +339,11 @@ const Bots: React.FC = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
-      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-2 lg:ml-[260px] overflow-y-auto">
+      <main className="w-full lg:flex-1 p-2 overflow-y-auto">
         <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
           <div className="flex justify-between items-center gap-4">
@@ -519,6 +520,11 @@ const Bots: React.FC = () => {
             </>
           )}
         </Tabs>
+
+        <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
       </main>
 
       <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-[41px]">
