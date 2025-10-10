@@ -4,7 +4,6 @@ import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
 
-
 import { useStoreHydration } from '@/hooks/useStoreHydration';
 
 import WhoToFollow from "@/components/WhoToFollow";
@@ -22,7 +21,6 @@ import { useQueryClient } from "@tanstack/react-query";
 //import { update } from "@react-spring/web";
 //introduce debounce
 import { debounce } from "@/utils/debounce";
-
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -43,9 +41,8 @@ interface User {
 }*/
 
 const Explore = () => {
-const isHydrated = useStoreHydration();
-//
-
+  const isHydrated = useStoreHydration();
+  //
 
   //add sep states for search
   const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
@@ -57,7 +54,7 @@ const isHydrated = useStoreHydration();
   //  const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
   // State to manage current user ID and following user IDs
-  const [hasLoadedFolllowing, setHasLoadedFollowing] = useState(false);
+  const [hasLoadedFollowing, setHasLoadedFollowing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followingUserIds, setFollowingUserIds } = useFollowStore();
   // const [loading, setLoading] = useState(true);
@@ -93,7 +90,6 @@ const isHydrated = useStoreHydration();
         setDisplayedUsers(users); // Reset to all users when query is empty
 
       }
-
 
       return;
     }
@@ -250,7 +246,6 @@ const isHydrated = useStoreHydration();
       //console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
       return fallbackFollowing;
     }
-
 
      // return data.following;
      return Boolean(isFollowing);//ensure and heck we return true
@@ -561,15 +556,12 @@ const isHydrated = useStoreHydration();
   //
 
   return (
-    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
-      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-
-      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
-
-
-        <div className="future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+      <main className="w-full lg:flex-1 p-2 overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
@@ -578,15 +570,13 @@ const isHydrated = useStoreHydration();
             </Link>
 
           </div>
-
-
         </div>
 
         <Tabs
           value={activeTab}
           onValueChange={(val) => {
             setActiveTab(val);
-            if (val === "accounts following" && !hasLoadedFolllowing && currentUserId !== null) {
+            if (val === "accounts following" && !hasLoadedFollowing && currentUserId !== null) {
               loadFollowingData(currentUserId);
             }
           }}
@@ -602,8 +592,6 @@ const isHydrated = useStoreHydration();
               </TabsTrigger>
             ))}
           </TabsList>
-
-
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
@@ -634,7 +622,7 @@ const isHydrated = useStoreHydration();
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="hidden lg:block w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

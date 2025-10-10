@@ -72,7 +72,7 @@ const PersonalSidebar = () => {
       </aside>
 
       {/* Fixed mobile navigation - removed duplicate nav element */}
-      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 border-3 rounded-xl border-rose-gold-accent-border drop-shadow-xl text-blue-500 dark:border-slate-200 p-2 lg:hidden z-50 bg-white dark:text-white ">
+      <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime dark:bg-indigo-950 border-3 rounded-xl border-rose-gold-accent-border drop-shadow-xl text-black dark:border-slate-200 p-2 lg:hidden z-50 bg-white dark:text-white ">
         <Link to="/home" className={`flex flex-col items-center relative hover:text-blue-200 ${
             isActivePath('/home') ? 'text-blue-500 dark:text-blue-400' : ''
           }`}
@@ -94,7 +94,7 @@ const PersonalSidebar = () => {
           }`}
         > <Bell strokeWidth={3} className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-lime-300 future-feed:bg-white"></span>
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-blue-500 future-feed:bg-white"></span>
           )}
         </Link>
         <Link to="/settings" className={`flex items-center gap-3 hover:text-blue-200 ${

@@ -33,6 +33,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+
+interface PaginatedResponse<T> {
+  content: T[];
+  totalPages: number;
+  // Optional: Add if present in full response, e.g.,
+  // totalElements?: number;
+  // numberOfElements?: number;
+  // first?: boolean;
+  // last?: boolean;
+}
+
 interface Preset {
   id: number;
   userId: number;
@@ -182,6 +193,8 @@ const HomePage = () => {
   const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
+  const [presetCurrentPage, setPresetCurrentPage] = useState(0);
+  const [presetHasMore, setPresetHasMore] = useState(true);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -209,7 +222,7 @@ const HomePage = () => {
     config: { tension: 250, friction: 35 },
   });
 
-  interface ErrorResponse{
+  interface ErrorResponse {
     error: string;
     message: string;
     labels?: string[];
@@ -907,13 +920,18 @@ const HomePage = () => {
       console.warn("Cannot fetch preset posts: currentUser is not loaded");
       return;
     }
+
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
     setIsViewingPresetFeed(true);
 
+    // Reset pagination state
+    setPresetCurrentPage(0);
+    setPresetHasMore(true);
+
     try {
       const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/presets/feed/${presetId}`, commonInit),
+        fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=0&size=${PAGE_SIZE}`, commonInit),
         fetch(`${API_URL}/api/reshares`, commonInit),
         fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
       ]);
@@ -921,7 +939,16 @@ const HomePage = () => {
       if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-      const apiPosts: ApiPost[] = await robustParse<ApiPost[]>(postsRes, `presets/feed/${presetId}`);
+      const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
+      const apiPosts: ApiPost[] = pageData.content || [];
+      // Rest unchanged (e.g., totalPages usage)
+
+      // Check if there are more pages
+      const totalPages = pageData.totalPages || 0;
+      if (0 >= totalPages - 1) {
+        setPresetHasMore(false);
+      }
+
       const myReshares: ApiReshare[] = myResharesRes.ok
         ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
         : [];
@@ -968,10 +995,11 @@ const HomePage = () => {
 
           let postUser;
           if (post.isBot && post.botId) {
-            postUser = await fetchBot(post.botId, post.user); // post.user might have partial bot data
+            postUser = await fetchBot(post.botId, post.user);
           } else {
             postUser = await fetchUser(post.user.id, post.user);
           }
+
           const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
           const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
 
@@ -996,6 +1024,21 @@ const HomePage = () => {
             }
           }
 
+          let likeCount = 0;
+          if (likesCountRes.ok) {
+            try {
+              const raw = await robustParse<number | string | { count: number }>(
+                likesCountRes,
+                `likes/count/${post.id}`
+              );
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (err) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, err);
+            }
+          }
+
           return {
             id: post.id,
             username: postUser.displayName,
@@ -1010,7 +1053,7 @@ const HomePage = () => {
             isReshared,
             commentCount: validComments.length,
             authorId: post.user.id,
-            likeCount: likesCountRes.ok ? await robustParse<number>(likesCountRes, `likes/count/${post.id}`) : 0,
+            likeCount,
             reshareCount,
             comments: commentsWithUsers,
             showComments: false,
@@ -1026,6 +1069,7 @@ const HomePage = () => {
       );
     } catch (err) {
       console.error(`Error fetching preset posts for preset ${presetId}:`, err);
+      setError("Failed to load preset feed.");
       setTimeout(() => setError(null), 3000);
       setPresetPosts([]);
     } finally {
@@ -1048,6 +1092,167 @@ const HomePage = () => {
       setError("Failed to load topics.");
       setTimeout(() => setError(null), 3000);
       return [];
+    }
+  };
+
+  const fetchMorePresetPosts = async (presetId: number, page: number) => {
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch preset posts: currentUser is not loaded");
+      return 0;
+    }
+
+    console.debug(`Fetching preset posts page ${page} for preset ${presetId}`);
+    setLoadingPresetPosts(true);
+
+    try {
+      const postsRes = await fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=${page}&size=${PAGE_SIZE}`, commonInit);
+
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+
+      const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
+      const apiPosts: ApiPost[] = pageData.content || [];
+      // Rest unchanged
+
+      if (apiPosts.length === 0) {
+        return 0;
+      }
+
+      // Check if there are more pages
+      const totalPages = pageData.totalPages || 0;
+      if (page >= totalPages - 1) {
+        setPresetHasMore(false);
+      }
+
+      const [myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/reshares`, commonInit),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      ]);
+
+      const myReshares: ApiReshare[] = myResharesRes.ok
+        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
+        : [];
+      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+
+      const validPosts = apiPosts.filter(post => {
+        if (!post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
+        }
+        return true;
+      });
+
+      const formattedPosts: PostData[] = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
+            fetchTopicsForPost(post.id),
+          ]);
+
+          const comments: ApiComment[] = commentsRes.ok
+            ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
+            : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          let postUser;
+          if (post.isBot && post.botId) {
+            postUser = await fetchBot(post.botId, post.user);
+          } else {
+            postUser = await fetchUser(post.user.id, post.user);
+          }
+
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked: boolean = false;
+          if (hasLikedRes.ok) {
+            try {
+              const raw = await robustParse<boolean | string | { liked: boolean }>(
+                hasLikedRes,
+                `likes/has-liked/${post.id}`
+              );
+              if (typeof raw === "boolean") isLiked = raw;
+              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
+              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          let likeCount = 0;
+          if (likesCountRes.ok) {
+            try {
+              const raw = await robustParse<number | string | { count: number }>(
+                likesCountRes,
+                `likes/count/${post.id}`
+              );
+              if (typeof raw === "number") likeCount = raw;
+              else if (typeof raw === "string") likeCount = Number(raw) || 0;
+              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
+            } catch (err) {
+              console.warn(`Failed to parse like count for post ${post.id}:`, err);
+            }
+          }
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
+            topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId
+          };
+        })
+      );
+
+      setPresetPosts(prev => {
+        const postsMap = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (!postsMap.has(p.id)) {
+            postsMap.set(p.id, p);
+          }
+        });
+        return Array.from(postsMap.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      });
+
+      return formattedPosts.length;
+    } catch (err) {
+      console.error("Error fetching more preset posts:", err);
+      return 0;
+    } finally {
+      setLoadingPresetPosts(false);
     }
   };
 
@@ -2054,7 +2259,7 @@ const HomePage = () => {
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white ">
+        <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white hidden lg:block">
 
         </div>
         <div className="ml-4 mt-8 flex flex-col hidden lg:flex">
@@ -2161,7 +2366,9 @@ const HomePage = () => {
                       </Button>
                     </div>
                   ) : (
-                    renderPosts(posts)
+                    <div className="mt-5">
+                      {renderPosts(posts)}
+                    </div>
                   )}
                 </TabsContent>
                 <TabsContent value="Following">
@@ -2221,14 +2428,25 @@ const HomePage = () => {
                             setIsViewingPresetFeed(false);
                             setPresetPosts([]);
                             setSelectedPreset(null);
+                            setPresetCurrentPage(0);
+                            setPresetHasMore(true);
                           }}
                           className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                         >
                           <ArrowLeft className="h-4 w-4 mr-1" />
                           Back to Presets
                         </Button>
+                        {selectedPreset && (
+                          <div className="ml-auto">
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Viewing feed for: {presets.find(p => p.id === selectedPreset)?.name}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      {loadingPresetPosts ? (
+
+                      {/* Initial loading skeleton */}
+                      {loadingPresetPosts && presetPosts.length === 0 ? (
                         renderSkeletonPosts()
                       ) : presetPosts.length === 0 ? (
                         <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
@@ -2239,15 +2457,32 @@ const HomePage = () => {
                           </p>
                         </div>
                       ) : (
-                        renderPosts(presetPosts)
+                        <>
+                          {/* Render the posts */}
+                          {renderPosts(presetPosts)}
+
+                          {/* Show loading skeleton at the bottom when loading more posts */}
+                          {loadingPresetPosts && presetPosts.length > 0 && (
+                            <div className="mt-4">
+                              {renderSkeletonPosts().slice(0, 3)}
+                            </div>
+                          )}
+
+                          {/* Show "no more posts" message */}
+                          {!presetHasMore && presetPosts.length > 0 && (
+                            <div className="text-center py-6">
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                No more posts to load
+                              </p>
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
-                  ) : isLoading ? (
-                    <div className="flex justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                    </div>
                   ) : (
                     <div className="space-y-4">
+
+                      {/* Presets List */}
                       {presets.length > 0 && (
                         <div className="mt-6 space-y-4">
                           {presets.map((preset) => (
@@ -2255,15 +2490,14 @@ const HomePage = () => {
                               <CardHeader>
                                 <div className="flex justify-between items-center">
                                   <CardTitle className="text-2xl font-bold dark:text-white">
-                                    <Input
-                                      value={preset.name}
-                                      onChange={(e) => {
-                                        setPresets((prev) =>
-                                          prev.map((p) => (p.id === preset.id ? { ...p, name: e.target.value } : p))
-                                        );
-                                      }}
-                                      className="border-0 bg-transparent text-lg font-bold dark:text-white text-black"
-                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <span>{preset.name}</span>
+                                      {preset.defaultPreset && (
+                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                                          Default
+                                        </span>
+                                      )}
+                                    </div>
                                   </CardTitle>
                                   <div className="flex items-center space-x-1">
                                     <Button
@@ -2313,7 +2547,7 @@ const HomePage = () => {
                                             <DialogHeader>
                                               <DialogTitle className="dark:text-white">Delete Preset</DialogTitle>
                                               <DialogDescription className="dark:text-gray-400">
-                                                Are you sure you want to delete "{preset.name}" Preset ? This action cannot be undone.
+                                                Are you sure you want to delete "{preset.name}" Preset? This action cannot be undone.
                                               </DialogDescription>
                                             </DialogHeader>
                                             <DialogFooter>
@@ -2339,6 +2573,7 @@ const HomePage = () => {
                                   <div className="space-y-4">
                                     <div className="space-y-3">
                                       <div className="flex flex-col space-y-2">
+                                        <label className="text-sm font-medium dark:text-white">Topic Filter</label>
                                         <select
                                           value={newRule.topicId || ""}
                                           onChange={(e) => setNewRule({ ...newRule, topicId: e.target.value ? Number(e.target.value) : undefined })}
@@ -2353,6 +2588,7 @@ const HomePage = () => {
                                         </select>
                                       </div>
                                       <div className="flex flex-col space-y-2">
+                                        <label className="text-sm font-medium dark:text-white">Source Type</label>
                                         <select
                                           value={newRule.sourceType || ""}
                                           onChange={(e) => setNewRule({ ...newRule, sourceType: e.target.value as 'user' | 'bot' | undefined })}
@@ -2364,7 +2600,8 @@ const HomePage = () => {
                                         </select>
                                       </div>
                                       <div className="flex flex-col space-y-2">
-                                        <div className="relative">
+                                        <label className="text-sm font-medium dark:text-white">Specific User</label>
+                                        <div className="relative user-search-container">
                                           <Input
                                             placeholder="Search users..."
                                             value={userSearchQuery}
@@ -2413,17 +2650,20 @@ const HomePage = () => {
                                           )}
                                         </div>
                                       </div>
-                                      <div className="flex items-center space-x-2">
-                                        <Input
-                                          type="number"
-                                          min="1"
-                                          max="100"
-                                          placeholder="Percentage (1-100)%"
-                                          value={newRule.percentage || ""}
-                                          onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
-                                          className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
-                                        />
-
+                                      <div className="flex flex-col space-y-2">
+                                        <label className="text-sm font-medium dark:text-white">Percentage</label>
+                                        <div className="flex items-center space-x-2">
+                                          <Input
+                                            type="number"
+                                            min="1"
+                                            max="100"
+                                            placeholder="Percentage (1-100)%"
+                                            value={newRule.percentage || ""}
+                                            onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
+                                            className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
+                                          />
+                                          <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                                        </div>
                                       </div>
                                       <Button
                                         className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-8"
@@ -2435,7 +2675,7 @@ const HomePage = () => {
                                     </div>
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
-                                        <h4 className="text-sm font-medium dark:text-white">Rules</h4>
+                                        <h4 className="text-sm font-medium dark:text-white">Current Rules</h4>
                                         {rules[preset.id].map((rule) => (
                                           <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 dark:bg-gray-700 dark:border-gray-600">
                                             <div className="flex items-center space-x-2 px-3">
@@ -2469,14 +2709,42 @@ const HomePage = () => {
                           ))}
                         </div>
                       )}
+
+                      {/* Empty State */}
+                      {presets.length === 0 && !isLoading && (
+                        <div className="text-center py-12">
+                          <div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <ChartNoAxesGantt className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No presets yet</h3>
+                          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                            Create your first preset to customize your feed with specific topics, sources, and users.
+                          </p>
+                          <Button
+                            onClick={() => setIsCreatePresetModalOpen(true)}
+                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2"
+                          >
+                            Create Your First Preset
+                          </Button>
+                        </div>
+                      )}
+
+                      {/* Loading State */}
+                      {isLoading && (
+                        <div className="flex justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Create Preset Modal */}
                   {isCreatePresetModalOpen && (
                     <animated.div
                       style={createPresetModalProps}
                       className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
                     >
-                      <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-md  border-2 dark:border-slate-200 flex flex-col relative">
+                      <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
                         <button
                           onClick={() => {
                             setIsCreatePresetModalOpen(false);
@@ -2490,23 +2758,33 @@ const HomePage = () => {
                         <div className="text-center mb-5">
                           <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
                         </div>
-                        <div className="flex flex space-x-4">
+                        <div className="flex flex-col space-y-4">
                           <Input
                             placeholder="Preset name (e.g., Tech & Bots)"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
                             className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
                           />
-                          <div className="flex justify-end">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setIsCreatePresetModalOpen(false);
+                                setNewPresetName("");
+                              }}
+                              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                            >
+                              Cancel
+                            </Button>
                             <Button
                               onClick={() => {
                                 createPreset(false);
                                 setIsCreatePresetModalOpen(false);
                               }}
-                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
                               disabled={!newPresetName.trim() || isLoading}
                             >
-                              {isLoading ? "Creating..." : "Create"}
+                              {isLoading ? "Creating..." : "Create Preset"}
                             </Button>
                           </div>
                         </div>
@@ -2742,7 +3020,7 @@ const HomePage = () => {
           </DialogHeader>
           <DialogFooter>
             <Button
-            className="text-red-500 bg-white"
+              className="text-red-500 bg-white"
               variant="outline"
               onClick={() => {
                 setIsErrorDialogOpen(false);
