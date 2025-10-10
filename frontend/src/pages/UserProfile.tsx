@@ -1787,7 +1787,7 @@ const UserProfile = () => {
                           </Button>
                           <Button
                             type="button"
-                            className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer"
+                            className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer bg-white dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200"
                             onClick={() => {
                               setShowDeleteDialog(false);
                               handleDeleteAccount();
