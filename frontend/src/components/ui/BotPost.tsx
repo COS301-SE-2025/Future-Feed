@@ -338,7 +338,7 @@ const BotPost: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className="bg-blue-500 text-white hover:bg-lime-600 text-xs sm:text-sm"
+                    className="bg-blue-500 text-white hover:bg-blue-600 text-xs sm:text-sm"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
