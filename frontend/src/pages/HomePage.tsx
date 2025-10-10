@@ -2359,7 +2359,9 @@ const HomePage = () => {
                       </Button>
                     </div>
                   ) : (
-                    renderPosts(posts)
+                    <div className="mt-5">
+                    {renderPosts(posts)}
+                    </div>
                   )}
                 </TabsContent>
                 <TabsContent value="Following">
