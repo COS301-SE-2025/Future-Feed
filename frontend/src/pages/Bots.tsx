@@ -9,7 +9,7 @@ import PersonalSidebar from "@/components/PersonalSidebar";
 import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
 
 interface Bot {
@@ -38,12 +38,6 @@ interface LoadingState {
   toggling: Set<number>;
 }
 
-interface UserProfile {
-  id: string;
-  username: string;
-  displayName: string;
-}
-
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const Bots: React.FC = () => {
@@ -61,29 +55,10 @@ const Bots: React.FC = () => {
     allBots: false,
     toggling: new Set<number>(),
   });
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [seconds, setSeconds] = useState(3);
-  const navigate = useNavigate();
 
-  const fetchCurrentUser = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
-      const data: UserProfile = await res.json();
-      if (!data.username || !data.displayName) {
-        throw new Error("User info missing username or displayName");
-      }
-      setUser(data);
-      return data;
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError("Failed to load user info. Please log in again.");
-      setUser(null);
-      return null;
-    }
-  };
+  useEffect(() => {
+    fetchAllBots();
+  }, []);
 
   const fetchAllBots = async () => {
     setLoading((prev) => ({ ...prev, allBots: true }));
@@ -150,19 +125,7 @@ const Bots: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    fetchCurrentUser();
-    fetchAllBots();
-  }, [fetchCurrentUser]);
 
-  useEffect(() => {
-    if (!user && seconds > 0) {
-      const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
-      return () => clearTimeout(timer);
-    } else if (!user && seconds === 0) {
-      navigate("/login", { replace: true });
-    }
-  }, [user, seconds, navigate]);
 
   const toggleBotActivation = async (botId: number) => {
     setLoading((prev) => ({ ...prev, toggling: new Set([...prev.toggling, botId]) }));
@@ -376,23 +339,6 @@ const Bots: React.FC = () => {
     </div>
   );
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-            Oops! Looks like you are not logged in.
-          </h1>
-          <p className="text-lg">
-            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
-          </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">

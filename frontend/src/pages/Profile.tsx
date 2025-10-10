@@ -126,7 +126,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 const Profile = () => {
   const { profileId } = useParams<{ profileId: string }>();
   const [user, setUser] = useState<UserProfile | null>(null);
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
   const [reshares, setReshares] = useState<PostData[]>([]);
   const [commentedPosts, setCommented] = useState<PostData[]>([]);
@@ -157,29 +156,6 @@ const Profile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([])
   const navigate = useNavigate();
-  const [seconds, setSeconds] = useState(3);
-
-  const fetchCurrentUser = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
-      const data: UserProfile = await res.json();
-      if (!data.username || !data.displayName) {
-        throw new Error("User info missing username or displayName");
-      }
-      setCurrentUser(data);
-      userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
-      return data;
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError("Failed to load user info. Please log in again.");
-      navigate("/login");
-      setCurrentUser(null);
-      return null;
-    }
-  };
 
   const fetchCurrentUserId = async () => {
     try {
@@ -1450,9 +1426,6 @@ const Profile = () => {
     setIsLoading(true);
     setError(null);
 
-    const currentUser = await fetchCurrentUser();
-    setCurrentUser(currentUser);
-
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
@@ -1537,34 +1510,8 @@ const Profile = () => {
       </div>
     );
 }
-useEffect(() => {
-      if (seconds > 0) {
-        const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        navigate("/login", { replace: true });
-      }
-    }, [seconds, navigate]);
 
-  if (!user) return <div className="p-4 text-black">User does not exist.</div>;
-
-  if (!currentUser || !currentUserId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-            Oops! Looks like you are not logged in.
-          </h1>
-          <p className="text-lg">
-            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
-          </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">

@@ -20,16 +20,6 @@ import {
 import { MoreVertical, Search, CheckCircle, Trash2, X } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 
-interface UserProfile {
-  id: number;
-  username: string;
-  displayName: string;
-  profilePicture?: string;
-  bio?: string | null;
-  dateOfBirth?: string | null;
-  email: string;
-}
-
 interface UserInfo {
   id: number;
   username: string;
@@ -53,29 +43,6 @@ const Notifications = () => {
   const notificationTimers = useRef<Map<number, NodeJS.Timeout>>(new Map());
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-  const fetchCurrentUser = async () => {
-    try {
-      const res = await fetch(`${API_URL}/api/user/myInfo`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
-      const data: UserProfile = await res.json();
-      if (!data.username || !data.displayName) {
-        throw new Error("User info missing username or displayName");
-      }
-      setUser(data);
-      userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
-      return data;
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError("Failed to load user info. Please log in again.");
-      setUser(null);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchUser = async (userId: number): Promise<UserInfo> => {
     if (userCache.has(userId)) {
       return userCache.get(userId)!;
@@ -96,6 +63,7 @@ const Notifications = () => {
         profilePicture: user.profilePicture ?? GRP2,
       };
       userCache.set(userId, userInfo);
+      setUser(user);
       return userInfo;
     } catch (err) {
       console.warn(`Error fetching user ${userId}:`, err);
@@ -112,8 +80,6 @@ const Notifications = () => {
 
   useEffect(() => {
     const initializeNotifications = async () => {
-      const currentUser = await fetchCurrentUser();
-      setUser(currentUser);
       if (currentUserId) {
         setLoading(true);
         await fetchNotifications(currentUserId);
@@ -125,7 +91,7 @@ const Notifications = () => {
     };
 
     initializeNotifications();
-  }, [currentUserId, fetchNotifications, fetchCurrentUser]);
+  }, [currentUserId, fetchNotifications]);
 
   useEffect(() => {
     setFilteredNotifications(notifications);
@@ -339,23 +305,19 @@ const Notifications = () => {
     );
   };
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-            Oops! Looks like you are not logged in.
-          </h1>
-          <p className="text-lg">
-            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
-          </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchUserProfiles = async () => {
+      const uniqueUserIds = Array.from(new Set(notifications.map((n) => n.senderUserId)));
+      const userPromises = uniqueUserIds.map((userId) => fetchUser(userId));
+      const users = await Promise.all(userPromises);
+      const userMap = new Map(users.map((user) => [user.id, user]));
+      setUserProfiles(userMap);
+    };
+
+    if (notifications.length > 0) {
+      fetchUserProfiles();
+    }
+  }, [notifications]);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">

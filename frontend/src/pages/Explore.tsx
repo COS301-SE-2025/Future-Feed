@@ -452,25 +452,6 @@ const Explore = () => {
     //setfollowingloading(false);
     //setHasLoadedFollowing(true);
   }
-
-  if (!currentUserId) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-            Oops! Looks like you are not logged in.
-          </h1>
-          <p className="text-lg">
-            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
-          </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const renderUserCard = (user: User) => {
       const isFollowing = followStatus[user.id] === true; // Explicitly check for true
 

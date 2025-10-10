@@ -6,11 +6,12 @@ import { Link, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import Post from "@/components/ui/post";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import GRP1 from "../assets/GRP1.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import BotPost from "@/components/ui/BotPost";
-import { FaBars, FaTimes, FaUser } from "react-icons/fa";
+import { FaBars, FaTimes } from "react-icons/fa";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface UserProfile {
@@ -147,7 +148,6 @@ const UserProfile = () => {
     likes: false,
     bookmarks: false,
   });
-  const [seconds, setSeconds] = useState(3);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
   const navigate = useNavigate();
@@ -381,7 +381,7 @@ const UserProfile = () => {
               id: reshare.post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: reshare.post.isBot || reshare.post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+              handle: `@${userInfo.username}`,
               time: formatRelativeTime(reshare.post.createdAt),
               text: reshare.post.content,
               ...(reshare.post.imageUrl ? { image: reshare.post.imageUrl } : {}),
@@ -499,7 +499,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+              handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -617,7 +617,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+              handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -748,7 +748,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+              handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -862,7 +862,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+              handle: `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -1472,32 +1472,7 @@ const UserProfile = () => {
     );
   }
 
-  useEffect(() => {
-      if (seconds > 0) {
-        const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
-        return () => clearTimeout(timer);
-      } else {
-        navigate("/login", { replace: true });
-      }
-    }, [seconds, navigate]);
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
-        <div className="text-center space-y-4">
-          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
-            Oops! Looks like you are not logged in.
-          </h1>
-          <p className="text-lg">
-            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
-          </p>
-          <div className="flex justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
@@ -1544,11 +1519,8 @@ const UserProfile = () => {
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-20 h-20 ">
               <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-                <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                <AvatarFallback className="bg-white text-gray-600 dark:bg-slate-200 dark:text-black h-18 w-20 rounded-full flex items-center justify-center text-4xl">
-                  <FaUser>
-                  </FaUser>
-                </AvatarFallback>
+                <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+                <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Link>
             </Avatar>
           </div>
@@ -1560,124 +1532,12 @@ const UserProfile = () => {
               <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
               <p className="mt-4 text-xl text-black">{user.bio}</p>
             </div>
-                <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal}>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="secondary"
-                      className=" bg-white border-rose-gold-accent-border mt-[-100px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer"
-                    >
-                      Edit Profile
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[900px] future-feed:bg-[#1a1a1a] bg-white dark:bg-[#1a1a1a] border-2 border-drop-shadow-x dark:border-lime-500 p-16 rounded-[16px]">
-                    <DialogHeader>
-                      <DialogTitle className="text-center future-feed:text-white text-4xl">Edit Profile</DialogTitle>
-                    </DialogHeader>
-                    <form onSubmit={handleSubmit} className="flex flex-col items-center">
-                      <div className="mb-3 flex w-full justify-center">
-                        <label htmlFor="profile-pic-upload" className="relative cursor-pointer">
-                          {formData.profileImage ? (
-                            <img
-                              src={formData.profileImage}
-                              alt="Profile"
-                              className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
-                            />
-                          ) : (
-                            <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)]">
-                              <img
-                              src={formData.profileImage}
-                              alt="Profile"
-                              className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
-                            />
-                            </div>
-                          )}
-                          <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.1)]" />
-                          <Input
-                            type="file"
-                            id="profile-pic-upload"
-                            accept="image/*"
-                            onChange={handleImageChange}
-                            className="hidden"
-                          />
-                        </label>
-                      </div>
-                      <div className="mb-3 w-full max-w-[500px] ">
-                        <LabelBlock label="Display Name" htmlFor="display-name" />
-                        <Input
-                          id="display-name"
-                          placeholder="Enter your display name"
-                          value={formData.displayName}
-                          onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                          className="text-black bg-white w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white  dark:text-white dark:placeholder:text-slate-100"
-                        />
-                      </div>
-                      <div className="mb-3 w-full max-w-[500px]">
-                        <LabelBlock label="Date of Birth" htmlFor="dob" />
-                        <Input
-                          id="dob"
-                          type="date"
-                          value={formData.dob}
-                          onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                          className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
-                        />
-                      </div>
-                      <div className="mb-3 w-full max-w-[500px]">
-                        <LabelBlock label="Bio" htmlFor="bio" />
-                        <Textarea
-                          id="bio"
-                          placeholder="Bio..."
-                          value={formData.bio}
-                          onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                          className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
-                        />
-                      </div>
-                      <Button
-                        type="submit"
-                        className="h-[58px] w-[186px] rounded-[25px] border border-black bg-white text-[15px] font-bold text-black hover:bg-gray-200 hover:shadow-[1px_1px_10px_black] hover:border-blue-500 hover:border-3 mt-3 cursor-pointer"
-                      >
-                        Save Changes
-                      </Button>
-                    </form>
-                    <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-                      <DialogTrigger asChild>
-                        <Button
-                          className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
-                          variant="ghost"
-                        >
-                          <Trash2 className="h-5 w-5 text-red-600" />
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="sm:max-w-[425px]">
-                        <DialogHeader>
-                          <DialogTitle>Delete Account</DialogTitle>
-                          <DialogDescription>
-                            Are you sure you want to delete your account? This action cannot be undone.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter className="flex justify-end gap-4">
-                          <Button
-                            type="button"
-                            variant="secondary"
-                            className="cursor-pointer"
-                            onClick={() => setShowDeleteDialog(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="button"
-                            className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer bg-white dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200"
-                            onClick={() => {
-                              setShowDeleteDialog(false);
-                              handleDeleteAccount();
-                            }}
-                          >
-                            Yes, Delete
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  </DialogContent>
-                </Dialog>
+            
+            <Link to="/edit-profile" className="flex items-center gap-3 hover:bg-blue-300 mr-0">
+              <Button variant={"secondary"} className=" lg:mt-[-190px] lg:w-[110px]   rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700">
+                Edit Profile
+              </Button>
+            </Link>
           </div>
           <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
@@ -1692,8 +1552,8 @@ const UserProfile = () => {
         </CardContent>
 
       </Card>
-        <Tabs defaultValue="posts" className="w-full  p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
+        <Tabs defaultValue="posts" className="w-full  " onValueChange={(value) => handleTabChange(value, user.id)}>
+          <TabsList className="w-full flex justify-around z-10 overflow-x-auto">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>
@@ -2092,7 +1952,7 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+      <aside className="w-full lg:w-[350px] mt-5 flex-shrink-0 hidden lg:block mr-6.5">
   <div className="sticky top-4 space-y-5">
     <div className="w-full lg:w-[320px] lg:ml-7">
       <WhatsHappening />

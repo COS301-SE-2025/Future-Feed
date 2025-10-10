@@ -12,8 +12,10 @@ import Bots from './pages/Bots';
 import Login from "./pages/Login";
 import Construction from "./pages/Construction";
 import Forgot from "./pages/Forgot";
+import EditProfilePage from "./pages/EditProfile";
 import PostPage from "./pages/PostPage";
 import BotPage from "./pages/BotPage";
+import EditBotPage from "./pages/EditBot";
 import Profile from "./pages/Profile";
 
 
@@ -34,9 +36,11 @@ function App() {
       <Route path="/home" element={<HomePage />} />
       <Route path="/construction" element={<Construction />} />
       <Route path="/forgotpassword" element={<Forgot />} />
+      <Route path="/edit-profile" element={<EditProfilePage />} />
       <Route path="/bots" element={<Bots />} />
       <Route path="/post/:postId" element={<PostPage />} />
       <Route path="/bot/:botId" element={<BotPage />} />
+      <Route path="/edit-bot" element={<EditBotPage />} />
       <Route path="/profile/:profileId" element={<Profile />} />
     </Routes>
     </>
