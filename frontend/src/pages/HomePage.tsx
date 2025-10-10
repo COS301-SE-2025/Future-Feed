@@ -1243,14 +1243,6 @@ const HomePage = () => {
     }
   };
 
-  // Add handleBackToPresets function
-  const handleBackToPresets = () => {
-    setIsViewingPresetFeed(false);
-    setPresetPosts([]);
-    setSelectedPreset(null);
-    setPresetCurrentPage(0);
-    setPresetHasMore(true);
-  };
   const fetchPresets = async () => {
     try {
       setIsLoading(true);
