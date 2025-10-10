@@ -1660,7 +1660,7 @@ const UserProfile = () => {
       </aside>
       <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
       <Card className="mb-5 ">
-        <CardContent className="ml-[-10px]">
+        <CardContent className="lg:ml-[-10px]">
           <div className="relative">
           <div className="mt-10 w-full" />
           <div className="absolute -bottom-10 left-4">
@@ -1814,8 +1814,8 @@ const UserProfile = () => {
         </CardContent>
 
       </Card>
-        <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
+        <Tabs defaultValue="posts" className="w-full  " onValueChange={(value) => handleTabChange(value, user.id)}>
+          <TabsList className="w-full flex justify-around z-10 overflow-x-auto">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>

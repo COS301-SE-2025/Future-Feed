@@ -128,7 +128,7 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "future-feed:bg-card future-feed:text-white text-black dark:bg-indigo-950 border-2  dark:hover:bg-black rounded-2xl mt-3 mb-4 cursor-pointer relative group ",
+        "future-feed:bg-card future-feed:text-white text-black dark:bg-indigo-950 border-2  dark:hover:bg-black  cursor-pointer relative group ",
         className
       )}
       onClick={handleClick}
