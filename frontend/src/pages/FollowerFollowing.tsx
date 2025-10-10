@@ -7,7 +7,7 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
-
+import { useNavigate } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
@@ -47,7 +47,7 @@ const FollowerFollowing = () => {
   const { followingUsers, fetchFollowers, fetchFollowing,followers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
-  
+  const Navigate = useNavigate();
   const [followersLoading, setFollowersLoading] = useState(true);
   const [followingLoading, setFollowingLoading] = useState(true);
   const location = useLocation();
@@ -70,6 +70,7 @@ const FollowerFollowing = () => {
     } catch (err) {
       console.error("Error fetching user info:", err)
       setUser(null)
+      Navigate("/login")
       return null
     } finally {
       setLoading(false)
@@ -168,7 +169,35 @@ const FollowerFollowing = () => {
   }, []);
 
   if (loading) return <div className="p-4 text-white">Loading profile...</div>;
-  if (!user) return <div className="p-4 text-black">Not logged in.</div>
+  if (!user) {
+      const navigate = useNavigate();
+      const [seconds, setSeconds] = useState(3);
+  
+      useEffect(() => {
+        if (seconds > 0) {
+          const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+          return () => clearTimeout(timer);
+        } else {
+          navigate("/login", { replace: true });
+        }
+      }, [seconds, navigate]);
+  
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
+              Oops! Looks like you are not logged in.
+            </h1>
+            <p className="text-lg">
+              Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
+            </p>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
   const renderUserCard = (user: User) => (
     <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white  rounded-2xl">

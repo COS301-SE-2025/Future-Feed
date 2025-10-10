@@ -143,6 +143,7 @@ const PostPage = () => {
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
+      navigate("/login");
       return null;
     }
   };

@@ -5,7 +5,7 @@ import {
 import PersonalSidebar from "@/components/PersonalSidebar"
 import WhatsHappening from "@/components/WhatsHappening"
 import WhoToFollow from "@/components/WhoToFollow"
-
+import { useState, useEffect } from "react"
 import * as React from "react"
 import {
   Command,
@@ -20,13 +20,43 @@ import {
 
 
 import { useNavigate } from "react-router-dom"
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 //add theme in settings for mobile devices
 //plus it makes sense to have it in settings
 
+interface UserProfile {
+  id: string;
+  username: string;
+  displayName: string;
+}
+
 const Settings = () => {
   const navigate = useNavigate()
+  const [user, setUser] = React.useState<UserProfile | null>(null);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setUser(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      navigate("/login");
+      setUser(null);
+      return null;
+    } finally {
+    }
+  };
 
   React.useEffect(() => {
+    fetchCurrentUser();
     const down = (e: KeyboardEvent) => {
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -45,6 +75,36 @@ const Settings = () => {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [navigate])
+
+  if (!user) {
+      const navigate = useNavigate();
+      const [seconds, setSeconds] = useState(3);
+  
+      useEffect(() => {
+        if (seconds > 0) {
+          const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+          return () => clearTimeout(timer);
+        } else {
+          navigate("/login", { replace: true });
+        }
+      }, [seconds, navigate]);
+  
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
+              Oops! Looks like you are not logged in.
+            </h1>
+            <p className="text-lg">
+              Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
+            </p>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
   return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">

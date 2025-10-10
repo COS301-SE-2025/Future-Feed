@@ -1619,7 +1619,35 @@ const UserProfile = () => {
     );
   }
 
-  if (!user) return <div className="p-4 text-black">Not logged in.</div>;
+  if (!user) {
+    const navigate = useNavigate();
+    const [seconds, setSeconds] = useState(3);
+
+    useEffect(() => {
+      if (seconds > 0) {
+        const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+        return () => clearTimeout(timer);
+      } else {
+        navigate("/login", { replace: true });
+      }
+    }, [seconds, navigate]);
+
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
+            Oops! Looks like you are not logged in.
+          </h1>
+          <p className="text-lg">
+            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
+          </p>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
