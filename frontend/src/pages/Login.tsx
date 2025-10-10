@@ -108,36 +108,40 @@ const Login: React.FC = () => {
         setIsLoading(false);
       }
     } else {
-      if (!username || !password) {
-        setErrorMsg("Username and password are required.");
-        setIsLoading(false);
-        return;
-      }
+      if (!username.trim() || !password.trim()) {
+    setErrorMsg("Both username and password are required.");
+    setIsLoading(false);
+    return;
+  }
 
-      const params = new URLSearchParams();
-      params.append("username", username);
-      params.append("password", password);
+  const params = new URLSearchParams();
+  params.append("username", username.trim());
+  params.append("password", password.trim());
 
+  try {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      credentials: "include",
+      body: params.toString(),
+    });
+
+    if (res.ok) {
+      navigate("/home");
+    } else {
+      let errorMessage = "Login failed. Please check your username or password.";
       try {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          credentials: "include",
-          body: params.toString(),
-        });
-
-        if (res.ok) {
-          navigate("/home");
-        } else {
-          const data = await res.json();
-          setErrorMsg(data.message || "Login failed. Please check your credentials.");
-        }
-      } catch (err) {
-        setErrorMsg("An error occurred during login. Please try again.");
-      } finally {
-        setIsLoading(false);
+        const data = await res.json();
+        if (data?.message) errorMessage = data.message;
+      } catch {
       }
+      setErrorMsg(errorMessage);
     }
+  } catch (err) {
+    setErrorMsg("Unable to connect to the server. Please try again later.");
+  } finally {
+    setIsLoading(false);
+  }}
   };
 
   const handleToggle = () => {
