@@ -501,7 +501,7 @@ const HomePage = () => {
           return {
             id: post.id,
             username: postUser.displayName,
-            handle: `@${postUser.username}`,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
             profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             createdAt: post.createdAt,

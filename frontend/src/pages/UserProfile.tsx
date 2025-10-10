@@ -410,7 +410,7 @@ const UserProfile = () => {
               id: reshare.post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: reshare.post.isBot || reshare.post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(reshare.post.createdAt),
               text: reshare.post.content,
               ...(reshare.post.imageUrl ? { image: reshare.post.imageUrl } : {}),
@@ -528,7 +528,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -646,7 +646,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -777,7 +777,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -891,7 +891,7 @@ const UserProfile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -1814,8 +1814,8 @@ const UserProfile = () => {
         </CardContent>
 
       </Card>
-        <Tabs defaultValue="posts" className="w-full  " onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="w-full flex justify-around z-10 overflow-x-auto">
+        <Tabs defaultValue="posts" className="w-full  p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>
