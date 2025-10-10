@@ -2,22 +2,16 @@ package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.FeedPresetDTO;
 import com.syntexsquad.futurefeed.dto.PresetRuleDTO;
-import com.syntexsquad.futurefeed.model.AppUser;
-import com.syntexsquad.futurefeed.model.FeedPreset;
-import com.syntexsquad.futurefeed.model.PresetRule;
-import com.syntexsquad.futurefeed.model.Post;
-import com.syntexsquad.futurefeed.model.PostTopic;
-import com.syntexsquad.futurefeed.model.UserPost;
-import com.syntexsquad.futurefeed.repository.AppUserRepository;
-import com.syntexsquad.futurefeed.repository.FeedPresetRepository;
-import com.syntexsquad.futurefeed.repository.PostRepository;
-import com.syntexsquad.futurefeed.repository.PostTopicRepository;
-import com.syntexsquad.futurefeed.repository.PresetRuleRepository;
+import com.syntexsquad.futurefeed.model.*;
+import com.syntexsquad.futurefeed.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -30,19 +24,19 @@ import java.util.stream.Collectors;
 @Service
 public class FeedPresetService {
 
+    private static final Logger log = LoggerFactory.getLogger(FeedPresetService.class);
+
     private final FeedPresetRepository presetRepo;
     private final PresetRuleRepository ruleRepo;
     private final AppUserRepository appUserRepository;
     private final PostRepository postRepository;
     private final PostTopicRepository postTopicRepository;
 
-    public FeedPresetService(
-            FeedPresetRepository presetRepo,
-            PresetRuleRepository ruleRepo,
-            AppUserRepository appUserRepository,
-            PostRepository postRepository,
-            PostTopicRepository postTopicRepository
-    ) {
+    public FeedPresetService(FeedPresetRepository presetRepo,
+                             PresetRuleRepository ruleRepo,
+                             AppUserRepository appUserRepository,
+                             PostRepository postRepository,
+                             PostTopicRepository postTopicRepository) {
         this.presetRepo = presetRepo;
         this.ruleRepo = ruleRepo;
         this.appUserRepository = appUserRepository;
@@ -50,23 +44,104 @@ public class FeedPresetService {
         this.postTopicRepository = postTopicRepository;
     }
 
+    // ---------- SAFE user resolution ----------
+    /** Returns Optional<AppUser> safely for endpoints that must not 500. */
+    private Optional<AppUser> tryGetCurrentUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return Optional.empty();
 
-    private AppUser getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication instanceof OAuth2AuthenticationToken oauthToken) {
-            OAuth2User oAuth2User = oauthToken.getPrincipal();
-            String email = (String) oAuth2User.getAttributes().get("email");
-            return appUserRepository.findByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("Authenticated user not found in DB"));
+        // 1) OAuth2
+        if (auth instanceof OAuth2AuthenticationToken oauth) {
+            OAuth2User principal = oauth.getPrincipal();
+            if (principal != null && principal.getAttributes() != null) {
+                Object emailAttr = principal.getAttributes().get("email");
+                if (emailAttr != null) {
+                    String email = String.valueOf(emailAttr);
+                    return appUserRepository.findByEmail(email);
+                }
+            }
         }
-        throw new RuntimeException("User not authenticated");
+
+        // 2) Custom AppUserDetails (if present)
+        Object principal = auth.getPrincipal();
+        try {
+            Class<?> audClass = Class.forName("com.syntexsquad.futurefeed.security.AppUserDetails");
+            if (audClass.isInstance(principal)) {
+                Object aud = principal;
+                try {
+                    Integer id = (Integer) audClass.getMethod("getId").invoke(aud);
+                    if (id != null) {
+                        Optional<AppUser> byId = appUserRepository.findById(id);
+                        if (byId.isPresent()) return byId;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+                try {
+                    String email = String.valueOf(audClass.getMethod("getEmail").invoke(aud));
+                    if (email != null && !email.isBlank()) {
+                        Optional<AppUser> byEmail = appUserRepository.findByEmail(email);
+                        if (byEmail.isPresent()) return byEmail;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+                try {
+                    String username = String.valueOf(audClass.getMethod("getUsername").invoke(aud));
+                    if (username != null && !username.isBlank()) {
+                        Optional<AppUser> byName = appUserRepository.findByEmail(username)
+                                .or(() -> appUserRepository.findByUsername(username));
+                        if (byName.isPresent()) return byName;
+                    }
+                } catch (NoSuchMethodException ignored) {}
+            }
+        } catch (ClassNotFoundException ignored) {
+        } catch (Exception reflectErr) {
+            log.warn("tryGetCurrentUser: AppUserDetails reflection error: {}", reflectErr.toString());
+        }
+
+        // 3) Generic Spring UserDetails
+        if (principal instanceof UserDetails ud) {
+            String name = ud.getUsername();
+            if (name != null && !name.isBlank()) {
+                Optional<AppUser> byName = appUserRepository.findByEmail(name)
+                        .or(() -> appUserRepository.findByUsername(name));
+                if (byName.isPresent()) return byName;
+            }
+        }
+
+        // 4) Principal as String
+        if (principal instanceof String s && !s.isBlank()) {
+            Optional<AppUser> byName = appUserRepository.findByEmail(s)
+                    .or(() -> appUserRepository.findByUsername(s));
+            if (byName.isPresent()) return byName;
+        }
+
+        // 5) Fallback: auth.getName()
+        String fallback = auth.getName();
+        if (fallback != null && !fallback.isBlank()) {
+            Optional<AppUser> byName = appUserRepository.findByEmail(fallback)
+                    .or(() -> appUserRepository.findByUsername(fallback));
+            if (byName.isPresent()) return byName;
+        }
+
+        return Optional.empty();
+    }
+
+    /** Legacy strict resolver (kept for callers/tests that expect exceptions). */
+    private AppUser getAuthenticatedUser() {
+        return tryGetCurrentUser()
+                .orElseThrow(() -> new RuntimeException("Could not extract authenticated user from security context"));
+    }
+    // -------------------------------------------------------------------------
+
+    // Used by /api/presets/default to avoid 500 and work for unauthenticated users
+    public Optional<FeedPreset> findDefaultPresetForCurrentUser() {
+        return tryGetCurrentUser()
+                .map(AppUser::getId)
+                .flatMap(uid -> presetRepo.findByUserIdAndDefaultPresetTrue(uid));
     }
 
     private int clampPercent(Integer p) {
         if (p == null) return 0;
         return Math.max(0, Math.min(100, p));
     }
-
 
     private void ensureTotalPercentWithin100(Integer presetId, Integer newRulePercent, Integer excludeRuleId) {
         int sum = ruleRepo.findByPresetId(presetId).stream()
@@ -80,7 +155,7 @@ public class FeedPresetService {
         }
     }
 
-    // Preset CRUD 
+    // ---------------- Preset CRUD ----------------
 
     public FeedPreset createPreset(FeedPresetDTO dto) {
         FeedPreset preset = new FeedPreset();
@@ -140,13 +215,14 @@ public class FeedPresetService {
         presetRepo.save(preset);
     }
 
+    /** Strict variant retained for compatibility with any existing callers. */
     public FeedPreset getDefaultPreset() {
         Integer userId = getAuthenticatedUser().getId();
         return presetRepo.findByUserIdAndDefaultPresetTrue(userId)
                 .orElseThrow(() -> new RuntimeException("No default preset found for this user"));
     }
 
-    // Rule CRUD 
+    // ---------------- Rule CRUD ----------------
 
     public PresetRule createRule(PresetRuleDTO dto) {
         if (dto.getPresetId() == null) {
@@ -159,7 +235,7 @@ public class FeedPresetService {
         rule.setTopicId(dto.getTopicId());
         rule.setSourceType(dto.getSourceType());
         rule.setSpecificUserId(dto.getSpecificUserId());
-        rule.setPercentage(clampPercent(dto.getPercentage())); 
+        rule.setPercentage(clampPercent(dto.getPercentage()));
         return ruleRepo.save(rule);
     }
 
@@ -200,6 +276,7 @@ public class FeedPresetService {
         ruleRepo.delete(rule);
     }
 
+    // ---------------- Feed generation ----------------
 
     private List<Post> filterPostsForRule(PresetRule rule) {
         List<Post> filteredPosts;
@@ -214,11 +291,11 @@ public class FeedPresetService {
 
         if ("user".equalsIgnoreCase(rule.getSourceType())) {
             filteredPosts = filteredPosts.stream()
-                    .filter(p -> "USER".equalsIgnoreCase(p.getPostType()))
+                    .filter(p -> p instanceof UserPost)
                     .collect(Collectors.toList());
         } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
             filteredPosts = filteredPosts.stream()
-                    .filter(p -> "BOT".equalsIgnoreCase(p.getPostType()))
+                    .filter(p -> p instanceof BotPost)
                     .collect(Collectors.toList());
         }
 
@@ -237,9 +314,9 @@ public class FeedPresetService {
         Instant ca = a.getCreatedAt();
         Instant cb = b.getCreatedAt();
         if (ca == null && cb == null) return 0;
-        if (ca == null) return 1;  
+        if (ca == null) return 1;
         if (cb == null) return -1;
-        return cb.compareTo(ca); 
+        return cb.compareTo(ca);
     };
 
     public List<Post> generateFeedForPreset(Integer presetId) {
@@ -261,14 +338,16 @@ public class FeedPresetService {
             resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
         }
 
-        return new ArrayList<>(resultFeed);
+        List<Post> out = new ArrayList<>(resultFeed);
+        out.sort(CREATED_DESC);
+        return out;
     }
 
     public Page<Post> generateFeedForPreset(Integer presetId, int page, int size) {
         int safePage = Math.max(0, page);
         int safeSize = Math.max(1, size);
         int offset = safePage * safeSize;
-        int targetCount = offset + safeSize; 
+        int targetCount = offset + safeSize;
 
         List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
         Map<Integer, List<Post>> ruleToCandidates = new LinkedHashMap<>();
@@ -307,7 +386,7 @@ public class FeedPresetService {
         Map<Integer, Integer> quotas = new LinkedHashMap<>();
         for (PresetRule r : rules) {
             int pct = ruleToPercent.getOrDefault(r.getId(), 0);
-            int q = (pct > 0) ? (targetCount * pct) / 100 : 0; 
+            int q = (pct > 0) ? (targetCount * pct) / 100 : 0;
             quotas.put(r.getId(), Math.max(0, q));
         }
 
@@ -335,7 +414,7 @@ public class FeedPresetService {
             List<Post> randomPool = complement.stream()
                     .filter(p -> p != null && p.getId() != null && !seenIds.contains(p.getId()))
                     .collect(Collectors.toCollection(ArrayList::new));
-            Collections.shuffle(randomPool, ThreadLocalRandom.current()); 
+            Collections.shuffle(randomPool, ThreadLocalRandom.current());
 
             for (Post p : randomPool) {
                 pool.add(p);

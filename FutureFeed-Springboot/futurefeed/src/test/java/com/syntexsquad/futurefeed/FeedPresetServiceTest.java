@@ -19,6 +19,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -223,9 +224,12 @@ public class FeedPresetServiceTest {
 
         List<Post> feed = feedPresetService.generateFeedForPreset(presetId);
 
-        assertEquals(0, feed.size(), "Should only contain posts from user 42");
-//        assertEquals(42, ((UserPost) feed.get(0)).getUser().getId());
+        // Expect exactly the one post from user 42
+        assertEquals(1, feed.size(), "Should only contain posts from user 42");
+        assertTrue(feed.get(0) instanceof UserPost);
+        assertEquals(42, ((UserPost) feed.get(0)).getUser().getId());
     }
+
 
     @Test
     public void testGenerateFeedForPreset_WithNoMatchingPosts() {

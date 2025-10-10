@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -8,9 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import BotPost from "@/components/ui/BotPost";
 import { formatRelativeTime } from "@/lib/timeUtils";
-import { FaRobot } from "react-icons/fa";
+import { FaRobot, FaTimes } from "react-icons/fa";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent} from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Loader2 } from "lucide-react";
 
 interface UserProfile {
   id: number;
@@ -39,8 +41,8 @@ interface Topic {
 
 interface PostData {
   id: number;
-  username: string; // Used as display name (bot.name)
-  handle: string; // @bot.schedule
+  username: string;
+  handle: string;
   time: string;
   text: string;
   image?: string;
@@ -63,7 +65,7 @@ interface BotProfile {
   ownerId: number;
   name: string;
   prompt: string;
-  schedule: string;
+  schedule: "hourly" | "daily" | "weekly" | "monthly";
   contextSource: string;
   createdAt: string;
 }
@@ -91,6 +93,27 @@ interface RawComment {
   createdAt: string;
 }
 
+interface Bot {
+  id: number;
+  name: string;
+  prompt: string;
+  createdAt: string;
+  schedule: "hourly" | "daily" | "weekly" | "monthly";
+  contextSource: string;
+  isActive: boolean;
+}
+
+interface ApiBot {
+  id: number;
+  ownerId: number;
+  name: string;
+  prompt: string;
+  schedule: Bot["schedule"];
+  contextSource: string | null;
+  createdAt: string;
+  isActive: boolean;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const BotPage = () => {
@@ -100,7 +123,16 @@ const BotPage = () => {
   const [posts, setPosts] = useState<PostData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newBotName, setNewBotName] = useState("");
+  const [newBotDescription, setNewBotDescription] = useState("");
+  const [newBotSchedule, setNewBotSchedule] = useState<
+    "hourly" | "daily" | "weekly" | "monthly"
+  >("daily");
+  const [newBotContextSource, setNewBotContextSource] = useState("");
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
 
   const fetchUser = async (
     userId: number
@@ -139,7 +171,6 @@ const BotPage = () => {
         return [];
       }
       const topicIds: number[] = await res.json();
-
       const resTopics = await fetch(`${API_URL}/api/topics`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("access_token")}`,
@@ -172,7 +203,6 @@ const BotPage = () => {
 
     try {
       setLoading(true);
-
       const botPostsResponse = await fetch(
         `${API_URL}/api/bot-posts/by-bot/${parsedBotId}`,
         { credentials: "include" }
@@ -181,8 +211,6 @@ const BotPage = () => {
         throw new Error(`Failed to fetch bot posts: ${botPostsResponse.status}`);
       }
       const botPosts: BotPost[] = await botPostsResponse.json();
-
-      // Limit to the first 10 posts
       const limitedBotPosts = botPosts.slice(0, 10);
 
       const formattedPosts = await Promise.all(
@@ -254,8 +282,8 @@ const BotPage = () => {
 
             return {
               id: postData.id,
-              username: bot?.name || "Unknown Bot", // Use bot.name as display name
-              handle: `@${bot?.schedule || "unknown"}`,
+              username: bot?.name || "Unknown Bot",
+              handle: `@${bot?.name.toLowerCase().replace(/\s+/g, "") || "unknown"}`,
               time: formatRelativeTime(postData.createdAt),
               text: postData.content,
               ...(postData.imageUrl ? { image: postData.imageUrl } : {}),
@@ -278,7 +306,9 @@ const BotPage = () => {
         })
       );
 
-      const validPosts = formattedPosts.filter((p): p is PostData => p !== null).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const validPosts = formattedPosts
+        .filter((p): p is PostData => p !== null)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setPosts(validPosts);
       if (validPosts.length === 0) {
         console.warn("No valid posts after processing.");
@@ -305,11 +335,8 @@ const BotPage = () => {
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
-      navigate("/login");
       setUser(null);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -327,7 +354,6 @@ const BotPage = () => {
 
       const wasLiked = post.isLiked;
 
-      // optimistic update
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -348,7 +374,6 @@ const BotPage = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        // revert
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId
@@ -369,7 +394,6 @@ const BotPage = () => {
         );
       }
 
-      // sync truth
       const hasLikedRes = await fetch(
         `${API_URL}/api/likes/has-liked/${postId}`,
         { credentials: "include" }
@@ -405,7 +429,6 @@ const BotPage = () => {
       }
       const wasBookmarked = post.isBookmarked;
 
-      // optimistic
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
@@ -420,7 +443,6 @@ const BotPage = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        // revert
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId ? { ...p, isBookmarked: wasBookmarked } : p
@@ -435,7 +457,6 @@ const BotPage = () => {
         );
       }
 
-      // sync truth
       const hasBookmarkedRes = await fetch(
         `${API_URL}/api/bookmarks/${user.id}/${postId}/exists`,
         { credentials: "include" }
@@ -473,7 +494,6 @@ const BotPage = () => {
         return;
       }
 
-      // optimistic add
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -488,7 +508,7 @@ const BotPage = () => {
                     content: commentText,
                     createdAt: new Date().toISOString(),
                     username: bot.name,
-                    handle: `@${bot.schedule}`,
+                    handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -506,7 +526,6 @@ const BotPage = () => {
 
       if (!res.ok) {
         const errorText = await res.text();
-        // revert optimistic comment
         setPosts((prev) =>
           prev.map((p) =>
             p.id === postId
@@ -527,7 +546,6 @@ const BotPage = () => {
 
       const newComment = await res.json();
 
-      // replace temp with real id/data
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -542,7 +560,7 @@ const BotPage = () => {
                         content: newComment.content,
                         createdAt: newComment.createdAt,
                         username: bot.name,
-                        handle: `@${bot.schedule}`,
+                        handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
                       }
                     : c
                 ),
@@ -552,7 +570,6 @@ const BotPage = () => {
       );
     } catch (err) {
       console.error("Error adding comment:", err);
-      // ensure revert
       setPosts((prev) =>
         prev.map((p) =>
           p.id === postId
@@ -596,6 +613,7 @@ const BotPage = () => {
       return;
     }
     try {
+      setIsExecuting(true);
       const res = await fetch(`${API_URL}/api/bots/${botId}/execute`, {
         method: "GET",
         credentials: "include",
@@ -605,12 +623,119 @@ const BotPage = () => {
         const errorText = await res.text();
         throw new Error(`Failed to execute bot: ${errorText}`);
       }
+
       const result = await res.json();
       console.log("Bot executed successfully:", result);
-      location.reload(); // Reload to reflect changes
+
+      const botPostsResponse = await fetch(
+        `${API_URL}/api/bot-posts/by-bot/${botId}`,
+        { credentials: "include" }
+      );
+      if (!botPostsResponse.ok) {
+        throw new Error(`Failed to fetch bot posts: ${botPostsResponse.status}`);
+      }
+      const botPosts: BotPost[] = await botPostsResponse.json();
+
+      const latestBotPost = botPosts.sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0];
+
+      if (latestBotPost) {
+        const postResponse = await fetch(
+          `${API_URL}/api/posts/${latestBotPost.postId}`,
+          { credentials: "include" }
+        );
+        if (!postResponse.ok) {
+          console.warn(`Failed to fetch post ID ${latestBotPost.postId}: ${postResponse.status}`);
+          return;
+        }
+        const postData: SinglePostResponse = await postResponse.json();
+
+        const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, topics] =
+          await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${postData.id}`, {
+              credentials: "include",
+            }),
+            fetch(`${API_URL}/api/likes/count/${postData.id}`, {
+              credentials: "include",
+            }),
+            fetch(`${API_URL}/api/likes/has-liked/${postData.id}`, {
+              credentials: "include",
+            }),
+            fetch(
+              `${API_URL}/api/bookmarks/${botId}/${postData.id}/exists`,
+              { credentials: "include" }
+            ),
+            fetchTopicsForPost(postData.id),
+          ]);
+
+        const comments = commentsRes.ok ? await commentsRes.json() : [];
+        const validComments = (comments as RawComment[]).filter(
+          (c) => c.userId && c.content
+        );
+
+        const commentsWithUsers: CommentData[] = (
+          await Promise.all(
+            validComments.map(async (comment: RawComment) => {
+              try {
+                const cu = await fetchUser(comment.userId!);
+                return {
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: cu.displayName,
+                  handle: `@${cu.username}`,
+                };
+              } catch (err) {
+                console.warn(
+                  `Failed to fetch user for comment ID ${comment.id}:`,
+                  err
+                );
+                return null;
+              }
+            })
+          )
+        ).filter((c): c is CommentData => c !== null);
+
+        const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+        const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+        const isBookmarked = hasBookmarkedRes.ok
+          ? await hasBookmarkedRes.json()
+          : false;
+
+        const newPost: PostData = {
+          id: postData.id,
+          username: bot.name,
+          handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
+          time: formatRelativeTime(postData.createdAt),
+          text: postData.content,
+          ...(postData.imageUrl ? { image: postData.imageUrl } : {}),
+          isLiked,
+          isBookmarked,
+          isReshared: false,
+          commentCount: validComments.length,
+          authorId: postData.authorId,
+          likeCount,
+          reshareCount: 0,
+          comments: commentsWithUsers,
+          showComments: false,
+          topics: topics ?? [],
+          createdAt: postData.createdAt,
+        };
+
+        setPosts((prev) =>
+          [newPost, ...prev].sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          ).slice(0, 10)
+        );
+      }
     } catch (err) {
       console.error("Error executing bot:", err);
       setError("Failed to execute bot.");
+    } finally {
+      setIsExecuting(false);
     }
   };
 
@@ -620,20 +745,112 @@ const BotPage = () => {
         credentials: "include",
       });
       if (!res.ok) throw new Error(`Failed to fetch bot info: ${res.status}`);
-      const data: BotProfile = await res.json();
-      if (!data.name) {
-        throw new Error("Bot info missing name");
+      const data: ApiBot = await res.json();
+      if (!data.name || !data.prompt || !data.schedule) {
+        throw new Error("Bot info missing required fields");
       }
-      setBot(data);
-      return data;
+      const mappedBot: BotProfile = {
+        id: data.id,
+        ownerId: data.ownerId,
+        name: data.name,
+        prompt: data.prompt,
+        schedule: data.schedule,
+        contextSource: data.contextSource || "",
+        createdAt: data.createdAt,
+      };
+      setBot(mappedBot);
+      setNewBotName(data.name);
+      setNewBotDescription(data.prompt);
+      setNewBotSchedule(data.schedule);
+      setNewBotContextSource(data.contextSource || "");
+      return mappedBot;
     } catch (err) {
       console.error("Error fetching bot info:", err);
       setError("Failed to load bot info. Please log in again.");
-      navigate("/login");
       setBot(null);
       return null;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const validateForm = () => {
+    const errors: { [key: string]: string } = {};
+    if (!newBotName.trim()) {
+      errors.name = "Bot name is required.";
+    } else if (newBotName.length > 50) {
+      errors.name = "Bot name must be 50 characters or less.";
+    }
+    if (!newBotDescription.trim()) {
+      errors.prompt = "Bot prompt is required.";
+    } else if (newBotDescription.length > 500) {
+      errors.prompt = "Bot prompt must be 500 characters or less.";
+    }
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const updateBot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!bot) {
+      setError("Please log in to update the bot.");
+      return;
+    }
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setIsEditing(true);
+      const res = await fetch(`${API_URL}/api/bots/${bot.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newBotName,
+          prompt: newBotDescription,
+          schedule: newBotSchedule,
+          contextSource: newBotContextSource || null,
+          ownerId: bot.ownerId,
+          createdAt: bot.createdAt,
+          isActive: true,
+        }),
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        if (res.status === 401) {
+          throw new Error("Unauthorized: Please log in to update a bot.");
+        } else if (res.status === 400 && errorText.includes("Prompt flagged as unsafe")) {
+          throw new Error(`${errorText} Please use a different prompt.`);
+        } else {
+          throw new Error(errorText || "Failed to update bot.");
+        }
+      }
+
+      const updatedBot: ApiBot = await res.json();
+      if (!updatedBot.name || !updatedBot.prompt || !updatedBot.schedule) {
+        throw new Error("Updated bot info missing required fields");
+      }
+      const mappedBot: BotProfile = {
+        id: updatedBot.id,
+        ownerId: updatedBot.ownerId,
+        name: updatedBot.name,
+        prompt: updatedBot.prompt,
+        schedule: updatedBot.schedule,
+        contextSource: updatedBot.contextSource || "",
+        createdAt: updatedBot.createdAt,
+      };
+
+      setBot(mappedBot);
+      setIsEditModalOpen(false);
+      setFormErrors({});
+      setError(null);
+    } catch (err) {
+      console.error("Error updating bot:", err);
+      setError(err instanceof Error ? err.message : "Failed to update bot. Please try again.");
+    } finally {
+      setIsEditing(false);
     }
   };
 
@@ -645,109 +862,107 @@ const BotPage = () => {
     );
   };
 
-
   useEffect(() => {
     const loadData = async () => {
-      await fetchBotInfo();
-      await fetchBotPosts();
-      await fetchCurrentUser();
+      await Promise.all([fetchBotInfo(), fetchBotPosts(), fetchCurrentUser()]);
     };
     loadData();
   }, [botId]);
 
   if (loading) {
-      return (
-      <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto white">
+    return (
+      <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           <div className="relative">
             <Skeleton className="h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-27 h-27 rounded-full" />
+              <Skeleton className="w-20 h-20 rounded-full" />
             </div>
           </div>
-          <div
-        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+          <div className="mt-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+              </div>
+            </div>
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
           </div>
-        </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
-      </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+        <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        </aside>
       </div>
     );
-}
+  }
 
-  if (!bot) return <div className="p-4 text-black">Bot not found.</div>;
+  if (!bot) return <div className="p-4 text-black dark:text-white">Bot not found.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
-        <Card className="mb-5 ">
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
+        <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
-          <div className="mt-10 w-full" />
-          <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-20 h-20">
-              <Link
-                to="/edit-bot"
-                className="flex items-center justify-center h-full w-full dark:hover:text-white"
-              >
-                <FaRobot className="w-15 h-15 text-black dark:text-gray-100 rounded-full  future-feed:text-white" />
-              </Link>
-            </Avatar>
-          </div>
-        </div>
-        <div className="pt-16 px-4">
-          <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-110px]">
-              <h1 className="text-2xl text-black  font-bold">{bot.name}</h1>
-              <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
-              <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
+              <div className="mt-10 w-full" />
+              <div className="absolute -bottom-10 left-4">
+                <Avatar className="w-20 h-20">
+                  <FaRobot className="w-15 h-15 text-black dark:text-gray-100 rounded-full" />
+                </Avatar>
+              </div>
             </div>
-            <div className="mt-[-50px] gap-4 flex items-center">
-              <Button
-                variant="secondary"
-                className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                onClick={handleExecuteBot}
-              >
-                Execute Bot
-              </Button>
-              <Button
-                variant="secondary"
-                className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                onClick={() => navigate("/edit-bot")}
-              >
-                Edit Bot
-              </Button>
+            <div className="pt-16 px-4">
+              <div className="text-gray-400 flex justify-between items-start">
+                <div className="ml-30 mt-[-110px]">
+                  <h1 className="text-2xl text-black dark:text-white font-bold">{bot.name}</h1>
+                  <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
+                  <p className="mt-4 text-xl text-black dark:text-white">{bot.prompt || "This is an area for prompt"}</p>
+                </div>
+                <div className="mt-[-50px] gap-4 flex items-center">
+                  <Button
+                    variant="secondary"
+                    className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
+                    onClick={handleExecuteBot}
+                    disabled={isExecuting}
+                  >
+                    {isExecuting ? (
+                      <Loader2 className="w-5 h-5 animate-spin ml-1" />
+                    ) : null}
+                    {isExecuting ? "Executing..." : "Execute Bot"}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
+                    onClick={() => {
+                      setNewBotName(bot.name);
+                      setNewBotDescription(bot.prompt);
+                      setNewBotSchedule(bot.schedule);
+                      setNewBotContextSource(bot.contextSource);
+                      setIsEditModalOpen(true);
+                    }}
+                  >
+                    Edit Bot
+                  </Button>
+                </div>
+              </div>
+              <div className="left-4 text-black dark:text-white mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+                <span className="font-medium dark:text-slate-200">{posts.length} Posts</span>
+              </div>
             </div>
-          </div>
-          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
-            <span className="font-medium dark:text-slate-200">{posts.length} Posts</span> 
-          </div>
-        </div>
           </CardContent>
         </Card>
-        
         <Separator className="my-4 bg-blue-500 shadow-xl" />
         {error && (
           <div
@@ -758,13 +973,13 @@ const BotPage = () => {
           </div>
         )}
         {posts.length === 0 ? (
-          <div className="p-4 text-gray-400">No posts yet.</div>
+          <div className="p-4 text-gray-400 dark:text-gray-400">No posts yet.</div>
         ) : (
           posts.map((post) => (
             <div key={post.id} className="mb-4">
               <BotPost
                 username={bot.name}
-                handle={bot.schedule}
+                handle={`@${bot.name.toLowerCase().replace(/\s+/g, "")}`}
                 time={post.time}
                 text={post.text}
                 image={post.image}
@@ -782,9 +997,9 @@ const BotPage = () => {
                 onBookmark={() => handleBookmark(post.id)}
                 onReshare={() => {}}
                 onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                onProfileClick={() => navigate(`/bot/${botId}`)}
+                onProfileClick={() => {}}
                 onDelete={() => handleDeletePost(post.id)}
-                onNavigate={() => navigate(`/post/${post.id}`)}
+                onNavigate={() => {}}
                 currentUser={user}
                 authorId={post.authorId}
                 topics={post.topics || []}
@@ -793,7 +1008,7 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="w-full lg:w-[350px] lg:sticky  lg:h-screen hidden lg:block mr-6.5">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
@@ -801,6 +1016,106 @@ const BotPage = () => {
           <WhoToFollow />
         </div>
       </aside>
+
+      {isEditModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
+          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-blue-500 dark:border-blue-300">
+            <div className="flex justify-between items-center mb-4">
+              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300">
+                Edit Bot
+              </CardTitle>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setNewBotName(bot.name);
+                  setNewBotDescription(bot.prompt);
+                  setNewBotSchedule(bot.schedule);
+                  setNewBotContextSource(bot.contextSource);
+                  setFormErrors({});
+                  setError(null);
+                }}
+                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400"
+                disabled={isEditing}
+              >
+                <FaTimes className="w-6 h-6" />
+              </Button>
+            </div>
+            <form onSubmit={updateBot}>
+              <CardContent className="flex flex-col gap-4">
+                <div>
+                  <Input
+                    placeholder="Bot Name"
+                    value={newBotName}
+                    onChange={(e) => setNewBotName(e.target.value)}
+                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    maxLength={50}
+                    disabled={isEditing}
+                  />
+                  {formErrors.name && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                  )}
+                </div>
+                <div>
+                  <Input
+                    placeholder="Bot Prompt"
+                    value={newBotDescription}
+                    onChange={(e) => setNewBotDescription(e.target.value)}
+                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    maxLength={500}
+                    disabled={isEditing}
+                  />
+                  {formErrors.prompt && (
+                    <p className="text-red-500 text-sm mt-1">{formErrors.prompt}</p>
+                  )}
+                </div>
+                <div>
+                  <select
+                    value={newBotSchedule}
+                    onChange={(e) =>
+                      setNewBotSchedule(
+                        e.target.value as "hourly" | "daily" | "weekly" | "monthly"
+                      )
+                    }
+                    className="text-black dark:text-white border border-slate-400 dark:border-gray-600 p-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                    disabled={isEditing}
+                  >
+                    <option value="hourly">Hourly</option>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+                <div>
+                  <Input
+                    placeholder="Context Source (optional)"
+                    value={newBotContextSource}
+                    onChange={(e) => setNewBotContextSource(e.target.value)}
+                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    disabled={isEditing}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 disabled:opacity-50"
+                  disabled={
+                    !newBotName.trim() ||
+                    !newBotDescription.trim() ||
+                    !!Object.keys(formErrors).length ||
+                    isEditing
+                  }
+                >
+                  {isEditing ? (
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  ) : null}
+                  {isEditing ? "Updating..." : "Update Bot"}
+                </Button>
+              </CardContent>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

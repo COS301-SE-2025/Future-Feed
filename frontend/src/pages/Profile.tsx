@@ -897,7 +897,7 @@ const Profile = () => {
     if (value === "posts" && !fetchedTabs.posts) {
       await fetchUserPosts(userId, currentUserId);
     } else if (value === "re-feeds" && !fetchedTabs.refeeds) {
-      await fetchResharedPosts(currentUserId);
+      await fetchResharedPosts(userId);
     } else if (value === "comments" && !fetchedTabs.comments) {
       await fetchCommentedPosts(userId, currentUserId);
     } else if (value === "likes" && !fetchedTabs.likes) {
@@ -1364,7 +1364,7 @@ const Profile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border  dark:border-slate-200 rounded-lg animate-pulse "
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1429,7 +1429,7 @@ const Profile = () => {
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
-    if (userId == profileId){
+    if (userId == parseInt(profileId || "0")) {
       navigate('/profile');
     }
 
@@ -1460,27 +1460,46 @@ const Profile = () => {
           <PersonalSidebar />
         </aside>
         
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
-          <div className="relative">
-            <Skeleton className="mt-1 h-40 w-full" />
-            <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-27 h-27 rounded-full" />
+        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+          <div className="mb-5 animate-pulse">
+            <Card>
+              <CardContent className="ml-[-10px]">
+                <div className="relative">
+                  <Skeleton className="mt-1 h-40 w-full" />
+                  <div className="absolute -bottom-10 left-4">
+                    <Skeleton className="w-20 h-20 rounded-full" />
+                  </div>
+                </div>
+                <div className="pt-16 px-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="ml-[120px] mt-[-110px] space-y-2">
+                      <Skeleton className="h-7 w-40" />
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-5 w-72" />
+                    </div>
+                    <Skeleton className="mt-[-110px] w-28 h-10 rounded-full" />
+                  </div>
+                  <div className="pl-4 mt-4 flex gap-4">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="border-t border-gray-200 dark:border-slate-700">
+              <div className="flex justify-around py-3 px-4 border-b border-gray-200 dark:border-slate-700 animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 flex-1 mx-1 rounded-full" />
+                ))}
+              </div>
+              <div className="p-0">
+                {renderSkeletonPosts()}
+              </div>
             </div>
           </div>
-          <div
-        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
-          </div>
-        </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
-      </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
@@ -1499,8 +1518,8 @@ const Profile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
-        <Card className="mb-5 ">
+      <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+        <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
           <div className="mt-10 w-full" />
@@ -1585,7 +1604,7 @@ const Profile = () => {
               </div>
             )}
             {tabLoading.posts ? (
-              <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
+              <div className="flex flex-col">{renderSkeletonPosts()}</div>
             ) : posts.length === 0 ? (
               <div className="p-4 dark:text-slate-500 text-gray-400">No posts yet.</div>
             ) : (
@@ -1960,14 +1979,15 @@ const Profile = () => {
 </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        
+        </aside>
     </div>
   );
 };

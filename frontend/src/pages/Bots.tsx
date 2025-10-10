@@ -342,8 +342,8 @@ const Bots: React.FC = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-4 pl-4 lg:ml-[260px] min-h-screen overflow-y-auto">
-        <div className="flex justify-between items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
+      <main className="flex-1 p-2 lg:ml-[260px] overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
           <div className="flex justify-between items-center gap-4">
             <Button onClick={() => setIsCreateModalOpen(true)} className="text-white cursor-pointer">
@@ -521,7 +521,7 @@ const Bots: React.FC = () => {
         </Tabs>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-7.5">
+      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-[41px]">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
@@ -583,7 +583,7 @@ const Bots: React.FC = () => {
                 />
                 <Button
                   type="submit"
-                  className="text-white hover:bg-lime-600 cursor-pointer"
+                  className="text-white hover:bg-blue-600 cursor-pointer"
                   disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
                 >
                   Create Bot

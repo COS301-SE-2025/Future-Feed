@@ -12,7 +12,7 @@ import { formatRelativeTime } from "@/lib/timeUtils";
 import { useSpring, animated } from "@react-spring/web";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Filter, SmilePlus, ArrowLeft, ChartNoAxesGantt, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
+import { Filter, SmilePlus, ArrowLeft, ChartNoAxesGantt, Trash2, ChevronUp, ChevronDown, EyeOff } from 'lucide-react';
 import { useNotifications } from "@/context/NotificationContext";
 import BotPost from "@/components/ui/BotPost";
 import {
@@ -179,6 +179,9 @@ const HomePage = () => {
   const [isUserSearchOpen, setIsUserSearchOpen] = useState(false);
   const [loadingImages, setLoadingImages] = useState<Set<number>>(new Set());
   const [isCreatePresetModalOpen, setIsCreatePresetModalOpen] = useState(false);
+  const [isErrorDialogOpen, setIsErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -205,6 +208,12 @@ const HomePage = () => {
     transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 250, friction: 35 },
   });
+
+  interface ErrorResponse {
+    error: string;
+    message: string;
+    labels?: string[];
+  }
 
   interface PostUser {
     id: number;
@@ -1352,7 +1361,40 @@ const HomePage = () => {
         });
       }
 
-      if (!res.ok) throw new Error(`Failed to create post: ${res.status} ${await res.text()}`);
+      if (!res.ok) {
+        try {
+          const errorData = await res.json();
+          if (errorData.error === "ContentRejected") {
+            setErrorMessage(errorData.message || "Your post has been blocked.");
+            setErrorData(errorData);
+            setIsErrorDialogOpen(true);
+
+            // Revert temp post immediately
+            if (isGeneratingImage) {
+              setLoadingImages(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(tempPostId);
+                return newSet;
+              });
+            }
+            setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+            setFollowingPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+            setSelectedTopicIds(selectedTopics);
+            setPostText(postText);
+            setisBot(isBot);
+            setBotId(botId);
+            setImageFile(tempImageFile);
+            setImagePrompt(tempImagePrompt);
+            setUseAIGeneration(!!tempImagePrompt);
+
+            return; // Exit early, don't proceed with success flow
+          }
+        } catch (parseErr) {
+          console.warn("Failed to parse error response as JSON:", parseErr);
+        }
+        throw new Error(`Failed to create post: ${res.status} ${await res.text()}`);
+      }
+
       const newPost: ApiPost = await res.json();
 
       if (selectedTopics.length > 0) {
@@ -1850,7 +1892,7 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -1979,11 +2021,22 @@ const HomePage = () => {
     }
   }, [currentUser, activeTab, selectedPreset]);
 
+  useEffect(() => {
+    if (isErrorDialogOpen) {
+      const timer = setTimeout(() => {
+        setIsErrorDialogOpen(false);
+        setErrorMessage('');
+        setErrorData(null);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isErrorDialogOpen]);
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
-        <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white ">
+        <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white hidden lg:block">
 
         </div>
         <div className="ml-4 mt-8 flex flex-col hidden lg:flex">
@@ -2160,8 +2213,12 @@ const HomePage = () => {
                       {loadingPresetPosts ? (
                         renderSkeletonPosts()
                       ) : presetPosts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center py-10">
-                          <p className="text-lg dark:text-white future-feed:text-lime text-gray-400">No posts available for this preset yet.</p>
+                        <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                          <EyeOff className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 dark:text-gray-400">No Posts available.</p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            No posts available yet for this preset. Please add rules if rules are empty.
+                          </p>
                         </div>
                       ) : (
                         renderPosts(presetPosts)
@@ -2330,7 +2387,6 @@ const HomePage = () => {
                                                   )}
                                                   <div>
                                                     <div className="text-sm font-medium dark:text-white">{user.displayName}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</div>
                                                   </div>
                                                 </div>
                                               ))}
@@ -2379,7 +2435,13 @@ const HomePage = () => {
                                         ))}
                                       </div>
                                     ) : (
-                                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">No rules added yet.</p>
+                                      <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                                        <Filter className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">No rules added yet.</p>
+                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                          Add rules to customize your feed content
+                                        </p>
+                                      </div>
                                     )}
                                   </div>
                                 )}
@@ -2436,6 +2498,7 @@ const HomePage = () => {
               </Tabs>
             </>
           )}
+
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky  lg:top-0 lg:h-screen  hidden lg:block ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
@@ -2645,7 +2708,36 @@ const HomePage = () => {
           </div>
         </animated.div>
       )}
+      <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
+        <DialogContent className="dark:bg-gray-800  bg-red-400 border-0 max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center dark:text-white text-white">Post Blocked</DialogTitle>
+            <DialogDescription className="text-white">
+              {errorMessage}
+              {errorData && errorData.labels && errorData.labels.length > 0 && (
+                <div className="mt-2 text-sm text-black">
+                  Labels: {errorData.labels.join(', ')}
+                </div>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              className="text-red-500 bg-white"
+              variant="outline"
+              onClick={() => {
+                setIsErrorDialogOpen(false);
+                setErrorMessage('');
+                setErrorData(null);
+              }}
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
