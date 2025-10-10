@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FF from "../assets/FF cropped.png"
-import Exploremobile from "../assets/profilemobile.png"
+import Exploremobile from "../assets/profilemobile.png.jpg"
 import Notificationsmobile from "../assets/home12.png"
 import Help_mobile from "../assets/helpmobilenew.png"
 import Settingsmobile from "../assets/settingsmobile.png"
@@ -109,7 +109,7 @@ const LandingPage = () => {
             </div>
             <div className="flex h-screen w-screen overflow-hidden ">
                 {/* Sticky Image Section */}
-                <div className="hidden w-1/2   md:flex justify-center items-start pt-8 sticky top-0 h-screen">
+                <div className="hidden w-1/2    md:flex justify-center items-start pt-3 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
                         <motion.img
                             key={currentImage}
@@ -119,13 +119,13 @@ const LandingPage = () => {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.2, ease: "easeInOut" }}
-                            className="rounded-3xl border-4 border-white w-[300px] h-[650px] object-cover absolute"
+                            className="rounded-3xl border-4 border-white drop-shadow-xl w-[300px] h-[650px] object-cover absolute"
                         />
                     </AnimatePresence>
                 </div>
 
                 {/* Scrolling Text Section */}
-                <div ref={scrollContainerRef} className=" w-full md:w-1/2  overflow-y-auto  h-screen px-6 md:px-12 pt-20 space-y-90 scroll-smooth">
+                <div ref={scrollContainerRef} className=" w-full md:w-1/2   overflow-y-auto  h-screen px-6 md:px-12 pt-20 space-y-90 scroll-smooth">
                     {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
