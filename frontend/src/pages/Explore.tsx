@@ -91,7 +91,6 @@ const Explore = () => {
 
       }
 
-
       return;
     }
 
@@ -247,7 +246,6 @@ const Explore = () => {
       //console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
       return fallbackFollowing;
     }
-
 
      // return data.following;
      return Boolean(isFollowing);//ensure and heck we return true
@@ -558,15 +556,12 @@ const Explore = () => {
   //
 
   return (
-    <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
-      <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-
-      <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
-
-
-        <div className="future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-3 sticky top-0 dark:bg-indigo-950 border-none dark:border-slate-200  z-10">
+      <main className="w-full lg:flex-1 p-2 overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
           <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
@@ -575,15 +570,13 @@ const Explore = () => {
             </Link>
 
           </div>
-
-
         </div>
 
         <Tabs
           value={activeTab}
           onValueChange={(val) => {
             setActiveTab(val);
-            if (val === "following" && !hasLoadedFollowing && currentUserId !== null) {
+            if (val === "accounts following" && !hasLoadedFollowing && currentUserId !== null) {
               loadFollowingData(currentUserId);
             }
           }}
@@ -599,8 +592,6 @@ const Explore = () => {
               </TabsTrigger>
             ))}
           </TabsList>
-
-
 
           <TabsContent value="accounts">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
@@ -631,7 +622,7 @@ const Explore = () => {
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
+      <aside className="hidden lg:block w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
             <WhatsHappening />
            

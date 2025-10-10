@@ -42,6 +42,7 @@ const FollowerFollowing = () => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const { updateFollowStatus, addFollowingUser, removeFollowingUser, followStatus, followingUsers, fetchFollowers, fetchFollowing, followers } = useFollowStore();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const { followingUsers, fetchFollowers, fetchFollowing, followers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
   const [followersLoading, setFollowersLoading] = useState(true);
@@ -172,7 +173,7 @@ const FollowerFollowing = () => {
   if (loading) return <div className="p-4 text-white">Loading profile...</div>;
 
   const renderUserCard = (user: User) => (
-    <Card key={user.id} className="border future-feed:bg-black future-feed:border-lime future-feed:text-white rounded-2xl">
+    <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white rounded-2xl">
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -194,7 +195,8 @@ const FollowerFollowing = () => {
         ) : (
           <Button
             onClick={() => handleFollow(user)}
-            className="px-4 py-1 rounded-full font-semibold hover:cursor-pointer"
+            className="px-4 py-1 rounded-full font-semibold  hover:cursor-pointer"
+
           >
             Follow
           </Button>
@@ -226,12 +228,15 @@ const FollowerFollowing = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
-        <div className="future-feed:border-black text-black flex flex-col items-center px-4 py-3 top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
-          <Avatar className="w-24 h-24 border-4">
+      <main className="h-fit dark:bg-blue-950 flex-1 rounded-2xl border-none min-h-screen mt-5">
+
+
+        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
+          <Avatar className=" w-24 h-24 border-4 ">
             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <AvatarImage src={user?.profilePicture || GRP1} alt={`@${user?.username}`} />
-              <AvatarFallback>{user?.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+              <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+
             </Link>
           </Avatar>
           <h1 className="text-xl future-feed:text-white font-bold">{user?.displayName || user?.username}</h1>
@@ -279,15 +284,18 @@ const FollowerFollowing = () => {
           <WhatsHappening />
           <WhoToFollow />
         </div>
-      </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
+      </main >
+      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+        <div className="sticky top-4 space-y-5">
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhoToFollow />
+          </div>
         </div>
       </aside>
+
     </div>
   );
 };

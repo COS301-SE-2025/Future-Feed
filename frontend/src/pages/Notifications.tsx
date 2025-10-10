@@ -359,7 +359,7 @@ const Notifications = () => {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
-      <aside className="hidden lg:block lg:fixed lg:top-0 lg:left-6 lg:h-screen lg:w-[245px] overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
         <PersonalSidebar />
       </aside>
 
@@ -467,6 +467,11 @@ const Notifications = () => {
             </>
           )}
         </Tabs>
+
+        <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
       </main>
 
       <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-6.5">

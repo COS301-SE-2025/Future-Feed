@@ -360,10 +360,10 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
             : p
         )
       );
@@ -380,10 +380,10 @@ const BotPage = () => {
           prev.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isLiked: wasLiked,
-                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
+                ...p,
+                isLiked: wasLiked,
+                likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+              }
               : p
           )
         );
@@ -500,21 +500,21 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: [
-                  ...p.comments,
-                  {
-                    id: tempId,
-                    postId,
-                    authorId: bot.id,
-                    content: commentText,
-                    createdAt: new Date().toISOString(),
-                    username: bot.name,
-                    handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
-                  },
-                ],
-                commentCount: p.commentCount + 1,
-              }
+              ...p,
+              comments: [
+                ...p.comments,
+                {
+                  id: tempId,
+                  postId,
+                  authorId: bot.id,
+                  content: commentText,
+                  createdAt: new Date().toISOString(),
+                  username: bot.name,
+                  handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
+                },
+              ],
+              commentCount: p.commentCount + 1,
+            }
             : p
         )
       );
@@ -532,10 +532,10 @@ const BotPage = () => {
           prev.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  comments: p.comments.filter((c) => c.id !== tempId),
-                  commentCount: Math.max(0, p.commentCount - 1),
-                }
+                ...p,
+                comments: p.comments.filter((c) => c.id !== tempId),
+                commentCount: Math.max(0, p.commentCount - 1),
+              }
               : p
           )
         );
@@ -552,21 +552,21 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: p.comments.map((c) =>
-                  c.id === tempId
-                    ? {
-                        id: newComment.id,
-                        postId: newComment.postId,
-                        authorId: newComment.userId || bot.id,
-                        content: newComment.content,
-                        createdAt: newComment.createdAt,
-                        username: bot.name,
-                        handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
-                      }
-                    : c
-                ),
-              }
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === tempId
+                  ? {
+                    id: newComment.id,
+                    postId: newComment.postId,
+                    authorId: newComment.userId || bot.id,
+                    content: newComment.content,
+                    createdAt: newComment.createdAt,
+                    username: bot.name,
+                    handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
+                  }
+                  : c
+              ),
+            }
             : p
         )
       );
@@ -576,10 +576,10 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: p.comments.filter((c) => c.id !== tempId),
-                commentCount: Math.max(0, p.commentCount - 1),
-              }
+              ...p,
+              comments: p.comments.filter((c) => c.id !== tempId),
+              commentCount: Math.max(0, p.commentCount - 1),
+            }
             : p
         )
       );
@@ -886,7 +886,7 @@ const BotPage = () => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           <div className="relative">
             <Skeleton className="h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -941,7 +941,7 @@ const BotPage = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
         <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
@@ -967,7 +967,7 @@ const BotPage = () => {
                     disabled={isExecuting}
                   >
                     {isExecuting ? (
-                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      <Loader2 className="w-5 h-5 animate-spin ml-1" />
                     ) : null}
                     {isExecuting ? "Executing..." : "Execute Bot"}
                   </Button>
@@ -1024,11 +1024,11 @@ const BotPage = () => {
                 isUserLoaded={!!bot}
                 onLike={() => handleLike(post.id)}
                 onBookmark={() => handleBookmark(post.id)}
-                onReshare={() => {}}
+                onReshare={() => { }}
                 onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                onProfileClick={() => {}}
+                onProfileClick={() => { }}
                 onDelete={() => handleDeletePost(post.id)}
-                onNavigate={() => {}}
+                onNavigate={() => { }}
                 currentUser={user}
                 authorId={post.authorId}
                 topics={post.topics || []}
@@ -1037,12 +1037,14 @@ const BotPage = () => {
           ))
         )}
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
+      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+        <div className="sticky top-4 space-y-5">
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhoToFollow />
+          </div>
         </div>
       </aside>
 
