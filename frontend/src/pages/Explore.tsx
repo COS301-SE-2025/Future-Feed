@@ -384,7 +384,9 @@ const Explore = () => {
         }
       }
     } catch (err) {
+      navigate("/login")
       console.error("Failed to load data:", err);
+
     }
   };
     //load only if we have users but no currenuserid

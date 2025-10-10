@@ -168,6 +168,7 @@ const Profile = () => {
       return data.id;
     } catch (err) {
       console.error("Failed to fetch current user ID:", err);
+      navigate("/login");
       return null;
     }
   };

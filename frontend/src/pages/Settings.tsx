@@ -20,11 +20,30 @@ import {
 
 
 import { useNavigate } from "react-router-dom"
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 //add theme in settings for mobile devices
 //plus it makes sense to have it in settings
 
 const Settings = () => {
   const navigate = useNavigate()
+
+  const fetchCurrentUserId = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch current user ID");
+      const data = await res.json();
+      return data.id;
+    } catch (err) {
+      console.error("Failed to fetch current user ID:", err);
+      navigate("/login");
+      return null;
+    }
+  };
+
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -40,6 +59,11 @@ const Settings = () => {
         e.preventDefault()
         navigate("/help")
       }
+    }
+
+    const currentUserId = fetchCurrentUserId();
+    if(!currentUserId){
+      navigate("/login")
     }
 
     document.addEventListener("keydown", down)
