@@ -1952,7 +1952,7 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+      <aside className="w-full lg:w-[350px] mt-5 flex-shrink-0 hidden lg:block mr-6.5">
   <div className="sticky top-4 space-y-5">
     <div className="w-full lg:w-[320px] lg:ml-7">
       <WhatsHappening />
