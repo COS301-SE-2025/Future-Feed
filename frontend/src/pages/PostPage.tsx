@@ -208,7 +208,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
           createdAt: comment.createdAt,
           username: commentUserInfo.displayName,
           handle: `@${commentUserInfo.username}`,
-          profilePicture: commentUserInfo.profilePicture,
+          profilePicture: comment.profilePicture,
         });
       } catch (err) {
         console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);

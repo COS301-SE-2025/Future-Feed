@@ -18,6 +18,9 @@ const Login: React.FC = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [regSuccessful, setRegSuccessful] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,12 +35,46 @@ const Login: React.FC = () => {
     }
   };
 
+  const calculateAge = (birthDate: string) => {
+    const today = new Date(2025, 9, 10);
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    setRegSuccessful(null);
+    setIsLoading(true);
 
     if (isRegister) {
+      if (!username || !password || !email || !displayName || !dateOfBirth) {
+        setErrorMsg("All fields are required.");
+        setIsLoading(false);
+        return;
+      }
       if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        setErrorMsg("Passwords do not match.");
+        setIsLoading(false);
+        return;
+      }
+      if (password.length < 6) {
+        setErrorMsg("Password must be at least 6 characters.");
+        setIsLoading(false);
+        return;
+      }
+      if (!email.match(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/)) {
+        setErrorMsg("Invalid email format.");
+        setIsLoading(false);
+        return;
+      }
+      const age = calculateAge(dateOfBirth);
+      if (age < 13) {
+        setErrorMsg("You must be at least 13 years old to register.");
+        setIsLoading(false);
         return;
       }
 
@@ -59,40 +96,60 @@ const Login: React.FC = () => {
         });
 
         if (res.ok) {
-          console.log("Registration successful");
           setIsRegister(false);
+          setRegSuccessful("Registration successful! Please login.");
         } else {
-          console.error("Registration failed");
+          const data = await res.json();
+          setErrorMsg(data.message || "Registration failed. Please try again.");
         }
-      } catch (err) {
-        console.error("Error during registration:", err);
+      } catch {
+        setErrorMsg("An error occurred during registration. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     } else {
-      const params = new URLSearchParams();
-      params.append("username", username);
-      params.append("password", password);
+      if (!username.trim() || !password.trim()) {
+    setErrorMsg("Both username and password are required.");
+    setIsLoading(false);
+    return;
+  }
 
+  const params = new URLSearchParams();
+  params.append("username", username.trim());
+  params.append("password", password.trim());
+
+  try {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      credentials: "include",
+      body: params.toString(),
+    });
+
+    if (res.ok) {
+      navigate("/home");
+    } else {
+      let errorMessage = "Login failed. Please check your username or password.";
       try {
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          credentials: "include",
-          body: params.toString(),
-        });
-
-        if (res.ok) {
-          console.log("Login successful");
-          navigate("/home");
-        } else {
-          console.error("Login failed");
-        }
-      } catch (err) {
-        console.error("Error during login:", err);
+        const data = await res.json();
+        if (data?.message) errorMessage = data.message;
+      } catch {
+        setErrorMsg("Login failed. Please check your username or password.");
       }
+      setErrorMsg(errorMessage);
     }
+  } catch {
+    setErrorMsg("Unable to connect to the server. Please try again later.");
+  } finally {
+    setIsLoading(false);
+  }}
   };
 
-  const handleToggle = () => setIsRegister(!isRegister);
+  const handleToggle = () => {
+  setIsRegister(!isRegister);
+  setErrorMsg(null);
+  setRegSuccessful(null);
+};
 
   return (
     <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex flex-col lg:flex-row overflow-hidden transition-all duration-500">
@@ -116,7 +173,11 @@ const Login: React.FC = () => {
           }}
         ></div>
         <div className="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 flex justify-center">
-          <img src={futurefeedLogo} alt="Future Feed Logo" className="h-[400px] w-auto" />
+          <img
+            src={futurefeedLogo}
+            alt="Future Feed Logo"
+            className="h-[200px] sm:h-[300px] md:h-[400px] w-auto"
+          />
         </div>
       </div>
 
@@ -151,9 +212,17 @@ const Login: React.FC = () => {
       >
         <Card className="w-full max-w-sm sm:max-w-md rounded-xl shadow-lg border-0 bg-white">
           <CardHeader>
-            <CardTitle className="text-center text-2xl sm:text-3xl font-bold">
-              {isRegister ? "Register" : "Login"}
-            </CardTitle>
+            <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
+            {errorMsg && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                  {errorMsg}
+                </div>
+              )}
+              {regSuccessful && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+                  {regSuccessful}
+                </div>
+              )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
@@ -243,9 +312,7 @@ const Login: React.FC = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="profilePic" className="font-bold text-sm sm:text-base">
-                      Profile Picture
-                    </Label>
+                    <Label htmlFor="profilePic" className="font-bold">Profile Picture (Optional)</Label>
                     <Input
                       type="file"
                       id="profilePic"
@@ -303,9 +370,9 @@ const Login: React.FC = () => {
               {/* SUBMIT */}
               <Button
                 type="submit"
-                className="lg:h-10 w-full py-2.5 sm:py-3 text-base sm:text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
-              >
-                {isRegister ? "Register" : "Login"}
+                disabled={isLoading}
+                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer">
+                {isLoading ? "Loading..." : isRegister ? "Register" : "Login"}
               </Button>
 
               {/* TOGGLE LOGIN/REGISTER */}
