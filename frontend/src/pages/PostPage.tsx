@@ -156,7 +156,6 @@ const fetchPost = async (id: number, currentUserId: number) => {
     }
     
     const post: RawPost = await postRes.json();
-    console.log("Fetched post:", post.user?.id);
     let userInfo: UserInfo;
     if (post.isBot || post.botId) {
       if (!post.botId) {
