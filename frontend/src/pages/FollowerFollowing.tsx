@@ -7,7 +7,7 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
-
+import { useNavigate } from "react-router-dom"
 import { useLocation } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
@@ -29,7 +29,7 @@ interface UserProfile {
 interface User {
   id: number;
   username: string;
-  name: string;
+  name:string;
   displayName: string;
   email: string;
   profilePicture?: string | null;
@@ -44,10 +44,10 @@ const FollowerFollowing = () => {
   const { updateFollowStatus, addFollowingUser, removeFollowingUser } = useFollowStore();
   const { followStatus } = useFollowStore();
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const { followingUsers, fetchFollowers, fetchFollowing, followers } = useFollowStore();
+  const { followingUsers, fetchFollowers, fetchFollowing,followers } = useFollowStore();
   const userCache = new Map<number, { username: string; displayName: string }>();
   const [loading, setLoading] = useState(true);
-
+  const Navigate = useNavigate();
   const [followersLoading, setFollowersLoading] = useState(true);
   const [followingLoading, setFollowingLoading] = useState(true);
   const location = useLocation();
@@ -70,6 +70,7 @@ const FollowerFollowing = () => {
     } catch (err) {
       console.error("Error fetching user info:", err)
       setUser(null)
+      Navigate("/login")
       return null
     } finally {
       setLoading(false)
@@ -109,7 +110,7 @@ const FollowerFollowing = () => {
         body: JSON.stringify({ followedId: user.id }),
       });
       updateFollowStatus(user.id, true);
-      addFollowingUser(user);
+    addFollowingUser(user);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -127,7 +128,7 @@ const FollowerFollowing = () => {
         credentials: "include",
       });
       updateFollowStatus(userId, false);
-      removeFollowingUser(userId);
+    removeFollowingUser(userId);
 
       if (currentUserId !== null) {
         await fetchFollowing(currentUserId, users);
@@ -160,7 +161,7 @@ const FollowerFollowing = () => {
         );
         useFollowStore.getState().bulkSetFollowStatus(Object.fromEntries(statusEntries));
 
-
+        
       }
     };
 
@@ -168,10 +169,38 @@ const FollowerFollowing = () => {
   }, []);
 
   if (loading) return <div className="p-4 text-white">Loading profile...</div>;
-  if (!user) return <div className="p-4 text-black">Not logged in.</div>
+  if (!user) {
+      const navigate = useNavigate();
+      const [seconds, setSeconds] = useState(3);
+  
+      useEffect(() => {
+        if (seconds > 0) {
+          const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+          return () => clearTimeout(timer);
+        } else {
+          navigate("/login", { replace: true });
+        }
+      }, [seconds, navigate]);
+  
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
+          <div className="text-center space-y-4">
+            <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
+              Oops! Looks like you are not logged in.
+            </h1>
+            <p className="text-lg">
+              Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
+            </p>
+            <div className="flex justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
   const renderUserCard = (user: User) => (
-    <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white rounded-2xl">
+    <Card key={user.id} className=" border future-feed:bg-black future-feed:border-lime future-feed:text-white  rounded-2xl">
       <CardContent className="flex gap-3 items-start p-4">
         <Avatar className="w-14 h-14 border-4 border-slate-300">
           <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
@@ -181,7 +210,7 @@ const FollowerFollowing = () => {
           <p className="font-semibold">{user.displayName}</p>
           <p className="text-sm text-gray-500 dark:text-slate-500">@{user.username}</p>
           <p className="text-sm dark:text-slate-500 mt-1">{user.bio || ""}</p>
-
+          
         </div>
         {followStatus[user.id] ? (
           <Button
@@ -195,7 +224,7 @@ const FollowerFollowing = () => {
           <Button
             onClick={() => handleFollow(user)}
             className="px-4 py-1 rounded-full font-semibold  hover:cursor-pointer"
-
+            
           >
             Follow
           </Button>
@@ -227,15 +256,15 @@ const FollowerFollowing = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="h-fit dark:bg-blue-950 flex-1 rounded-2xl border-none min-h-screen mt-5">
+      <main className="h-fit p-6 dark:bg-blue-950 flex-1 mx-7 my-7 rounded-2xl border-none min-h-screen">
+        
 
-
-        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
+        <div className="future-feed:border-black  text-black flex flex-col items-center px-4 py-3 sticky top-0 dark:bg-blue-950 border-none drop-shadow-xl rounded-xl dark:border-slate-200 z-10">
           <Avatar className=" w-24 h-24 border-4 ">
-            <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
+             <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+               <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
               <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-
+              
             </Link>
           </Avatar>
           <h1 className="text-xl future-feed:text-white  font-bold">{user.displayName || user.username}</h1>
@@ -256,7 +285,12 @@ const FollowerFollowing = () => {
             >
               Following ({followingUsers.length})
             </TabsTrigger>
-
+            <TabsTrigger
+              value="bots"
+              className="flex-1 rounded-2xl "
+            >
+              Bots
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="followers">
@@ -279,6 +313,9 @@ const FollowerFollowing = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="bots">
+            <p className="p-4 dark:text-gray-400">You are currently not following any bots</p>
+          </TabsContent>
         </Tabs>
 
         <div className="w-full lg:sticky  dark:bg-blue-950 px-4 mt-7 py-2 space-y-6 block lg:hidden">
@@ -286,17 +323,15 @@ const FollowerFollowing = () => {
           <WhoToFollow />
         </div>
       </main >
-      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
-        <div className="sticky top-4 space-y-5">
-          <div className="w-full lg:w-[320px] lg:ml-7">
-            <WhatsHappening />
-          </div>
-          <div className="w-full lg:w-[320px] lg:ml-7">
-            <WhoToFollow />
-          </div>
+      <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+          <WhoToFollow />
         </div>
       </aside>
-
+     
     </div>
   )
 }

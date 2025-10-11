@@ -109,32 +109,36 @@ const Login: React.FC = () => {
       }
     } else {
       if (!username.trim() || !password.trim()) {
-    setErrorMsg("Both username and password are required.");
-    setIsLoading(false);
-    return;
-  }
+        setErrorMsg("Both username and password are required.");
+        setIsLoading(false);
+        return;
+      }
+
+      const params = new URLSearchParams();
+      params.append("username", username.trim());
+      params.append("password", password.trim());
 
   const params = new URLSearchParams();
   params.append("username", username.trim());
   params.append("password", password.trim());
 
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      credentials: "include",
-      body: params.toString(),
-    });
-
-    if (res.ok) {
-      navigate("/home");
-    } else {
-      let errorMessage = "Login failed. Please check your username or password.";
-      try {
-        const data = await res.json();
-        if (data?.message) errorMessage = data.message;
+        if (res.ok) {
+          navigate("/home");
+        } else {
+          let errorMessage = "Login failed. Please check your username or password.";
+          try {
+            const data = await res.json();
+            if (data?.message) errorMessage = data.message;
+            // Intentionally empty: data parsing is optional
+          } catch {
+            // Intentionally empty: fallback to default error message
+          }
+          setErrorMsg(errorMessage);
+        }
       } catch {
-        setErrorMsg("Login failed. Please check your username or password.");
+        setErrorMsg("Unable to connect to the server. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
       setErrorMsg(errorMessage);
     }
@@ -146,14 +150,13 @@ const Login: React.FC = () => {
   };
 
   const handleToggle = () => {
-  setIsRegister(!isRegister);
-  setErrorMsg(null);
-  setRegSuccessful(null);
-};
+    setIsRegister(!isRegister);
+    setErrorMsg(null);
+    setRegSuccessful(null);
+  };
 
   return (
     <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex flex-col lg:flex-row overflow-hidden transition-all duration-500">
-
       {/* LEFT SIDE IMAGE SECTION (hidden on mobile) */}
       <div
         className={`absolute inset-0 transition-transform duration-500 ${
@@ -214,19 +217,18 @@ const Login: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
             {errorMsg && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                  {errorMsg}
-                </div>
-              )}
-              {regSuccessful && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-                  {regSuccessful}
-                </div>
-              )}
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
+                {errorMsg}
+              </div>
+            )}
+            {regSuccessful && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
+                {regSuccessful}
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
-
               {/* GOOGLE SIGN-IN */}
               {!isRegister && (
                 <Button
@@ -236,15 +238,12 @@ const Login: React.FC = () => {
                   }}
                   className="w-full lg:h-10 py-4 sm:py-3 text-base sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
-                  <span className="whitespace-nowrap mr-2 gap-3">Continue with:         
-                  
-                  </span>
-                   <img
+                  <span className="whitespace-nowrap mr-2 gap-3">Continue with:</span>
+                  <img
                     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                     alt="Google Logo"
                     className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
                   />
-                  
                 </Button>
               )}
 
@@ -378,11 +377,7 @@ const Login: React.FC = () => {
               {/* TOGGLE LOGIN/REGISTER */}
               <p className="text-center text-xs sm:text-sm mt-3 sm:mt-4">
                 {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
-                <Link
-                  to="#"
-                  onClick={handleToggle}
-                  className="text-blue-600 hover:underline"
-                >
+                <Link to="#" onClick={handleToggle} className="text-blue-600 hover:underline">
                   {isRegister ? "Login" : "Register"}
                 </Link>
               </p>

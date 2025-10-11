@@ -49,7 +49,6 @@ const Explore = () => {
   //monitor sesrch query and check is search is active
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const navigate = useNavigate();
   //
   //  const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("accounts");
@@ -62,7 +61,8 @@ const Explore = () => {
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
-
+  const [seconds, setSeconds] = useState(3);
+  const navigate = useNavigate();
   //
   //cachce fetching for users in tabs
   const queryClient = useQueryClient();
@@ -398,7 +398,7 @@ const Explore = () => {
     //isMounted = false;
     //};
 
-  }, [users, isHydrated]);//do it when users data changes and we have hydrated 
+  }, [users, isHydrated, bulkSetFollowStatus, refetchFollowing]);//do it when users data changes and we have hydrated 
   //handle follwoing relations
   useEffect(() => {
     if (followingRelations.length > 0 && isHydrated) {
@@ -419,7 +419,7 @@ const Explore = () => {
       bulkSetFollowStatus(newStatuses);
     }
   }
-}, [followingRelations, isHydrated]);
+}, [followingRelations, isHydrated, bulkSetFollowStatus, setFollowingUserIds]);
   //
 
   useEffect(() => {
@@ -429,7 +429,19 @@ const Explore = () => {
     } else if (!isSearchActive && users.length > 0) {
       setDisplayedUsers(users);
     }
-  }, [activeTab, isSearchActive, users]);
+  }, [activeTab, isSearchActive, users, handleSearch, searchQuery]);
+
+  useEffect(() => {
+    if (currentUserId != null) {
+      return;
+    }
+    if (seconds > 0) {
+      const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+      return () => clearTimeout(timer);
+    } else {
+      navigate("/login", { replace: true });
+    }
+  }, [currentUserId, seconds, navigate]);
 
   const loadFollowingData = async (userId: number) => {
     await refetchFollowing();
@@ -551,7 +563,7 @@ const Explore = () => {
           }}
           className="w-full p-0 future-feed:text-lime">
           <TabsList className="w-full future-feed:text-lime  flex justify-around ">
-            {["accounts", "accounts following"].map((tab) => (
+            {["accounts", "following"].map((tab) => (
               <TabsTrigger
                 key={tab}
                 value={tab}
@@ -572,7 +584,7 @@ const Explore = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="accounts following">
+          <TabsContent value="following">
             <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
               {followingLoading ? (
                 renderSkeleton()
