@@ -122,6 +122,13 @@ interface UserInfo {
   profilePicture?: string;
 }
 
+interface cUserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePictureUrl?: string;
+}
+
 const userCache = new Map<number, UserInfo>();
 
 const profileDataCache = {
@@ -361,11 +368,7 @@ const UserProfile = () => {
       const resharedPosts = await Promise.all(
         resharedList.map(async (reshare) => {
           try {
-            const authorId = reshare.post.user?.id;
-            if (!authorId) {
-              console.warn(`Post ${reshare.post.id} has no user ID; cannot fetch accurate profile. Using default.`);
-              return null;
-            }
+            const authorId = reshare.post.user?.id ?? 0;
             const userInfo: UserInfo = reshare.post.user ?? (await fetchUser(authorId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${reshare.post.id}`, { credentials: "include" }),
@@ -396,7 +399,7 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.profilePicture,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
                 });
                 } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
@@ -482,12 +485,8 @@ const UserProfile = () => {
       const commentedPosts = await Promise.all(
         commentedList.map(async (post) => {
           try {
-            const authorId = post.user?.id;
-            if (!authorId) {
-              console.warn(`Post ${post.id} has no user ID; cannot fetch accurate profile. Using default.`);
-              return null;
-            }
-            const userInfo: UserInfo = post.user ?? (await fetchUser(authorId));
+            const authorId = post.user?.id ?? 0;
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(authorId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -517,7 +516,7 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.profilePicture, 
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
                 });
                 } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
@@ -530,7 +529,7 @@ const UserProfile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: post.profilePicture,
+              profilePicture: post.profilePicture || userInfo.profilePictureUrl,
               username: userInfo.displayName,
               handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -601,13 +600,10 @@ const UserProfile = () => {
       }
       const likedPosts = await Promise.all(
         likedList.map(async (post) => {
+          console.log(post)
           try {
-            const authorId = post.user?.id;
-            if (!authorId) {
-              console.warn(`Post ${post.id} has no user ID; cannot fetch accurate profile. Using default.`);
-              return null;
-            }
-            const userInfo: UserInfo = post.user ?? (await fetchUser(authorId)); 
+            const authorId = post.user?.id ?? 0;
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(authorId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -637,7 +633,7 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.profilePicture,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
                 });
                 } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
@@ -650,7 +646,7 @@ const UserProfile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: userInfo.profilePicture,
+              profilePicture: userInfo.profilePictureUrl,
               username: userInfo.displayName,
               handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -693,6 +689,9 @@ const UserProfile = () => {
   };
 
   const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
+    if(!user){
+      setError("Please log in")
+    }
     setTabLoading((prev) => ({ ...prev, bookmarks: true }));
     try {
       const book = await fetch(`${API_URL}/api/bookmarks/${userId}`, {
@@ -724,18 +723,8 @@ const UserProfile = () => {
               return null;
             }
             const post: RawPost = await postRes.json();
-            let userInfo: UserInfo;
-            if (!post.user?.id) {
-              console.warn(`Post ID ${bookmark.postId} has no user data; fetching user info.`);
-              return null;
-            } else {
-              userInfo = {
-                id: post.user.id,
-                username: post.user.username,
-                displayName: post.user.displayName,
-                profilePicture: post.user.profilePicture || "",
-              };
-            }
+            const authorId = post.user?.id ?? 0;
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(authorId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -765,7 +754,7 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.profilePicture,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
                 });
                 } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
@@ -778,7 +767,7 @@ const UserProfile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: userInfo.profilePicture,
+              profilePicture: userInfo.profilePictureUrl,
               username: userInfo.displayName,
               handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -845,11 +834,7 @@ const UserProfile = () => {
       const formattedPosts = await Promise.all(
         apiPosts.map(async (post) => {
           try {
-            const authorId = post.user?.id;
-            if (!authorId) {
-              console.warn(`Post ${post.id} has no user ID; cannot fetch accurate profile. Using default.`);
-              return null;
-            }
+            const authorId = post.user?.id ?? 0;
             const userInfo: UserInfo = post.user ?? (await fetchUser(authorId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
