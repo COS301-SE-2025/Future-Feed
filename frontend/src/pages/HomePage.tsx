@@ -2628,11 +2628,10 @@ const HomePage = () => {
                                             onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
                                             className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
                                           />
-                                          <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
                                         </div>
                                       </div>
                                       <Button
-                                        className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-8"
+                                        className="w-full bg-blue-500 text-white hover:bg-blue-600 rounded-xl h-8 mt-1.5"
                                         onClick={() => addRule(preset.id)}
                                         disabled={!newRule.topicId && !newRule.sourceType && !newRule.specificUserId}
                                       >
