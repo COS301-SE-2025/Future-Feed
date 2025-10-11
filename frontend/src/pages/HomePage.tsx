@@ -2303,7 +2303,7 @@ const HomePage = () => {
             >
               Logout
             </button>
-            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
+            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2 ">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
@@ -2937,9 +2937,9 @@ const HomePage = () => {
       {isTopicModalOpen && (
         <animated.div
           style={topicModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border drop-shadow-xl dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
@@ -2950,7 +2950,7 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white text-center">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
@@ -2972,9 +2972,9 @@ const HomePage = () => {
       {isViewTopicsModalOpen && (
         <animated.div
           style={viewTopicsModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white dark:bg-blue-950 rounded-2xl p-4 w-full max-w-md drop-shadow-xl border dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
@@ -2982,16 +2982,16 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
+            <h2 className="text-center text-xl font-bold mb-5 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
                 <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2 future-feed:text-black">
+                    <div key={topic.id} className="inline-block border dark:border-lime-400 bg-blue-500 dark:bg-lime-900 text-white dark:text-lime-200 text-xs sm:text-sm px-3 py-0.5 rounded-xl">
                       {topic.name}
-                    </li>
+                    </div>
                   ))}
                 </ul>
               )}
