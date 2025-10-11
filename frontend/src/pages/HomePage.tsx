@@ -2097,7 +2097,7 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-14 mt-5 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -2493,7 +2493,7 @@ const HomePage = () => {
                                     <div className="flex items-center space-x-2">
                                       <span>{preset.name}</span>
                                       {preset.defaultPreset && (
-                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
                                           Default
                                         </span>
                                       )}
@@ -2722,7 +2722,7 @@ const HomePage = () => {
                           </p>
                           <Button
                             onClick={() => setIsCreatePresetModalOpen(true)}
-                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2"
+                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2 hover:cursor-pointer"
                           >
                             Create Your First Preset
                           </Button>
@@ -2772,7 +2772,7 @@ const HomePage = () => {
                                 setIsCreatePresetModalOpen(false);
                                 setNewPresetName("");
                               }}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                              className="hover:bg-gray-100 dark:hover:bg-gray-800 text-black"
                             >
                               Cancel
                             </Button>
@@ -2803,7 +2803,6 @@ const HomePage = () => {
 
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            {/*  */}
             <WhoToFollow />
           </div>
 
