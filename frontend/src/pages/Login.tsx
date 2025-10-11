@@ -102,7 +102,7 @@ const Login: React.FC = () => {
           const data = await res.json();
           setErrorMsg(data.message || "Registration failed. Please try again.");
         }
-      } catch (err) {
+      } catch {
         setErrorMsg("An error occurred during registration. Please try again.");
       } finally {
         setIsLoading(false);
@@ -134,10 +134,11 @@ const Login: React.FC = () => {
         const data = await res.json();
         if (data?.message) errorMessage = data.message;
       } catch {
+        setErrorMsg("Login failed. Please check your username or password.");
       }
       setErrorMsg(errorMessage);
     }
-  } catch (err) {
+  } catch {
     setErrorMsg("Unable to connect to the server. Please try again later.");
   } finally {
     setIsLoading(false);
