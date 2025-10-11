@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -133,6 +133,8 @@ const BotPage = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [seconds, setSeconds] = useState(3);
+  const navigate = useNavigate();
 
   const fetchUser = async (
     userId: number
@@ -867,7 +869,16 @@ const BotPage = () => {
       await Promise.all([fetchBotInfo(), fetchBotPosts(), fetchCurrentUser()]);
     };
     loadData();
-  }, [botId]);
+  }, [botId, fetchBotInfo, fetchBotPosts, fetchCurrentUser]);
+
+  useEffect(() => {
+    if (!user && seconds > 0) {
+      const timer = setTimeout(() => setSeconds(seconds - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (!user && seconds === 0) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, seconds, navigate]);
 
   if (loading) {
     return (
@@ -901,6 +912,24 @@ const BotPage = () => {
             <WhoToFollow />
           </div>
         </aside>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-blue-950 text-black dark:text-white p-4">
+        <div className="text-center space-y-4">
+          <h1 className="text-3xl font-bold text-red-600 dark:text-red-400">
+            Oops! Looks like you are not logged in.
+          </h1>
+          <p className="text-lg">
+            Redirecting to login in {seconds} second{seconds !== 1 ? "s" : ""}...
+          </p>
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-600 dark:border-blue-400"></div>
+          </div>
+        </div>
       </div>
     );
   }

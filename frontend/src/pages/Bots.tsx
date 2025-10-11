@@ -125,6 +125,8 @@ const Bots: React.FC = () => {
     }
   };
 
+
+
   const toggleBotActivation = async (botId: number) => {
     setLoading((prev) => ({ ...prev, toggling: new Set([...prev.toggling, botId]) }));
     try {
@@ -337,6 +339,7 @@ const Bots: React.FC = () => {
     </div>
   );
 
+
   return (
     <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
@@ -362,7 +365,6 @@ const Bots: React.FC = () => {
           </div>
         )}
 
-        {/* Tabs Section */}
         <Tabs defaultValue="all" className="w-full p-2">
           <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
             <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
@@ -536,7 +538,6 @@ const Bots: React.FC = () => {
         </div>
       </aside>
 
-      {/* Modals */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="rounded-2xl p-6 w-full max-w-md border-2 ">
