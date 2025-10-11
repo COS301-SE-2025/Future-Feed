@@ -210,7 +210,6 @@ const Post: React.FC<PostProps> = ({
               </div>
             )}
             
-            {/* NEW: Image section with loading state */}
             {isImageLoading ? (
               <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
