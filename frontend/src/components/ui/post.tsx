@@ -342,7 +342,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className=" text-xs sm:text-sm bg-blue-500"
+                    className=" text-xs sm:text-sm bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
