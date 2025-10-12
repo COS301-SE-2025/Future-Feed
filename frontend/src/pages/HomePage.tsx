@@ -2344,28 +2344,24 @@ const HomePage = () => {
           ) : (
             <>
               <div
-  className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
-  onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
->
-  {/* Animated background - prominent by default, subtle on hover */}
-  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
-  
-  <div className="flex items-center space-x-3">
-    {/* Pencil/edit icon - prominent by default */}
-    <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
-      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-      </svg>
-    </div>
-    
-    <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
-      {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
-    </h1>
-  </div>
-  
-  {/* Border - prominent by default, subtle on hover */}
-  <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
-</div>
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
+                onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+
+                  <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
+                    {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
+                  </h1>
+                </div>
+                <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
+              </div>
               <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
@@ -2778,30 +2774,20 @@ const HomePage = () => {
                         <div className="text-center mb-5">
                           <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
                         </div>
-                        <div className="flex flex-col space-y-4">
+                        <div className="flex flex-row space-between space-x-4 space-y-4">
                           <Input
-                            placeholder="Preset name (e.g., Tech & Bots)"
+                            placeholder="Preset name"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
                             className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
                           />
                           <div className="flex justify-end space-x-2">
                             <Button
-                              variant="outline"
-                              onClick={() => {
-                                setIsCreatePresetModalOpen(false);
-                                setNewPresetName("");
-                              }}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-800 text-black"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
                               onClick={() => {
                                 createPreset(false);
                                 setIsCreatePresetModalOpen(false);
                               }}
-                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              className="bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer"
                               disabled={!newPresetName.trim() || isLoading}
                             >
                               {isLoading ? "Creating..." : "Create Preset"}
