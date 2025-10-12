@@ -83,7 +83,7 @@ public class NotificationService {
         return notifications.size();
     }
 
-
+     @Transactional 
     public boolean deleteNotification(Integer userId, Integer notificationId) {
         return notificationRepo.findByIdAndRecipientUserId(notificationId, userId)
                 .map(notification -> {
@@ -93,6 +93,7 @@ public class NotificationService {
     }
 
     // Delete all notifications for a user
+     @Transactional 
     public void deleteAllNotifications(Integer userId) {
         notificationRepo.deleteByRecipientUserId(userId);
     }
