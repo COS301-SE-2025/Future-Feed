@@ -2473,7 +2473,7 @@ const HomePage = () => {
                             setPresetCurrentPage(0);
                             setPresetHasMore(true);
                           }}
-                          className="bg-blue-500 text-white hover:bg-blue-600 hover:text-blue-500"
+                          className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                         >
                           <ArrowLeft className="h-4 w-4 mr-1" />
                           Back to Presets
