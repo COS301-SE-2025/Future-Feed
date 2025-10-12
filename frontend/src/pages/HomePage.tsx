@@ -1598,6 +1598,25 @@ const HomePage = () => {
       }
 
       const newPost: ApiPost = await res.json();
+      if (selectedTopics.length > 0) {
+        const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            postId: newPost.id,
+            topicIds: selectedTopics,
+          }),
+        });
+        if (!assignRes.ok) {
+          console.warn("Failed to assign topics to post:", await assignRes.text());
+          setError("Post created, but failed to assign topics.");
+          setTimeout(() => setError(null), 3000);
+        }
+      }
 
       const postTopics = await fetchTopicsForPost(newPost.id);
 
@@ -1625,56 +1644,12 @@ const HomePage = () => {
       };
 
       if (useAIGeneration) {
-        // For AI: Open preview instead of adding to posts
         setPreviewPostData(formattedPost);
         setIsPreviewModalOpen(true);
 
-        // Assign topics here temporarily (will delete post if canceled)
-        if (selectedTopics.length > 0) {
-          const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              postId: newPost.id,
-              topicIds: selectedTopics,
-            }),
-          });
-          if (!assignRes.ok) {
-            console.warn("Failed to assign topics to post:", await assignRes.text());
-            setError("Post created, but failed to assign topics.");
-            setTimeout(() => setError(null), 3000);
-          }
-        }
-
-        // Remove temp post, as preview will add if confirmed
         setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       } else {
-        // Non-AI: Proceed as before
-        if (selectedTopics.length > 0) {
-          const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              postId: newPost.id,
-              topicIds: selectedTopics,
-            }),
-          });
-          if (!assignRes.ok) {
-            console.warn("Failed to assign topics to post:", await assignRes.text());
-            setError("Post created, but failed to assign topics.");
-            setTimeout(() => setError(null), 3000);
-          }
-        }
-
-        if (isGeneratingImage) {  // Note: isGeneratingImage is already set to useAIGeneration, but this branch won't hit for AI now
+        if (isGeneratingImage) { 
           setLoadingImages(prev => {
             const newSet = new Set(prev);
             newSet.delete(tempPostId);
@@ -1739,7 +1714,6 @@ const HomePage = () => {
     }
     setIsPreviewModalOpen(false);
     setPreviewPostData(null);
-    // Optionally restore form states if needed (e.g., setPostText, setImagePrompt, etc.)
   };
 
   const handleDeletePost = async (postId: number) => {
