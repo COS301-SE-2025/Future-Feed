@@ -156,7 +156,6 @@ const fetchPost = async (id: number, currentUserId: number) => {
     }
     
     const post: RawPost = await postRes.json();
-    console.log("Fetched post:", post.user?.id);
     let userInfo: UserInfo;
     if (post.isBot || post.botId) {
       if (!post.botId) {
@@ -711,7 +710,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
           onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
           onReshare={() => handleReshare(post.id)}
           onDelete={() => handleDeletePost(post.id)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          onProfileClick={() => navigate(`/bot/${post.authorId}`)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!currentUser}
