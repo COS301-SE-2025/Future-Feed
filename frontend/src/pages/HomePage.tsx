@@ -2344,13 +2344,28 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
-                onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
-              >
-                <h1 className="future-feed:text-lime text-xl dark:text-slate-200 font-bold text-black">
-                  {activeTab === "Presets" ? "Create a new preset" : "What's on your mind?"}
-                </h1>
-              </div>
+  className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
+  onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
+>
+  {/* Animated background - prominent by default, subtle on hover */}
+  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
+  
+  <div className="flex items-center space-x-3">
+    {/* Pencil/edit icon - prominent by default */}
+    <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    </div>
+    
+    <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
+      {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
+    </h1>
+  </div>
+  
+  {/* Border - prominent by default, subtle on hover */}
+  <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
+</div>
               <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
