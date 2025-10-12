@@ -195,7 +195,6 @@ const HomePage = () => {
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
   const [presetCurrentPage, setPresetCurrentPage] = useState(0);
   const [presetHasMore, setPresetHasMore] = useState(true);
-  const [seconds, setSeconds] = useState(3);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -2227,6 +2226,41 @@ const HomePage = () => {
     }
   }, [currentUser, activeTab, selectedPreset]);
 
+  useEffect(() => {
+    if (isErrorDialogOpen) {
+      const timer = setTimeout(() => {
+        setIsErrorDialogOpen(false);
+        setErrorMessage('');
+        setErrorData(null);
+      }, 4000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isErrorDialogOpen]);
+
+  useEffect(() => {
+    const handlePresetScroll = () => {
+      if (
+        isViewingPresetFeed &&
+        selectedPreset &&
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingPresetPosts &&
+        presetHasMore
+      ) {
+        const nextPage = presetCurrentPage + 1;
+        fetchMorePresetPosts(selectedPreset, nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setPresetHasMore(false);
+          } else {
+            setPresetCurrentPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handlePresetScroll);
+    return () => window.removeEventListener("scroll", handlePresetScroll);
+  }, [presetCurrentPage, loadingPresetPosts, presetHasMore, isViewingPresetFeed, selectedPreset]);
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
