@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UserProfile {
   id: number;
@@ -965,7 +966,17 @@ const BotPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Separator className="my-4 bg-blue-500 shadow-xl" />
+        <Tabs defaultValue="posts" className="w-full p-0">
+          <TabsList className="w-full flex justify-center rounded-lg bg-white dark:bg-gray-900 border border-rose-gold-accent-border dark:border-slate-200 shadow-md mb-5 sticky top-[68px] z-10">
+            <TabsTrigger
+              className="text-xl font-semibold text-black dark:text-white data-[state=active]:bg-slate-500 data-[state=active]:text-white data-[state=active]:rounded-lg py-3 px-6"
+              value="posts"
+            >
+              Posts
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {/* <Separator className="my-4 bg-blue-500 shadow-xl" /> */}
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
