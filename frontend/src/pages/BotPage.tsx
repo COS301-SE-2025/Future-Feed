@@ -769,8 +769,6 @@ const BotPage = () => {
       setError("Failed to load bot info. Please log in again.");
       setBot(null);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -875,23 +873,25 @@ const BotPage = () => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-20 h-20 rounded-full" />
+              <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-          <div className="mt-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-              <div className="flex-1">
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
-              </div>
-            </div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+          <div
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
