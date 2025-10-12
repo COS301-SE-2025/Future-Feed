@@ -945,8 +945,11 @@ const HomePage = () => {
 
       // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
-      if (0 >= totalPages - 1) {
+      // If we're on the first page and there's only one page or no pages, set hasMore to false
+      if (totalPages <= 1 || apiPosts.length < PAGE_SIZE) {
         setPresetHasMore(false);
+      } else {
+        setPresetHasMore(true);
       }
 
       const myReshares: ApiReshare[] = myResharesRes.ok
@@ -1107,20 +1110,19 @@ const HomePage = () => {
     try {
       const postsRes = await fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=${page}&size=${PAGE_SIZE}`, commonInit);
 
-      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${posts}`);
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged
+
+      const totalPages = pageData.totalPages || 0;
+
+      if (page >= totalPages - 1 || apiPosts.length === 0) {
+        setPresetHasMore(false);
+      }
 
       if (apiPosts.length === 0) {
         return 0;
-      }
-
-      // Check if there are more pages
-      const totalPages = pageData.totalPages || 0;
-      if (page >= totalPages - 1) {
-        setPresetHasMore(false);
       }
 
       const [myResharesRes, bookmarksRes] = await Promise.all([
@@ -1144,6 +1146,7 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
+          // ... rest of your post processing logic remains the same
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
             fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
@@ -1250,6 +1253,8 @@ const HomePage = () => {
       return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching more preset posts:", err);
+      // Also set hasMore to false on error to prevent infinite retries
+      setPresetHasMore(false);
       return 0;
     } finally {
       setLoadingPresetPosts(false);
