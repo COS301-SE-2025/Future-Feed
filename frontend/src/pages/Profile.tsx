@@ -1631,7 +1631,7 @@ const Profile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1707,7 +1707,7 @@ const Profile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
@@ -1783,7 +1783,7 @@ const Profile = () => {
             onDelete={() => handleDeletePost(post.id)}
             onToggleComments={() => toggleComments(post.id)}
             onNavigate={() => navigate(`/post/${post.id}`)}
-            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
@@ -1859,7 +1859,7 @@ const Profile = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          onProfileClick={() => navigate(`/bot/${post.authorId}`)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
@@ -1935,7 +1935,7 @@ const Profile = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          onProfileClick={() => navigate(`/bot/${post.authorId}`)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
