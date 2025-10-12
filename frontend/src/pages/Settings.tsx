@@ -48,7 +48,7 @@ const Settings = () => {
       const data: UserProfile = await res.json();
       setCurrentUser(data);
       return data;
-    } catch (err) {
+    } catch {
       navigate("/login");
       return null;
     }
