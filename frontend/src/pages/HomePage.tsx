@@ -157,7 +157,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("Following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -2220,16 +2220,17 @@ const HomePage = () => {
     }
   }, [activeTab, currentUser]);
 
-
+  useEffect(() => {
+    if (currentUser && activeTab === "for You" && posts.length === 0) {
+      fetchPaginatedPosts(0);
+    }
+  }, [currentUser, activeTab, posts.length]);
 
   useEffect(() => {
-    if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
-      fetchFollowingPosts();
-    }
     if (selectedPreset) {
       fetchRules(selectedPreset);
     }
-  }, [currentUser, activeTab, selectedPreset]);
+  }, [selectedPreset]);
 
   useEffect(() => {
     if (isErrorDialogOpen) {
@@ -2362,7 +2363,7 @@ const HomePage = () => {
                 </div>
                 <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
