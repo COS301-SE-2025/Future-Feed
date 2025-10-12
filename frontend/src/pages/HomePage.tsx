@@ -37,11 +37,6 @@ import {
 interface PaginatedResponse<T> {
   content: T[];
   totalPages: number;
-  // Optional: Add if present in full response, e.g.,
-  // totalElements?: number;
-  // numberOfElements?: number;
-  // first?: boolean;
-  // last?: boolean;
 }
 
 interface Preset {
@@ -828,7 +823,6 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -924,8 +918,6 @@ const HomePage = () => {
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
     setIsViewingPresetFeed(true);
-
-    // Reset pagination state
     setPresetCurrentPage(0);
     setPresetHasMore(true);
 
@@ -941,11 +933,7 @@ const HomePage = () => {
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged (e.g., totalPages usage)
-
-      // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
-      // If we're on the first page and there's only one page or no pages, set hasMore to false
       if (totalPages <= 1 || apiPosts.length < PAGE_SIZE) {
         setPresetHasMore(false);
       } else {
@@ -1146,7 +1134,6 @@ const HomePage = () => {
 
       const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-          // ... rest of your post processing logic remains the same
           const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
             fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
             fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
@@ -1253,7 +1240,6 @@ const HomePage = () => {
       return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching more preset posts:", err);
-      // Also set hasMore to false on error to prevent infinite retries
       setPresetHasMore(false);
       return 0;
     } finally {
@@ -1452,7 +1438,7 @@ const HomePage = () => {
       parts.push(`${rule.percentage}%`);
     }
 
-    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 '); // Using non-breaking spaces
+    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 ');
   };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1579,7 +1565,6 @@ const HomePage = () => {
             setErrorData(errorData);
             setIsErrorDialogOpen(true);
 
-            // Revert temp post immediately
             if (isGeneratingImage) {
               setLoadingImages(prev => {
                 const newSet = new Set(prev);
@@ -1597,7 +1582,7 @@ const HomePage = () => {
             setImagePrompt(tempImagePrompt);
             setUseAIGeneration(!!tempImagePrompt);
 
-            return; // Exit early, don't proceed with success flow
+            return;
           }
         } catch (parseErr) {
           console.warn("Failed to parse error response as JSON:", parseErr);
