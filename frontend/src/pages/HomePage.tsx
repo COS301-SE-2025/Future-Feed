@@ -190,6 +190,8 @@ const HomePage = () => {
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
   const [presetCurrentPage, setPresetCurrentPage] = useState(0);
   const [presetHasMore, setPresetHasMore] = useState(true);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewPostData, setPreviewPostData] = useState<PostData | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -214,6 +216,11 @@ const HomePage = () => {
   const createPresetModalProps = useSpring({
     opacity: isCreatePresetModalOpen ? 1 : 0,
     transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 250, friction: 35 },
+  });
+  const previewModalProps = useSpring({
+    opacity: isPreviewModalOpen ? 1 : 0,
+    transform: isPreviewModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 250, friction: 35 },
   });
 
@@ -1592,26 +1599,6 @@ const HomePage = () => {
 
       const newPost: ApiPost = await res.json();
 
-      if (selectedTopics.length > 0) {
-        const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            postId: newPost.id,
-            topicIds: selectedTopics,
-          }),
-        });
-        if (!assignRes.ok) {
-          console.warn("Failed to assign topics to post:", await assignRes.text());
-          setError("Post created, but failed to assign topics.");
-          setTimeout(() => setError(null), 3000);
-        }
-      }
-
       const postTopics = await fetchTopicsForPost(newPost.id);
 
       const formattedPost: PostData = {
@@ -1637,20 +1624,71 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      if (isGeneratingImage) {
-        setLoadingImages(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tempPostId);
-          return newSet;
-        });
-      }
+      if (useAIGeneration) {
+        // For AI: Open preview instead of adding to posts
+        setPreviewPostData(formattedPost);
+        setIsPreviewModalOpen(true);
 
-      setPosts((prev) =>
-        [
-          formattedPost,
-          ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      );
+        // Assign topics here temporarily (will delete post if canceled)
+        if (selectedTopics.length > 0) {
+          const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              postId: newPost.id,
+              topicIds: selectedTopics,
+            }),
+          });
+          if (!assignRes.ok) {
+            console.warn("Failed to assign topics to post:", await assignRes.text());
+            setError("Post created, but failed to assign topics.");
+            setTimeout(() => setError(null), 3000);
+          }
+        }
+
+        // Remove temp post, as preview will add if confirmed
+        setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      } else {
+        // Non-AI: Proceed as before
+        if (selectedTopics.length > 0) {
+          const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            },
+            credentials: "include",
+            body: JSON.stringify({
+              postId: newPost.id,
+              topicIds: selectedTopics,
+            }),
+          });
+          if (!assignRes.ok) {
+            console.warn("Failed to assign topics to post:", await assignRes.text());
+            setError("Post created, but failed to assign topics.");
+            setTimeout(() => setError(null), 3000);
+          }
+        }
+
+        if (isGeneratingImage) {  // Note: isGeneratingImage is already set to useAIGeneration, but this branch won't hit for AI now
+          setLoadingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempPostId);
+            return newSet;
+          });
+        }
+
+        setPosts((prev) =>
+          [
+            formattedPost,
+            ...prev.filter((p) => p.id !== tempPostId),
+          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
+      }
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
@@ -1674,6 +1712,34 @@ const HomePage = () => {
       setImagePrompt(tempImagePrompt);
       setUseAIGeneration(!!tempImagePrompt);
     }
+  };
+  const handleConfirmPreview = () => {
+    if (previewPostData) {
+      setPosts((prev) =>
+        [previewPostData, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
+
+  const handleCancelPreview = async () => {
+    if (previewPostData) {
+      try {
+        const res = await fetch(`${API_URL}/api/posts/del/${previewPostData.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete preview post");
+      } catch (err) {
+        console.error("Error deleting preview post:", err);
+        setError("Failed to cancel post.");
+        setTimeout(() => setError(null), 3000);
+      }
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+    // Optionally restore form states if needed (e.g., setPostText, setImagePrompt, etc.)
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -2318,7 +2384,7 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen || isPreviewModalOpen ? "backdrop-blur-sm" : ""}`}
       >
         <main className="mt-1 flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {loading ? (
@@ -2992,6 +3058,48 @@ const HomePage = () => {
               >
                 Close
               </Button>
+            </div>
+          </div>
+        </animated.div>
+      )}
+      {isPreviewModalOpen && previewPostData && (
+        <animated.div
+          style={previewModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
+        >
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 max-w-2xl border-2 dark:border-slate-200 flex flex-col relative">
+            <button
+              onClick={handleCancelPreview}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <div className="text-center mb-5">
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Image preview</h2>
+            </div>
+            <div className="flex flex-col flex-1">
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
+              {previewPostData.image && (
+                <img src={previewPostData.image} alt="Generated AI Image" className="w-full h-auto mb-4 rounded" />
+              )}
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white text-center font-semibold">
+                Do you want to use this image?
+              </p>
+              <div className="flex justify-end space-x-4">
+                <Button
+                  onClick={handleCancelPreview}
+                  className="bg-red-500 text-white hover:bg-red-600 rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmPreview}
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                >
+                  Use
+                </Button>
+              </div>
             </div>
           </div>
         </animated.div>
