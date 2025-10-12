@@ -11,6 +11,7 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Bot {
   id: number;
@@ -38,6 +39,16 @@ interface LoadingState {
   toggling: Set<number>;
 }
 
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+  email: string;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const Bots: React.FC = () => {
@@ -51,14 +62,45 @@ const Bots: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<LoadingState>({
     allBots: false,
     toggling: new Set<number>(),
   });
+  const navigate = useNavigate();
 
   useEffect(() => {
-    fetchAllBots();
-  }, []);
+  const initializeData = async () => {
+    await fetchCurrentUser();
+    await fetchAllBots();
+  };
+
+  initializeData();
+}, []);
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      setError("Failed to load user info. Please log in again.");
+      navigate("/login");
+      return null;
+    }
+  };
+
+  if(!currentUser){
+    return <div className="p-4 text-black"></div>;
+  }
 
   const fetchAllBots = async () => {
     setLoading((prev) => ({ ...prev, allBots: true }));

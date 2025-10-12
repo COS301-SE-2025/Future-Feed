@@ -17,16 +17,49 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command"
-
+import { useState } from "react";
 
 import { useNavigate } from "react-router-dom"
 //add theme in settings for mobile devices
 //plus it makes sense to have it in settings
 
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+}
+
 const Settings = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
   React.useEffect(() => {
+    const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      setCurrentUser(data);
+      return data;
+    } catch (err) {
+      navigate("/login");
+      return null;
+    }
+  };
+
+  const fetchData = async () => {
+    const user = await fetchCurrentUser();
+    setCurrentUser(user);
+  };
+  
+  fetchData();
     const down = (e: KeyboardEvent) => {
       if (e.key === "p" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
@@ -45,6 +78,10 @@ const Settings = () => {
     document.addEventListener("keydown", down)
     return () => document.removeEventListener("keydown", down)
   }, [navigate])
+  
+  if(!currentUser){
+    return <div className="p-4 text-black">Not logged in.</div>;
+  }
 
   return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
