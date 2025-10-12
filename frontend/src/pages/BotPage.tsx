@@ -930,6 +930,7 @@ const BotPage = () => {
                   <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
                   <p className="mt-4 text-xl text-black dark:text-white">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
+                {user && bot && user.id === bot.ownerId && (
                 <div className="mt-[-50px] gap-4 flex items-center">
                   <Button
                     variant="secondary"
@@ -956,6 +957,7 @@ const BotPage = () => {
                     Edit Bot
                   </Button>
                 </div>
+                )}
               </div>
               <div className="left-4 text-black dark:text-white mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
                 <span className="font-medium dark:text-slate-200">{posts.length} Posts</span>
