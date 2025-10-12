@@ -5,7 +5,6 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import BotPost from "@/components/ui/BotPost";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { FaRobot, FaTimes } from "react-icons/fa";
@@ -976,7 +975,6 @@ const BotPage = () => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
-        {/* <Separator className="my-4 bg-blue-500 shadow-xl" /> */}
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -1034,9 +1032,9 @@ const BotPage = () => {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
-          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-blue-500 dark:border-blue-300">
+          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-drop-shadow-x">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300">
+              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300 ml-7">
                 Edit Bot
               </CardTitle>
               <Button
