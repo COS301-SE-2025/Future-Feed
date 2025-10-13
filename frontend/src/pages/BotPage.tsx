@@ -13,6 +13,7 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: number;
@@ -133,6 +134,7 @@ const BotPage = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const navigate = useNavigate();
 
   const fetchUser = async (
     userId: number
@@ -336,6 +338,7 @@ const BotPage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setUser(null);
+      navigate("/login")
       return null;
     }
   };

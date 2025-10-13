@@ -328,6 +328,7 @@ const HomePage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
+      navigate("/login")
       return null;
     }
   };
