@@ -335,6 +335,7 @@ const HomePage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
+      navigate("/login")
       return null;
     }
   };
@@ -2165,7 +2166,7 @@ const HomePage = () => {
             onDelete={() => handleDeletePost(post.id)}
             onToggleComments={() => toggleComments(post.id)}
             onNavigate={() => navigate(`/post/${post.id}`)}
-            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!currentUser}

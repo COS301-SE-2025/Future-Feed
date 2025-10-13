@@ -18,6 +18,7 @@ interface NotificationContextType {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   fetchNotifications: (userId: number) => Promise<void>;
   markAllAsRead: (userId: number) => Promise<void>;
+  deleteAllNotifications: (userId: number) => Promise<void>;
   currentUserId: number | null;
 }
 
@@ -98,6 +99,29 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     [API_URL]
   );
 
+  const deleteAllNotifications = useCallback(
+    async (userId: number) => {
+      try {
+        const response = await fetch(`${API_URL}/api/notifications?userId=${userId}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+          },
+          credentials: "include",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to delete all notifications: ${response.status}`);
+        }
+
+        setNotifications([]);
+      } catch (err) {
+        console.error("Error deleting all notifications:", err);
+      }
+    },
+    [API_URL]
+  );
+
   useEffect(() => {
     const initializeNotifications = async () => {
       const userId = await fetchCurrentUser();
@@ -112,7 +136,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, currentUserId }}
+      value={{ notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, deleteAllNotifications, currentUserId }}
     >
       {children}
     </NotificationContext.Provider>
