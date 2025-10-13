@@ -1650,7 +1650,7 @@ const HomePage = () => {
 
         setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
       } else {
-        if (isGeneratingImage) { 
+        if (isGeneratingImage) {
           setLoadingImages(prev => {
             const newSet = new Set(prev);
             newSet.delete(tempPostId);
@@ -1717,16 +1717,21 @@ const HomePage = () => {
     setPreviewPostData(null);
   };
 
-  const handleDeletePost = async (postId: number) => {
+  const handleDeletePost = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to delete posts.");
       return;
     }
 
-    const deletedPost = posts.find((p) => p.id === postId);
-    const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
-    setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    let deletedPost;
+    if (isPresetFeed) {
+      deletedPost = presetPosts.find((p) => p.id === postId);
+      setPresetPosts((prev) => prev.filter((p) => p.id !== postId));
+    } else {
+      deletedPost = posts.find((p) => p.id === postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -1739,23 +1744,27 @@ const HomePage = () => {
       console.error("Error deleting post:", err);
       setError("Failed to delete post. Reverting...");
       setTimeout(() => setError(null), 3000);
-      if (deletedPost) {
+
+      if (isPresetFeed && deletedPost) {
+        setPresetPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } else if (deletedPost) {
         setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      }
-      if (deletedFollowingPost) {
-        setFollowingPosts((prev) =>
-          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        );
       }
     }
   };
-  const handleLike = async (postId: number) => {
+  const handleLike = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1776,8 +1785,12 @@ const HomePage = () => {
           : p
       );
 
-    setPosts((prevPosts) => updatePostInArray(prevPosts));
-    setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsLiked ? "DELETE" : "POST";
@@ -1805,8 +1818,12 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked, likeCount } : p
         );
 
-      setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
-      setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
@@ -1817,18 +1834,28 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
         );
 
-      setPosts((prevPosts) => revertPostInArray(prevPosts));
-      setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleReshare = async (postId: number) => {
+  const handleReshare = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to reshare posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1838,8 +1865,8 @@ const HomePage = () => {
     const originalIsReshared = post.isReshared;
     const originalReshareCount = post.reshareCount;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId
           ? {
             ...p,
@@ -1847,19 +1874,14 @@ const HomePage = () => {
             reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
           }
           : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId
-          ? {
-            ...p,
-            isReshared: !p.isReshared,
-            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-          }
-          : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -1877,24 +1899,24 @@ const HomePage = () => {
       console.error("Error toggling reshare:", err);
       setError(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId
             ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
             : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
-            : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleAddComment = async (postId: number, commentText: string) => {
+  const handleAddComment = async (postId: number, commentText: string, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to comment.");
       return;
@@ -1916,28 +1938,43 @@ const HomePage = () => {
       profilePicture: currentUser.profilePicture
     };
 
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
+    // Update the appropriate posts array
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1961,65 +1998,102 @@ const HomePage = () => {
         profilePicture: currentUser.profilePicture,
       };
 
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
+      // Update the appropriate posts array with the real comment
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      }
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
+
+      // Revert the appropriate posts array
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      }
     }
   };
 
-  const handleBookmark = async (postId: number) => {
+  const handleBookmark = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to bookmark/unbookmark posts.");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -2028,16 +2102,17 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
@@ -2064,30 +2139,33 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+      const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
@@ -2111,17 +2189,25 @@ const HomePage = () => {
     }
   };
 
-  const toggleComments = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
+  const toggleComments = (postId: number, isPresetFeed: boolean = false) => {
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    }
   };
 
   const renderSkeletonPosts = () => {
@@ -2142,7 +2228,7 @@ const HomePage = () => {
     ));
   };
 
-  const renderPosts = (posts: PostData[]) => {
+  const renderPosts = (posts: PostData[], isPresetFeed: boolean = false) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
@@ -2159,12 +2245,12 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
             onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
@@ -2188,12 +2274,12 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
             onProfileClick={() => navigate(`/profile/${post.authorId}`)}
             showComments={post.showComments || false}
@@ -2416,7 +2502,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(posts)}
+                      {renderPosts(posts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2451,7 +2537,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(followingPosts)}
+                      {renderPosts(followingPosts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2502,7 +2588,7 @@ const HomePage = () => {
                       ) : (
                         <>
                           {/* Render the posts */}
-                          {renderPosts(presetPosts)}
+                          {renderPosts(presetPosts, true)}
 
                           {/* Show loading skeleton at the bottom when loading more posts */}
                           {loadingPresetPosts && presetPosts.length > 0 && (
@@ -3051,7 +3137,7 @@ const HomePage = () => {
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center mb-5">
-              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Image preview</h2>
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Preview</h2>
             </div>
             <div className="flex flex-col flex-1">
               <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
@@ -3070,7 +3156,7 @@ const HomePage = () => {
                 </Button>
                 <Button
                   onClick={handleConfirmPreview}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 hover:text-blue-500 rounded-full"
                 >
                   Use
                 </Button>

@@ -213,7 +213,7 @@ const Post: React.FC<PostProps> = ({
             {isImageLoading ? (
               <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-lime-500" />
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
                 </div>
               </div>
@@ -303,7 +303,7 @@ const Post: React.FC<PostProps> = ({
             </div>
             {showComments && (
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 dark:border-gray-700">
                   <MessageCircle className="h-4 w-4 text-blue-500" />
                   <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                     Comments
@@ -361,10 +361,10 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className="text-xs sm:text-sm bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
+                    className="text-xs sm:text-sm rounded-full mt-3 bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
-                    Post
+                    Comment
                   </Button>
                 </div>
               </div>

@@ -209,7 +209,7 @@ const StaticPost: React.FC<PostProps> = ({
               >
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
                 <span className="hidden sm:inline text-sm">Like</span>
-                <span className="text-xs sm:text-sm ml-1">({likeCount})</span>
+                <span className="text-xs sm:text-sm ml-1">{likeCount}</span>
               </Button>
               
               <Button
@@ -224,7 +224,7 @@ const StaticPost: React.FC<PostProps> = ({
               >
                 <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline text-sm">Comment</span>
-                <span className="text-xs sm:text-sm ml-1">({commentCount})</span>
+                <span className="text-xs sm:text-sm ml-1">{commentCount}</span>
               </Button>
               
               <Button
@@ -240,7 +240,7 @@ const StaticPost: React.FC<PostProps> = ({
               >
                 <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden sm:inline text-sm">Re-Feed</span>
-                <span className="text-xs sm:text-sm ml-1">({reshareCount})</span>
+                <span className="text-xs sm:text-sm ml-1">{reshareCount}</span>
               </Button>
               
               <Popover>
@@ -294,43 +294,58 @@ const StaticPost: React.FC<PostProps> = ({
             
             {showComments && (
               <div className="mt-4">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 dark:border-gray-700"></div>
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
-
-                      <div key={comment.id} className="flex gap-2 mb-6 mt-10">
+                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h2 className="font-bold future-feed:text-white  dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs future-feed:text-white sm:text-sm dark:text-gray-300">{comment.handle || "@unknown"}</p>
-                          <p className="text-xs sm:text-sm dark:text-white future-feed:text-white">{comment.content}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 future-feed:text-white ">
-                            {formatRelativeTime(comment.createdAt)}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatRelativeTime(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm dark:text-white mt-1">
+                            {comment.content}
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    No comments yet.
-                  </p>
+                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                    <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      No comments yet. Be the first to comment!
+                    </p>
+                  </div>
                 )}
+
+                <div className="mb-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Add a comment
+                  </label>
+                </div>
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
+                    placeholder={isUserLoaded ? "Write your comment here..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full mr-4 dark:border-slate-200 future-feed:border-lime dark:bg-indigo-950 future-feed:bg-black hover:border-white dark:text-white  future-feed:border-lime resize-none border-2 border-rose-gold-accent-border future-feed:border-lime text-xs sm:text-sm"
+                    className="w-full hover:border-white resize-none border-2 text-xs sm:text-sm border-blue-500"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
                   <Button
-                    onClick={handleSubmitComment}
-                    className="bg-blue-500 mt-3 mr-4 text-white hover:bg-lime-600 text-xs sm:text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSubmitComment();
+                    }}
+                    className="text-xs sm:text-sm rounded-full mt-3 bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment
