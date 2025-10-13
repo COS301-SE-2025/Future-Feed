@@ -190,6 +190,8 @@ const HomePage = () => {
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
   const [presetCurrentPage, setPresetCurrentPage] = useState(0);
   const [presetHasMore, setPresetHasMore] = useState(true);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewPostData, setPreviewPostData] = useState<PostData | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -214,6 +216,11 @@ const HomePage = () => {
   const createPresetModalProps = useSpring({
     opacity: isCreatePresetModalOpen ? 1 : 0,
     transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 250, friction: 35 },
+  });
+  const previewModalProps = useSpring({
+    opacity: isPreviewModalOpen ? 1 : 0,
+    transform: isPreviewModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 250, friction: 35 },
   });
 
@@ -1592,7 +1599,6 @@ const HomePage = () => {
       }
 
       const newPost: ApiPost = await res.json();
-
       if (selectedTopics.length > 0) {
         const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
           method: "POST",
@@ -1638,20 +1644,27 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      if (isGeneratingImage) {
-        setLoadingImages(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tempPostId);
-          return newSet;
-        });
-      }
+      if (useAIGeneration) {
+        setPreviewPostData(formattedPost);
+        setIsPreviewModalOpen(true);
 
-      setPosts((prev) =>
-        [
-          formattedPost,
-          ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      );
+        setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      } else {
+        if (isGeneratingImage) { 
+          setLoadingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempPostId);
+            return newSet;
+          });
+        }
+
+        setPosts((prev) =>
+          [
+            formattedPost,
+            ...prev.filter((p) => p.id !== tempPostId),
+          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
+      }
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
@@ -1675,6 +1688,33 @@ const HomePage = () => {
       setImagePrompt(tempImagePrompt);
       setUseAIGeneration(!!tempImagePrompt);
     }
+  };
+  const handleConfirmPreview = () => {
+    if (previewPostData) {
+      setPosts((prev) =>
+        [previewPostData, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
+
+  const handleCancelPreview = async () => {
+    if (previewPostData) {
+      try {
+        const res = await fetch(`${API_URL}/api/posts/del/${previewPostData.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete preview post");
+      } catch (err) {
+        console.error("Error deleting preview post:", err);
+        setError("Failed to cancel post.");
+        setTimeout(() => setError(null), 3000);
+      }
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
   };
 
   const handleDeletePost = async (postId: number) => {
@@ -2280,7 +2320,7 @@ const HomePage = () => {
 
       <button
 
-        className="lg:hidden -translate-y-[15px] fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+        className="lg:hidden -translate-y-[15px] fixed top-10.5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
@@ -2319,7 +2359,7 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen || isPreviewModalOpen ? "backdrop-blur-sm" : ""}`}
       >
         <main className="mt-1 flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {loading ? (
@@ -2434,7 +2474,7 @@ const HomePage = () => {
                             setPresetCurrentPage(0);
                             setPresetHasMore(true);
                           }}
-                          className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                          className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                         >
                           <ArrowLeft className="h-4 w-4 mr-1" />
                           Back to Presets
@@ -2833,7 +2873,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none rounded-xl"
                 rows={8}
               />
               <div className="mb-4">
@@ -2843,7 +2883,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
+                  className="rounded-xl border-blue-200 future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-0.5 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
@@ -2864,7 +2904,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded-full"
+                    className="w-40 dark:text-black text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
                   >
                     Upload Image
                   </Button>
@@ -2874,7 +2914,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded rounded-full"
+                    className="bg-blue-500 hover:cursor-pointer w-40 dark:text-black text-white rounded rounded-full hover:bg-blue-600 hover:text-white "
                   >
                     Generate AI Image
                   </Button>
@@ -2885,14 +2925,14 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5 future-feed:text-white"
+                      className="w-full border border-blue-400 dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-xl mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
+                      className="hover:cursor-pointer dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18 hover:bg-gray-400 hover:border-blue-300"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2916,7 +2956,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
@@ -2993,6 +3033,48 @@ const HomePage = () => {
               >
                 Close
               </Button>
+            </div>
+          </div>
+        </animated.div>
+      )}
+      {isPreviewModalOpen && previewPostData && (
+        <animated.div
+          style={previewModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
+        >
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 max-w-2xl border-2 dark:border-slate-200 flex flex-col relative">
+            <button
+              onClick={handleCancelPreview}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <div className="text-center mb-5">
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Image preview</h2>
+            </div>
+            <div className="flex flex-col flex-1">
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
+              {previewPostData.image && (
+                <img src={previewPostData.image} alt="Generated AI Image" className="w-full h-auto mb-4 rounded" />
+              )}
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white text-center font-semibold">
+                Do you want to use this image?
+              </p>
+              <div className="flex justify-end space-x-4">
+                <Button
+                  onClick={handleCancelPreview}
+                  className="bg-red-500 text-white hover:bg-red-600 rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmPreview}
+                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                >
+                  Use
+                </Button>
+              </div>
             </div>
           </div>
         </animated.div>
