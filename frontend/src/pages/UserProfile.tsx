@@ -1647,7 +1647,7 @@ const UserProfile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1 min-h-screen overflow-y-auto mt-[21px] mr-7">
       <Card className="mb-5 ">
         <CardContent className="ml-[-10px]">
           <div className="relative">
@@ -2203,17 +2203,16 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen hidden lg:block mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            <WhatsHappening />
-           
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-        
-            <WhoToFollow />
-          </div>
-        
-        </aside>
+      <aside className="w-full lg:w-[350px] hidden lg:block mx-[-2px] mt-5">
+  <div className="sticky top-4">
+    <div className="w-full lg:w-[320px] mb-5">
+      <WhatsHappening />
+    </div>
+    <div className="w-full lg:w-[320px]">
+      <WhoToFollow />
+    </div>
+  </div>
+</aside>
     </div>
   );
 }
