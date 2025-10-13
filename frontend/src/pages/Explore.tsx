@@ -33,6 +33,16 @@ interface User {
   bio: string;
 }
 
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  email: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+}
+
 /*interface FollowRelation {
   id: number;
   followerId: number;
@@ -62,6 +72,7 @@ const Explore = () => {
   const [unfollowingId, setUnfollowingId] = useState<number | null>(null);
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
 
   //
   //cachce fetching for users in tabs
@@ -71,6 +82,25 @@ const Explore = () => {
     isLoading: usersLoading,
 
   } = useUsersQuery();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      navigate("/login");
+      return null;
+    }
+  };
 
   const {
     data: followingRelations = [],
@@ -329,7 +359,8 @@ const Explore = () => {
         //initialize displayed users
         ////setDisplayedUsers(allUsers);
         //setCurrentUserId(userId);
-
+        const user = await fetchCurrentUser();
+        setCurrentUser(user);
 
         //const statusEntries = await Promise.all(
         //allUsers.map(async (user: User) => {
@@ -430,6 +461,11 @@ const Explore = () => {
       setDisplayedUsers(users);
     }
   }, [activeTab, isSearchActive, users]);
+
+  if(!currentUser){
+    console.error("You are not logged in. Please log in.");
+    navigate("/login");
+  }
 
   const loadFollowingData = async (userId: number) => {
     await refetchFollowing();
