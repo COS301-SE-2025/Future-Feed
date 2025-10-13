@@ -2955,7 +2955,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
