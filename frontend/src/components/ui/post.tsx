@@ -213,7 +213,7 @@ const Post: React.FC<PostProps> = ({
             {isImageLoading ? (
               <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-lime-500" />
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                   <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
                 </div>
               </div>

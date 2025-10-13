@@ -3137,7 +3137,7 @@ const HomePage = () => {
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center mb-5">
-              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Image preview</h2>
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Preview</h2>
             </div>
             <div className="flex flex-col flex-1">
               <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
@@ -3156,7 +3156,7 @@ const HomePage = () => {
                 </Button>
                 <Button
                   onClick={handleConfirmPreview}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 hover:text-blue-500 rounded-full"
                 >
                   Use
                 </Button>
