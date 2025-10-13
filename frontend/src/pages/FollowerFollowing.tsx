@@ -7,8 +7,7 @@ import GRP1 from "../assets/GRP1.jpg";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import WhoToFollow from "@/components/WhoToFollow"
 import WhatsHappening from "@/components/WhatsHappening"
-
-import { useLocation } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useFollowStore } from "@/store/useFollowStore"
 import { Button } from "@/components/ui/button"
@@ -53,6 +52,7 @@ const FollowerFollowing = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const tabParam = searchParams.get("tab") || "followers";
+  const navigate = useNavigate();
 
   const fetchCurrentUser = async () => {
     try {
@@ -70,6 +70,7 @@ const FollowerFollowing = () => {
     } catch (err) {
       console.error("Error fetching user info:", err)
       setUser(null)
+      navigate("/login")
       return null
     } finally {
       setLoading(false)

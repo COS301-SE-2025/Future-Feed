@@ -83,6 +83,7 @@ const Notifications = () => {
         setLoading(false);
       } else {
         setError("User not authenticated. Please log in.");
+        navigate("/login");
         setLoading(false);
       }
     };

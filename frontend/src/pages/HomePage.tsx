@@ -37,11 +37,6 @@ import {
 interface PaginatedResponse<T> {
   content: T[];
   totalPages: number;
-  // Optional: Add if present in full response, e.g.,
-  // totalElements?: number;
-  // numberOfElements?: number;
-  // first?: boolean;
-  // last?: boolean;
 }
 
 interface Preset {
@@ -157,7 +152,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("Following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -333,6 +328,7 @@ const HomePage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
+      navigate("/login")
       return null;
     }
   };
@@ -828,7 +824,6 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -924,8 +919,6 @@ const HomePage = () => {
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
     setIsViewingPresetFeed(true);
-
-    // Reset pagination state
     setPresetCurrentPage(0);
     setPresetHasMore(true);
 
@@ -941,12 +934,11 @@ const HomePage = () => {
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged (e.g., totalPages usage)
-
-      // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
-      if (0 >= totalPages - 1) {
+      if (totalPages <= 1 || apiPosts.length < PAGE_SIZE) {
         setPresetHasMore(false);
+      } else {
+        setPresetHasMore(true);
       }
 
       const myReshares: ApiReshare[] = myResharesRes.ok
@@ -1107,20 +1099,19 @@ const HomePage = () => {
     try {
       const postsRes = await fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=${page}&size=${PAGE_SIZE}`, commonInit);
 
-      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${posts}`);
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged
+
+      const totalPages = pageData.totalPages || 0;
+
+      if (page >= totalPages - 1 || apiPosts.length === 0) {
+        setPresetHasMore(false);
+      }
 
       if (apiPosts.length === 0) {
         return 0;
-      }
-
-      // Check if there are more pages
-      const totalPages = pageData.totalPages || 0;
-      if (page >= totalPages - 1) {
-        setPresetHasMore(false);
       }
 
       const [myResharesRes, bookmarksRes] = await Promise.all([
@@ -1250,6 +1241,7 @@ const HomePage = () => {
       return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching more preset posts:", err);
+      setPresetHasMore(false);
       return 0;
     } finally {
       setLoadingPresetPosts(false);
@@ -1447,7 +1439,7 @@ const HomePage = () => {
       parts.push(`${rule.percentage}%`);
     }
 
-    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 '); // Using non-breaking spaces
+    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 ');
   };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1574,7 +1566,6 @@ const HomePage = () => {
             setErrorData(errorData);
             setIsErrorDialogOpen(true);
 
-            // Revert temp post immediately
             if (isGeneratingImage) {
               setLoadingImages(prev => {
                 const newSet = new Set(prev);
@@ -1592,7 +1583,7 @@ const HomePage = () => {
             setImagePrompt(tempImagePrompt);
             setUseAIGeneration(!!tempImagePrompt);
 
-            return; // Exit early, don't proceed with success flow
+            return;
           }
         } catch (parseErr) {
           console.warn("Failed to parse error response as JSON:", parseErr);
@@ -2097,7 +2088,7 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-14 mt-5 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -2135,7 +2126,7 @@ const HomePage = () => {
             onDelete={() => handleDeletePost(post.id)}
             onToggleComments={() => toggleComments(post.id)}
             onNavigate={() => navigate(`/post/${post.id}`)}
-            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!currentUser}
@@ -2215,16 +2206,17 @@ const HomePage = () => {
     }
   }, [activeTab, currentUser]);
 
-
+  useEffect(() => {
+    if (currentUser && activeTab === "for You" && posts.length === 0) {
+      fetchPaginatedPosts(0);
+    }
+  }, [currentUser, activeTab, posts.length]);
 
   useEffect(() => {
-    if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
-      fetchFollowingPosts();
-    }
     if (selectedPreset) {
       fetchRules(selectedPreset);
     }
-  }, [currentUser, activeTab, selectedPreset]);
+  }, [selectedPreset]);
 
   useEffect(() => {
     if (isErrorDialogOpen) {
@@ -2339,14 +2331,25 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
                 onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
               >
-                <h1 className="future-feed:text-lime text-xl dark:text-slate-200 font-bold text-black">
-                  {activeTab === "Presets" ? "Create a new preset" : "What's on your mind?"}
-                </h1>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+
+                  <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
+                    {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
+                  </h1>
+                </div>
+                <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -2493,7 +2496,7 @@ const HomePage = () => {
                                     <div className="flex items-center space-x-2">
                                       <span>{preset.name}</span>
                                       {preset.defaultPreset && (
-                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
                                           Default
                                         </span>
                                       )}
@@ -2722,7 +2725,7 @@ const HomePage = () => {
                           </p>
                           <Button
                             onClick={() => setIsCreatePresetModalOpen(true)}
-                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2"
+                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2 hover:cursor-pointer"
                           >
                             Create Your First Preset
                           </Button>
@@ -2758,30 +2761,20 @@ const HomePage = () => {
                         <div className="text-center mb-5">
                           <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
                         </div>
-                        <div className="flex flex-col space-y-4">
+                        <div className="flex flex-row space-between space-x-4 space-y-4">
                           <Input
-                            placeholder="Preset name (e.g., Tech & Bots)"
+                            placeholder="Preset name"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
                             className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
                           />
                           <div className="flex justify-end space-x-2">
                             <Button
-                              variant="outline"
-                              onClick={() => {
-                                setIsCreatePresetModalOpen(false);
-                                setNewPresetName("");
-                              }}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
                               onClick={() => {
                                 createPreset(false);
                                 setIsCreatePresetModalOpen(false);
                               }}
-                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              className="bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer"
                               disabled={!newPresetName.trim() || isLoading}
                             >
                               {isLoading ? "Creating..." : "Create Preset"}
@@ -2803,7 +2796,6 @@ const HomePage = () => {
 
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            {/*  */}
             <WhoToFollow />
           </div>
 

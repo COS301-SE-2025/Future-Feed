@@ -5,7 +5,6 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import BotPost from "@/components/ui/BotPost";
 import { formatRelativeTime } from "@/lib/timeUtils";
 import { FaRobot, FaTimes } from "react-icons/fa";
@@ -13,6 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: number;
@@ -133,6 +134,7 @@ const BotPage = () => {
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [isEditing, setIsEditing] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
+  const navigate = useNavigate();
 
   const fetchUser = async (
     userId: number
@@ -336,6 +338,7 @@ const BotPage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setUser(null);
+      navigate("/login")
       return null;
     }
   };
@@ -769,8 +772,6 @@ const BotPage = () => {
       setError("Failed to load bot info. Please log in again.");
       setBot(null);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -875,23 +876,25 @@ const BotPage = () => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
+        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
-            <Skeleton className="h-40 w-full" />
+            <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-20 h-20 rounded-full" />
+              <Skeleton className="w-27 h-27 rounded-full" />
             </div>
           </div>
-          <div className="mt-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-              <div className="flex-1">
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
-              </div>
-            </div>
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+          <div
+        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+      >
+        <div className="flex items-center space-x-4">
+          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="flex-1">
+            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
           </div>
+        </div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
@@ -930,6 +933,7 @@ const BotPage = () => {
                   <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
                   <p className="mt-4 text-xl text-black dark:text-white">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
+                {user && bot && user.id === bot.ownerId && (
                 <div className="mt-[-50px] gap-4 flex items-center">
                   <Button
                     variant="secondary"
@@ -956,6 +960,7 @@ const BotPage = () => {
                     Edit Bot
                   </Button>
                 </div>
+                )}
               </div>
               <div className="left-4 text-black dark:text-white mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
                 <span className="font-medium dark:text-slate-200">{posts.length} Posts</span>
@@ -963,7 +968,16 @@ const BotPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Separator className="my-4 bg-blue-500 shadow-xl" />
+        <Tabs defaultValue="posts" className="w-full p-0">
+          <TabsList className="w-full flex justify-center rounded-lg bg-white dark:bg-gray-900 border border-rose-gold-accent-border dark:border-slate-200 shadow-md mb-5 sticky top-[68px] z-10">
+            <TabsTrigger
+              className="text-xl font-semibold text-black dark:text-white data-[state=active]:bg-slate-500 data-[state=active]:text-white data-[state=active]:rounded-lg py-3 px-6"
+              value="posts"
+            >
+              Posts
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         {error && (
           <div
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -1021,9 +1035,9 @@ const BotPage = () => {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
-          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-blue-500 dark:border-blue-300">
+          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-drop-shadow-x">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300">
+              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300 ml-7">
                 Edit Bot
               </CardTitle>
               <Button

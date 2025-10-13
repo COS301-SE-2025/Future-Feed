@@ -6,11 +6,57 @@ import {
 } from "@/components/ui/accordion"
 import {  MessageCircle } from "lucide-react"
 {/* https://FAQS.x.com/en/using-x/how-to-post*/ }
-
+import { useEffect, useState } from "react";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import PersonalSidebar from "@/components/PersonalSidebar";
+import { useNavigate } from "react-router-dom";
+
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+  email: string;
+}
 const FAQS = () => {
+    const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+      const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+      const navigate = useNavigate();
+    
+      const fetchCurrentUser = async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/user/myInfo`, {
+            credentials: "include",
+          });
+          if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+          const data: UserProfile = await res.json();
+          if (!data.username || !data.displayName) {
+            throw new Error("User info missing username or displayName");
+          }
+          setCurrentUser(data);
+          return data;
+        } catch (err) {
+          console.error("Error fetching user info:", err);
+          navigate("/login");
+          return null;
+        }
+      };
+    
+      useEffect(() => {
+      const initializeData = async () => {
+        await fetchCurrentUser();
+      };
+    
+      initializeData();
+    }, []);
+    
+    if(!currentUser){
+      console.error("You are not logged in. Please log in.");
+      navigate("/login");
+    }
    
    return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-ffgrey dark:bg-blue-950 dark:text-white">
