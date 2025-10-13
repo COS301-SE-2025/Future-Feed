@@ -156,7 +156,7 @@ const Post: React.FC<PostProps> = ({
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 
+              <h2
                 className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -185,7 +185,7 @@ const Post: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p 
+            <p
               className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]"
               onClick={(e) => {
                 e.stopPropagation();
@@ -209,7 +209,7 @@ const Post: React.FC<PostProps> = ({
                 ))}
               </div>
             )}
-            
+
             {isImageLoading ? (
               <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
@@ -246,7 +246,7 @@ const Post: React.FC<PostProps> = ({
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
 
                 <span className="hidden xl:inline">Like</span>
-                <span className="ml-1">({likeCount})</span>
+                <span className="ml-1">{likeCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -265,7 +265,7 @@ const Post: React.FC<PostProps> = ({
                   <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <span className="hidden xl:inline">Comment</span>
-                <span className="ml-1">({commentCount})</span>
+                <span className="ml-1">{commentCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -282,7 +282,7 @@ const Post: React.FC<PostProps> = ({
               >
                 <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden xl:inline">Re-Feed</span>
-                <span className="ml-1">({reshareCount})</span>
+                <span className="ml-1">{reshareCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -303,37 +303,56 @@ const Post: React.FC<PostProps> = ({
             </div>
             {showComments && (
               <div className="mt-4">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 border-b border-gray-200 dark:border-gray-700">
+                  <MessageCircle className="h-4 w-4 text-blue-500" />
+                  <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
+                    Comments
+                  </h3>
+                </div>
+
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-2 mb-2">
+                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs sm:text-sm dark:text-white line-clamp-3 max-w-full">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                              {formatRelativeTime(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm dark:text-white mt-1">
                             {comment.content}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatRelativeTime(comment.createdAt)}
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    No comments yet.
-                  </p>
+                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                    <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      No comments yet. Be the first to comment!
+                    </p>
+                  </div>
                 )}
+
+                {/* Add "Add a comment" label */}
+                <div className="mb-2">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Add a comment
+                  </label>
+                </div>
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
+                    placeholder={isUserLoaded ? "Write your comment here..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full hover:border-white  resize-none border-2  text-xs sm:text-sm border-blue-500"
+                    className="w-full hover:border-white resize-none border-2 text-xs sm:text-sm border-blue-500"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -342,10 +361,10 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className=" text-xs sm:text-sm bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
+                    className="text-xs sm:text-sm bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
-                    Comment
+                    Post
                   </Button>
                 </div>
               </div>
