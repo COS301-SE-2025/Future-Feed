@@ -303,7 +303,7 @@ const Post: React.FC<PostProps> = ({
             </div>
             {showComments && (
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 dark:border-gray-700">
                   <MessageCircle className="h-4 w-4 text-blue-500" />
                   <h3 className="font-semibold text-sm text-gray-700 dark:text-gray-300">
                     Comments
@@ -361,10 +361,10 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className="text-xs sm:text-sm bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
+                    className="text-xs sm:text-sm rounded-full mt-3 bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
-                    Post
+                    Comment
                   </Button>
                 </div>
               </div>
