@@ -37,11 +37,6 @@ import {
 interface PaginatedResponse<T> {
   content: T[];
   totalPages: number;
-  // Optional: Add if present in full response, e.g.,
-  // totalElements?: number;
-  // numberOfElements?: number;
-  // first?: boolean;
-  // last?: boolean;
 }
 
 interface Preset {
@@ -157,7 +152,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("Following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -195,6 +190,8 @@ const HomePage = () => {
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
   const [presetCurrentPage, setPresetCurrentPage] = useState(0);
   const [presetHasMore, setPresetHasMore] = useState(true);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewPostData, setPreviewPostData] = useState<PostData | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -219,6 +216,11 @@ const HomePage = () => {
   const createPresetModalProps = useSpring({
     opacity: isCreatePresetModalOpen ? 1 : 0,
     transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 250, friction: 35 },
+  });
+  const previewModalProps = useSpring({
+    opacity: isPreviewModalOpen ? 1 : 0,
+    transform: isPreviewModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 250, friction: 35 },
   });
 
@@ -829,7 +831,6 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -925,8 +926,6 @@ const HomePage = () => {
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
     setIsViewingPresetFeed(true);
-
-    // Reset pagination state
     setPresetCurrentPage(0);
     setPresetHasMore(true);
 
@@ -942,12 +941,11 @@ const HomePage = () => {
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged (e.g., totalPages usage)
-
-      // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
-      if (0 >= totalPages - 1) {
+      if (totalPages <= 1 || apiPosts.length < PAGE_SIZE) {
         setPresetHasMore(false);
+      } else {
+        setPresetHasMore(true);
       }
 
       const myReshares: ApiReshare[] = myResharesRes.ok
@@ -1108,20 +1106,19 @@ const HomePage = () => {
     try {
       const postsRes = await fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=${page}&size=${PAGE_SIZE}`, commonInit);
 
-      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${posts}`);
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged
+
+      const totalPages = pageData.totalPages || 0;
+
+      if (page >= totalPages - 1 || apiPosts.length === 0) {
+        setPresetHasMore(false);
+      }
 
       if (apiPosts.length === 0) {
         return 0;
-      }
-
-      // Check if there are more pages
-      const totalPages = pageData.totalPages || 0;
-      if (page >= totalPages - 1) {
-        setPresetHasMore(false);
       }
 
       const [myResharesRes, bookmarksRes] = await Promise.all([
@@ -1251,6 +1248,7 @@ const HomePage = () => {
       return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching more preset posts:", err);
+      setPresetHasMore(false);
       return 0;
     } finally {
       setLoadingPresetPosts(false);
@@ -1448,7 +1446,7 @@ const HomePage = () => {
       parts.push(`${rule.percentage}%`);
     }
 
-    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 '); // Using non-breaking spaces
+    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 ');
   };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1575,7 +1573,6 @@ const HomePage = () => {
             setErrorData(errorData);
             setIsErrorDialogOpen(true);
 
-            // Revert temp post immediately
             if (isGeneratingImage) {
               setLoadingImages(prev => {
                 const newSet = new Set(prev);
@@ -1593,7 +1590,7 @@ const HomePage = () => {
             setImagePrompt(tempImagePrompt);
             setUseAIGeneration(!!tempImagePrompt);
 
-            return; // Exit early, don't proceed with success flow
+            return;
           }
         } catch (parseErr) {
           console.warn("Failed to parse error response as JSON:", parseErr);
@@ -1602,7 +1599,6 @@ const HomePage = () => {
       }
 
       const newPost: ApiPost = await res.json();
-
       if (selectedTopics.length > 0) {
         const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
           method: "POST",
@@ -1648,20 +1644,27 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      if (isGeneratingImage) {
-        setLoadingImages(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tempPostId);
-          return newSet;
-        });
-      }
+      if (useAIGeneration) {
+        setPreviewPostData(formattedPost);
+        setIsPreviewModalOpen(true);
 
-      setPosts((prev) =>
-        [
-          formattedPost,
-          ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      );
+        setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      } else {
+        if (isGeneratingImage) {
+          setLoadingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempPostId);
+            return newSet;
+          });
+        }
+
+        setPosts((prev) =>
+          [
+            formattedPost,
+            ...prev.filter((p) => p.id !== tempPostId),
+          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
+      }
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
@@ -1686,17 +1689,49 @@ const HomePage = () => {
       setUseAIGeneration(!!tempImagePrompt);
     }
   };
+  const handleConfirmPreview = () => {
+    if (previewPostData) {
+      setPosts((prev) =>
+        [previewPostData, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
 
-  const handleDeletePost = async (postId: number) => {
+  const handleCancelPreview = async () => {
+    if (previewPostData) {
+      try {
+        const res = await fetch(`${API_URL}/api/posts/del/${previewPostData.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete preview post");
+      } catch (err) {
+        console.error("Error deleting preview post:", err);
+        setError("Failed to cancel post.");
+        setTimeout(() => setError(null), 3000);
+      }
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
+
+  const handleDeletePost = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to delete posts.");
       return;
     }
 
-    const deletedPost = posts.find((p) => p.id === postId);
-    const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
-    setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    let deletedPost;
+    if (isPresetFeed) {
+      deletedPost = presetPosts.find((p) => p.id === postId);
+      setPresetPosts((prev) => prev.filter((p) => p.id !== postId));
+    } else {
+      deletedPost = posts.find((p) => p.id === postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -1709,23 +1744,27 @@ const HomePage = () => {
       console.error("Error deleting post:", err);
       setError("Failed to delete post. Reverting...");
       setTimeout(() => setError(null), 3000);
-      if (deletedPost) {
+
+      if (isPresetFeed && deletedPost) {
+        setPresetPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } else if (deletedPost) {
         setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      }
-      if (deletedFollowingPost) {
-        setFollowingPosts((prev) =>
-          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        );
       }
     }
   };
-  const handleLike = async (postId: number) => {
+  const handleLike = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1746,8 +1785,12 @@ const HomePage = () => {
           : p
       );
 
-    setPosts((prevPosts) => updatePostInArray(prevPosts));
-    setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsLiked ? "DELETE" : "POST";
@@ -1775,8 +1818,12 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked, likeCount } : p
         );
 
-      setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
-      setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
@@ -1787,18 +1834,28 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
         );
 
-      setPosts((prevPosts) => revertPostInArray(prevPosts));
-      setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleReshare = async (postId: number) => {
+  const handleReshare = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to reshare posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1808,8 +1865,8 @@ const HomePage = () => {
     const originalIsReshared = post.isReshared;
     const originalReshareCount = post.reshareCount;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId
           ? {
             ...p,
@@ -1817,19 +1874,14 @@ const HomePage = () => {
             reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
           }
           : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId
-          ? {
-            ...p,
-            isReshared: !p.isReshared,
-            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-          }
-          : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -1847,24 +1899,24 @@ const HomePage = () => {
       console.error("Error toggling reshare:", err);
       setError(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId
             ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
             : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
-            : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleAddComment = async (postId: number, commentText: string) => {
+  const handleAddComment = async (postId: number, commentText: string, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to comment.");
       return;
@@ -1886,28 +1938,43 @@ const HomePage = () => {
       profilePicture: currentUser.profilePicture
     };
 
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
+    // Update the appropriate posts array
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1931,65 +1998,102 @@ const HomePage = () => {
         profilePicture: currentUser.profilePicture,
       };
 
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
+      // Update the appropriate posts array with the real comment
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      }
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
+
+      // Revert the appropriate posts array
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      }
     }
   };
 
-  const handleBookmark = async (postId: number) => {
+  const handleBookmark = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to bookmark/unbookmark posts.");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1998,16 +2102,17 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
@@ -2034,30 +2139,33 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+      const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
@@ -2081,24 +2189,32 @@ const HomePage = () => {
     }
   };
 
-  const toggleComments = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
+  const toggleComments = (postId: number, isPresetFeed: boolean = false) => {
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    }
   };
 
   const renderSkeletonPosts = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-14 mt-5 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
@@ -2112,7 +2228,7 @@ const HomePage = () => {
     ));
   };
 
-  const renderPosts = (posts: PostData[]) => {
+  const renderPosts = (posts: PostData[], isPresetFeed: boolean = false) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
@@ -2129,12 +2245,12 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
             onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
@@ -2158,12 +2274,12 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
             onProfileClick={() => navigate(`/profile/${post.authorId}`)}
             showComments={post.showComments || false}
@@ -2216,16 +2332,17 @@ const HomePage = () => {
     }
   }, [activeTab, currentUser]);
 
-
+  useEffect(() => {
+    if (currentUser && activeTab === "for You" && posts.length === 0) {
+      fetchPaginatedPosts(0);
+    }
+  }, [currentUser, activeTab, posts.length]);
 
   useEffect(() => {
-    if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
-      fetchFollowingPosts();
-    }
     if (selectedPreset) {
       fetchRules(selectedPreset);
     }
-  }, [currentUser, activeTab, selectedPreset]);
+  }, [selectedPreset]);
 
   useEffect(() => {
     if (isErrorDialogOpen) {
@@ -2289,7 +2406,7 @@ const HomePage = () => {
 
       <button
 
-        className="lg:hidden -translate-y-[15px] fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+        className="lg:hidden -translate-y-[15px] fixed top-10.5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
@@ -2304,7 +2421,7 @@ const HomePage = () => {
             >
               Logout
             </button>
-            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
+            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2 ">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
@@ -2328,7 +2445,7 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen || isPreviewModalOpen ? "backdrop-blur-sm" : ""}`}
       >
         <main className="mt-1 flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {loading ? (
@@ -2340,14 +2457,25 @@ const HomePage = () => {
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
                 onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
               >
-                <h1 className="future-feed:text-lime text-xl dark:text-slate-200 font-bold text-black">
-                  {activeTab === "Presets" ? "Create a new preset" : "What's on your mind?"}
-                </h1>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+
+                  <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
+                    {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
+                  </h1>
+                </div>
+                <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -2374,7 +2502,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(posts)}
+                      {renderPosts(posts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2409,7 +2537,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(followingPosts)}
+                      {renderPosts(followingPosts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2432,7 +2560,7 @@ const HomePage = () => {
                             setPresetCurrentPage(0);
                             setPresetHasMore(true);
                           }}
-                          className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                          className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                         >
                           <ArrowLeft className="h-4 w-4 mr-1" />
                           Back to Presets
@@ -2460,7 +2588,7 @@ const HomePage = () => {
                       ) : (
                         <>
                           {/* Render the posts */}
-                          {renderPosts(presetPosts)}
+                          {renderPosts(presetPosts, true)}
 
                           {/* Show loading skeleton at the bottom when loading more posts */}
                           {loadingPresetPosts && presetPosts.length > 0 && (
@@ -2494,7 +2622,7 @@ const HomePage = () => {
                                     <div className="flex items-center space-x-2">
                                       <span>{preset.name}</span>
                                       {preset.defaultPreset && (
-                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
                                           Default
                                         </span>
                                       )}
@@ -2723,7 +2851,7 @@ const HomePage = () => {
                           </p>
                           <Button
                             onClick={() => setIsCreatePresetModalOpen(true)}
-                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2"
+                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2 hover:cursor-pointer"
                           >
                             Create Your First Preset
                           </Button>
@@ -2759,30 +2887,20 @@ const HomePage = () => {
                         <div className="text-center mb-5">
                           <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
                         </div>
-                        <div className="flex flex-col space-y-4">
+                        <div className="flex flex-row space-between space-x-4 space-y-4">
                           <Input
-                            placeholder="Preset name (e.g., Tech & Bots)"
+                            placeholder="Preset name"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
                             className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
                           />
                           <div className="flex justify-end space-x-2">
                             <Button
-                              variant="outline"
-                              onClick={() => {
-                                setIsCreatePresetModalOpen(false);
-                                setNewPresetName("");
-                              }}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
                               onClick={() => {
                                 createPreset(false);
                                 setIsCreatePresetModalOpen(false);
                               }}
-                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              className="bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer"
                               disabled={!newPresetName.trim() || isLoading}
                             >
                               {isLoading ? "Creating..." : "Create Preset"}
@@ -2804,7 +2922,6 @@ const HomePage = () => {
 
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            {/*  */}
             <WhoToFollow />
           </div>
 
@@ -2842,7 +2959,7 @@ const HomePage = () => {
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none"
+                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none rounded-xl"
                 rows={8}
               />
               <div className="mb-4">
@@ -2852,7 +2969,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
+                  className="rounded-xl border-blue-200 future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-0.5 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
@@ -2873,7 +2990,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded-full"
+                    className="w-40 dark:text-black text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
                   >
                     Upload Image
                   </Button>
@@ -2883,7 +3000,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded rounded-full"
+                    className="bg-blue-500 hover:cursor-pointer w-40 dark:text-black text-white rounded rounded-full hover:bg-blue-600 hover:text-white "
                   >
                     Generate AI Image
                   </Button>
@@ -2894,14 +3011,14 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5 future-feed:text-white"
+                      className="w-full border border-blue-400 dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-xl mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
+                      className="hover:cursor-pointer dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18 hover:bg-gray-400 hover:border-blue-300"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2925,7 +3042,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
@@ -2938,9 +3055,9 @@ const HomePage = () => {
       {isTopicModalOpen && (
         <animated.div
           style={topicModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border drop-shadow-xl dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
@@ -2951,7 +3068,7 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white text-center">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
@@ -2973,9 +3090,9 @@ const HomePage = () => {
       {isViewTopicsModalOpen && (
         <animated.div
           style={viewTopicsModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white dark:bg-blue-950 rounded-2xl p-4 w-full max-w-md drop-shadow-xl border dark:border-slate-200 flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
               className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
@@ -2983,16 +3100,16 @@ const HomePage = () => {
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
+            <h2 className="text-center text-xl font-bold mb-5 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
                 <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2 future-feed:text-black">
+                    <div key={topic.id} className="inline-block border dark:border-lime-400 bg-blue-500 dark:bg-lime-900 text-white dark:text-lime-200 text-xs sm:text-sm px-3 py-0.5 rounded-xl">
                       {topic.name}
-                    </li>
+                    </div>
                   ))}
                 </ul>
               )}
@@ -3002,6 +3119,48 @@ const HomePage = () => {
               >
                 Close
               </Button>
+            </div>
+          </div>
+        </animated.div>
+      )}
+      {isPreviewModalOpen && previewPostData && (
+        <animated.div
+          style={previewModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
+        >
+          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 max-w-2xl border-2 dark:border-slate-200 flex flex-col relative">
+            <button
+              onClick={handleCancelPreview}
+              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <div className="text-center mb-5">
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Preview</h2>
+            </div>
+            <div className="flex flex-col flex-1">
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
+              {previewPostData.image && (
+                <img src={previewPostData.image} alt="Generated AI Image" className="w-full h-auto mb-4 rounded" />
+              )}
+              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white text-center font-semibold">
+                Do you want to use this image?
+              </p>
+              <div className="flex justify-end space-x-4">
+                <Button
+                  onClick={handleCancelPreview}
+                  className="bg-red-500 text-white hover:bg-red-600 rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmPreview}
+                  className="bg-blue-500 text-white hover:bg-blue-600 hover:text-blue-500 rounded-full"
+                >
+                  Use
+                </Button>
+              </div>
             </div>
           </div>
         </animated.div>

@@ -64,9 +64,15 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             )
         )
         .logout(logout -> logout
-            .logoutUrl("/logout")
-            .logoutSuccessUrl("http://localhost:5173")
-            .permitAll()
+            .logoutUrl("/api/auth/logout")
+            .invalidateHttpSession(true)
+            .clearAuthentication(true)
+            .deleteCookies("JSESSIONID")
+            .logoutSuccessHandler((request, response, authentication) -> {
+                response.setStatus(200);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"logged out\"}");
+            })
         )
 
         .exceptionHandling(ex -> ex
@@ -176,10 +182,15 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .userInfoEndpoint(u -> u.userService(customOAuth2UserService))
         )
         .logout(logout -> logout
-            .logoutUrl("/logout")
+            .logoutUrl("/api/auth/logout")
+            .invalidateHttpSession(true)
+            .clearAuthentication(true)
             .deleteCookies("JSESSIONID")
-            .logoutSuccessUrl(frontendUrl)
-            .permitAll()
+            .logoutSuccessHandler((request, response, authentication) -> {
+                response.setStatus(200);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"message\":\"logged out\"}");
+            })
         )
 
         .exceptionHandling(ex -> ex

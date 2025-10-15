@@ -30,7 +30,7 @@ interface UserInfo {
 const userCache = new Map<number, UserInfo>();
 
 const Notifications = () => {
-  const { notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, currentUserId } = useNotifications();
+  const { notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, deleteAllNotifications, currentUserId } = useNotifications();
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -324,6 +324,14 @@ const Notifications = () => {
               >
                 <CheckCircle className="mr-2 h-4 w-4 text-lime-400" />
                 Mark all as read
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => currentUserId && deleteAllNotifications(currentUserId)}
+                disabled={notifications.length === 0}
+                className="flex items-center cursor-pointer"
+              >
+                <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                Delete all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
