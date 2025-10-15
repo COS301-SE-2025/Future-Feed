@@ -122,6 +122,13 @@ const profileDataCache = {
   bookmarkedPosts: [] as PostData[],
 };
 
+interface cUserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePictureUrl?: string;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const Profile = () => {
@@ -797,7 +804,7 @@ const Profile = () => {
       const bookmarkedPosts = await Promise.all(
         bookmarkedList.map(async (post) => {
           try {
-            const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(userId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -840,7 +847,7 @@ const Profile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: userInfo.profilePicture,
+              profilePicture: userInfo.profilePictureUrl,
               username: userInfo.displayName,
               handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -1600,7 +1607,7 @@ const Profile = () => {
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1676,7 +1683,7 @@ const Profile = () => {
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1705,7 +1712,7 @@ const Profile = () => {
                   />
                   ) : (
                     <Post
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1752,7 +1759,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
           <BotPost
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1781,7 +1788,7 @@ const Profile = () => {
           />
           ) : (
             <Post
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1828,7 +1835,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1857,7 +1864,7 @@ const Profile = () => {
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1904,7 +1911,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1933,7 +1940,7 @@ const Profile = () => {
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
