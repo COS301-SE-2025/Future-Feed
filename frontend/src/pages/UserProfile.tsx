@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import WhatsHappening from "@/components/WhatsHappening";
 import WhoToFollow from "@/components/WhoToFollow";
 import BotPost from "@/components/ui/BotPost";
-import { FaBars, FaTimes, FaUser } from "react-icons/fa";
+import { FaUser } from "react-icons/fa";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
@@ -161,7 +161,6 @@ const UserProfile = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tabLoading, setTabLoading] = useState({
     posts: false,
     refeeds: false,
@@ -1576,7 +1575,7 @@ const UserProfile = () => {
           <PersonalSidebar />
         </aside>
         
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px] ">
           <div className="relative">
             <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -1612,42 +1611,10 @@ const UserProfile = () => {
 
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
-      <button
-        className="lg:hidden fixed top-2 left-2 bg-blue-500 future-feed:bg-lime text-white p-3 rounded-full z-20 shadow-lg "
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        {isMobileMenuOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-      </button>
-      {isMobileMenuOpen && (
-    <div className="md:hidden fixed inset-0 bg-black/90 z-10 flex flex-col items-center justify-center text-white">
-      <PersonalSidebar />
-      <Button
-        variant="secondary"
-        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
-        onClick={() => navigate("/edit-profile")}
-      >
-        Edit Profile
-      </Button>
-      <Button
-        variant="secondary"
-        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
-        onClick={() => navigate("/followers?tab=following")}
-      >
-        View Following
-      </Button>
-      <Button
-        variant="secondary"
-        className="mt-4 bg-white dark:bg-slate-200 dark:text-black"
-        onClick={() => navigate("/followers?tab=followers")}
-      >
-        View Followers
-      </Button>
-    </div>
-  )}
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 min-h-screen overflow-y-auto mt-[21px] mr-7">
+      <main className="flex-1 min-h-screen overflow-y-auto mt-[21px] sm:px-5">
       <Card className="mb-5 ">
         <CardContent className="ml-[-10px]">
           <div className="relative">
@@ -1675,7 +1642,7 @@ const UserProfile = () => {
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
-                      className=" bg-white border-rose-gold-accent-border mt-[-100px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer"
+                      className=" border-rose-gold-accent-border mt-[-100px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer rounded-full bg-blue-500 text-white hover:bg-blue-600" 
                     >
                       Edit Profile
                     </Button>
@@ -1804,7 +1771,7 @@ const UserProfile = () => {
 
       </Card>
         <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>
