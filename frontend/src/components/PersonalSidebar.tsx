@@ -5,7 +5,6 @@ import { useNotifications } from "@/context/NotificationContext";
 const PersonalSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { unreadCount } = useNotifications();
 
   const handleLogout = async () => {
@@ -19,8 +18,6 @@ const PersonalSidebar = () => {
       console.error("Logout failed", err);
     }
   };
-  //
-  // Helper function to check if a path is active
   const isActivePath = (path: string) => {
     return location.pathname === path;
   };
@@ -68,8 +65,6 @@ const PersonalSidebar = () => {
           </button>
         </nav>
       </aside>
-
-      {/* Fixed mobile navigation - removed duplicate nav element */}
       <nav className="fixed bottom-0 w-full flex justify-around items-center future-feed:bg-black future-feed:border-lime future-feed:text-lime border-3 rounded-xl border-rose-gold-accent-border drop-shadow-xl text-black p-2 lg:hidden z-50 bg-white">
         <Link to="/home" className={`flex flex-col items-center relative hover:text-blue-200 ${isActivePath('/home') ? 'text-blue-500' : ''
           }`}
