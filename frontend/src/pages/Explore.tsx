@@ -1,3 +1,5 @@
+//import reusable auth hook ere
+import { useAuthCheck } from "@/hooks/useAuthCheck";
 import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
@@ -50,8 +52,10 @@ interface UserProfile {
 
 const Explore = () => {
   const isHydrated = useStoreHydration();
-  //
+  //auth hook
+  const isAuthenticated = useAuthCheck();
 
+  //
   //add sep states for search
   const [displayedUsers, setDisplayedUsers] = useState<User[]>([]);
   //monitor sesrch query and check is search is active
@@ -109,6 +113,7 @@ const Explore = () => {
     refetch: refetchFollowing
   } = useFollowingQuery(currentUserId);
   //
+  
   const handleSearch = async (query: string) => {
     const trimmedQuery = query.trim();
     setSearchQuery(query);
@@ -481,6 +486,21 @@ const Explore = () => {
     //await fetchFollowing(userId, users);
     //setfollowingloading(false);
     //setHasLoadedFollowing(true);
+  }
+  //have the hek happen b4 anything else
+    //opionsl to display this , but it would be annoying if it apears for EVERY single page so i opted out
+//if (isAuthenticated === null) {
+    // Still checking auth,
+  //  return (
+    //  <div className="flex justify-center items-center min-h-screen dark:bg-blue-950">
+      //  <p className="text-lg text-slate-400">Checking authentication...</p>
+      //</div>
+    //);
+  //}
+
+  if (!isAuthenticated) {
+    // Redirect will happen automatically in useAuthCheck hook
+    return null;
   }
   const renderUserCard = (user: User) => {
       const isFollowing = followStatus[user.id] === true; // Explicitly check for true
