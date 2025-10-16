@@ -3,9 +3,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings } from "lucide-react";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import { useNavigate } from "react-router-dom";
-
 import { useStoreHydration } from '@/hooks/useStoreHydration';
-
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
@@ -73,6 +71,7 @@ const Explore = () => {
   const [followingId, setFollowingId] = useState<number | null>(null);
   const { followStatus, setFollowStatus, bulkSetFollowStatus } = useFollowStore();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
 
   //
   //cachce fetching for users in tabs
@@ -88,12 +87,14 @@ const Explore = () => {
       const res = await fetch(`${API_URL}/api/user/myInfo`, {
         credentials: "include",
       });
-      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      if (!res.ok){
+        throw new Error(`Failed to fetch user info: ${res.status}`);
+      }
+         
       const data: UserProfile = await res.json();
       if (!data.username || !data.displayName) {
         throw new Error("User info missing username or displayName");
       }
-      setCurrentUser(data);
       return data;
     } catch (err) {
       console.error("Error fetching user info:", err);
@@ -359,7 +360,13 @@ const Explore = () => {
         //initialize displayed users
         ////setDisplayedUsers(allUsers);
         //setCurrentUserId(userId);
+        setIsLoadingUser(true);
         const user = await fetchCurrentUser();
+        if(!user){
+          navigate("/login");
+          setIsLoadingUser(false);
+          return;
+        }
         setCurrentUser(user);
 
         //const statusEntries = await Promise.all(
@@ -414,8 +421,12 @@ const Explore = () => {
           bulkSetFollowStatus(newStatuses);
         }
       }
+
+      setIsLoadingUser(false);
     } catch (err) {
       console.error("Failed to load data:", err);
+      navigate("/login");
+      setIsLoadingUser(false);
     }
   };
     //load only if we have users but no currenuserid
@@ -461,11 +472,6 @@ const Explore = () => {
       setDisplayedUsers(users);
     }
   }, [activeTab, isSearchActive, users]);
-
-  if(!currentUser){
-    console.error("You are not logged in. Please log in.");
-    navigate("/login");
-  }
 
   const loadFollowingData = async (userId: number) => {
     await refetchFollowing();
@@ -557,6 +563,80 @@ const Explore = () => {
   const debouncedSearch = debounce((query: string) => {
     handleSearch(query);
   }, 300);
+
+  if (isLoadingUser) {
+  return (
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+        <PersonalSidebar />
+      </aside>
+      <main className="w-full lg:flex-1 p-2 overflow-y-auto">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
+          <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
+          <div className="flex items-center gap-3">
+            <SearchUser onSearch={debouncedSearch} />
+            <Link to="/settings">
+              <Settings size={20} className="dark:text-slate-200" />
+            </Link>
+          </div>
+        </div>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(val) => {
+            setActiveTab(val);
+            if (val === "accounts following" && !hasLoadedFollowing && currentUserId !== null) {
+              loadFollowingData(currentUserId);
+            }
+          }}
+          className="w-full p-0 future-feed:text-lime"
+        >
+          <TabsList className="w-full future-feed:text-lime flex justify-around">
+            {["accounts", "accounts following"].map((tab) => (
+              <TabsTrigger
+                key={tab}
+                value={tab}
+                className="flex-1 capitalize"
+              >
+                {tab.replace(/^[a-z]/, (c) => c.toUpperCase())}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <TabsContent value="accounts">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2">
+              {renderSkeleton()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="accounts following">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2">
+              {renderSkeleton()}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
+          <WhatsHappening />
+          <WhoToFollow />
+        </div>
+      </main>
+
+      <aside className="hidden lg:block w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto mr-6.5">
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhatsHappening />
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+          <WhoToFollow />
+        </div>
+      </aside>
+    </div>
+  );
+}
+
+if(currentUser){
+    console.log("Nothing to worry about, everything went well");
+  }
 
   //
 
