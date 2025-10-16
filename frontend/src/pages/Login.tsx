@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import futurefeedLogo from "../assets/white logo.png";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -21,6 +22,7 @@ const Login: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [regSuccessful, setRegSuccessful] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -52,28 +54,31 @@ const Login: React.FC = () => {
 
     if (isRegister) {
       if (!username || !password || !email || !displayName || !dateOfBirth) {
-        setErrorMsg("All fields are required.");
+        setErrorMsg("All required fields must be filled out.");
         setIsLoading(false);
         return;
       }
       if (password !== confirmPassword) {
-        setErrorMsg("Passwords do not match.");
+        setErrorMsg("Passwords do not match. Please try again.");
         setIsLoading(false);
         return;
       }
-      if (password.length < 6) {
-        setErrorMsg("Password must be at least 6 characters.");
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        setErrorMsg(
+          "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character."
+        );
         setIsLoading(false);
         return;
       }
       if (!email.match(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/)) {
-        setErrorMsg("Invalid email format.");
+        setErrorMsg("Please enter a valid email address.");
         setIsLoading(false);
         return;
       }
       const age = calculateAge(dateOfBirth);
       if (age < 13) {
-        setErrorMsg("You must be at least 13 years old to register.");
+        setErrorMsg("You must be at least 13 years old to create an account.");
         setIsLoading(false);
         return;
       }
@@ -97,59 +102,63 @@ const Login: React.FC = () => {
 
         if (res.ok) {
           setIsRegister(false);
-          setRegSuccessful("Registration successful! Please login.");
+          setRegSuccessful("Registration successful! You can now log in with your new account.");
         } else {
           const data = await res.json();
-          setErrorMsg(data.message || "Registration failed. Please try again.");
+          setErrorMsg(data.message || "Registration failed. Please check your details and try again.");
         }
       } catch {
-        setErrorMsg("An error occurred during registration. Please try again.");
+        setErrorMsg("An unexpected error occurred during registration. Please try again later.");
       } finally {
         setIsLoading(false);
       }
     } else {
       if (!username.trim() || !password.trim()) {
-    setErrorMsg("Both username and password are required.");
-    setIsLoading(false);
-    return;
-  }
-
-  const params = new URLSearchParams();
-  params.append("username", username.trim());
-  params.append("password", password.trim());
-
-  try {
-    const res = await fetch(`${API_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      credentials: "include",
-      body: params.toString(),
-    });
-
-    if (res.ok) {
-      navigate("/home");
-    } else {
-      let errorMessage = "Login failed. Please check your username or password.";
-      try {
-        const data = await res.json();
-        if (data?.message) errorMessage = data.message;
-      } catch {
-        setErrorMsg("Login failed. Please check your username or password.");
+        setErrorMsg("Please enter both username and password.");
+        setIsLoading(false);
+        return;
       }
-      setErrorMsg(errorMessage);
+
+      const params = new URLSearchParams();
+      params.append("username", username.trim());
+      params.append("password", password.trim());
+
+      try {
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          credentials: "include",
+          body: params.toString(),
+        });
+
+        if (res.ok) {
+          navigate("/home");
+        } else {
+          let errorMessage = "Login failed. Please check your username and password and try again.";
+          try {
+            const data = await res.json();
+            if (data?.message) errorMessage = data.message;
+          } catch {}
+          setErrorMsg(errorMessage);
+        }
+      } catch {
+        setErrorMsg("Unable to connect to the server. Please check your internet connection and try again.");
+      } finally {
+        setIsLoading(false);
+      }
     }
-  } catch {
-    setErrorMsg("Unable to connect to the server. Please try again later.");
-  } finally {
-    setIsLoading(false);
-  }}
+  };
+
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true);
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
   };
 
   const handleToggle = () => {
-  setIsRegister(!isRegister);
-  setErrorMsg(null);
-  setRegSuccessful(null);
-};
+    setIsRegister(!isRegister);
+    setErrorMsg(null);
+    setRegSuccessful(null);
+  };
 
   return (
     <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex flex-col lg:flex-row overflow-hidden transition-all duration-500">
@@ -214,15 +223,17 @@ const Login: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
             {errorMsg && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-                  {errorMsg}
-                </div>
-              )}
-              {regSuccessful && (
-                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-                  {regSuccessful}
-                </div>
-              )}
+              <Alert variant="destructive" className="mt-4">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
+            {regSuccessful && (
+              <Alert variant="success" className="mt-4">
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{regSuccessful}</AlertDescription>
+              </Alert>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
@@ -231,20 +242,20 @@ const Login: React.FC = () => {
               {!isRegister && (
                 <Button
                   type="button"
-                  onClick={() => {
-                    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
-                  }}
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
                   className="w-full lg:h-10 py-4 sm:py-3 text-base sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
-                  <span className="whitespace-nowrap mr-2 gap-3">Continue with:         
-                  
+                  <span className="whitespace-nowrap mr-2 gap-3">
+                    {isGoogleLoading ? "Loading..." : "Continue with:"}
                   </span>
-                   <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google Logo"
-                    className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
-                  />
-                  
+                  {!isGoogleLoading && (
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt="Google Logo"
+                      className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
+                    />
+                  )}
                 </Button>
               )}
 
