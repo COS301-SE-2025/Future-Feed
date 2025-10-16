@@ -1501,6 +1501,14 @@ const UserProfile = () => {
       setLoading(true);
       if (profileDataCache.user) {
         setUser(profileDataCache.user);
+        setFormData({
+          displayName: profileDataCache.user.displayName || "",
+          bio: profileDataCache.user.bio || "",
+          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
+            ? ""
+            : profileDataCache.user.profilePicture,
+          dob: profileDataCache.user.dateOfBirth || "",
+        });
         setFollowers(profileDataCache.followers);
         setFollowingUsers(profileDataCache.followingUsers);
         setPosts(profileDataCache.posts);
@@ -1515,14 +1523,7 @@ const UserProfile = () => {
           likes: profileDataCache.likedPosts.length > 0,
           bookmarks: profileDataCache.bookmarkedPosts.length > 0,
         });
-        setFormData({
-          displayName: profileDataCache.user.displayName || "",
-          bio: profileDataCache.user.bio || "",
-          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
-            ? ""
-            : profileDataCache.user.profilePicture,
-          dob: profileDataCache.user.dateOfBirth || "",
-        });
+        
         setInitialProfilePicture(
           profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
             ? ""
@@ -1532,14 +1533,8 @@ const UserProfile = () => {
         return;
       }
       const currentUser = await fetchCurrentUser();
+      
       if (currentUser?.id) {
-        const allUsers = await fetchUsers();
-        await Promise.all([
-          fetchFollowing(currentUser.id, allUsers),
-          fetchFollowers(currentUser.id, allUsers),
-          fetchUserPosts(currentUser.id, currentUser.id),
-        ]);
-        profileDataCache.user = currentUser;
         setFormData({
           displayName: currentUser.displayName || "",
           bio: currentUser.bio || "",
@@ -1548,6 +1543,14 @@ const UserProfile = () => {
             : currentUser.profilePicture,
           dob: currentUser.dateOfBirth || "",
         });
+        const allUsers = await fetchUsers();
+        await Promise.all([
+          fetchFollowing(currentUser.id, allUsers),
+          fetchFollowers(currentUser.id, allUsers),
+          fetchUserPosts(currentUser.id, currentUser.id),
+        ]);
+        profileDataCache.user = currentUser;
+        
         setInitialProfilePicture(
           currentUser.profilePicture?.startsWith("blob:") || !currentUser.profilePicture
             ? ""
