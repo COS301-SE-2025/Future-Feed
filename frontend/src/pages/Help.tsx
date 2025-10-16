@@ -10,11 +10,11 @@ import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { useEffect, useState } from "react";
-import LoginHelp from "../assets/loginhelp.mp4";
-import HowToLoginMobile from "../assets/howtologinmobile.mp4";
+import HowtoLoginDesktop from "../assets/howtologindesktop.mp4";
+import HowToLoginMobile from "../assets/mobilelogin.mp4";
 import PostCreationHelp from "../assets/postcreationhelp.mp4";
-import FollowHelpDesktop from "../assets/followhelpdesktop.mp4";
-import FollowHelpMobile from "../assets/followhelpmobile.mp4";
+import HowToFollowDesktop from "../assets/howtofollowdesktop.mp4";
+import HowToFollowMobile from "../assets/howtofollowmobile.mp4";
 import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
 import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
 import { useNavigate } from "react-router-dom";
@@ -108,7 +108,7 @@ if(!currentUser){
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={FollowHelpMobile} type="video/mp4" />
+          <source src={HowToFollowMobile} type="video/mp4" />
         </video>
       </AccordionContent>
 
@@ -131,7 +131,7 @@ if(!currentUser){
       <AccordionTrigger>How to Log In</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={LoginHelp} type="video/mp4" />
+          <source src={HowtoLoginDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -149,7 +149,7 @@ if(!currentUser){
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={FollowHelpDesktop} type="video/mp4" />
+          <source src={HowToFollowDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
