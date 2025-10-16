@@ -1266,6 +1266,7 @@ const UserProfile = () => {
                     createdAt: new Date().toISOString(),
                     username: user.displayName,
                     handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -1286,6 +1287,7 @@ const UserProfile = () => {
           createdAt: new Date().toISOString(),
           username: user.displayName,
           handle: `@${user.username}`,
+          profilePicture: user.profilePicture
         }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1329,6 +1331,7 @@ const UserProfile = () => {
         createdAt: newComment.createdAt,
         username: user.displayName,
         handle: `@${user.username}`,
+        profilePicture: user.profilePicture
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
