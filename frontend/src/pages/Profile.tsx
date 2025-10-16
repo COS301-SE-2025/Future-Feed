@@ -1218,9 +1218,9 @@ const Profile = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!user || !currentUser) {
+    if (!currentUser) {
       setError("Please log in to comment.");
-      navigate
+      navigate("/login")
       return;
     }
     if (!commentText.trim()) {
