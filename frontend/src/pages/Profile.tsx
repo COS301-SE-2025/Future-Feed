@@ -1485,7 +1485,7 @@ const Profile = () => {
           <PersonalSidebar />
         </aside>
         
-        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] px-5">
           <div className="mb-5 animate-pulse">
             <Card>
               <CardContent className="ml-[-10px]">
@@ -1543,7 +1543,7 @@ const Profile = () => {
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] sm:px-5">
         <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
@@ -1605,7 +1605,7 @@ const Profile = () => {
           className="w-full p-0"
           onValueChange={(value) => handleTabChange(value, user.id, currentUserId || user.id)}
         >
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
             <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="posts">
               Posts
             </TabsTrigger>

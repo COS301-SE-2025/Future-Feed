@@ -119,7 +119,7 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 relative", className)}>
+    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 lg:mx-0 mx-3 relative", className)}>
       {isCopied && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
