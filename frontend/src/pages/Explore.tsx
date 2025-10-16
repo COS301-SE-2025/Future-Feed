@@ -257,28 +257,28 @@ const Explore = () => {
         credentials: "include",
       });
       if (!res.ok) {
-      console.error(`HTTP ${res.status} for user ${userId}`);
-      return false;
-    }
+        console.error(`HTTP ${res.status} for user ${userId}`);
+        return false;
+      }
 
       const data = await res.json();
       ////console.log(`Full response for user ${userId}:`, data); // Debug the full response
-    //console.log(`isFollowing value for user ${userId}:`, data.isFollowing);
-       // Handle undefined response - if you're following them, return true
-       const isFollowing = data.isFollowing;
-    if (isFollowing === undefined || isFollowing === null) {
-      //console.warn(`Undefined follow status for user ${userId}, checking following list`);
-      
-      // Check if this user is in your following list
-      const currentFollowing = useFollowStore.getState().followingUserIds;
+      //console.log(`isFollowing value for user ${userId}:`, data.isFollowing);
+      // Handle undefined response - if you're following them, return true
+      const isFollowing = data.isFollowing;
+      if (isFollowing === undefined || isFollowing === null) {
+        //console.warn(`Undefined follow status for user ${userId}, checking following list`);
 
-      const fallbackFollowing = currentFollowing.includes(userId);
-      //console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
-      return fallbackFollowing;
-    }
+        // Check if this user is in your following list
+        const currentFollowing = useFollowStore.getState().followingUserIds;
 
-     // return data.following;
-     return Boolean(isFollowing);//ensure and heck we return true
+        const fallbackFollowing = currentFollowing.includes(userId);
+        //console.log(`Fallback value for user ${userId}:`, fallbackFollowing);
+        return fallbackFollowing;
+      }
+
+      // return data.following;
+      return Boolean(isFollowing);//ensure and heck we return true
     } catch (err) {
       console.error("Failed to check follow status for user", userId, err);
       return false;
@@ -389,35 +389,35 @@ const Explore = () => {
           //};
           // updateStatuses();
           //immediately get hydrated state
-         const currentStatuses = useFollowStore.getState().followStatus;
-        const currentFollowing = useFollowStore.getState().followingUserIds;
-        
-        //('Current hydrated statuses:', currentStatuses);
-       // console.log('Current following IDs:', currentFollowing);
-        
-        // Instead of checking each user individually, use the following list
-        const newStatuses: Record<number, boolean> = {};
-        
-        users.forEach(user => {
-          // If we don't have a status for this user, determine it
-          const shouldBeFollowing = currentFollowing.includes(user.id);
-          if (!(user.id in currentStatuses) || currentStatuses[user.id] !== shouldBeFollowing) {
-            // Use the following list to determine status
-            newStatuses[user.id] = shouldBeFollowing;
+          const currentStatuses = useFollowStore.getState().followStatus;
+          const currentFollowing = useFollowStore.getState().followingUserIds;
+
+          //('Current hydrated statuses:', currentStatuses);
+          // console.log('Current following IDs:', currentFollowing);
+
+          // Instead of checking each user individually, use the following list
+          const newStatuses: Record<number, boolean> = {};
+
+          users.forEach(user => {
+            // If we don't have a status for this user, determine it
+            const shouldBeFollowing = currentFollowing.includes(user.id);
+            if (!(user.id in currentStatuses) || currentStatuses[user.id] !== shouldBeFollowing) {
+              // Use the following list to determine status
+              newStatuses[user.id] = shouldBeFollowing;
+            }
+          });
+
+          // console.log('New statuses to add from following list:', newStatuses);
+
+          // Only update if we have new statuses
+          if (Object.keys(newStatuses).length > 0) {
+            bulkSetFollowStatus(newStatuses);
           }
-        });
-        
-       // console.log('New statuses to add from following list:', newStatuses);
-        
-        // Only update if we have new statuses
-        if (Object.keys(newStatuses).length > 0) {
-          bulkSetFollowStatus(newStatuses);
         }
+      } catch (err) {
+        console.error("Failed to load data:", err);
       }
-    } catch (err) {
-      console.error("Failed to load data:", err);
-    }
-  };
+    };
     //load only if we have users but no currenuserid
     if (users.length > 0 && isHydrated) {
 
@@ -435,22 +435,22 @@ const Explore = () => {
     if (followingRelations.length > 0 && isHydrated) {
       const followedUserIds = followingRelations.map(relation => relation.followedId);
       setFollowingUserIds(followedUserIds);
-    // Immediately update follow statuses based on the new following data
-    const currentStatuses = useFollowStore.getState().followStatus;
-    const newStatuses: Record<number, boolean> = {};
-    
-    followedUserIds.forEach(userId => {
-      if (currentStatuses[userId] !== true) {
-        newStatuses[userId] = true;
+      // Immediately update follow statuses based on the new following data
+      const currentStatuses = useFollowStore.getState().followStatus;
+      const newStatuses: Record<number, boolean> = {};
+
+      followedUserIds.forEach(userId => {
+        if (currentStatuses[userId] !== true) {
+          newStatuses[userId] = true;
+        }
+      });
+
+      if (Object.keys(newStatuses).length > 0) {
+        // console.log('Updating follow statuses from relations:', newStatuses);
+        bulkSetFollowStatus(newStatuses);
       }
-    });
-    
-    if (Object.keys(newStatuses).length > 0) {
-     // console.log('Updating follow statuses from relations:', newStatuses);
-      bulkSetFollowStatus(newStatuses);
     }
-  }
-}, [followingRelations, isHydrated]);
+  }, [followingRelations, isHydrated]);
   //
 
   useEffect(() => {
@@ -462,7 +462,7 @@ const Explore = () => {
     }
   }, [activeTab, isSearchActive, users]);
 
-  if(!currentUser){
+  if (!currentUser) {
     console.error("You are not logged in. Please log in.");
     navigate("/login");
   }
@@ -477,11 +477,11 @@ const Explore = () => {
     //setHasLoadedFollowing(true);
   }
   const renderUserCard = (user: User) => {
-      const isFollowing = followStatus[user.id] === true; // Explicitly check for true
+    const isFollowing = followStatus[user.id] === true; // Explicitly check for true
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 border border dark:border-slate-200  ">
+        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime">
           <CardContent className="flex border border gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
@@ -496,26 +496,26 @@ const Explore = () => {
     }
 
     return (
-      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border dark:bg-indigo-950 dark:text-white dark:border-slate-200  ">
+      <Card key={user.id} className="  text-black   border-rose-gold-accent-border future-feed:bg-card future-feed:border-lime future-feed:text-white  w-full  border">
         <CardContent className="flex gap-3 items-start p-4">
-          <Avatar 
+          <Avatar
             className="w-14 h-14 border-4 border-slate-300 hover:cursor-pointer"
-            onClick={() => navigate(`/profile/${user.id}`)} 
+            onClick={() => navigate(`/profile/${user.id}`)}
           >
             <AvatarImage src={user.profilePicture} alt={user.username} />
             <AvatarFallback>{user.username[0]}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <p 
-              className="font-semibold hover:cursor-pointer hover:underline" 
+            <p
+              className="font-semibold hover:cursor-pointer hover:underline"
               onClick={() => navigate(`/profile/${user.id}`)}
             >
-            {user.displayName}</p>
-            <p 
-              className="text-sm text-gray-500 dark:text-neutral-400 hover:cursor-pointer hover:underline"
+              {user.displayName}</p>
+            <p
+              className="text-sm text-gray-500 hover:cursor-pointer hover:underline"
               onClick={() => navigate(`/profile/${user.id}`)}
             >@{user.username}</p>
-            <p className="text-sm dark:text-neutral-300 mt-1">{user.bio}</p>
+            <p className="text-sm mt-1">{user.bio}</p>
           </div>
           {isFollowing ? (
             <Button variant={"secondary"}
@@ -539,7 +539,7 @@ const Explore = () => {
 
   const renderSkeleton = () =>
     Array.from({ length: 4 }).map((_, idx) => (
-      <Card key={idx} className="future-feed:bg-card future-feed:border-lime dark:bg-indigo-950 dark:border-slate-200  ">
+      <Card key={idx} className="future-feed:bg-card future-feed:border-lime ">
         <CardContent className="flex gap-3 items-start p-4">
           <Skeleton className="w-14 h-14 rounded-full" />
           <div className="flex-1 space-y-2">
@@ -561,17 +561,17 @@ const Explore = () => {
   //
 
   return (
-    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="w-full lg:flex-1 p-2 overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 z-10">
+          <h1 className="text-xl font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
             <Link to="/settings">
-              <Settings size={20} className="dark:text-slate-200" />
+              <Settings size={20} />
             </Link>
 
           </div>
@@ -586,7 +586,7 @@ const Explore = () => {
             }
           }}
           className="w-full p-0 future-feed:text-lime">
-          <TabsList className="w-full future-feed:text-lime  flex justify-around ">
+          <TabsList className="w-full future-feed:text-lime flex justify-around ">
             {["accounts", "accounts following"].map((tab) => (
               <TabsTrigger
                 key={tab}
@@ -599,7 +599,7 @@ const Explore = () => {
           </TabsList>
 
           <TabsContent value="accounts">
-            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2">
               {!isHydrated || usersLoading ? (
                 renderSkeleton()
               ) : (
@@ -609,7 +609,7 @@ const Explore = () => {
           </TabsContent>
 
           <TabsContent value="accounts following">
-            <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2">
               {followingLoading ? (
                 renderSkeleton()
               ) : (
@@ -628,16 +628,16 @@ const Explore = () => {
       </main>
 
       <aside className="hidden lg:block w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto mr-6.5 ">
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
-            <WhatsHappening />
-           
-          </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-        
-            <WhoToFollow />
-          </div>
-        
-        </aside>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 ">
+          <WhatsHappening />
+
+        </div>
+        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+
+          <WhoToFollow />
+        </div>
+
+      </aside>
     </div>
   );
 };

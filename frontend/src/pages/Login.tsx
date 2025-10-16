@@ -153,8 +153,6 @@ const Login: React.FC = () => {
 
   return (
     <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex flex-col lg:flex-row overflow-hidden transition-all duration-500">
-
-      {/* LEFT SIDE IMAGE SECTION (hidden on mobile) */}
       <div
         className={`absolute inset-0 transition-transform duration-500 ${
           !isRegister ? "translate-x-full" : ""
@@ -180,8 +178,6 @@ const Login: React.FC = () => {
           />
         </div>
       </div>
-
-      {/* RIGHT SIDE IMAGE SECTION (hidden on mobile) */}
       <div
         className={`absolute inset-0 transition-transform duration-500 ${
           isRegister ? "translate-x-full" : ""
@@ -203,8 +199,6 @@ const Login: React.FC = () => {
           <img src={futurefeedLogo} alt="Future Feed Logo" className="h-[400px] w-auto" />
         </div>
       </div>
-
-      {/* FORM SECTION */}
       <div
         className={`relative z-10 flex w-full lg:w-1/2 items-center justify-center p-6 sm:p-8 md:p-10 transition-transform duration-500 ${
           isRegister ? "lg:translate-x-0" : "lg:translate-x-full"
@@ -226,8 +220,6 @@ const Login: React.FC = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
-
-              {/* GOOGLE SIGN-IN */}
               {!isRegister && (
                 <Button
                   type="button"
@@ -247,8 +239,6 @@ const Login: React.FC = () => {
                   
                 </Button>
               )}
-
-              {/* USERNAME */}
               <div>
                 <Label htmlFor="username" className="font-bold text-sm sm:text-base">
                   Username
@@ -263,8 +253,6 @@ const Login: React.FC = () => {
                   className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
-
-              {/* REGISTER FIELDS */}
               {isRegister && (
                 <>
                   <div>
@@ -323,8 +311,6 @@ const Login: React.FC = () => {
                   </div>
                 </>
               )}
-
-              {/* PASSWORD */}
               <div>
                 <Label htmlFor="password" className="font-bold text-sm sm:text-base">
                   Password
@@ -339,8 +325,6 @@ const Login: React.FC = () => {
                   className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
-
-              {/* CONFIRM PASSWORD (REGISTER ONLY) */}
               {isRegister && (
                 <div>
                   <Label htmlFor="confirm-password" className="font-bold text-sm sm:text-base">
@@ -357,8 +341,6 @@ const Login: React.FC = () => {
                   />
                 </div>
               )}
-
-              {/* FORGOT PASSWORD */}
               {!isRegister && (
                 <div className="text-right mt-1 sm:mt-2">
                   <Link to="/forgot-password" className="text-xs sm:text-sm text-blue-600 hover:underline">
@@ -366,16 +348,12 @@ const Login: React.FC = () => {
                   </Link>
                 </div>
               )}
-
-              {/* SUBMIT */}
               <Button
                 type="submit"
                 disabled={isLoading}
                 className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer">
                 {isLoading ? "Loading..." : isRegister ? "Register" : "Login"}
               </Button>
-
-              {/* TOGGLE LOGIN/REGISTER */}
               <p className="text-center text-xs sm:text-sm mt-3 sm:mt-4">
                 {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
                 <Link

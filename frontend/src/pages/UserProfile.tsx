@@ -44,7 +44,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
-  profilePicture?:string;
+  profilePicture?: string;
 }
 
 interface RawComment {
@@ -53,7 +53,7 @@ interface RawComment {
   userId?: number;
   content: string;
   createdAt: string;
-  profilePicture?:string;
+  profilePicture?: string;
 }
 
 interface PostData {
@@ -398,9 +398,9 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture : commentUserInfo.profilePicture,
                 });
-                } catch (err) {
+              } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
               }
             }
@@ -515,9 +515,9 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture : commentUserInfo.profilePicture,
                 });
-                } catch (err) {
+              } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
               }
             }
@@ -632,9 +632,9 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture : commentUserInfo.profilePicture,
                 });
-                } catch (err) {
+              } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
               }
             }
@@ -688,7 +688,7 @@ const UserProfile = () => {
   };
 
   const fetchBookmarkedPosts = async (userId: number, currentUserId: number) => {
-    if(!user){
+    if (!user) {
       setError("Please log in")
     }
     setTabLoading((prev) => ({ ...prev, bookmarks: true }));
@@ -697,13 +697,13 @@ const UserProfile = () => {
         credentials: "include",
       });
       if (!book.ok) throw new Error(`Failed to fetch bookmarks: ${book.status}`);
-      const bookmarkedList: { 
-        id: number; 
-        userId: number; 
-        postId: number; 
+      const bookmarkedList: {
+        id: number;
+        userId: number;
+        postId: number;
         bookmarkedAt: string;
 
-       }[] = await book.json();
+      }[] = await book.json();
       if (!Array.isArray(bookmarkedList) || bookmarkedList.length === 0) {
         console.warn("No bookmarked posts found for user:", userId);
         setBookmarkedPosts([]);
@@ -753,9 +753,9 @@ const UserProfile = () => {
                   createdAt: comment.createdAt,
                   username: commentUserInfo.displayName,
                   handle: `@${commentUserInfo.username}`,
-                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture : commentUserInfo.profilePicture,
                 });
-                } catch (err) {
+              } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
               }
             }
@@ -866,7 +866,7 @@ const UserProfile = () => {
                   handle: `@${commentUserInfo.username}`,
                   profilePicture: commentUserInfo.profilePicture,
                 });
-                } catch (err) {
+              } catch (err) {
                 console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
               }
             }
@@ -939,10 +939,10 @@ const UserProfile = () => {
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -956,10 +956,10 @@ const UserProfile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
             : p
         );
       setPosts(updatePostState);
@@ -986,10 +986,10 @@ const UserProfile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isLiked: wasLiked,
-                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
+                ...p,
+                isLiked: wasLiked,
+                likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+              }
               : p
           );
         setPosts(revertPostState);
@@ -1035,10 +1035,10 @@ const UserProfile = () => {
   const handleBookmark = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1128,10 +1128,10 @@ const UserProfile = () => {
   const handleReshare = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1145,10 +1145,10 @@ const UserProfile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
+              ...p,
+              isReshared: !p.isReshared,
+              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+            }
             : p
         );
       setPosts(updateReshareState);
@@ -1181,10 +1181,10 @@ const UserProfile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isReshared: wasReshared,
-                  reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
-                }
+                ...p,
+                isReshared: wasReshared,
+                reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
+              }
               : p
           );
         setPosts(revertReshareState);
@@ -1242,10 +1242,10 @@ const UserProfile = () => {
     }
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1254,21 +1254,21 @@ const UserProfile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: [
-                  ...p.comments,
-                  {
-                    id: Date.now(),
-                    postId,
-                    authorId: user.id,
-                    content: commentText,
-                    createdAt: new Date().toISOString(),
-                    username: user.displayName,
-                    handle: `@${user.username}`,
-                  },
-                ],
-                commentCount: p.commentCount + 1,
-              }
+              ...p,
+              comments: [
+                ...p.comments,
+                {
+                  id: Date.now(),
+                  postId,
+                  authorId: user.id,
+                  content: commentText,
+                  createdAt: new Date().toISOString(),
+                  username: user.displayName,
+                  handle: `@${user.username}`,
+                },
+              ],
+              commentCount: p.commentCount + 1,
+            }
             : p
         );
       setPosts(updateCommentState);
@@ -1277,15 +1277,17 @@ const UserProfile = () => {
       setLikedPosts(updateCommentState);
       setCommented((prev) => {
         if (prev.some((p) => p.id === postId)) return updateCommentState(prev);
-        return [...prev, { ...post, comments: [...post.comments, {
-          id: Date.now(),
-          postId,
-          authorId: user.id,
-          content: commentText,
-          createdAt: new Date().toISOString(),
-          username: user.displayName,
-          handle: `@${user.username}`,
-        }], commentCount: post.commentCount + 1 }];
+        return [...prev, {
+          ...post, comments: [...post.comments, {
+            id: Date.now(),
+            postId,
+            authorId: user.id,
+            content: commentText,
+            createdAt: new Date().toISOString(),
+            username: user.displayName,
+            handle: `@${user.username}`,
+          }], commentCount: post.commentCount + 1
+        }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
@@ -1302,10 +1304,10 @@ const UserProfile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  comments: p.comments.filter((c) => c.id !== Date.now()),
-                  commentCount: p.commentCount - 1,
-                }
+                ...p,
+                comments: p.comments.filter((c) => c.id !== Date.now()),
+                commentCount: p.commentCount - 1,
+              }
               : p
           );
         setPosts(revertCommentState);
@@ -1333,12 +1335,12 @@ const UserProfile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: p.comments.map((c) =>
-                  c.id === Date.now() ? formattedComment : c
-                ),
-                commentCount: p.commentCount,
-              }
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === Date.now() ? formattedComment : c
+              ),
+              commentCount: p.commentCount,
+            }
             : p
         );
       setPosts(updateCommentStatus);
@@ -1397,7 +1399,6 @@ const UserProfile = () => {
     }
   };
 
-  // Handle profile update submission
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
@@ -1429,9 +1430,9 @@ const UserProfile = () => {
         updatedUser.dateOfBirth === formData.dob &&
         (formData.profileImage === initialProfilePicture || updatedUser.profilePicture === formData.profileImage)
       ) {
-        setUser(updatedUser); // Update user state
-        profileDataCache.user = updatedUser; // Update cache
-        setShowEditProfileModal(false); // Close modal
+        setUser(updatedUser);
+        profileDataCache.user = updatedUser;
+        setShowEditProfileModal(false);
       } else {
         throw new Error("Profile update response does not match submitted data");
       }
@@ -1441,7 +1442,6 @@ const UserProfile = () => {
     }
   };
 
-  // Handle account deletion
   const handleDeleteAccount = async () => {
     try {
       const response = await fetch(`${API_URL}/api/user/delete`, {
@@ -1454,7 +1454,7 @@ const UserProfile = () => {
         throw new Error(`Failed to delete account: ${errorText}`);
       }
 
-      navigate("/"); // Redirect to landing page
+      navigate("/");
     } catch (err) {
       console.error("Error deleting account:", err);
       setError("Failed to delete account.");
@@ -1477,16 +1477,16 @@ const UserProfile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border  dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="mb-4 border  rounded-lg p-4 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 rounded w-full" />
+        <div className="h-4 bg-gray-300 rounded w-5/6" />
       </div>
     ));
   };
@@ -1558,23 +1558,23 @@ const UserProfile = () => {
 
   const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
     <div className="relative my-[15px] flex items-center justify-center text-center">
-      <div className="mr-2.5 h-px w-1/3 future-feed:bg-lime bg-gray-500 dark:bg-slate-200"></div>
+      <div className="mr-2.5 h-px w-1/3 future-feed:bg-lime bg-gray-500"></div>
       <span className="text-[0.9rem] font-bold">
         <Label htmlFor={htmlFor} className="mb-2 block font-bold text-[18px]">
           {label}
         </Label>
       </span>
-      <div className="ml-2.5 h-px w-1/3 future-feed:bg-lime bg-gray-500 dark:bg-slate-200"></div>
+      <div className="ml-2.5 h-px w-1/3 future-feed:bg-lime bg-gray-500"></div>
     </div>
   );
 
   if (loading) {
     return (
-      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
           <PersonalSidebar />
         </aside>
-        
+
         <main className="flex-1 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px] ">
           <div className="relative">
             <Skeleton className="mt-1 h-40 w-full" />
@@ -1583,26 +1583,26 @@ const UserProfile = () => {
             </div>
           </div>
           <div
-        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            className="mt-4 b-4 border border-rose-gold-accent-border rounded-lg p-4 animate-pulse space-y-4"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gray-300 rounded-full" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-300 rounded w-3/4" />
+              </div>
+            </div>
+            <div className="h-4 bg-gray-300 rounded w-full" />
+            <div className="h-4 bg-gray-300 rounded w-5/6" />
           </div>
-        </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
-      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        </aside>
       </div>
     );
   }
@@ -1610,44 +1610,44 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="flex-1 min-h-screen overflow-y-auto mt-[21px] sm:px-5">
-      <Card className="mb-5 ">
-        <CardContent className="ml-[-10px]">
-          <div className="relative">
-          <div className="mt-10 w-full" />
-          <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-20 h-20 ">
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-                <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                <AvatarFallback className="bg-white text-gray-600 dark:bg-slate-200 dark:text-black h-18 w-20 rounded-full flex items-center justify-center text-4xl">
-                  <FaUser>
-                  </FaUser>
-                </AvatarFallback>
-              </Link>
-            </Avatar>
-          </div>
-        </div>
-          <div className="pt-16 px-4">
-          <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-110px]">
-              <h1 className="text-xl text-black font-bold ">{user.displayName || user.username}</h1>
-              <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
-              <p className="mt-2 text-xl text-black">{user.bio}</p>
+        <Card className="mb-5 ">
+          <CardContent className="ml-[-10px]">
+            <div className="relative">
+              <div className="mt-10 w-full" />
+              <div className="absolute -bottom-10 left-4">
+                <Avatar className="w-20 h-20 ">
+                  <Link to="/edit-profile" className="flex items-center gap-3">
+                    <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
+                    <AvatarFallback className="bg-white text-gray-600 h-18 w-20 rounded-full flex items-center justify-center text-4xl">
+                      <FaUser>
+                      </FaUser>
+                    </AvatarFallback>
+                  </Link>
+                </Avatar>
+              </div>
             </div>
+            <div className="pt-16 px-4">
+              <div className="text-gray-400 flex justify-between items-start">
+                <div className="ml-30 mt-[-110px]">
+                  <h1 className="text-xl text-black font-bold ">{user.displayName || user.username}</h1>
+                  <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
+                  <p className="mt-2 text-xl text-black">{user.bio}</p>
+                </div>
                 <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal} >
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
-                      className=" border-rose-gold-accent-border mt-[-100px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer rounded-full bg-blue-500 text-white hover:bg-blue-600" 
+                      className=" border-rose-gold-accent-border mt-[-100px] hover:cursor-pointer rounded-full bg-blue-500 text-white hover:bg-blue-600"
                     >
                       Edit Profile
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px] lg:max-w-[800px] future-feed:bg-[#1a1a1a] bg-white dark:bg-[#1a1a1a] border-2 border-drop-shadow-x dark:border-lime-500 p-16 rounded-[16px]">
+                  <DialogContent className="sm:max-w-[600px] lg:max-w-[800px] future-feed:bg-[#1a1a1a] bg-white border-2 border-drop-shadow-x p-16 rounded-[16px]">
                     <DialogHeader>
                       <DialogTitle className="text-center future-feed:text-white text-4xl">Edit Profile</DialogTitle>
                     </DialogHeader>
@@ -1663,10 +1663,10 @@ const UserProfile = () => {
                           ) : (
                             <div className="mx-auto flex h-[140px] w-[140px] items-center justify-center rounded-full border-2 border-black bg-[#1a1a1a] shadow-[0_2px_6px_rgba(0,0,0,0.1)]">
                               <img
-                              src={formData.profileImage}
-                              alt="Profile"
-                              className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
-                            />
+                                src={formData.profileImage}
+                                alt="Profile"
+                                className="mx-auto h-[140px] w-[140px] rounded-full border-2 border-black object-cover shadow-[0_2px_6px_rgba(0,0,0,0.1)]"
+                              />
                             </div>
                           )}
                           <Camera className="absolute bottom-2 right-2 h-6 w-6 rounded-full bg-white p-1 text-black shadow-[0_1px_3px_rgba(0,0,0,0.1)]" />
@@ -1686,7 +1686,7 @@ const UserProfile = () => {
                           placeholder="Enter your display name"
                           value={formData.displayName}
                           onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                          className="text-black bg-white w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white  dark:text-white dark:placeholder:text-slate-100"
+                          className="text-black bg-white w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                         />
                       </div>
                       <div className="mb-3 w-full max-w-[500px]">
@@ -1696,7 +1696,7 @@ const UserProfile = () => {
                           type="date"
                           value={formData.dob}
                           onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                          className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                          className="w-full rounded-[20px] border border-black px-4 py-2 text-s"
                         />
                       </div>
                       <div className="mb-3 w-full max-w-[500px]">
@@ -1706,7 +1706,7 @@ const UserProfile = () => {
                           placeholder="Bio..."
                           value={formData.bio}
                           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                          className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                          className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wra"
                         />
                       </div>
                       <Button
@@ -1719,7 +1719,7 @@ const UserProfile = () => {
                     <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                       <DialogTrigger asChild>
                         <Button
-                          className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+                          className="absolute left-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black]"
                           variant="ghost"
                         >
                           <Trash2 className="h-5 w-5 text-red-600" />
@@ -1743,7 +1743,7 @@ const UserProfile = () => {
                           </Button>
                           <Button
                             type="button"
-                            className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer bg-white dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200"
+                            className="border border-red-600 text-red-600 hover:bg-red-100 cursor-pointer bg-white"
                             onClick={() => {
                               setShowDeleteDialog(false);
                               handleDeleteAccount();
@@ -1756,20 +1756,20 @@ const UserProfile = () => {
                     </Dialog>
                   </DialogContent>
                 </Dialog>
-          </div>
-          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
-            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
-            </Link>
-            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
-            </Link>
-            <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
-          </div>
-        </div>
-        </CardContent>
+              </div>
+              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm ">
+                <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
+                  <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
+                </Link>
+                <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+                  <span className="font-medium ">{followers ? followers.length : 0}</span> Followers ·
+                </Link>
+                <span className="font-medium ">{posts.length}</span> Posts
+              </div>
+            </div>
+          </CardContent>
 
-      </Card>
+        </Card>
         <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
           <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
@@ -1780,77 +1780,77 @@ const UserProfile = () => {
           </TabsList>
           <TabsContent value="posts" className="p-0">
             {error && (
-    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-      <p>{error}</p>
-    </div>
-  )}
-  {tabLoading.posts ? (
-    <div className="flex flex-col gap-6 py-4">
-      {renderSkeletonPosts()}
-    </div>
-  ) : posts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No posts yet.</div>
-  ) : (
-    posts.map((post) => (
-      <div key={post.id} className="mb-4">
-        {post.botId || post.isBot ? (
-          <BotPost
-            profilePicture={user.profilePicture}
-            username={post.username}
-            handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+              <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            {tabLoading.posts ? (
+              <div className="flex flex-col gap-6 py-4">
+                {renderSkeletonPosts()}
+              </div>
+            ) : posts.length === 0 ? (
+              <div className="p-4  text-gray-400">No posts yet.</div>
+            ) : (
+              posts.map((post) => (
+                <div key={post.id} className="mb-4">
+                  {post.botId || post.isBot ? (
+                    <BotPost
+                      profilePicture={user.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   ) : (
                     <Post
-                    profilePicture={user.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                      profilePicture={user.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   )}
                 </div>
               ))
@@ -1867,68 +1867,68 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : reshares.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No re-feeds yet.</div>
+              <div className="p-4  text-gray-400">No re-feeds yet.</div>
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
-                  <BotPost
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                    <BotPost
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   ) : (
                     <Post
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   )}
                 </div>
               ))
@@ -1945,68 +1945,68 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : commentedPosts.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No commented posts yet.</div>
+              <div className="p-4  text-gray-400">No commented posts yet.</div>
             ) : (
               commentedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
-                  <BotPost
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                    <BotPost
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   ) : (
                     <Post
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   )}
                 </div>
               ))
@@ -2023,68 +2023,68 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : likedPosts.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No likes yet.</div>
+              <div className="p-4  text-gray-400">No likes yet.</div>
             ) : (
               likedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
-                  <BotPost
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics || []}
-                  />
+                    <BotPost
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics || []}
+                    />
                   ) : (
                     <Post
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics}
-                  />
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics}
+                    />
                   )}
                 </div>
               ))
@@ -2101,68 +2101,68 @@ const UserProfile = () => {
                 {renderSkeletonPosts()}
               </div>
             ) : bookmarkedPosts.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No bookmarks yet.</div>
+              <div className="p-4  text-gray-400">No bookmarks yet.</div>
             ) : (
               bookmarkedPosts.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
-                  <BotPost
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics}
-                  />
+                    <BotPost
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics}
+                    />
                   ) : (
                     <Post
-                    profilePicture={post.profilePicture}
-                    username={post.username}
-                    handle={post.handle}
-                    time={post.time}
-                    text={post.text}
-                    image={post.image}
-                    isLiked={post.isLiked}
-                    likeCount={post.likeCount}
-                    isBookmarked={post.isBookmarked}
-                    isReshared={post.isReshared}
-                    reshareCount={post.reshareCount}
-                    commentCount={post.commentCount}
-                    onLike={() => handleLike(post.id)}
-                    onBookmark={() => handleBookmark(post.id)}
-                    onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-                    onReshare={() => handleReshare(post.id)}
-                    onDelete={() => handleDeletePost(post.id)}
-                    onToggleComments={() => toggleComments(post.id)}
-                    onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-                    showComments={post.showComments}
-                    comments={post.comments}
-                    isUserLoaded={!!user}
-                    currentUser={user}
-                    authorId={post.authorId}
-                    topics={post.topics}
-                  />
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      commentCount={post.commentCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDeletePost(post.id)}
+                      onToggleComments={() => toggleComments(post.id)}
+                      onNavigate={() => navigate(`/post/${post.id}`)}
+                      onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!user}
+                      currentUser={user}
+                      authorId={post.authorId}
+                      topics={post.topics}
+                    />
                   )}
                 </div>
               ))
@@ -2171,15 +2171,15 @@ const UserProfile = () => {
         </Tabs>
       </main>
       <aside className="w-full lg:w-[350px] hidden lg:block mx-[-2px] mt-5">
-  <div className="sticky top-4">
-    <div className="w-full lg:w-[320px] mb-5">
-      <WhatsHappening />
-    </div>
-    <div className="w-full lg:w-[320px]">
-      <WhoToFollow />
-    </div>
-  </div>
-</aside>
+        <div className="sticky top-4">
+          <div className="w-full lg:w-[320px] mb-5">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px]">
+            <WhoToFollow />
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }
