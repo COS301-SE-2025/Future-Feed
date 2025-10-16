@@ -1660,7 +1660,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1689,7 +1689,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1736,7 +1736,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1765,7 +1765,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1812,7 +1812,7 @@ const Profile = () => {
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
@@ -1841,7 +1841,7 @@ const Profile = () => {
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
@@ -1888,7 +1888,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1917,7 +1917,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1964,7 +1964,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1993,7 +1993,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
