@@ -160,6 +160,7 @@ const UserProfile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tabLoading, setTabLoading] = useState({
@@ -1557,7 +1558,9 @@ const UserProfile = () => {
       }
       setLoading(false);
     };
+    setIsLoading(true);
     loadInitialData();
+    setIsLoading(false);
   }, []);
 
   const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
@@ -1674,7 +1677,8 @@ const UserProfile = () => {
               <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
               <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
-                <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal}>
+            {!isLoading && (
+              <Dialog open={showEditProfileModal && !isLoading} onOpenChange={(open) => !isLoading && setShowEditProfileModal(open)}>
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
@@ -1792,6 +1796,8 @@ const UserProfile = () => {
                     </Dialog>
                   </DialogContent>
                 </Dialog>
+            )}
+                
           </div>
           <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
