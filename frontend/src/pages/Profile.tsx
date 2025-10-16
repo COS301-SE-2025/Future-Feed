@@ -155,6 +155,7 @@ const Profile = () => {
     likes: false,
     bookmarks: false,
   });
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followStatus, setFollowStatus} = useFollowStore();
   const queryClient = useQueryClient();
@@ -164,6 +165,29 @@ const Profile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([])
   const navigate = useNavigate();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      setCurrentUserId(data.id);
+      userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      setError("Failed to load user info. Please log in again.");
+      navigate("/login");
+      setUser(null);
+      return null;
+    }
+  };
 
   const fetchCurrentUserId = async () => {
     try {
@@ -1194,8 +1218,9 @@ const Profile = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!user) {
+    if (!user || !currentUser) {
       setError("Please log in to comment.");
+      navigate
       return;
     }
     if (!commentText.trim()) {
@@ -1222,11 +1247,12 @@ const Profile = () => {
                   {
                     id: Date.now(),
                     postId,
-                    authorId: user.id,
+                    authorId: currentUser.id,
                     content: commentText,
                     createdAt: new Date().toISOString(),
-                    username: user.displayName,
-                    handle: `@${user.username}`,
+                    username: currentUser.displayName,
+                    handle: `@${currentUser.username}`,
+                    profilePicture: currentUser.profilePicture,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -1242,11 +1268,12 @@ const Profile = () => {
         return [...prev, { ...post, comments: [...post.comments, {
           id: Date.now(),
           postId,
-          authorId: user.id,
+          authorId: currentUser.id,
           content: commentText,
           createdAt: new Date().toISOString(),
-          username: user.displayName,
-          handle: `@${user.username}`,
+          username: currentUser.displayName,
+          handle: `@${currentUser.username}`,
+          profilePicture: currentUser.profilePicture
         }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1285,11 +1312,11 @@ const Profile = () => {
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
-        authorId: newComment.userId || user.id,
+        authorId: newComment.userId || currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        username: user.displayName,
-        handle: `@${user.username}`,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
@@ -1424,6 +1451,9 @@ const Profile = () => {
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
+    const user = await fetchCurrentUser();
+    setCurrentUser(user);
+    
     if (userId == parseInt(profileId || "0")) {
       navigate('/profile');
     }
