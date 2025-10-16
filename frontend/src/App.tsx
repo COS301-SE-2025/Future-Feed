@@ -23,7 +23,6 @@ function App() {
   return (
     <>
     <Routes>
-      {/* Future routes: <Route path="/" element={<Landing />} /> */}
       <Route path="/profile" element={<UserProfile />} />
       <Route path="/notifications" element={<Notifications />} />
       <Route path="/explore" element={<Explore />} />
