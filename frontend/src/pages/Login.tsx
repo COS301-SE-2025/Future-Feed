@@ -138,7 +138,9 @@ const Login: React.FC = () => {
           try {
             const data = await res.json();
             if (data?.message) errorMessage = data.message;
-          } catch {}
+          } catch {
+            setErrorMsg(errorMessage);
+          }
           setErrorMsg(errorMessage);
         }
       } catch {
