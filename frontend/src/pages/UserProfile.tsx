@@ -1638,7 +1638,7 @@ const UserProfile = () => {
               <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
               <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
-                <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal}>
+                <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal} >
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
@@ -1647,7 +1647,7 @@ const UserProfile = () => {
                       Edit Profile
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[900px] future-feed:bg-[#1a1a1a] bg-white dark:bg-[#1a1a1a] border-2 border-drop-shadow-x dark:border-lime-500 p-16 rounded-[16px]">
+                  <DialogContent className="sm:max-w-[600px] lg:max-w-[800px] future-feed:bg-[#1a1a1a] bg-white dark:bg-[#1a1a1a] border-2 border-drop-shadow-x dark:border-lime-500 p-16 rounded-[16px]">
                     <DialogHeader>
                       <DialogTitle className="text-center future-feed:text-white text-4xl">Edit Profile</DialogTitle>
                     </DialogHeader>
