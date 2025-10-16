@@ -160,6 +160,7 @@ const UserProfile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [tabLoading, setTabLoading] = useState({
     posts: false,
@@ -1254,21 +1255,22 @@ const UserProfile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-              ...p,
-              comments: [
-                ...p.comments,
-                {
-                  id: Date.now(),
-                  postId,
-                  authorId: user.id,
-                  content: commentText,
-                  createdAt: new Date().toISOString(),
-                  username: user.displayName,
-                  handle: `@${user.username}`,
-                },
-              ],
-              commentCount: p.commentCount + 1,
-            }
+                ...p,
+                comments: [
+                  ...p.comments,
+                  {
+                    id: Date.now(),
+                    postId,
+                    authorId: user.id,
+                    content: commentText,
+                    createdAt: new Date().toISOString(),
+                    username: user.displayName,
+                    handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
+                  },
+                ],
+                commentCount: p.commentCount + 1,
+              }
             : p
         );
       setPosts(updateCommentState);
@@ -1277,17 +1279,16 @@ const UserProfile = () => {
       setLikedPosts(updateCommentState);
       setCommented((prev) => {
         if (prev.some((p) => p.id === postId)) return updateCommentState(prev);
-        return [...prev, {
-          ...post, comments: [...post.comments, {
-            id: Date.now(),
-            postId,
-            authorId: user.id,
-            content: commentText,
-            createdAt: new Date().toISOString(),
-            username: user.displayName,
-            handle: `@${user.username}`,
-          }], commentCount: post.commentCount + 1
-        }];
+        return [...prev, { ...post, comments: [...post.comments, {
+          id: Date.now(),
+          postId,
+          authorId: user.id,
+          content: commentText,
+          createdAt: new Date().toISOString(),
+          username: user.displayName,
+          handle: `@${user.username}`,
+          profilePicture: user.profilePicture
+        }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
@@ -1330,6 +1331,7 @@ const UserProfile = () => {
         createdAt: newComment.createdAt,
         username: user.displayName,
         handle: `@${user.username}`,
+        profilePicture: user.profilePicture
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
@@ -1496,6 +1498,14 @@ const UserProfile = () => {
       setLoading(true);
       if (profileDataCache.user) {
         setUser(profileDataCache.user);
+        setFormData({
+          displayName: profileDataCache.user.displayName || "",
+          bio: profileDataCache.user.bio || "",
+          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
+            ? ""
+            : profileDataCache.user.profilePicture,
+          dob: profileDataCache.user.dateOfBirth || "",
+        });
         setFollowers(profileDataCache.followers);
         setFollowingUsers(profileDataCache.followingUsers);
         setPosts(profileDataCache.posts);
@@ -1510,14 +1520,7 @@ const UserProfile = () => {
           likes: profileDataCache.likedPosts.length > 0,
           bookmarks: profileDataCache.bookmarkedPosts.length > 0,
         });
-        setFormData({
-          displayName: profileDataCache.user.displayName || "",
-          bio: profileDataCache.user.bio || "",
-          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
-            ? ""
-            : profileDataCache.user.profilePicture,
-          dob: profileDataCache.user.dateOfBirth || "",
-        });
+        
         setInitialProfilePicture(
           profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
             ? ""
@@ -1527,14 +1530,8 @@ const UserProfile = () => {
         return;
       }
       const currentUser = await fetchCurrentUser();
+      
       if (currentUser?.id) {
-        const allUsers = await fetchUsers();
-        await Promise.all([
-          fetchFollowing(currentUser.id, allUsers),
-          fetchFollowers(currentUser.id, allUsers),
-          fetchUserPosts(currentUser.id, currentUser.id),
-        ]);
-        profileDataCache.user = currentUser;
         setFormData({
           displayName: currentUser.displayName || "",
           bio: currentUser.bio || "",
@@ -1543,6 +1540,14 @@ const UserProfile = () => {
             : currentUser.profilePicture,
           dob: currentUser.dateOfBirth || "",
         });
+        const allUsers = await fetchUsers();
+        await Promise.all([
+          fetchFollowing(currentUser.id, allUsers),
+          fetchFollowers(currentUser.id, allUsers),
+          fetchUserPosts(currentUser.id, currentUser.id),
+        ]);
+        profileDataCache.user = currentUser;
+        
         setInitialProfilePicture(
           currentUser.profilePicture?.startsWith("blob:") || !currentUser.profilePicture
             ? ""
@@ -1553,7 +1558,9 @@ const UserProfile = () => {
       }
       setLoading(false);
     };
+    setIsLoading(true);
     loadInitialData();
+    setIsLoading(false);
   }, []);
 
   const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
@@ -1639,6 +1646,8 @@ const UserProfile = () => {
                   <p className="mt-2 text-xl text-black">{user.bio}</p>
                 </div>
                 <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal} >
+            {!isLoading && (
+              <Dialog open={showEditProfileModal && !isLoading} onOpenChange={(open) => !isLoading && setShowEditProfileModal(open)}>
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
@@ -1756,18 +1765,20 @@ const UserProfile = () => {
                     </Dialog>
                   </DialogContent>
                 </Dialog>
-              </div>
-              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm ">
-                <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-                  <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
-                </Link>
-                <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-                  <span className="font-medium ">{followers ? followers.length : 0}</span> Followers ·
-                </Link>
-                <span className="font-medium ">{posts.length}</span> Posts
-              </div>
-            </div>
-          </CardContent>
+            )}
+                
+          </div>
+          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+            <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
+            </Link>
+            <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
+              <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
+            </Link>
+            <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
+          </div>
+        </div>
+        </CardContent>
 
         </Card>
         <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
