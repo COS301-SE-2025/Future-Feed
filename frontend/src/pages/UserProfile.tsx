@@ -160,6 +160,7 @@ const UserProfile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [tabLoading, setTabLoading] = useState({
     posts: false,
@@ -1265,6 +1266,7 @@ const UserProfile = () => {
                     createdAt: new Date().toISOString(),
                     username: user.displayName,
                     handle: `@${user.username}`,
+                    profilePicture: user.profilePicture,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -1285,6 +1287,7 @@ const UserProfile = () => {
           createdAt: new Date().toISOString(),
           username: user.displayName,
           handle: `@${user.username}`,
+          profilePicture: user.profilePicture
         }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1328,6 +1331,7 @@ const UserProfile = () => {
         createdAt: newComment.createdAt,
         username: user.displayName,
         handle: `@${user.username}`,
+        profilePicture: user.profilePicture
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
@@ -1496,6 +1500,14 @@ const UserProfile = () => {
       setLoading(true);
       if (profileDataCache.user) {
         setUser(profileDataCache.user);
+        setFormData({
+          displayName: profileDataCache.user.displayName || "",
+          bio: profileDataCache.user.bio || "",
+          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
+            ? ""
+            : profileDataCache.user.profilePicture,
+          dob: profileDataCache.user.dateOfBirth || "",
+        });
         setFollowers(profileDataCache.followers);
         setFollowingUsers(profileDataCache.followingUsers);
         setPosts(profileDataCache.posts);
@@ -1510,14 +1522,7 @@ const UserProfile = () => {
           likes: profileDataCache.likedPosts.length > 0,
           bookmarks: profileDataCache.bookmarkedPosts.length > 0,
         });
-        setFormData({
-          displayName: profileDataCache.user.displayName || "",
-          bio: profileDataCache.user.bio || "",
-          profileImage: profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
-            ? ""
-            : profileDataCache.user.profilePicture,
-          dob: profileDataCache.user.dateOfBirth || "",
-        });
+        
         setInitialProfilePicture(
           profileDataCache.user.profilePicture?.startsWith("blob:") || !profileDataCache.user.profilePicture
             ? ""
@@ -1527,14 +1532,8 @@ const UserProfile = () => {
         return;
       }
       const currentUser = await fetchCurrentUser();
+      
       if (currentUser?.id) {
-        const allUsers = await fetchUsers();
-        await Promise.all([
-          fetchFollowing(currentUser.id, allUsers),
-          fetchFollowers(currentUser.id, allUsers),
-          fetchUserPosts(currentUser.id, currentUser.id),
-        ]);
-        profileDataCache.user = currentUser;
         setFormData({
           displayName: currentUser.displayName || "",
           bio: currentUser.bio || "",
@@ -1543,6 +1542,14 @@ const UserProfile = () => {
             : currentUser.profilePicture,
           dob: currentUser.dateOfBirth || "",
         });
+        const allUsers = await fetchUsers();
+        await Promise.all([
+          fetchFollowing(currentUser.id, allUsers),
+          fetchFollowers(currentUser.id, allUsers),
+          fetchUserPosts(currentUser.id, currentUser.id),
+        ]);
+        profileDataCache.user = currentUser;
+        
         setInitialProfilePicture(
           currentUser.profilePicture?.startsWith("blob:") || !currentUser.profilePicture
             ? ""
@@ -1553,7 +1560,9 @@ const UserProfile = () => {
       }
       setLoading(false);
     };
+    setIsLoading(true);
     loadInitialData();
+    setIsLoading(false);
   }, []);
 
   const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
@@ -1638,7 +1647,8 @@ const UserProfile = () => {
               <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
               <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
-                <Dialog open={showEditProfileModal} onOpenChange={setShowEditProfileModal} >
+            {!isLoading && (
+              <Dialog open={showEditProfileModal && !isLoading} onOpenChange={(open) => !isLoading && setShowEditProfileModal(open)}>
                   <DialogTrigger asChild>
                     <Button
                       variant="secondary"
@@ -1756,6 +1766,8 @@ const UserProfile = () => {
                     </Dialog>
                   </DialogContent>
                 </Dialog>
+            )}
+                
           </div>
           <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">

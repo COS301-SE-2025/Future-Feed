@@ -40,6 +40,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?: string;
 }
 
 interface RawComment {
@@ -121,6 +122,13 @@ const profileDataCache = {
   bookmarkedPosts: [] as PostData[],
 };
 
+interface cUserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePictureUrl?: string;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const Profile = () => {
@@ -147,6 +155,7 @@ const Profile = () => {
     likes: false,
     bookmarks: false,
   });
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const { followStatus, setFollowStatus} = useFollowStore();
   const queryClient = useQueryClient();
@@ -156,6 +165,29 @@ const Profile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([])
   const navigate = useNavigate();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      setCurrentUserId(data.id);
+      userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      setError("Failed to load user info. Please log in again.");
+      navigate("/login");
+      setUser(null);
+      return null;
+    }
+  };
 
   const fetchCurrentUserId = async () => {
     try {
@@ -367,27 +399,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -485,27 +514,24 @@ const Profile = () => {
               if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${reshare.id}: ${hasResharedRes.status}`);
               const comments = commentsRes.ok ? await commentsRes.json() : [];
               const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-              const commentsWithUsers: CommentData[] = (
-                await Promise.all(
-                  validComments.map(async (comment: RawComment) => {
-                    try {
-                      const commentUserInfo = await fetchUser(comment.userId!);
-                      return {
-                        id: comment.id,
-                        postId: comment.postId,
-                        authorId: comment.userId!,
-                        content: comment.content,
-                        createdAt: comment.createdAt,
-                        username: commentUserInfo.displayName,
-                        handle: `@${commentUserInfo.username}`,
-                      };
-                    } catch (err) {
-                      console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                      return null;
-                    }
-                  })
-                )
-              ).filter((comment): comment is CommentData => comment !== null);
+              const commentsWithUsers: CommentData[] = [];
+              for (const comment of validComments) {
+                try {
+                  const commentUserInfo = await fetchUser(comment.userId!);
+                  commentsWithUsers.push({
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId!,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: commentUserInfo.displayName,
+                    handle: `@${commentUserInfo.username}`,
+                    profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  });
+                  } catch (err) {
+                  console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                }
+              }
               const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
               const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
               const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -601,27 +627,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -714,27 +737,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -808,7 +828,7 @@ const Profile = () => {
       const bookmarkedPosts = await Promise.all(
         bookmarkedList.map(async (post) => {
           try {
-            const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(userId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -826,27 +846,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -854,7 +871,7 @@ const Profile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: userInfo.profilePicture,
+              profilePicture: userInfo.profilePictureUrl,
               username: userInfo.displayName,
               handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
@@ -1201,8 +1218,9 @@ const Profile = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!user) {
+    if (!currentUser) {
       setError("Please log in to comment.");
+      navigate("/login")
       return;
     }
     if (!commentText.trim()) {
@@ -1229,11 +1247,12 @@ const Profile = () => {
                   {
                     id: Date.now(),
                     postId,
-                    authorId: user.id,
+                    authorId: currentUser.id,
                     content: commentText,
                     createdAt: new Date().toISOString(),
-                    username: user.displayName,
-                    handle: `@${user.username}`,
+                    username: currentUser.displayName,
+                    handle: `@${currentUser.username}`,
+                    profilePicture: currentUser.profilePicture,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -1249,16 +1268,19 @@ const Profile = () => {
         return [...prev, { ...post, comments: [...post.comments, {
           id: Date.now(),
           postId,
-          authorId: user.id,
+          authorId: currentUser.id,
           content: commentText,
           createdAt: new Date().toISOString(),
-          username: user.displayName,
-          handle: `@${user.username}`,
+          username: currentUser.displayName,
+          handle: `@${currentUser.username}`,
+          profilePicture: currentUser.profilePicture
         }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
+        headers: {
+          "Content-Type": "text/plain",
+        },
         credentials: "include",
         body: commentText,
       });
@@ -1282,7 +1304,6 @@ const Profile = () => {
         setCommented((prev) => prev.filter((p) => p.id !== postId || p.commentCount > 1));
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
-          navigate("/login");
         } else {
           throw new Error(`Failed to add comment: ${errorText}`);
         }
@@ -1291,11 +1312,11 @@ const Profile = () => {
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
-        authorId: newComment.userId || user.id,
+        authorId: newComment.userId || currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        username: user.displayName,
-        handle: `@${user.username}`,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
@@ -1430,6 +1451,9 @@ const Profile = () => {
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
+    const user = await fetchCurrentUser();
+    setCurrentUser(user);
+    
     if (userId == parseInt(profileId || "0")) {
       navigate('/profile');
     }
@@ -1613,7 +1637,7 @@ const Profile = () => {
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1636,7 +1660,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1665,7 +1689,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1689,7 +1713,7 @@ const Profile = () => {
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1712,13 +1736,13 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
                   ) : (
                     <Post
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1741,7 +1765,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1765,7 +1789,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
           <BotPost
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1788,13 +1812,13 @@ const Profile = () => {
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
           ) : (
             <Post
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1817,7 +1841,7 @@ const Profile = () => {
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
@@ -1841,7 +1865,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1864,13 +1888,13 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1893,7 +1917,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1917,7 +1941,7 @@ const Profile = () => {
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1940,13 +1964,13 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1969,7 +1993,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
