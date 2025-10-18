@@ -292,13 +292,13 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  isBookmarked ? "text-yellow-500 " : "text-gray-",
+                  isBookmarked ? "text-yellow-500 " : "text-gray-500",
                   "hover:text-yellow-500"
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
                 <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
-                <span className="hidden xl:inline">Bookmark</span>
+                <span className="hidden xl:inline ">Bookmark</span>
               </Button>
             </div>
             {showComments && (
