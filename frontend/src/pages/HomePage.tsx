@@ -2693,8 +2693,13 @@ const HomePage = () => {
                                         <label className="text-sm font-medium ">Topic Filter</label>
                                         <select
                                           value={newRule.topicId || ""}
-                                          onChange={(e) => setNewRule({ ...newRule, topicId: e.target.value ? Number(e.target.value) : undefined })}
-                                          className="   flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              topicId: e.target.value ? Number(e.target.value) : undefined,
+                                            })
+                                          }
+                                          className="flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2708,65 +2713,84 @@ const HomePage = () => {
                                         <label className="text-sm font-medium ">Source Type</label>
                                         <select
                                           value={newRule.sourceType || ""}
-                                          onChange={(e) => setNewRule({ ...newRule, sourceType: e.target.value as 'user' | 'bot' | undefined })}
-                                          className="   flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
+                                          onChange={(e) => {
+                                            const sourceType = e.target.value as 'user' | 'bot' | undefined;
+                                            setNewRule({
+                                              ...newRule,
+                                              sourceType,
+                                              // Clear specificUserId if sourceType is 'bot'
+                                              specificUserId: sourceType === 'bot' ? undefined : newRule.specificUserId,
+                                            });
+                                            // Clear user search query if sourceType is 'bot'
+                                            if (sourceType === 'bot') {
+                                              setUserSearchQuery('');
+                                              setIsUserSearchOpen(false);
+                                            }
+                                          }}
+                                          className="flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
                                         >
                                           <option value="">Select Source</option>
                                           <option value="user">User Posts</option>
                                           <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium ">Specific User</label>
-                                        <div className="relative user-search-container">
-                                          <Input
-                                            placeholder="Search users..."
-                                            value={userSearchQuery}
-                                            onChange={(e) => {
-                                              setUserSearchQuery(e.target.value);
-                                              setIsUserSearchOpen(true);
-                                            }}
-                                            onFocus={() => setIsUserSearchOpen(true)}
-                                            className="   pr-10 bg-gray-300 text-black rounded-xl h-8"
-                                          />
-                                          {newRule.specificUserId && (
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => {
-                                                setNewRule({ ...newRule, specificUserId: undefined });
-                                                setUserSearchQuery("");
+                                      {newRule.sourceType === 'user' && (
+                                        <div className="flex flex-col space-y-2">
+                                          <label className="text-sm font-medium ">Specific User</label>
+                                          <div className="relative user-search-container">
+                                            <Input
+                                              placeholder="Search users..."
+                                              value={userSearchQuery}
+                                              onChange={(e) => {
+                                                setUserSearchQuery(e.target.value);
+                                                setIsUserSearchOpen(true);
                                               }}
-                                              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                            >
-                                              <FaTimes size={12} className="text-red-500" />
-                                            </Button>
-                                          )}
-                                          {isUserSearchOpen && filteredUsers.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white  border border-gray-300  rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                              {filteredUsers.map((user) => (
-                                                <div
-                                                  key={user.id}
-                                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-3"
-                                                  onClick={() => {
-                                                    setNewRule({ ...newRule, specificUserId: user.id });
-                                                    setUserSearchQuery(`${user.displayName} (@${user.username})`);
-                                                    setIsUserSearchOpen(false);
-                                                  }}
-                                                >
-                                                  {user.profilePicture && (
-                                                    <img src={user.profilePicture} alt={user.displayName} className="w-6 h-6 rounded-full" />
-                                                  )}
-                                                  <div>
-                                                    <div className="text-sm font-medium ">{user.displayName}</div>
-                                                    <div className="text-xs text-gray-500 ">@{user.username}</div>
+                                              onFocus={() => setIsUserSearchOpen(true)}
+                                              className="pr-10 bg-gray-300 text-black rounded-xl h-8"
+                                            />
+                                            {newRule.specificUserId && (
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setNewRule({ ...newRule, specificUserId: undefined });
+                                                  setUserSearchQuery('');
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                              >
+                                                <FaTimes size={12} className="text-red-500" />
+                                              </Button>
+                                            )}
+                                            {isUserSearchOpen && filteredUsers.length > 0 && (
+                                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                {filteredUsers.map((user) => (
+                                                  <div
+                                                    key={user.id}
+                                                    className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-3"
+                                                    onClick={() => {
+                                                      setNewRule({ ...newRule, specificUserId: user.id });
+                                                      setUserSearchQuery(`${user.displayName} (@${user.username})`);
+                                                      setIsUserSearchOpen(false);
+                                                    }}
+                                                  >
+                                                    {user.profilePicture && (
+                                                      <img
+                                                        src={user.profilePicture}
+                                                        alt={user.displayName}
+                                                        className="w-6 h-6 rounded-full"
+                                                      />
+                                                    )}
+                                                    <div>
+                                                      <div className="text-sm font-medium ">{user.displayName}</div>
+                                                      <div className="text-xs text-gray-500 ">@{user.username}</div>
+                                                    </div>
                                                   </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
+                                      )}
                                       <div className="flex flex-col space-y-2">
                                         <label className="text-sm font-medium ">Percentage</label>
                                         <div className="flex items-center space-x-2">
@@ -2775,9 +2799,14 @@ const HomePage = () => {
                                             min="1"
                                             max="100"
                                             placeholder="Percentage (1-100)%"
-                                            value={newRule.percentage || ""}
-                                            onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
-                                            className="flex-1    bg-gray-300 rounded-xl"
+                                            value={newRule.percentage || ''}
+                                            onChange={(e) =>
+                                              setNewRule({
+                                                ...newRule,
+                                                percentage: e.target.value ? Number(e.target.value) : undefined,
+                                              })
+                                            }
+                                            className="flex-1 bg-gray-300 rounded-xl"
                                           />
                                           <span className="text-sm text-gray-500 ">%</span>
                                         </div>
@@ -2794,10 +2823,13 @@ const HomePage = () => {
                                       <div className="space-y-2">
                                         <h4 className="text-sm font-medium ">Current Rules</h4>
                                         {rules[preset.id].map((rule) => (
-                                          <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 ">
+                                          <div
+                                            key={rule.id}
+                                            className="flex items-center justify-between border rounded-xl bg-blue-500 "
+                                          >
                                             <div className="flex items-center space-x-2 px-3">
                                               <Filter className="h-4 w-4 text-white" />
-                                              <span className="text-sm  text-white">{formatRule(rule)}</span>
+                                              <span className="text-sm text-white">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2811,10 +2843,10 @@ const HomePage = () => {
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="text-center py-6 border-2 border-dashed border-gray-300  rounded-lg">
-                                        <Filter className="h-8 w-8 text-gray-400  mx-auto mb-2" />
+                                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                                        <Filter className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                                         <p className="text-sm text-gray-500 ">No rules added yet.</p>
-                                        <p className="text-xs text-gray-400  mt-1">
+                                        <p className="text-xs text-gray-400 mt-1">
                                           Add rules to customize your feed content
                                         </p>
                                       </div>
