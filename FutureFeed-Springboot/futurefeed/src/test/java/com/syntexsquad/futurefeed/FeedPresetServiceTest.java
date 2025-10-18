@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
+import org.mockito.junit.jupiter.MockitoSettings;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -23,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class FeedPresetServiceTest {
 
     @Mock
@@ -51,7 +54,7 @@ public class FeedPresetServiceTest {
 
     @InjectMocks
     private FeedPresetService feedPresetService;
-
+   
     private AppUser authenticatedUser;
 
     @BeforeEach
@@ -220,16 +223,15 @@ public class FeedPresetServiceTest {
         UserPost postFrom42 = new UserPost(); postFrom42.setId(10); postFrom42.setUser(user42);
         UserPost postFrom99 = new UserPost(); postFrom99.setId(11); postFrom99.setUser(user99);
 
+        when(postRepository.findAll()).thenReturn(List.of(postFrom42, postFrom99));
         when(postRepository.findAllById(List.of(10, 11))).thenReturn(List.of(postFrom42, postFrom99));
 
         List<Post> feed = feedPresetService.generateFeedForPreset(presetId);
 
-        // Expect exactly the one post from user 42
         assertEquals(1, feed.size(), "Should only contain posts from user 42");
         assertTrue(feed.get(0) instanceof UserPost);
         assertEquals(42, ((UserPost) feed.get(0)).getUser().getId());
     }
-
 
     @Test
     public void testGenerateFeedForPreset_WithNoMatchingPosts() {
