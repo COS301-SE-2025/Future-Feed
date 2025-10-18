@@ -44,8 +44,6 @@ public class FeedPresetService {
         this.postTopicRepository = postTopicRepository;
     }
 
-    // ---------- SAFE user resolution ----------
-    /** Returns Optional<AppUser> safely for endpoints that must not 500. */
     private Optional<AppUser> tryGetCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) return Optional.empty();
@@ -124,14 +122,12 @@ public class FeedPresetService {
         return Optional.empty();
     }
 
-    /** Legacy strict resolver (kept for callers/tests that expect exceptions). */
     private AppUser getAuthenticatedUser() {
         return tryGetCurrentUser()
                 .orElseThrow(() -> new RuntimeException("Could not extract authenticated user from security context"));
     }
     // -------------------------------------------------------------------------
 
-    // Used by /api/presets/default to avoid 500 and work for unauthenticated users
     public Optional<FeedPreset> findDefaultPresetForCurrentUser() {
         return tryGetCurrentUser()
                 .map(AppUser::getId)
@@ -215,7 +211,6 @@ public class FeedPresetService {
         presetRepo.save(preset);
     }
 
-    /** Strict variant retained for compatibility with any existing callers. */
     public FeedPreset getDefaultPreset() {
         Integer userId = getAuthenticatedUser().getId();
         return presetRepo.findByUserIdAndDefaultPresetTrue(userId)
@@ -278,38 +273,6 @@ public class FeedPresetService {
 
     // ---------------- Feed generation ----------------
 
-    private List<Post> filterPostsForRule(PresetRule rule) {
-        List<Post> filteredPosts;
-
-        if (rule.getTopicId() != null) {
-            List<PostTopic> postTopics = postTopicRepository.findByTopicId(rule.getTopicId());
-            List<Integer> postIds = postTopics.stream().map(PostTopic::getPostId).toList();
-            filteredPosts = postRepository.findAllById(postIds);
-        } else {
-            filteredPosts = postRepository.findAll();
-        }
-
-        if ("user".equalsIgnoreCase(rule.getSourceType())) {
-            filteredPosts = filteredPosts.stream()
-                    .filter(p -> p instanceof UserPost)
-                    .collect(Collectors.toList());
-        } else if ("bot".equalsIgnoreCase(rule.getSourceType())) {
-            filteredPosts = filteredPosts.stream()
-                    .filter(p -> p instanceof BotPost)
-                    .collect(Collectors.toList());
-        }
-
-        if (rule.getSpecificUserId() != null) {
-            filteredPosts = filteredPosts.stream()
-                    .filter(p -> (p instanceof UserPost)
-                            && ((UserPost) p).getUser() != null
-                            && ((UserPost) p).getUser().getId().equals(rule.getSpecificUserId()))
-                    .collect(Collectors.toList());
-        }
-
-        return filteredPosts;
-    }
-
     private static final Comparator<Post> CREATED_DESC = (a, b) -> {
         Instant ca = a.getCreatedAt();
         Instant cb = b.getCreatedAt();
@@ -319,23 +282,46 @@ public class FeedPresetService {
         return cb.compareTo(ca);
     };
 
+    private List<Post> filterPostsForRule(PresetRule rule) {
+        List<Post> allPosts = postRepository.findAll();
+
+        Set<Integer> tmpAllowed = null;
+        if (rule.getTopicId() != null) {
+            tmpAllowed = postTopicRepository.findByTopicId(rule.getTopicId()).stream()
+                    .map(PostTopic::getPostId)
+                    .collect(Collectors.toSet());
+        }
+        final Set<Integer> allowedPostIds = tmpAllowed;
+
+        return allPosts.stream()
+                .filter(post -> {
+                    if (allowedPostIds != null && !allowedPostIds.contains(post.getId())) return false;
+
+                    if ("user".equalsIgnoreCase(rule.getSourceType()) && !(post instanceof UserPost)) return false;
+                    if ("bot".equalsIgnoreCase(rule.getSourceType()) && !(post instanceof BotPost)) return false;
+
+                    if (rule.getSpecificUserId() != null) {
+                        if (!(post instanceof UserPost up) || up.getUser() == null ||
+                                !Objects.equals(up.getUser().getId(), rule.getSpecificUserId())) {
+                            return false;
+                        }
+                    }
+
+                    return true;
+                })
+                .sorted(CREATED_DESC)
+                .toList();
+    }
+
     public List<Post> generateFeedForPreset(Integer presetId) {
         List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
         Set<Post> resultFeed = new HashSet<>();
 
         for (PresetRule rule : rules) {
-            List<Post> filteredPosts = filterPostsForRule(rule);
-
-            Integer rp = rule.getPercentage();
-            int limit;
-            if (rp == null) {
-                limit = filteredPosts.size();
-            } else {
-                int pct = clampPercent(rp);
-                limit = (pct > 0) ? (filteredPosts.size() * pct) / 100 : 0;
-            }
-
-            resultFeed.addAll(filteredPosts.stream().limit(limit).toList());
+            List<Post> filtered = filterPostsForRule(rule);
+            int pct = clampPercent(rule.getPercentage());
+            int limit = (pct > 0) ? (filtered.size() * pct) / 100 : 0;
+            resultFeed.addAll(filtered.stream().limit(limit).toList());
         }
 
         List<Post> out = new ArrayList<>(resultFeed);
@@ -355,40 +341,37 @@ public class FeedPresetService {
 
         for (PresetRule r : rules) {
             List<Post> cand = filterPostsForRule(r);
-            cand.sort(CREATED_DESC);
             ruleToCandidates.put(r.getId(), cand);
             ruleToPercent.put(r.getId(), clampPercent(r.getPercentage()));
         }
 
-        LinkedHashMap<Integer, Post> unionById = new LinkedHashMap<>();
+        LinkedHashMap<Integer, Post> unionByPostId = new LinkedHashMap<>();
         for (List<Post> list : ruleToCandidates.values()) {
             for (Post p : list) {
-                if (p != null && p.getId() != null && !unionById.containsKey(p.getId())) {
-                    unionById.put(p.getId(), p);
-                }
+                if (p != null && p.getId() != null) unionByPostId.putIfAbsent(p.getId(), p);
             }
         }
-        List<Post> globalRuleUnion = new ArrayList<>(unionById.values());
+        List<Post> globalRuleUnion = new ArrayList<>(unionByPostId.values());
         globalRuleUnion.sort(CREATED_DESC);
 
-        Set<Integer> ruleIds = unionById.keySet();
+        Set<Integer> matchedIds = unionByPostId.keySet();
         List<Post> allPosts = postRepository.findAll();
-        List<Post> complement = new ArrayList<>();
-        for (Post p : allPosts) {
-            if (p != null && p.getId() != null && !ruleIds.contains(p.getId())) {
-                complement.add(p);
-            }
-        }
-        complement.sort(CREATED_DESC);
+        List<Post> complement = allPosts.stream()
+                .filter(p -> p != null && p.getId() != null && !matchedIds.contains(p.getId()))
+                .sorted(CREATED_DESC)
+                .collect(Collectors.toCollection(ArrayList::new));
 
         int totalUnique = globalRuleUnion.size() + complement.size();
 
+        int sumPct = 0;
         Map<Integer, Integer> quotas = new LinkedHashMap<>();
         for (PresetRule r : rules) {
             int pct = ruleToPercent.getOrDefault(r.getId(), 0);
+            sumPct += pct;
             int q = (pct > 0) ? (targetCount * pct) / 100 : 0;
             quotas.put(r.getId(), Math.max(0, q));
         }
+        if (sumPct > 100) sumPct = 100;
 
         LinkedHashSet<Integer> seenIds = new LinkedHashSet<>();
         List<Post> pool = new ArrayList<>();
@@ -396,7 +379,6 @@ public class FeedPresetService {
         for (PresetRule r : rules) {
             int quota = quotas.getOrDefault(r.getId(), 0);
             if (quota <= 0) continue;
-
             List<Post> cand = ruleToCandidates.getOrDefault(r.getId(), List.of());
             int taken = 0;
             for (Post p : cand) {
@@ -410,12 +392,11 @@ public class FeedPresetService {
             if (pool.size() >= targetCount) break;
         }
 
-        if (pool.size() < targetCount && !complement.isEmpty()) {
+        if (sumPct < 100 && pool.size() < targetCount && !complement.isEmpty()) {
             List<Post> randomPool = complement.stream()
                     .filter(p -> p != null && p.getId() != null && !seenIds.contains(p.getId()))
                     .collect(Collectors.toCollection(ArrayList::new));
             Collections.shuffle(randomPool, ThreadLocalRandom.current());
-
             for (Post p : randomPool) {
                 pool.add(p);
                 seenIds.add(p.getId());
