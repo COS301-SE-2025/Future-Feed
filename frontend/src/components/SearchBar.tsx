@@ -5,9 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import GRP2 from "../assets/GRP1.jpg";
-import type { Notification } from "@/context/NotificationContext"; // Use type-only import
+import type { Notification } from "@/context/NotificationContext";
 
-// Define simplified user interface for search results
 interface UserSearchResult {
   id: number;
   username: string;
@@ -25,7 +24,6 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
   const [isFocused, setIsFocused] = useState(false);
   const navigate = useNavigate();
 
-  // Extract unique users from notifications
   const uniqueUsers: UserSearchResult[] = Array.from(
     new Map(
       notifications.map((notification) => {
@@ -39,14 +37,12 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
     ).values()
   );
 
-  // Filter users based on query
   const filteredUsers = query.trim()
     ? uniqueUsers.filter((user) =>
-        user.username.toLowerCase().includes(query.toLowerCase())
-      )
+      user.username.toLowerCase().includes(query.toLowerCase())
+    )
     : [];
 
-  // Handle search input change
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
@@ -61,14 +57,14 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
   const handleUserClick = (userId: number) => {
     setQuery("");
     setIsFocused(false);
-    onNotificationFilter("", userId); // Filter notifications by user
-    navigate("/notifications"); // Ensure we're on the notifications page
+    onNotificationFilter("", userId);
+    navigate("/notifications");
   };
 
   return (
     <div className="relative">
       <div className="relative">
-        <Search className=" absolute left-3 top-1/2 transform -translate-y-1/2 text-lime-500 dark:text-white" size={22} />
+        <Search className=" absolute left-3 top-1/2 transform -translate-y-1/2 text-lime-500" size={22} />
         <Input
           type="text"
           placeholder="Search notifications"
@@ -76,18 +72,18 @@ const SearchBar = ({ notifications, onNotificationFilter, userProfiles }: Search
           onChange={handleSearch}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)} // Delay to allow clicks
-          className="rounded-full bg-white dark:bg-blue-950 dark:text-white dark:placeholder:text-white border-2 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"
+          className="rounded-full bg-white border-2 focus-visible:ring-0 focus-visible:ring-offset-0 pl-10"
         />
       </div>
 
       {isFocused && query.trim() && filteredUsers.length > 0 && (
-        <Card className="absolute z-20 w-full mt-2 dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl">
+        <Card className="absolute z-20 w-full mt-2 border rounded-2xl">
           <CardContent className="p-2">
             <div className="space-y-2">
               {filteredUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex gap-3 items-center p-2 hover:bg-lime-400 dark:hover:bg-indigo-950 rounded-lg cursor-pointer"
+                  className="flex gap-3 items-center p-2 hover:bg-lime-400 rounded-lg cursor-pointer"
                   onClick={() => handleUserClick(user.id)}
                 >
                   <Avatar className="w-10 h-10 border border-2 future-feed:border-lime">

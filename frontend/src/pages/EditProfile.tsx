@@ -138,7 +138,7 @@ const EditProfile: React.FC = () => {
         throw new Error(`Failed to delete account: ${errorText}`);
       }
 
-      navigate("/"); // Redirect to landing page after delete
+      navigate("/");
     } catch (err) {
       console.error("Error deleting account:", err);
     }
@@ -146,13 +146,13 @@ const EditProfile: React.FC = () => {
 
   return (
 
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black future-feed:bg-black  dark:text-white">
-        <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 future-feed:bg-black">
+        <Card className="future-feed:bg-card mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999]">
 
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
             <Link to="/profile">
               <Button
-                className="h-[40px] w-[40px] rounded-full border  p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200  dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
+                className="h-[40px] w-[40px] rounded-full border  p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black]"
                 variant="ghost"
               >
                 <ArrowLeft className="h-5 w-5 text-black" />
@@ -162,7 +162,7 @@ const EditProfile: React.FC = () => {
           <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <DialogTrigger asChild>
               <Button
-                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black]"
                 variant="ghost"
               >
                 <Trash2 className="h-5 w-5 text-red-600" />
@@ -226,7 +226,6 @@ const EditProfile: React.FC = () => {
                 </label>
               </div>
 
-              {/* Display Name */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Display Name" htmlFor="display-name" />
                 <Input
@@ -234,11 +233,10 @@ const EditProfile: React.FC = () => {
                   placeholder="Enter your display name"
                   value={formData.displayName}
                   onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
-                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                 />
               </div>
 
-              {/* DOB */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Date of Birth" htmlFor="dob" />
                 <Input
@@ -246,11 +244,10 @@ const EditProfile: React.FC = () => {
                   type="date"
                   value={formData.dob}
                   onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                 />
               </div>
 
-              {/* Bio */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Bio" htmlFor="bio" />
                 <Textarea
@@ -258,7 +255,7 @@ const EditProfile: React.FC = () => {
                   placeholder="Bio..."
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                  className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                  className="future-feed:text-white future-feed:bg-card h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap"
                 />
               </div>
 
@@ -281,13 +278,13 @@ const EditProfile: React.FC = () => {
 
 const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
   <div className="relative my-[15px] flex items-center justify-center text-center">
-    <div className="mr-2.5 h-px w-1/3 future-feed:bg-lime bg-blue-500 dark:bg-slate-200"></div>
+    <div className="mr-2.5 h-px w-1/3 future-feed:bg-lime bg-blue-500"></div>
     <span className="text-[0.9rem] font-bold">
       <Label htmlFor={htmlFor} className="mb-2 block font-bold text-[18px]">
         {label}
       </Label>
     </span>
-    <div className="ml-2.5 h-px w-1/3 future-feed:bg-lime  bg-blue-500 dark:bg-slate-200"></div>
+    <div className="ml-2.5 h-px w-1/3 future-feed:bg-lime  bg-blue-500"></div>
   </div>
 );
 

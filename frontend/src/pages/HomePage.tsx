@@ -1938,7 +1938,6 @@ const HomePage = () => {
       profilePicture: currentUser.profilePicture
     };
 
-    // Update the appropriate posts array
     if (isPresetFeed) {
       setPresetPosts((prevPosts) =>
         prevPosts.map((post) =>
@@ -1998,7 +1997,6 @@ const HomePage = () => {
         profilePicture: currentUser.profilePicture,
       };
 
-      // Update the appropriate posts array with the real comment
       if (isPresetFeed) {
         setPresetPosts((prevPosts) =>
           prevPosts.map((post) =>
@@ -2040,7 +2038,6 @@ const HomePage = () => {
       setError("Failed to add comment. Reverting...");
       setTimeout(() => setError(null), 3000);
 
-      // Revert the appropriate posts array
       if (isPresetFeed) {
         setPresetPosts((prevPosts) =>
           prevPosts.map((post) =>
@@ -2214,16 +2211,16 @@ const HomePage = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-14 mt-5 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border  rounded-lg p-14 mt-5 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 rounded w-full" />
+        <div className="h-4 bg-gray-300 rounded w-5/6" />
       </div>
     ));
   };
@@ -2380,7 +2377,7 @@ const HomePage = () => {
     return () => window.removeEventListener("scroll", handlePresetScroll);
   }, [presetCurrentPage, loadingPresetPosts, presetHasMore, isViewingPresetFeed, selectedPreset]);
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
         <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white hidden lg:block">
@@ -2406,7 +2403,7 @@ const HomePage = () => {
 
       <button
 
-        className="lg:hidden -translate-y-[15px] fixed top-10.5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+        className="lg:hidden -translate-y-[15px] fixed top-10.5 right-5 bg-blue-500  future-feed:border-2 future-feed:bg-black  future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
@@ -2417,17 +2414,17 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500 dark:hover:text-gray-400 transition-colors future-feed:bg-lime dark:bg-indigo-800"
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime"
             >
               Logout
             </button>
-            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2 ">
+            <div className="p-4 border-t  flex flex-col gap-2 ">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors dark:hover:text-gray-400  future-feed:bg-lime dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors   future-feed:bg-lime"
               >
                 Create Topic
               </button>
@@ -2436,7 +2433,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:hover:text-gray-400 dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime "
               >
                 View Topics
               </button>
@@ -2452,28 +2449,28 @@ const HomePage = () => {
             renderSkeletonPosts()
           ) : !currentUser ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-lg dark:text-white">Please log in to view posts.</p>
+              <p className="text-lg ">Please log in to view posts.</p>
             </div>
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-gray-50 dark:bg-gray-800 rounded-2xl z-10 cursor-pointer hover:bg-white dark:hover:bg-indigo-950 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0  border bg-gray-50  rounded-2xl z-10 cursor-pointer hover:bg-white transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
                 onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
 
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-500 dark:bg-blue-600 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
                     <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
                   </div>
 
-                  <h1 className="future-feed:text-lime text-xl text-black dark:text-blue-400 font-bold group-hover:text-blue-600 dark:group-hover:text-slate-200 transition-colors">
+                  <h1 className="future-feed:text-lime text-xl text-black font-bold group-hover:text-blue-600 transition-colors">
                     {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
                   </h1>
                 </div>
-                <div className="absolute inset-0 border-2 border-blue-200 dark:border-blue-600 group-hover:border-blue-100 dark:group-hover:border-blue-800 rounded-2xl transition-all duration-300"></div>
+                <div className="absolute inset-0 border-2 border-blue-200 group-hover:border-blue-100 rounded-2xl transition-all duration-300"></div>
               </div>
               <Tabs defaultValue="for You" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
@@ -2492,7 +2489,7 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg future-feed:text-lime  dark:text-white">No posts available.</p>
+                      <p className="text-lg future-feed:text-lime  ">No posts available.</p>
                       <Button
                         className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
@@ -2514,7 +2511,7 @@ const HomePage = () => {
 
                       <div className="flex flex-col justify-center items-center mt-10 gap-12">
                         <SmilePlus size={50} color="#3B82F6" />
-                        <p className="dark:text-white text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
+                        <p className=" text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
 
                       </div>
                       <div className="flex gap-20 mt-13">
@@ -2567,40 +2564,33 @@ const HomePage = () => {
                         </Button>
                         {selectedPreset && (
                           <div className="ml-auto">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-gray-500 ">
                               Viewing feed for: {presets.find(p => p.id === selectedPreset)?.name}
                             </p>
                           </div>
                         )}
                       </div>
-
-                      {/* Initial loading skeleton */}
                       {loadingPresetPosts && presetPosts.length === 0 ? (
                         renderSkeletonPosts()
                       ) : presetPosts.length === 0 ? (
-                        <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                          <EyeOff className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500 dark:text-gray-400">No Posts available.</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        <div className="text-center py-6 border-2 border-dashed border-gray-300  rounded-lg">
+                          <EyeOff className="h-8 w-8 text-gray-400  mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 ">No Posts available.</p>
+                          <p className="text-xs text-gray-400  mt-1">
                             No posts available yet for this preset. Please add rules if rules are empty.
                           </p>
                         </div>
                       ) : (
                         <>
-                          {/* Render the posts */}
                           {renderPosts(presetPosts, true)}
-
-                          {/* Show loading skeleton at the bottom when loading more posts */}
                           {loadingPresetPosts && presetPosts.length > 0 && (
                             <div className="mt-4">
                               {renderSkeletonPosts().slice(0, 3)}
                             </div>
                           )}
-
-                          {/* Show "no more posts" message */}
                           {!presetHasMore && presetPosts.length > 0 && (
                             <div className="text-center py-6">
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-gray-500 ">
                                 No more posts to load
                               </p>
                             </div>
@@ -2610,19 +2600,17 @@ const HomePage = () => {
                     </>
                   ) : (
                     <div className="space-y-4">
-
-                      {/* Presets List */}
                       {presets.length > 0 && (
                         <div className="mt-6 space-y-4">
                           {presets.map((preset) => (
-                            <Card key={preset.id} className="w-full dark:bg-indigo-950 dark:border-slate-200 dark:text-white">
+                            <Card key={preset.id} className="w-full   ">
                               <CardHeader>
                                 <div className="flex justify-between items-center">
-                                  <CardTitle className="text-2xl font-bold dark:text-white">
+                                  <CardTitle className="text-2xl font-bold ">
                                     <div className="flex items-center space-x-2">
                                       <span>{preset.name}</span>
                                       {preset.defaultPreset && (
-                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">
+                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full ">
                                           Default
                                         </span>
                                       )}
@@ -2643,7 +2631,7 @@ const HomePage = () => {
                                           <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                       </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-600">
+                                      <DropdownMenuContent align="end" className=" ">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -2672,10 +2660,10 @@ const HomePage = () => {
                                               Delete Preset
                                             </DropdownMenuItem>
                                           </DialogTrigger>
-                                          <DialogContent className="dark:bg-gray-800 dark:border-gray-600">
+                                          <DialogContent className=" ">
                                             <DialogHeader>
-                                              <DialogTitle className="dark:text-white">Delete Preset</DialogTitle>
-                                              <DialogDescription className="dark:text-gray-400">
+                                              <DialogTitle className="">Delete Preset</DialogTitle>
+                                              <DialogDescription className="">
                                                 Are you sure you want to delete "{preset.name}" Preset? This action cannot be undone.
                                               </DialogDescription>
                                             </DialogHeader>
@@ -2702,11 +2690,11 @@ const HomePage = () => {
                                   <div className="space-y-4">
                                     <div className="space-y-3">
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Topic Filter</label>
+                                        <label className="text-sm font-medium ">Topic Filter</label>
                                         <select
                                           value={newRule.topicId || ""}
                                           onChange={(e) => setNewRule({ ...newRule, topicId: e.target.value ? Number(e.target.value) : undefined })}
-                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
+                                          className="   flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2717,11 +2705,11 @@ const HomePage = () => {
                                         </select>
                                       </div>
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Source Type</label>
+                                        <label className="text-sm font-medium ">Source Type</label>
                                         <select
                                           value={newRule.sourceType || ""}
                                           onChange={(e) => setNewRule({ ...newRule, sourceType: e.target.value as 'user' | 'bot' | undefined })}
-                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
+                                          className="   flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
                                         >
                                           <option value="">Select Source</option>
                                           <option value="user">User Posts</option>
@@ -2729,7 +2717,7 @@ const HomePage = () => {
                                         </select>
                                       </div>
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Specific User</label>
+                                        <label className="text-sm font-medium ">Specific User</label>
                                         <div className="relative user-search-container">
                                           <Input
                                             placeholder="Search users..."
@@ -2739,7 +2727,7 @@ const HomePage = () => {
                                               setIsUserSearchOpen(true);
                                             }}
                                             onFocus={() => setIsUserSearchOpen(true)}
-                                            className="dark:bg-gray-800 dark:border-gray-600 dark:text-white pr-10 bg-gray-300 text-black rounded-xl h-8"
+                                            className="   pr-10 bg-gray-300 text-black rounded-xl h-8"
                                           />
                                           {newRule.specificUserId && (
                                             <Button
@@ -2755,11 +2743,11 @@ const HomePage = () => {
                                             </Button>
                                           )}
                                           {isUserSearchOpen && filteredUsers.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                            <div className="absolute z-10 w-full mt-1 bg-white  border border-gray-300  rounded-md shadow-lg max-h-60 overflow-y-auto">
                                               {filteredUsers.map((user) => (
                                                 <div
                                                   key={user.id}
-                                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3"
+                                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-3"
                                                   onClick={() => {
                                                     setNewRule({ ...newRule, specificUserId: user.id });
                                                     setUserSearchQuery(`${user.displayName} (@${user.username})`);
@@ -2770,8 +2758,8 @@ const HomePage = () => {
                                                     <img src={user.profilePicture} alt={user.displayName} className="w-6 h-6 rounded-full" />
                                                   )}
                                                   <div>
-                                                    <div className="text-sm font-medium dark:text-white">{user.displayName}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</div>
+                                                    <div className="text-sm font-medium ">{user.displayName}</div>
+                                                    <div className="text-xs text-gray-500 ">@{user.username}</div>
                                                   </div>
                                                 </div>
                                               ))}
@@ -2780,7 +2768,7 @@ const HomePage = () => {
                                         </div>
                                       </div>
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Percentage</label>
+                                        <label className="text-sm font-medium ">Percentage</label>
                                         <div className="flex items-center space-x-2">
                                           <Input
                                             type="number"
@@ -2789,9 +2777,9 @@ const HomePage = () => {
                                             placeholder="Percentage (1-100)%"
                                             value={newRule.percentage || ""}
                                             onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
-                                            className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
+                                            className="flex-1    bg-gray-300 rounded-xl"
                                           />
-                                          <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                                          <span className="text-sm text-gray-500 ">%</span>
                                         </div>
                                       </div>
                                       <Button
@@ -2804,12 +2792,12 @@ const HomePage = () => {
                                     </div>
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
-                                        <h4 className="text-sm font-medium dark:text-white">Current Rules</h4>
+                                        <h4 className="text-sm font-medium ">Current Rules</h4>
                                         {rules[preset.id].map((rule) => (
-                                          <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                          <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 ">
                                             <div className="flex items-center space-x-2 px-3">
                                               <Filter className="h-4 w-4 text-white" />
-                                              <span className="text-sm dark:text-white text-white">{formatRule(rule)}</span>
+                                              <span className="text-sm  text-white">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2823,10 +2811,10 @@ const HomePage = () => {
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                                        <Filter className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No rules added yet.</p>
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                      <div className="text-center py-6 border-2 border-dashed border-gray-300  rounded-lg">
+                                        <Filter className="h-8 w-8 text-gray-400  mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500 ">No rules added yet.</p>
+                                        <p className="text-xs text-gray-400  mt-1">
                                           Add rules to customize your feed content
                                         </p>
                                       </div>
@@ -2839,14 +2827,13 @@ const HomePage = () => {
                         </div>
                       )}
 
-                      {/* Empty State */}
                       {presets.length === 0 && !isLoading && (
                         <div className="text-center py-12">
-                          <div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                            <ChartNoAxesGantt className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                          <div className="bg-gray-100  rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <ChartNoAxesGantt className="h-8 w-8 text-gray-400 " />
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No presets yet</h3>
-                          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                          <h3 className="text-lg font-medium text-gray-900  mb-2">No presets yet</h3>
+                          <p className="text-gray-500  mb-6 max-w-md mx-auto">
                             Create your first preset to customize your feed with specific topics, sources, and users.
                           </p>
                           <Button
@@ -2857,8 +2844,6 @@ const HomePage = () => {
                           </Button>
                         </div>
                       )}
-
-                      {/* Loading State */}
                       {isLoading && (
                         <div className="flex justify-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -2866,33 +2851,31 @@ const HomePage = () => {
                       )}
                     </div>
                   )}
-
-                  {/* Create Preset Modal */}
                   {isCreatePresetModalOpen && (
                     <animated.div
                       style={createPresetModalProps}
                       className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
                     >
-                      <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+                      <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-md border-2  flex flex-col relative">
                         <button
                           onClick={() => {
                             setIsCreatePresetModalOpen(false);
                             setNewPresetName("");
                           }}
-                          className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+                          className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
                           title="Close modal"
                         >
                           <FaTimes className="w-6 h-6" />
                         </button>
                         <div className="text-center mb-5">
-                          <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
+                          <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 ">Create New Preset</h2>
                         </div>
                         <div className="flex flex-row space-between space-x-4 space-y-4">
                           <Input
                             placeholder="Preset name"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
-                            className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                            className="  "
                           />
                           <div className="flex justify-end space-x-2">
                             <Button
@@ -2932,7 +2915,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2  flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -2946,20 +2929,20 @@ const HomePage = () => {
                 setImageWidth(384);
                 setImageHeight(384);
               }}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-5 future-feed:text-lime text-blue-500 dark:text-white">Share your thoughts</h2>
+              <h2 className="text-xl font-bold mb-5 future-feed:text-lime text-blue-500 ">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none rounded-xl"
+                className="w-full mb-4 text-gray-900    flex-1 future-feed:text-white resize-none rounded-xl"
                 rows={8}
               />
               <div className="mb-4">
@@ -2969,7 +2952,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="rounded-xl border-blue-200 future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-0.5 w-full future-feed:text-lime text-blue-500 h-20"
+                  className="rounded-xl border-blue-200 future-feed:border-lime    border-2 rounded-md p-0.5 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
@@ -2978,7 +2961,7 @@ const HomePage = () => {
                   ))}
                 </select>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple topics</p>
+                  <p className="text-sm text-gray-500  mt-2">Hold Ctrl/Cmd to select multiple topics</p>
                 </div>
               </div>
               <div className="mb-4">
@@ -2990,7 +2973,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
+                    className="w-40 text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
                   >
                     Upload Image
                   </Button>
@@ -3000,7 +2983,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="bg-blue-500 hover:cursor-pointer w-40 dark:text-black text-white rounded rounded-full hover:bg-blue-600 hover:text-white "
+                    className="bg-blue-500 hover:cursor-pointer w-40 text-white rounded rounded-full hover:bg-blue-600 hover:text-white "
                   >
                     Generate AI Image
                   </Button>
@@ -3011,14 +2994,14 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full border border-blue-400 dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-xl mt-5 future-feed:text-white"
+                      className="w-full border border-blue-400    rounded rounded-xl mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="hover:cursor-pointer dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18 hover:bg-gray-400 hover:border-blue-300"
+                      className="hover:cursor-pointer  text-black  flex items-center space-x-1 border-2 rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18 hover:bg-gray-400 hover:border-blue-300"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -3057,24 +3040,24 @@ const HomePage = () => {
           style={topicModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border drop-shadow-xl dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-md border drop-shadow-xl  flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
                 setNewTopicName("");
               }}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white text-center">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500  text-center">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
                 value={newTopicName}
                 onChange={(e) => setNewTopicName(e.target.value)}
-                className="mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                className="mb-4   "
               />
               <Button
                 onClick={createTopic}
@@ -3092,22 +3075,22 @@ const HomePage = () => {
           style={viewTopicsModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white dark:bg-blue-950 rounded-2xl p-4 w-full max-w-md drop-shadow-xl border dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white  rounded-2xl p-4 w-full max-w-md drop-shadow-xl border  flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-center text-xl font-bold mb-5 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
+            <h2 className="text-center text-xl font-bold mb-5 text-blue-500  future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
-                <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
+                <p className="text-sm text-lime  future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <div key={topic.id} className="inline-block border dark:border-lime-400 bg-blue-500 dark:bg-lime-900 text-white dark:text-lime-200 text-xs sm:text-sm px-3 py-0.5 rounded-xl">
+                    <div key={topic.id} className="inline-block border bg-blue-500 text-white  text-xs sm:text-sm px-3 py-0.5 rounded-xl">
                       {topic.name}
                     </div>
                   ))}
@@ -3128,23 +3111,23 @@ const HomePage = () => {
           style={previewModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 max-w-2xl border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 max-w-2xl border-2  flex flex-col relative">
             <button
               onClick={handleCancelPreview}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center mb-5">
-              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Preview</h2>
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 ">Preview</h2>
             </div>
             <div className="flex flex-col flex-1">
-              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white">{previewPostData.text}</p>
+              <p className="mb-4 text-gray-900  future-feed:text-white">{previewPostData.text}</p>
               {previewPostData.image && (
                 <img src={previewPostData.image} alt="Generated AI Image" className="w-full h-auto mb-4 rounded" />
               )}
-              <p className="mb-4 text-gray-900 dark:text-white future-feed:text-white text-center font-semibold">
+              <p className="mb-4 text-gray-900  future-feed:text-white text-center font-semibold">
                 Do you want to use this image?
               </p>
               <div className="flex justify-end space-x-4">
@@ -3166,9 +3149,9 @@ const HomePage = () => {
         </animated.div>
       )}
       <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-        <DialogContent className="dark:bg-gray-800  bg-red-400 border-0 max-w-md">
+        <DialogContent className="  bg-red-400 border-0 max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center dark:text-white text-white">Post Blocked</DialogTitle>
+            <DialogTitle className="text-center  text-white">Post Blocked</DialogTitle>
             <DialogDescription className="text-white">
               {errorMessage}
               {errorData && errorData.labels && errorData.labels.length > 0 && (

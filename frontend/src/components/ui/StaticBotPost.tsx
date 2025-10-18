@@ -123,8 +123,8 @@ const StaticBotPost: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-2 sm:my-4 md:my-6 mx-2 sm:mx-4",
-        "max-w-full pb-16 lg:pb-6", // Added padding-bottom for mobile to avoid overlap with nav
+        "border-2 border-rose-gold-accent-border future-feed:border-lime rounded-2xl my-2 sm:my-4 md:my-6 mx-2 sm:mx-4",
+        "max-w-full pb-16 lg:pb-6",
         className
       )}
     >
@@ -134,12 +134,11 @@ const StaticBotPost: React.FC<PostProps> = ({
         </div>
       )}
       <CardContent className="p-3 sm:p-4 md:p-6">
-        {/* Back Button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-gray-500 dark:text-white hover:text-blue-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 sm:mb-3 hover:cursor-pointer"
+          className="text-gray-500 hover:text-blue-500 p-1 sm:p-2 mb-2 sm:mb-3 hover:cursor-pointer"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 future-feed:text-lime" />
@@ -147,10 +146,7 @@ const StaticBotPost: React.FC<PostProps> = ({
             Back
           </span>
         </Button>
-
-        {/* Main Content */}
         <div className="flex gap-3 sm:gap-4 md:gap-6">
-          {/* Avatar */}
           <Avatar
             className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 hover:cursor-pointer flex-shrink-0"
             onClick={(e) => {
@@ -164,13 +160,11 @@ const StaticBotPost: React.FC<PostProps> = ({
             </AvatarFallback>
           </Avatar>
 
-          {/* Content Area */}
           <div className="flex-1 min-w-0">
-            {/* Header Section */}
             <div className="flex justify-between items-start gap-2 mb-1">
               <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
                 <h2
-                  className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline future-feed:text-white truncate"
+                  className="font-bold text-sm sm:text-base hover:cursor-pointer hover:underline future-feed:text-white truncate"
                   onClick={(e) => {
                     e.stopPropagation();
                     onProfileClick();
@@ -182,7 +176,7 @@ const StaticBotPost: React.FC<PostProps> = ({
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="text-xs sm:text-sm dark:text-gray-400 future-feed:text-white whitespace-nowrap">
+                <span className="text-xs sm:text-sm future-feed:text-white whitespace-nowrap">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -190,7 +184,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={onDelete}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -198,9 +192,8 @@ const StaticBotPost: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            {/* Handle */}
             <p
-              className="dark:text-gray-300 text-xs sm:text-sm future-feed:text-white mt-0.5"
+              className="text-xs sm:text-sm future-feed:text-white mt-0.5"
               onClick={(e) => {
                 e.stopPropagation();
                 onProfileClick();
@@ -208,13 +201,9 @@ const StaticBotPost: React.FC<PostProps> = ({
             >
               {handle || "@unknown"}
             </p>
-
-            {/* Post Text */}
-            <p className="mt-2 dark:text-white text-sm sm:text-base future-feed:text-white break-words">
+            <p className="mt-2 text-sm sm:text-base future-feed:text-white break-words">
               {text}
             </p>
-
-            {/* Image */}
             {image && (
               <div className="mt-3 sm:mt-4">
                 <img
@@ -224,18 +213,15 @@ const StaticBotPost: React.FC<PostProps> = ({
                 />
               </div>
             )}
-
-            {/* Action Buttons */}
             <div className="flex flex-wrap justify-between mt-3 sm:mt-4 gap-y-1">
-              {/* Like Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onLike}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px]",
-                  isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
-                  "hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
+                  isLiked ? "text-red-500" : "text-gray-500",
+                  "hover:text-red-500 hover:cursor-pointer"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
@@ -252,8 +238,8 @@ const StaticBotPost: React.FC<PostProps> = ({
                 size="sm"
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px]",
-                  showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
-                  "hover:text-blue-500 dark:hover:text-blue-400"
+                  showComments ? "text-blue-500" : "text-gray-500",
+                  "hover:text-blue-500"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
@@ -262,15 +248,14 @@ const StaticBotPost: React.FC<PostProps> = ({
                 <span className="text-xs sm:text-sm ml-0.5">{commentCount}</span>
               </Button>
 
-              {/* Reshare Button */}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onReshare}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px]",
-                  isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
-                  "hover:text-green-500 dark:hover:text-green-400 hover:cursor-pointer"
+                  isReshared ? "text-green-500" : "text-gray-500",
+                  "hover:text-green-500 hover:cursor-pointer"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
@@ -286,7 +271,7 @@ const StaticBotPost: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px] text-gray-500 dark:text-white hover:text-green-500 hover:cursor-pointer"
+                      "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px] text-gray-500 hover:text-green-500 hover:cursor-pointer"
                     )}
                     aria-label="Share post"
                   >
@@ -294,13 +279,13 @@ const StaticBotPost: React.FC<PostProps> = ({
                     <span className="hidden xs:inline text-xs sm:text-sm future-feed:text-white">Share</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 max-w-[90vw] dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
+                <PopoverContent className="w-80 max-w-[90vw] border-2 border-rose-gold-accent-border future-feed:border-lime">
                   <div className="flex flex-col sm:flex-row items-center gap-2">
                     <input
                       type="text"
                       value={postUrl}
                       readOnly
-                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border future-feed:border-lime w-full"
+                      className="flex-1 p-2 bg-gray-100 text-sm rounded border future-feed:border-lime w-full"
                     />
                     <Button
                       onClick={handleCopyLink}
@@ -320,8 +305,8 @@ const StaticBotPost: React.FC<PostProps> = ({
                 onClick={onBookmark}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 min-w-[80px] sm:min-w-[100px]",
-                  isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
-                  "hover:text-yellow-500 dark:hover:text-yellow-400"
+                  isBookmarked ? "text-yellow-500" : "text-gray-500",
+                  "hover:text-yellow-500"
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
@@ -335,23 +320,23 @@ const StaticBotPost: React.FC<PostProps> = ({
             {/* Comments Section */}
             {showComments && (
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 dark:border-gray-700"></div>
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200"></div>
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <h2 className="font-bold text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                            <span className="text-xs text-gray-500">
                               {formatRelativeTime(comment.createdAt)}
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm dark:text-white mt-1">
+                          <p className="text-xs sm:text-sm mt-1">
                             {comment.content}
                           </p>
                         </div>
@@ -359,16 +344,16 @@ const StaticBotPost: React.FC<PostProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50">
                     <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       No comments yet. Be the first to comment!
                     </p>
                   </div>
                 )}
 
                 <div className="mb-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="text-sm font-medium text-gray-700">
                     Add a comment
                   </label>
                 </div>
