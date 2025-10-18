@@ -9,6 +9,7 @@ import com.syntexsquad.futurefeed.repository.BotRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -28,6 +29,9 @@ public class BotExecutionService {
 
     @Autowired
     private BotPostService botPostService;
+
+    @Autowired
+    private TopicService topicService;
 
     private final String FASTAPI_URL = "https://api.rookemtrading.com/fastapi/execute-bot";  
 
@@ -87,6 +91,12 @@ public class BotExecutionService {
 
             // Link bot-post
             botPostService.linkBotToPost(bot.getId(), savedPost.getId());
+
+            try {
+                topicService.autoTagIfMissing(savedPost.getId());
+            } catch (Exception e) {
+                System.err.println("[bot] autoTag failed postId=" + savedPost.getId() + " err=" + e.getMessage());
+            }
 
             return output;
 
