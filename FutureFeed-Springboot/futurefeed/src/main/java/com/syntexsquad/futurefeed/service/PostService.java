@@ -6,9 +6,11 @@ import com.syntexsquad.futurefeed.repository.AppUserRepository;
 import com.syntexsquad.futurefeed.repository.PostRepository;
 import com.syntexsquad.futurefeed.repository.LikeRepository;
 import com.syntexsquad.futurefeed.repository.CommentRepository;
+import com.syntexsquad.futurefeed.repository.FollowerRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.Authentication;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +43,8 @@ public class PostService {
     private final LikeRepository likerepository;
     private final CommentRepository commentRepository;
     private final TopicService topicService;
+    @Autowired
+    private FollowerRepository followRepository;
 
     public PostService(PostRepository postRepository,
                        AppUserRepository appUserRepository,
@@ -230,4 +235,40 @@ public class PostService {
                 .toList();
         return postRepository.findAllById(postIds);
     }
+
+    @Transactional(readOnly = true)
+    public List<Integer> getFollowedUserIds(Integer userId) {
+        return followRepository.findFollowedIdsByFollowerId(userId);
+    }
+
+    public AppUser getCurrentAuthenticatedUser() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+        return resolveCurrentUser(auth);
+    }
+
+
+    @Transactional(readOnly = true)
+    public Page<Post> getFollowingPosts(List<Integer> followedUserIds, int page, int size) {
+        if (followedUserIds == null || followedUserIds.isEmpty()) {
+            return Page.empty();
+        }
+
+        if (em != null) em.clear();
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        Page<Post> result = postRepository.findPostsByFollowedUsers(
+                new ArrayList<>(followedUserIds), pageable
+        );
+
+        List<Post> freshPosts = result.getContent().stream()
+                .filter(p -> followedUserIds.contains(p.getUser().getId()))
+                .toList();
+
+        return new PageImpl<>(freshPosts, pageable, freshPosts.size());
+    }
+
 }
