@@ -186,6 +186,7 @@ const Bots: React.FC = () => {
       return;
     }
 
+    setLoading((prev) => ({ ...prev, creating: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots`, {
         method: "POST",
@@ -249,6 +250,7 @@ const Bots: React.FC = () => {
       return;
     }
 
+    setLoading((prev) => ({ ...prev, editing: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots/${editingBot.id}`, {
         method: "PUT",
@@ -309,6 +311,7 @@ const Bots: React.FC = () => {
   const deleteBot = useCallback(async () => {
     if (!deletingBotId) return;
 
+    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots/${deletingBotId}`, {
         method: "DELETE",
