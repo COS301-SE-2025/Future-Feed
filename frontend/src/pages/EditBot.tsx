@@ -56,12 +56,12 @@ const EditBot: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200 dark:bg-black dark:text-white">
-        <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999] dark:bg-[#1a1a1a] dark:border-lime-500 dark:shadow-none">
+    <div className="flex min-h-screen flex-col items-center font-['Cambay',Arial,sans-serif] bg-gray-200">
+        <Card className="mt-10 relative w-full max-w-[900px] rounded-[16px] border-2 border-lime-500 bg-white p-16 shadow-[0_0_30px_#999]">
           <div className="absolute left-5 top-5 flex items-center gap-2 flex-col">
             <Button
               onClick={() => navigate(-1)}
-              className="h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-lime-500 dark:shadow-white dark:hover:bg-slate-400 dark:hover:shadow-none"
+              className="h-[40px] w-[40px] rounded-full border border-lime-500 bg-white p-0 hover:bg-gray-200 cursor-pointer hover:shadow-[1px_1px_10px_black]"
               variant="ghost"
             >
               <ArrowLeft className="h-5 w-5 text-black" />
@@ -70,7 +70,7 @@ const EditBot: React.FC = () => {
           <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <DialogTrigger asChild>
               <Button
-                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black] dark:bg-gray-200 dark:border-red-600 dark:hover:bg-red-200 dark:hover:shadow-none"
+                className="absolute right-5 top-5 h-[40px] w-[40px] rounded-full border border-red-600 bg-white p-0 hover:bg-red-100 cursor-pointer hover:shadow-[1px_1px_10px_black]"
                 variant="ghost"
               >
                 <Trash2 className="h-5 w-5 text-red-600" />
@@ -110,7 +110,6 @@ const EditBot: React.FC = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="flex flex-col items-center">
-              {/* Bot Name */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Bot Name" htmlFor="bot-name" />
                 <Input
@@ -118,11 +117,9 @@ const EditBot: React.FC = () => {
                   placeholder="Enter your bot's name"
                   value={formData.botName}
                   onChange={(e) => setFormData({ ...formData, botName: e.target.value })}
-                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                 />
               </div>
-
-              {/* Prompt */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Prompt" htmlFor="prompt" />
                 <Textarea
@@ -130,11 +127,9 @@ const EditBot: React.FC = () => {
                   placeholder="Enter the bot's prompt..."
                   value={formData.prompt}
                   onChange={(e) => setFormData({ ...formData, prompt: e.target.value })}
-                  className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap dark:text-white dark:placeholder:text-slate-100"
+                  className="h-[100px] w-full rounded-[20px] border border-black px-4 py-2 text-sm resize-y whitespace-pre-wrap"
                 />
               </div>
-
-              {/* Schedule */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Schedule" htmlFor="schedule" />
                 <Select
@@ -143,7 +138,7 @@ const EditBot: React.FC = () => {
                 >
                   <SelectTrigger
                     id="schedule"
-                    className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                    className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                   >
                     <SelectValue placeholder="Select schedule" />
                   </SelectTrigger>
@@ -156,8 +151,6 @@ const EditBot: React.FC = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Context Source */}
               <div className="mb-3 w-full max-w-[500px]">
                 <LabelBlock label="Context Source" htmlFor="context-source" />
                 <Input
@@ -165,7 +158,7 @@ const EditBot: React.FC = () => {
                   placeholder="Enter the bot's context source"
                   value={formData.contextSource}
                   onChange={(e) => setFormData({ ...formData, contextSource: e.target.value })}
-                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm dark:text-white dark:placeholder:text-slate-100"
+                  className="w-full rounded-[20px] border border-black px-4 py-2 text-sm"
                 />
               </div>
 
@@ -184,13 +177,13 @@ const EditBot: React.FC = () => {
 
 const LabelBlock = ({ label, htmlFor }: { label: string; htmlFor: string }) => (
   <div className="relative my-[15px] flex items-center justify-center text-center">
-    <div className="mr-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
+    <div className="mr-2.5 h-px w-1/3 bg-lime-500"></div>
     <span className="text-[0.9rem] font-bold">
       <Label htmlFor={htmlFor} className="mb-2 block font-bold text-[18px]">
         {label}
       </Label>
     </span>
-    <div className="ml-2.5 h-px w-1/3 bg-lime-500 dark:bg-lime-500"></div>
+    <div className="ml-2.5 h-px w-1/3 bg-lime-500"></div>
   </div>
 );
 
