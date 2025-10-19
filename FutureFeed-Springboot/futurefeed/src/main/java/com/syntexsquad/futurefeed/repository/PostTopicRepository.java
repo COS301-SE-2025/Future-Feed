@@ -2,13 +2,14 @@ package com.syntexsquad.futurefeed.repository;
 
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.PostTopic;
+import com.syntexsquad.futurefeed.model.Topic;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import jakarta.transaction.Transactional;
-
+import java.util.Optional;
 import java.util.List;
 
 @Repository
@@ -28,4 +29,7 @@ public interface PostTopicRepository extends JpaRepository<PostTopic, Integer> {
     @Transactional
     @Query("DELETE FROM PostTopic pt WHERE pt.post.id = :postId")
     void deleteByPostId(@Param("postId") Integer postId);
+
+    @Query("SELECT t FROM Topic t WHERE LOWER(t.name) = LOWER(:name)")
+    Optional<Topic> findDistinctTopicByNameIgnoreCase(String name);
 }
