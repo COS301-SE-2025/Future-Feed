@@ -1617,11 +1617,11 @@ const UserProfile = () => {
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1 min-h-screen overflow-y-auto mt-[21px] mr-7.5 sm:px-5">
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
       <Card className="mb-5 ">
         <CardContent className="ml-[-10px]">
           <div className="relative">
@@ -2180,12 +2180,12 @@ const UserProfile = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <aside className="w-full lg:w-[350px] hidden lg:block mx-[-2px] mt-5">
-        <div className="sticky top-4">
-          <div className="w-full lg:w-[320px] mb-5">
+      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+        <div className="sticky top-4 space-y-5">
+          <div className="w-full lg:w-[320px] lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px]">
+          <div className="w-full lg:w-[320px] lg:ml-7">
             <WhoToFollow />
           </div>
         </div>
