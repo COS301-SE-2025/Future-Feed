@@ -100,7 +100,7 @@ const Help = () => {
               <AccordionTrigger>How to Create a Post</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={PostCreationHelp} type="video/mp4" />
+                  <source src={HowToCreatePostsMobile} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
@@ -109,16 +109,16 @@ const Help = () => {
               <AccordionTrigger>How to Follow Users</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={FollowHelpMobile} type="video/mp4" />
+                  <source src={HowToFollowMobile} type="video/mp4" />
                 </video>
               </AccordionContent>
 
             </AccordionItem>
             <AccordionItem value="mobile-theme">
-              <AccordionTrigger>How to Change Theme </AccordionTrigger>
+              <AccordionTrigger>How to Create a Bot </AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={HowToChangeThemeMobile} type="video/mp4" />
+                  <source src={HowToCreateBotsMobile} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
@@ -130,7 +130,7 @@ const Help = () => {
               <AccordionTrigger>How to Log In</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={LoginHelp} type="video/mp4" />
+                  <source src={HowtoLoginDesktop} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
@@ -139,7 +139,7 @@ const Help = () => {
               <AccordionTrigger>How to Create a Post</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={PostCreationHelp} type="video/mp4" />
+                  <source src={HowToCreatePostDesktop} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
@@ -148,15 +148,15 @@ const Help = () => {
               <AccordionTrigger>How to Follow Users</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={FollowHelpDesktop} type="video/mp4" />
+                  <source src={HowToFollowDesktop} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
             <AccordionItem value="-theme">
-              <AccordionTrigger>How to Change Theme</AccordionTrigger>
+              <AccordionTrigger>How to Create a Bot</AccordionTrigger>
               <AccordionContent>
                 <video controls className="w-full future-feed:border-lime rounded-xl border ">
-                  <source src={HowToChangeThemeDesktop} type="video/mp4" />
+                  <source src={HowToCreateBotsDesktop} type="video/mp4" />
                 </video>
               </AccordionContent>
             </AccordionItem>
