@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,9 @@ import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 interface Bot {
   id: number;
@@ -37,6 +38,9 @@ interface ApiBot {
 interface LoadingState {
   allBots: boolean;
   toggling: Set<number>;
+  creating: boolean;
+  editing: boolean;
+  deleting: boolean;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -52,10 +56,15 @@ const Bots: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingBotId, setDeletingBotId] = useState<number | null>(null);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState<LoadingState>({
+    const [loading, setLoading] = useState<LoadingState>({
     allBots: false,
     toggling: new Set<number>(),
+    creating: false,
+    editing: false,
+    deleting: false,
   });
 
   useEffect(() => {
@@ -173,11 +182,12 @@ const Bots: React.FC = () => {
 
   const createBot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
-      setError("All fields are required.");
+    if (!newBotName.trim() || !newBotDescription.trim()) {
+      setError("Bot Name and Bot Prompt are required.");
       return;
     }
 
+    setLoading((prev) => ({ ...prev, creating: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots`, {
         method: "POST",
@@ -187,7 +197,7 @@ const Bots: React.FC = () => {
           name: newBotName,
           prompt: newBotDescription,
           schedule: newBotSchedule,
-          contextSource: newBotContextSource,
+          contextSource: newBotContextSource.trim() || "N/A",
           isActive: true,
         }),
       });
@@ -229,16 +239,19 @@ const Bots: React.FC = () => {
     } catch (err) {
       console.error("Error creating bot:", err);
       setError(err instanceof Error ? err.message : "Failed to create bot. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, creating: false }));
     }
   };
 
   const updateBot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingBot || !newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
-      setError("All fields are required.");
+    if (!editingBot || !newBotName.trim() || !newBotDescription.trim()) {
+      setError("Bot Name and Bot Prompt are required.");
       return;
     }
 
+    setLoading((prev) => ({ ...prev, editing: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots/${editingBot.id}`, {
         method: "PUT",
@@ -248,7 +261,7 @@ const Bots: React.FC = () => {
           name: newBotName,
           prompt: newBotDescription,
           schedule: newBotSchedule,
-          contextSource: newBotContextSource,
+          contextSource: newBotContextSource.trim() || "N/A",
           isActive: editingBot.isActive,
         }),
       });
@@ -291,14 +304,17 @@ const Bots: React.FC = () => {
     } catch (err) {
       console.error("Error updating bot:", err);
       setError(err instanceof Error ? err.message : "Failed to update bot. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, editing: false }));
     }
   };
 
-  const deleteBot = async (botId: number) => {
-    if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+  const deleteBot = useCallback(async () => {
+    if (!deletingBotId) return;
 
+    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
-      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+      const res = await fetch(`${API_URL}/api/bots/${deletingBotId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -308,18 +324,17 @@ const Bots: React.FC = () => {
         throw new Error(errorText || "Failed to delete bot.");
       }
 
-      setBots((prev) => {
-        const next = prev.filter((b) => b.id !== botId);
-        setActiveBots(next.filter((b) => b.isActive));
-        return next;
-      });
-
+      setBots((prev) => prev.filter((b) => b.id !== deletingBotId));
+      setShowDeleteDialog(false);
+      setDeletingBotId(null);
       setError(null);
     } catch (err) {
-      console.error(`Error deleting bot ${botId}:`, err);
-      setError(err instanceof Error ? err.message : "Failed to delete bot. Please try again.");
+      console.error(`Error deleting bot ${deletingBotId}:`, err);
+      setError(err instanceof Error ? err.message : "Failed to delete bot.");
+    } finally {
+      setLoading((prev) => ({ ...prev, deleting: false }));
     }
-  };
+  }, [deletingBotId]);
 
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4 sm:gap-6">
@@ -434,8 +449,8 @@ const Bots: React.FC = () => {
                                 className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
@@ -500,17 +515,21 @@ const Bots: React.FC = () => {
                               >
                                 <FaEdit />
                               </Button>
+                              <DialogTrigger asChild>
                               <Button
                                 variant="outline"
+                                aria-label={`Delete bot ${bot.name}`}
                                 className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
                               </Button>
+                            </DialogTrigger>
                             </div>
                           </CardContent>
                         </Card>
@@ -522,6 +541,48 @@ const Bots: React.FC = () => {
             </>
           )}
         </Tabs>
+
+        <Dialog open={showDeleteDialog} onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeletingBotId(null);
+        }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Bot</DialogTitle>
+              <DialogDescription
+                className="mt-4"
+              >
+                Are you sure you want to delete this bot? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowDeleteDialog(false)}
+                className="hover:cursor-pointer hover:bg-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={deleteBot}
+                className="hover:cursor-pointer hover:bg-red-500"
+                disabled={loading.deleting}
+              >
+                {loading.deleting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
@@ -590,9 +651,16 @@ const Bots: React.FC = () => {
                 <Button
                   type="submit"
                   className="text-white hover:bg-blue-600 cursor-pointer"
-                  disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
+                  disabled={loading.creating || !newBotName.trim() || !newBotDescription.trim()}
                 >
-                  Create Bot
+                  {loading.creating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Bot"
+                  )}
                 </Button>
               </CardContent>
             </form>
@@ -654,10 +722,17 @@ const Bots: React.FC = () => {
                 <Button
                   type="submit"
                   variant={"secondary"}
-                  className="text-white hover:bg-lime-600 cursor-pointer"
-                  disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
+                  className="text-white bg-blue-500 cursor-pointer hover:bg-blue-600"
+                  disabled={loading.editing || !newBotName.trim() || !newBotDescription.trim()}
                 >
-                  Update Bot
+                  {loading.editing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Bot"
+                  )}
                 </Button>
               </CardContent>
             </form>

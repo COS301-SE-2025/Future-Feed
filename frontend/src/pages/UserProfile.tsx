@@ -1628,9 +1628,9 @@ const UserProfile = () => {
           <div className="mt-10 w-full" />
           <div className="absolute -bottom-10 left-4">
             <Avatar className="w-20 h-20 ">
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+              <Link to="/edit-profile" className="flex items-center gap-3">
                 <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                <AvatarFallback className="bg-white text-gray-600 dark:bg-slate-200 dark:text-black h-18 w-20 rounded-full flex items-center justify-center text-4xl">
+                <AvatarFallback className="bg-white text-gray-600 h-18 w-20 rounded-full flex items-center justify-center text-4xl">
                   <FaUser>
                   </FaUser>
                 </AvatarFallback>
@@ -1767,14 +1767,14 @@ const UserProfile = () => {
             )}
                 
           </div>
-          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
+          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
             <Link to="/followers?tab=following" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium">{followingUsers ? followingUsers.length : 0}</span> Following ·
+              <span className="font-medium text-black">{followingUsers ? followingUsers.length : 0}</span> Following ·
             </Link>
             <Link to="/followers?tab=followers" className="flex items-center gap-3 hover:underline cursor-pointer">
-              <span className="font-medium dark:text-slate-200">{followers ? followers.length : 0}</span> Followers ·
+              <span className="font-medium">{followers ? followers.length : 0}</span> Followers ·
             </Link>
-            <span className="font-medium dark:text-slate-200">{posts.length}</span> Posts
+            <span className="font-medium">{posts.length}</span> Posts
           </div>
         </div>
         </CardContent>
