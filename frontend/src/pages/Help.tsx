@@ -11,12 +11,16 @@ import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { useEffect, useState } from "react";
 import HowtoLoginDesktop from "../assets/howtologindesktop.mp4";
-import HowToLoginMobile from "../assets/mobilelogin.mp4";
-import PostCreationHelp from "../assets/postcreationhelp.mp4";
+import HowToLoginMobile from "../assets/howtologinmobile.mp4";
+
 import HowToFollowDesktop from "../assets/howtofollowdesktop.mp4";
 import HowToFollowMobile from "../assets/howtofollowmobile.mp4";
-import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
-import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
+import HowToCreateBotsDesktop from "../assets/howtomakebotdesktop.mp4";
+import HowToCreateBotsMobile from "../assets/howtomakebotmobile.mp4";
+import HowToCreatePostsMobile from "../assets/howtocreatepostmobile.mp4";
+
+import HowToCreatePostDesktop from "../assets/howtoCreatePostdesktop.mp4";
+
 import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
@@ -99,7 +103,7 @@ if(!currentUser){
       <AccordionTrigger>How to Create a Post</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={PostCreationHelp} type="video/mp4" />
+          <source src={HowToCreatePostsMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -114,10 +118,10 @@ if(!currentUser){
 
     </AccordionItem>
      <AccordionItem value="mobile-theme">
-      <AccordionTrigger>How to Change Theme </AccordionTrigger>
+      <AccordionTrigger>How to Create a Bot </AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={HowToChangeThemeMobile} type="video/mp4" />
+          <source src={HowToCreateBotsMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -140,7 +144,7 @@ if(!currentUser){
       <AccordionTrigger>How to Create a Post</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={PostCreationHelp} type="video/mp4" />
+          <source src={HowToCreatePostDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -154,10 +158,10 @@ if(!currentUser){
       </AccordionContent>
     </AccordionItem>
      <AccordionItem value="-theme">
-      <AccordionTrigger>How to Change Theme</AccordionTrigger>
+      <AccordionTrigger>How to Create a Bot</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={HowToChangeThemeDesktop} type="video/mp4" />
+          <source src={HowToCreateBotsDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
