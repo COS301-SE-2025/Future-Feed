@@ -66,7 +66,7 @@ const FAQS = () => {
       <main className="flex-1 sm:p9 p-4  min-h-screen overflow-y-auto">
 
 
-        <div className="border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-4 sticky top-0 z-10">
+        <div className="border-none future-feed:border-lime future-feed:bg-card flex border justify-between items-center px-2 py-4 sticky top-0 z-10">
           <h1 className="text-xl font-bold">Frequently Asked Questions</h1>
         </div>
         <div className="drop-shadow-xl flex flex-col gap-2 p-3 rounded-lg w-full bg-white">
