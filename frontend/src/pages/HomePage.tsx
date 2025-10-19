@@ -142,6 +142,8 @@ const HomePage = () => {
   const [isViewTopicsModalOpen, setIsViewTopicsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
   const [botId, setBotId] = useState(0);
+  const [currentFollowingPage, setCurrentFollowingPage] = useState(0);
+  const [hasMoreFollowing, setHasMoreFollowing] = useState(true);
   const [isBot, setisBot] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
@@ -636,188 +638,133 @@ const HomePage = () => {
     headers: { Accept: "application/json" },
   };
 
-  const fetchFollowingPosts = async () => {
+  const fetchFollowingPosts = async (page: number): Promise<number> => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch following posts: currentUser is not loaded");
-      return;
+      return 0;
     }
-
-    console.debug("Fetching following posts");
+    console.debug(`Fetching following posts page ${page}`);
     setLoadingFollowing(true);
-
     try {
-      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
-        fetch(`${API_URL}/api/reshares`, commonInit),
-        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/posts/following?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
 
+      if (!postsRes.ok) throw new Error(`Failed to fetch following posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
-      const myReshares: ApiReshare[] = myResharesRes.ok
-        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
-        : [];
-      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+      const pageData = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content || [];
 
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
-      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
-      if (!followedIds.length) {
-        setFollowingPosts([]);
-        return;
-      }
+      // Filter out any malformed posts (same as For You)
+      const validPosts = apiPosts.filter(post => {
+        if (!post?.user?.id) return false;
+        return true;
+      });
 
-      const allFollowingPosts = await Promise.all(
-        followedIds.map(async (userId: number) => {
-          try {
-            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
-            if (!res.ok) return [];
-            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
-          } catch (error) {
-            console.warn(`Failed to fetch posts for user ${userId}:`, error);
-            return [];
-          }
-        })
-      );
-
-      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const uniquePosts: ApiPost[] = Array.from(
-        new Map(flattenedPosts.map((post) => [post.id, post])).values()
-      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
-
-      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
-
-      const formattedPosts = await Promise.all(
+      const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-          try {
-            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
-              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
-              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-              fetchTopicsForPost(post.id),
-            ]);
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
 
-            let comments: ApiComment[] = [];
-            let likeCount = 0;
-            let isLiked = false;
-            let topics: Topic[] = [];
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((c) => c.userId);
 
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = post.isBot && post.botId
+            ? await fetchBot(post.botId, post.user)
+            : await fetchUser(post.user.id, post.user);
+
+          const isReshared = myReshares.some((r) => r.postId === post.id);
+          const reshareCount = myReshares.filter((r) => r.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
             try {
-              comments = commentsRes.ok
-                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
-                : [];
-            } catch (error) {
-              console.warn(`Failed to parse comments for post ${post.id}:`, error);
-              comments = [];
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
             }
-
-            try {
-              const raw = likesCountRes.ok
-                ? await robustParse<number | string | { count: number }>(
-                  likesCountRes,
-                  `likes/count/${post.id}`
-                )
-                : 0;
-              if (typeof raw === "number") likeCount = raw;
-              else if (typeof raw === "string") likeCount = Number(raw) || 0;
-              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
-            } catch (error) {
-              console.warn(`Failed to parse like count for post ${post.id}:`, error);
-            }
-
-            try {
-              const raw = hasLikedRes.ok
-                ? await robustParse<boolean | string | { liked: boolean }>(
-                  hasLikedRes,
-                  `likes/has-liked/${post.id}`
-                )
-                : false;
-              if (typeof raw === "boolean") isLiked = raw;
-              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
-            } catch (error) {
-              console.warn(`Failed to parse like status for post ${post.id}:`, error);
-            }
-
-            try {
-              topics = await topicsRes;
-            } catch (error) {
-              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-              topics = [];
-            }
-
-            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
-
-            const commentsWithUsers = await Promise.all(
-              validComments.map(async (comment: ApiComment) => {
-                try {
-                  const user = await fetchUser(comment.userId, comment.user);
-                  return {
-                    id: comment.id,
-                    postId: comment.postId,
-                    authorId: comment.userId,
-                    content: comment.content,
-                    createdAt: comment.createdAt,
-                    username: user.displayName,
-                    handle: `@${user.username}`,
-                    profilePicture: user.profilePicture,
-                  } as CommentData;
-                } catch (error) {
-                  console.warn(`Failed to process comment ${comment.id}:`, error);
-                  return null;
-                }
-              })
-            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
-
-            const postUser = await fetchUser(post.user.id, post.user);
-            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
-            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
-
-            return {
-              id: post.id,
-              username: postUser.displayName,
-              handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
-              profilePicture: postUser.profilePicture,
-              time: formatRelativeTime(post.createdAt),
-              createdAt: post.createdAt,
-              text: post.content,
-              image: post.imageUrl,
-              isLiked,
-              isBookmarked: bookmarkedPostIds.has(post.id),
-              isReshared,
-              commentCount: validComments.length,
-              authorId: post.user.id,
-              likeCount,
-              reshareCount,
-              comments: commentsWithUsers,
-              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-              topics,
-              isBot: post.isBot,
-              botId: post.botId
-            };
-          } catch (postError) {
-            console.error(`Error processing post ${post.id}:`, postError);
-            return null;
           }
+
+          // Preserve showComments toggle if the post already exists in followingPosts
+          const existing = followingPosts.find(p => p.id === post.id);
+          const showComments = existing ? existing.showComments : false;
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments,
+            topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId,
+          };
         })
       );
 
-      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
-
-      setFollowingPosts(
-        successfulPosts.sort(
+      // Merge like For You does
+      setFollowingPosts(prev => {
+        const map = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (map.has(p.id)) {
+            map.set(p.id, { ...p, showComments: map.get(p.id)!.showComments });
+          } else {
+            map.set(p.id, p);
+          }
+        });
+        return Array.from(map.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      );
+        );
+      });
+
+      return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
-      setTimeout(() => setError(null), 3000);
+      return 0;
     } finally {
       setLoadingFollowing(false);
     }
   };
+
   const fetchDefaultPreset = async () => {
     try {
       const response = await fetch(`${API_URL}/api/presets/default`, {
@@ -2325,7 +2272,10 @@ const HomePage = () => {
     if (activeTab === "for You") {
       fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
-      fetchFollowingPosts();
+      setFollowingPosts([]);
+      setCurrentFollowingPage(0);
+      setHasMoreFollowing(true);
+      fetchFollowingPosts(0);
     }
   }, [activeTab, currentUser]);
 
@@ -2376,6 +2326,30 @@ const HomePage = () => {
     window.addEventListener("scroll", handlePresetScroll);
     return () => window.removeEventListener("scroll", handlePresetScroll);
   }, [presetCurrentPage, loadingPresetPosts, presetHasMore, isViewingPresetFeed, selectedPreset]);
+
+  useEffect(() => {
+    const handleFollowingScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingFollowing &&
+        hasMoreFollowing &&
+        activeTab === "Following"
+      ) {
+        const nextPage = currentFollowingPage + 1;
+        fetchFollowingPosts(nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setHasMoreFollowing(false);
+          } else {
+            setCurrentFollowingPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleFollowingScroll);
+    return () => window.removeEventListener("scroll", handleFollowingScroll);
+  }, [currentFollowingPage, loadingFollowing, hasMoreFollowing, activeTab]);
+
   return (
     <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
@@ -2524,7 +2498,7 @@ const HomePage = () => {
                         </Button>
                         <Button
                           className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
-                          onClick={() => fetchFollowingPosts()}
+                          onClick={() => fetchFollowingPosts(0)}
                           size={'lg'}
                         >
                           Refresh
