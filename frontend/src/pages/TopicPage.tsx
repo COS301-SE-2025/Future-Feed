@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
@@ -106,10 +106,27 @@ const TopicPage = () => {
   const { topicId } = useParams<{ topicId: string }>();
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [posts, setPosts] = useState<PostData[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]); // Added state for topics
+  const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState<number>(0);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const navigate = useNavigate();
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastPostElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading || loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prev) => prev + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore]
+  );
 
   // Utility to format relative time
   const formatRelativeTime = (date: string): string => {
@@ -124,16 +141,11 @@ const TopicPage = () => {
   };
 
   // Fetch user details
-  const fetchUser = async (userId: number, isBot: boolean = false, botId?: number, cachedUser?: UserInfo): Promise<UserProfile> => {
-    if (isBot) {
-      return {
-        id: userId,
-        username: `bot${botId || userId}`,
-        displayName: `Bot #${botId || userId}`,
-        email: "",
-        profilePicture: undefined,
-      };
-    }
+  const fetchUser = async (
+    userId: number,
+    isBot: boolean = false,
+    cachedUser?: UserInfo
+  ): Promise<UserProfile> => {
     if (cachedUser?.username && cachedUser?.displayName) {
       return {
         id: userId,
@@ -144,16 +156,17 @@ const TopicPage = () => {
       };
     }
     try {
-      const res = await fetch(`${API_URL}/api/user/${userId}`, { credentials: "include" });
-      if (!res.ok) throw new Error(`Failed to fetch user ${userId}`);
+      const endpoint = isBot ? `${API_URL}/api/bots/${userId}` : `${API_URL}/api/user/${userId}`;
+      const res = await fetch(endpoint, { credentials: "include" });
+      if (!res.ok) throw new Error(`Failed to fetch ${isBot ? 'bot' : 'user'} ${userId}`);
       const data: UserProfile = await res.json();
       return data;
     } catch (err) {
-      console.warn(`Error fetching user ${userId}:`, err);
+      console.warn(`Error fetching ${isBot ? 'bot' : 'user'} ${userId}:`, err);
       return {
         id: userId,
-        username: `user${userId}`,
-        displayName: `User ${userId}`,
+        username: isBot ? `bot${userId}` : `user${userId}`,
+        displayName: isBot ? `Bot #${userId}` : `User ${userId}`,
         email: "",
       };
     }
@@ -226,134 +239,135 @@ const TopicPage = () => {
 
   // Fetch paginated posts for the topic
   const fetchTopicPosts = async (page: number = 0) => {
-  if (!currentUser?.id) {
-    console.warn("Cannot fetch posts: currentUser is not loaded");
-    setError("User not authenticated.");
-    return;
-  }
-  if (!topicId || isNaN(parseInt(topicId))) {
-    setError("Invalid topic ID.");
-    setLoading(false);
-    return;
-  }
-  console.debug(`Fetching topic posts for topic ${topicId}, page ${page}`);
-  setLoading(true);
-
-  try {
-    const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
-      fetch(`${API_URL}/api/topics/${topicId}/posts/paginated?page=${page}&size=${PAGE_SIZE}`, {
-        credentials: "include",
-      }),
-      fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
-      fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
-    ]);
-
-    if (!postsRes.ok) {
-      const errorData = await postsRes.json();
-      throw new Error(errorData.message || `Failed to fetch posts: ${postsRes.status}`);
+    if (!currentUser?.id) {
+      console.warn("Cannot fetch posts: currentUser is not loaded");
+      setError("User not authenticated.");
+      return;
     }
-    if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
+    if (!topicId || isNaN(parseInt(topicId))) {
+      setError("Invalid topic ID.");
+      setLoading(false);
+      return;
+    }
+    console.debug(`Fetching topic posts for topic ${topicId}, page ${page}`);
+    setLoading(page === 0);
+    setLoadingMore(page > 0);
 
-    const pageData: PaginatedResponse = await postsRes.json();
-    const apiPosts: ApiPost[] = pageData.content;
-    const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
-    const bookmarks: ApiBookmark[] = await bookmarksRes.json();
-    const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
+    try {
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/topics/${topicId}/posts/paginated?page=${page}&size=${PAGE_SIZE}`, {
+          credentials: "include",
+        }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
+      ]);
 
-    const validPosts = apiPosts.filter(post => {
-      if (post.isBot) return true;
-      if (!post.user?.id) {
-        console.warn("Skipping post with undefined user.id:", post);
-        return false;
+      if (!postsRes.ok) {
+        const errorData = await postsRes.json();
+        throw new Error(errorData.message || `Failed to fetch posts: ${postsRes.status}`);
       }
-      return true;
-    });
+      if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-    const formattedPosts: PostData[] = await Promise.all(
-      validPosts.map(async (post: ApiPost) => {
-        const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-          fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
-          fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
-          fetchTopicsForPost(post.id),
-        ]);
+      const pageData: PaginatedResponse = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content;
+      setHasMore(!pageData.last);
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
+      const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
 
-        const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
-        const validComments = comments.filter((comment: ApiComment) => comment.userId);
-
-        const commentsWithUsers = await Promise.all(
-          validComments.map(async (comment: ApiComment) => {
-            const user = await fetchUser(comment.userId);
-            return {
-              id: comment.id,
-              postId: comment.postId,
-              authorId: comment.userId,
-              content: comment.content,
-              createdAt: comment.createdAt,
-              username: user.displayName,
-              handle: `@${user.username}`,
-              profilePicture: user.profilePicture,
-            };
-          })
-        );
-
-        const authorId = post.isBot ? post.botId : (post.user?.id || post.botId);
-        const postUser = post.isBot
-          ? await fetchUser(authorId, true, post.botId)
-          : await fetchUser(authorId, false, undefined, post.user || undefined);
-        const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
-        const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
-
-        let isLiked = false;
-        if (hasLikedRes.ok) {
-          try {
-            isLiked = await hasLikedRes.json();
-          } catch (err) {
-            console.warn(`Failed to parse like status for post ${post.id}:`, err);
-          }
+      const validPosts = apiPosts.filter((post) => {
+        if (!post.isBot && !post.user?.id) {
+          console.warn("Skipping post with undefined user.id:", post);
+          return false;
         }
+        return true;
+      });
 
-        return {
-          id: post.id,
-          username: postUser.displayName,
-          handle: `@${postUser.username}`,
-          profilePicture: postUser.profilePicture,
-          time: formatRelativeTime(post.createdAt),
-          createdAt: post.createdAt,
-          text: post.content,
-          image: post.imageUrl || undefined,
-          isLiked,
-          isBookmarked: bookmarkedPostIds.has(post.id),
-          isReshared,
-          commentCount: validComments.length,
-          authorId,
-          likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
-          reshareCount,
-          comments: commentsWithUsers,
-          showComments: false, // Reset showComments for new posts
-          topics: topicsRes,
-          isBot: post.isBot,
-          botId: post.botId,
-        };
-      })
-    );
+      const formattedPosts: PostData[] = await Promise.all(
+        validPosts.map(async (post: ApiPost) => {
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
 
-    // Replace posts instead of merging
-    setPosts(formattedPosts.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    ));
-  } catch (err) {
-    console.error("Error fetching topic posts:", err);
-    setError(`Failed to load posts for topic ID ${topicId}.`);
-  } finally {
-    setLoading(false);
-  }
-};
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((comment: ApiComment) => comment.userId);
+
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const authorId = post.isBot ? post.botId : post.user?.id || post.botId;
+          const postUser = await fetchUser(authorId, post.isBot, post.user || undefined);
+          const isReshared = myReshares.some((reshare: ApiReshare) => reshare.postId === post.id);
+          const reshareCount = myReshares.filter((reshare: ApiReshare) => reshare.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
+            try {
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
+            }
+          }
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl || undefined,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments: false,
+            topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId,
+          };
+        })
+      );
+
+      setPosts((prev) =>
+        page === 0
+          ? formattedPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          : [...prev, ...formattedPosts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    } catch (err) {
+      console.error("Error fetching topic posts:", err);
+      setError(`Failed to load posts for topic ID ${topicId}.`);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
 
   // Handle post interactions
   const handleLike = (postId: number) => {
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId
           ? {
               ...post,
@@ -366,16 +380,16 @@ const TopicPage = () => {
   };
 
   const handleBookmark = (postId: number) => {
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId ? { ...post, isBookmarked: !post.isBookmarked } : post
       )
     );
   };
 
   const handleReshare = (postId: number) => {
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId
           ? {
               ...post,
@@ -393,8 +407,8 @@ const TopicPage = () => {
       return;
     }
     const tempId = Date.now();
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId
           ? {
               ...post,
@@ -419,12 +433,12 @@ const TopicPage = () => {
   };
 
   const handleDelete = (postId: number) => {
-    setPosts(prev => prev.filter(post => post.id !== postId));
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
   };
 
   const handleToggleComments = (postId: number) => {
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId ? { ...post, showComments: !post.showComments } : post
       )
     );
@@ -455,19 +469,25 @@ const TopicPage = () => {
         navigate("/login", { replace: true });
         return;
       }
-      // Fetch topics initially to populate the topics state
       await fetchTopics();
     };
     loadData();
   }, [navigate]);
 
   useEffect(() => {
-  if (currentUser && topicId) {
-    // Reset posts when topicId changes
-    setPosts([]);
-    fetchTopicPosts();
-  }
-}, [currentUser, topicId]);
+    if (currentUser && topicId) {
+      setPosts([]);
+      setPage(0);
+      setHasMore(true);
+      fetchTopicPosts(0);
+    }
+  }, [currentUser, topicId]);
+
+  useEffect(() => {
+    if (currentUser && topicId && page > 0) {
+      fetchTopicPosts(page);
+    }
+  }, [page, currentUser, topicId]);
 
   // Loading state with skeleton
   if (loading) {
@@ -554,11 +574,11 @@ const TopicPage = () => {
             </span>
           </Button>
           <h1 className="text-3xl font-bold text-black">
-    {topics.find(topic => topic.id === parseInt(topicId || "0"))?.name
-      ? topics.find(topic => topic.id === parseInt(topicId || "0"))!.name.charAt(0).toUpperCase() + 
-        topics.find(topic => topic.id === parseInt(topicId || "0"))!.name.slice(1)
-      : `Topic ${topicId}`}
-  </h1>
+            {topics.find((topic) => topic.id === parseInt(topicId || "0"))?.name
+              ? topics.find((topic) => topic.id === parseInt(topicId || "0"))!.name.charAt(0).toUpperCase() +
+                topics.find((topic) => topic.id === parseInt(topicId || "0"))!.name.slice(1)
+              : `Topic ${topicId}`}
+          </h1>
           <p className="text-gray-600 mt-1">
             {posts.length} {posts.length === 1 ? "Post" : "Posts"} on this topic
           </p>
@@ -566,75 +586,94 @@ const TopicPage = () => {
 
         {/* Posts List */}
         {posts.length > 0 ? (
-  <div className="space-y-4">
-    {posts.map((post) =>
-      post.botId || post.isBot ? (
-        <BotPost
-          key={post.id}
-          profilePicture={post.profilePicture}
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          commentCount={post.commentCount}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDelete(post.id)}
-          onNavigate={() => handleNavigate(post.id)}
-          onProfileClick={() => handleProfileClick(post.authorId)}
-          onToggleComments={() => handleToggleComments(post.id)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          topics={post.topics}
-        />
-      ) : (
-        <Post
-          key={post.id}
-          profilePicture={post.profilePicture}
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          commentCount={post.commentCount}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDelete(post.id)}
-          onNavigate={() => handleNavigate(post.id)}
-          onProfileClick={() => handleProfileClick(post.authorId)}
-          onToggleComments={() => handleToggleComments(post.id)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          topics={post.topics}
-          isImageLoading={false}
-        />
-      )
-    )}
-  </div>
-) : (
-  <p className="text-gray-600">No posts found for this topic.</p>
-)}
+          <div className="space-y-4">
+            {posts.map((post, index) => {
+              const isLastPost = index === posts.length - 1;
+              return (
+                <div key={post.id} ref={isLastPost ? lastPostElementRef : null}>
+                  {post.isBot ? (
+                    <BotPost
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      commentCount={post.commentCount}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDelete(post.id)}
+                      onNavigate={() => handleNavigate(post.id)}
+                      onProfileClick={() => handleProfileClick(post.authorId)}
+                      onToggleComments={() => handleToggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!currentUser}
+                      currentUser={currentUser}
+                      authorId={post.authorId}
+                      topics={post.topics}
+                    />
+                  ) : (
+                    <Post
+                      profilePicture={post.profilePicture}
+                      username={post.username}
+                      handle={post.handle}
+                      time={post.time}
+                      text={post.text}
+                      image={post.image}
+                      isLiked={post.isLiked}
+                      likeCount={post.likeCount}
+                      isBookmarked={post.isBookmarked}
+                      commentCount={post.commentCount}
+                      isReshared={post.isReshared}
+                      reshareCount={post.reshareCount}
+                      onLike={() => handleLike(post.id)}
+                      onBookmark={() => handleBookmark(post.id)}
+                      onAddComment={(commentText) => handleAddComment(post.id, commentText)}
+                      onReshare={() => handleReshare(post.id)}
+                      onDelete={() => handleDelete(post.id)}
+                      onNavigate={() => handleNavigate(post.id)}
+                      onProfileClick={() => handleProfileClick(post.authorId)}
+                      onToggleComments={() => handleToggleComments(post.id)}
+                      showComments={post.showComments}
+                      comments={post.comments}
+                      isUserLoaded={!!currentUser}
+                      currentUser={currentUser}
+                      authorId={post.authorId}
+                      topics={post.topics}
+                      isImageLoading={false}
+                    />
+                  )}
+                </div>
+              );
+            })}
+            {loadingMore && (
+              <div className="animate-pulse space-y-4 mt-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="border border-rose-gold-accent-border rounded-lg p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full" />
+                      <div className="flex-1">
+                        <div className="h-4 bg-gray-300 rounded w-3/4" />
+                      </div>
+                    </div>
+                    <div className="h-4 bg-gray-300 rounded w-full mt-2" />
+                    <div className="h-4 bg-gray-300 rounded w-5/6 mt-2" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-gray-600">No posts found for this topic.</p>
+        )}
       </main>
       <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
         <div className="sticky top-4 space-y-5">

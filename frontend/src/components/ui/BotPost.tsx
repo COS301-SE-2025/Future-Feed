@@ -210,7 +210,7 @@ const BotPost: React.FC<PostProps> = ({
                 {topics.map((topic) => (
                   <span
                     key={topic.id}
-                    className="inline-block border bg-blue-300 text-black text-xs sm:text-sm px-2 rounded-md"
+                    className="inline-block border bg-blue-500 text-white text-xs sm:text-sm px-2 rounded-xl"
                   >
                     {topic.name}
                   </span>
