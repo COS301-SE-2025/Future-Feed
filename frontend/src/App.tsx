@@ -38,7 +38,7 @@ function App() {
       <Route path="/bot/:botId" element={<BotPage />} />
       <Route path="/edit-bot" element={<EditBotPage />} />
       <Route path="/post/:postId" element={<PostPage />} />
-      <Route path="/topic/:topicName" element={<TopicPage />} />
+      <Route path="/topic/:topicId" element={<TopicPage />} />
       <Route path="/forgotpassword" element={<Forgot />} />
       <Route path="/construction" element={<Construction />} />
       <Route path="*" element={<Navigate to="/home" replace />} />
