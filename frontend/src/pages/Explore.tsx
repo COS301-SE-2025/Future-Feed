@@ -492,7 +492,7 @@ const Explore = () => {
 //if (isAuthenticated === null) {
     // Still checking auth,
   //  return (
-    //  <div className="flex justify-center items-center min-h-screen dark:bg-blue-950">
+    //  <div className="flex justify-center items-center min-h-screen ">
       //  <p className="text-lg text-slate-400">Checking authentication...</p>
       //</div>
     //);
@@ -586,17 +586,17 @@ const Explore = () => {
 
   if (isLoadingUser) {
   return (
-    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime min-h-screen bg-white  ">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="w-full lg:flex-1 p-2 overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0  z-10">
+          <h1 className="text-xl  font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
             <Link to="/settings">
-              <Settings size={20} className="dark:text-slate-200" />
+              <Settings size={20} className="" />
             </Link>
           </div>
         </div>
@@ -660,17 +660,17 @@ if(currentUser){
 
   if (isLoadingUser) {
   return (
-    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white dark:bg-blue-950 dark:text-white">
+    <div className="flex flex-col lg:flex-row items-start future-feed:bg-black future-feed:text-lime  min-h-screen bg-white  ">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
       <main className="w-full lg:flex-1 p-2 overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-slate-200 font-bold">Explore</h1>
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0   z-10">
+          <h1 className="text-xl  font-bold">Explore</h1>
           <div className="flex items-center gap-3">
             <SearchUser onSearch={debouncedSearch} />
             <Link to="/settings">
-              <Settings size={20} className="dark:text-slate-200" />
+              <Settings size={20} className="" />
             </Link>
           </div>
         </div>
