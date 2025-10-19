@@ -78,9 +78,7 @@ const Settings = () => {
     return () => document.removeEventListener("keydown", down)
   }, [navigate])
   
-  if(!currentUser){
-    return <div className="p-4 text-black">Not logged in.</div>;
-  }
+ 
 
   return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime min-h-screen bg-ffgrey">
