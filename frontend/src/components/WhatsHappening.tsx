@@ -40,16 +40,28 @@ const WhatsHappening = () => {
               {trendingTopics.map((topic) => (
                 <div key={topic.id}>
 
-                  <p className="font-semibold">#{topic.name}</p>
+                  <Link
+                    to={`/topic/${encodeURIComponent(topic.name)}`}
+                    className="font-semibold hover:underline"
+                  >
+                    #{topic.name}
+                  </Link>
                 </div>
               ))}
             </>
           )}
           {trendingTopics && trendingTopics.length === 0 && !isLoading && (
             <div className=" text-sm">
-              <p className="font-semibold">#Anime</p>
-              <p className="font-semibold">#Tech</p>
-              <p className="font-semibold">#Health</p>
+              {["Anime", "Tech", "Health", "Sports"].map((topicName) => (
+                <div key={topicName}>
+                  <Link
+                    to={`/topic/${encodeURIComponent(topicName)}`}
+                    className="font-semibold hover:underline"
+                  >
+                    #{topicName}
+                  </Link>
+                </div>
+              ))}
             </div>
           )}
           {!trendingTopics && !isLoading && !isError && (
