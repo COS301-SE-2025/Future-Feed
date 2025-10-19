@@ -934,35 +934,43 @@ const BotPage = () => {
                   <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
-                  <div className="mt-[-50px] gap-4 flex items-center">
-                    <Button
-                      variant="secondary"
-                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
-                      onClick={handleExecuteBot}
-                      disabled={isExecuting}
-                    >
-                      {isExecuting ? (
-                        <Loader2 className="w-5 h-5 animate-spin ml-1" />
-                      ) : null}
-                      {isExecuting ? "Executing..." : "Execute Bot"}
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                      onClick={() => {
-                        setNewBotName(bot.name);
-                        setNewBotDescription(bot.prompt);
-                        setNewBotSchedule(bot.schedule);
-                        setNewBotContextSource(bot.contextSource);
-                        setIsEditModalOpen(true);
-                      }}
-                    >
-                      {isEditing ? (
-                        <Loader2 className="w-5 h-5 animate-spin ml-1" />
-                      ) : null}
-                      {isEditing ? "Editing..." : "Edit Bot"}
-                    </Button>
-                  </div>
+                <div className="lg:mt-[-50px] mt-[-40px] gap-4 flex items-center flex-col flex sm:flex-row justify-center sm:justify-start">
+  <Button
+    variant="secondary"
+    className="
+      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
+      bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50
+      px-3 py-2               /* mobile padding */
+      sm:px-4 sm:py-2.5       /* desktop padding */
+    "
+    onClick={handleExecuteBot}
+    disabled={isExecuting}
+  >
+    {isExecuting ? <Loader2 className="w-5 h-5 animate-spin ml-1" /> : null}
+    {isExecuting ? "Executing..." : "Execute Bot"}
+  </Button>
+
+  <Button
+    variant="secondary"
+    className="
+      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
+      bg-blue-500 text-white hover:bg-blue-700
+      px-3 py-2
+      sm:px-4 sm:py-2.5
+    "
+    onClick={() => {
+      setNewBotName(bot.name);
+      setNewBotDescription(bot.prompt);
+      setNewBotSchedule(bot.schedule);
+      setNewBotContextSource(bot.contextSource);
+      setIsEditModalOpen(true);
+    }}
+  >
+    {isEditing ? <Loader2 className="w-5 h-5 animate-spin ml-1" /> : null}
+    {isEditing ? "Editing..." : "Edit Bot"}
+  </Button>
+</div>
+
                 )}
               </div>
               <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
