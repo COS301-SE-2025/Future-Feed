@@ -1,5 +1,7 @@
 package com.syntexsquad.futurefeed.Controller;
 
+import com.syntexsquad.futurefeed.dto.PostDTO;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.LikeService;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +14,11 @@ import java.util.List;
 public class LikeController {
 
     private final LikeService likeService;
+    private final PostViewMapper postViewMapper;
 
-    public LikeController(LikeService likeService) {
+    public LikeController(LikeService likeService, PostViewMapper postViewMapper) {
         this.likeService = likeService;
+        this.postViewMapper = postViewMapper;
     }
 
     @PostMapping("/{postId}")
@@ -54,8 +58,8 @@ public class LikeController {
     }
 
     @GetMapping("/my-likes/{userId}")
-    public ResponseEntity<List<Post>> getLikedPosts(@PathVariable Integer userId) {
-        return ResponseEntity.ok(likeService.getLikedPostsByUserId(userId));
+    public ResponseEntity<List<PostDTO>> getLikedPosts(@PathVariable Integer userId) {
+            return ResponseEntity.ok(postViewMapper.toDtoList(likeService.getLikedPostsByUserId(userId)));
     }
 
 

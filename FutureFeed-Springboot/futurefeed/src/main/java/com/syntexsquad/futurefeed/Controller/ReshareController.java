@@ -1,7 +1,9 @@
 package com.syntexsquad.futurefeed.Controller;
 
 //import com.syntexsquad.futurefeed.dto.PostReshareInfoDTO;
+import com.syntexsquad.futurefeed.dto.PostDTO;
 import com.syntexsquad.futurefeed.dto.ReshareRequest;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Reshare;
 import com.syntexsquad.futurefeed.service.ReshareService;
@@ -15,9 +17,10 @@ import java.util.List;
 public class ReshareController {
 
     private final ReshareService reshareService;
-
-    public ReshareController(ReshareService reshareService) {
+    private final PostViewMapper postViewMapper;
+    public ReshareController(ReshareService reshareService, PostViewMapper postViewMapper) {
         this.reshareService = reshareService;
+        this.postViewMapper = postViewMapper;
     }
 
     @PostMapping
@@ -54,7 +57,7 @@ public class ReshareController {
     }
 
     @GetMapping("/my-reshares/{userId}")
-    public ResponseEntity<List<Post>> getResharedPosts(@PathVariable Integer userId) {
-        return ResponseEntity.ok(reshareService.getResharedPostsByUserId(userId));
+    public ResponseEntity<List<PostDTO>> getResharedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(postViewMapper.toDtoList(reshareService.getResharedPostsByUserId(userId)));
     }
 }
