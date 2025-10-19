@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
 import BotPost from "@/components/ui/BotPost";
 import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface FollowRelation {
   id: number;
@@ -1571,6 +1572,7 @@ const Profile = () => {
                       disabled={unfollowingId === user.id || followingId === user.id}
                       className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
                     >
+                      {unfollowingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
                       {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
                     </Button>
                   ) : (
@@ -1579,6 +1581,8 @@ const Profile = () => {
                       disabled={unfollowingId === user.id || followingId === user.id}
                       className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
                     >
+
+                      {followingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
                       {followingId === user.id ? "Following..." : "Follow"}
                     </Button>
                   )

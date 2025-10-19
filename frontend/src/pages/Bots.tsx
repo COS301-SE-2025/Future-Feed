@@ -75,7 +75,7 @@ const Bots: React.FC = () => {
         if (res.status === 401) {
           navigate("/login")
           throw new Error("Unauthorized: Please log in to view bots.");
-          
+
         } else if (res.status === 404) {
           throw new Error("Bots endpoint not found. Please check the server configuration.");
         } else {
@@ -84,6 +84,7 @@ const Bots: React.FC = () => {
       }
 
       const botList: ApiBot[] = await res.json();
+      console.log("Raw bots data from API:", botList); // Add this line
 
       const botsWithActiveStatus: Bot[] = await Promise.all(
         botList.map(async (bot) => {
@@ -367,8 +368,8 @@ const Bots: React.FC = () => {
         )}
 
         <Tabs defaultValue="all" className="w-full p-2">
-          <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
           <TabsList className="w-full flex justify-around border rounded-2xl">
+            <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
             <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
           </TabsList>
 
