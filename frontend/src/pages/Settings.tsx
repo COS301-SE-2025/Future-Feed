@@ -93,7 +93,7 @@ const Settings = () => {
           <h1 className="text-xl font-bold">Settings</h1>
         </div>
 
-        <div className="w-full max-w-4xl mx-auto px-4">
+        <div className="w-full max-w-10xl mx-auto">
           <Command className="border-rose-gold-accent-border future-feed:border-lime rounded-2xl border shadow-md w-full max-w-full">
             <CommandInput placeholder=" Search..." />
             <CommandList>
