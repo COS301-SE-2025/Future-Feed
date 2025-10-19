@@ -934,10 +934,10 @@ const BotPage = () => {
                   <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
-                  <div className="mt-[-50px] gap-4 flex items-center">
+                  <div className="mt-[-90px] ml-[20px] flex flex-col sm:flex-row gap-4 items-center">
                     <Button
                       variant="secondary"
-                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
+                      className="w-full sm:w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
                       onClick={handleExecuteBot}
                       disabled={isExecuting}
                     >
@@ -948,7 +948,7 @@ const BotPage = () => {
                     </Button>
                     <Button
                       variant="secondary"
-                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
+                      className="w-full sm:w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
                       onClick={() => {
                         setNewBotName(bot.name);
                         setNewBotDescription(bot.prompt);
@@ -964,9 +964,6 @@ const BotPage = () => {
                     </Button>
                   </div>
                 )}
-              </div>
-              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
-                <span className="font-medium">{posts.length} Posts</span>
               </div>
             </div>
           </CardContent>
