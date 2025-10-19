@@ -1786,7 +1786,7 @@ const Profile = () => {
   {tabLoading.comments ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : commentedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No commented posts yet.</div>
+    <div className="p-4 text-gray-400">No commented posts yet.</div>
   ) : (
     commentedPosts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -1862,7 +1862,7 @@ const Profile = () => {
   {tabLoading.likes ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : likedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No likes yet.</div>
+    <div className="p-4 text-gray-400">No likes yet.</div>
   ) : (
     likedPosts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -1938,7 +1938,7 @@ const Profile = () => {
   {tabLoading.bookmarks ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : bookmarkedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No bookmarks yet.</div>
+    <div className="p-4 text-gray-400">No bookmarks yet.</div>
   ) : (
     bookmarkedPosts.map((post) => (
       <div key={post.id} className="mb-4">

@@ -1,11 +1,14 @@
 package com.syntexsquad.futurefeed.service;
 
 import com.syntexsquad.futurefeed.dto.FeedPresetDTO;
+import com.syntexsquad.futurefeed.dto.PostDTO;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.dto.PresetRuleDTO;
 import com.syntexsquad.futurefeed.model.*;
 import com.syntexsquad.futurefeed.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,6 +34,9 @@ public class FeedPresetService {
     private final AppUserRepository appUserRepository;
     private final PostRepository postRepository;
     private final PostTopicRepository postTopicRepository;
+
+    @Autowired
+    private PostViewMapper postViewMapper;
 
     public FeedPresetService(FeedPresetRepository presetRepo,
                              PresetRuleRepository ruleRepo,
@@ -327,6 +333,77 @@ public class FeedPresetService {
         List<Post> out = new ArrayList<>(resultFeed);
         out.sort(CREATED_DESC);
         return out;
+    }
+
+    @Transactional
+    public Map<String, Object> createPresetByTopicPaginated(String topicName, int page, int size) {
+        AppUser user = getAuthenticatedUser();
+
+        Optional<Topic> topicOpt = postTopicRepository.findDistinctTopicByNameIgnoreCase(topicName);
+        if (topicOpt.isEmpty()) {
+            throw new RuntimeException("Topic '" + topicName + "' not found");
+        }
+        Topic topic = topicOpt.get();
+
+        String presetName = "Preset for " + topic.getName();
+
+        // Check if preset already exists for this user and topic
+        FeedPreset preset = presetRepo.findByUserId(user.getId()).stream()
+                .filter(p -> presetName.equalsIgnoreCase(p.getName()))
+                .findFirst()
+                .orElseGet(() -> {
+                    FeedPreset newPreset = new FeedPreset();
+                    newPreset.setUserId(user.getId());
+                    newPreset.setName(presetName);
+                    newPreset.setDefaultPreset(false);
+                    return presetRepo.save(newPreset);
+                });
+
+        // Ensure rule exists and matches (topic + 100%)
+        PresetRule rule = ruleRepo.findByPresetId(preset.getId()).stream()
+                .filter(r -> Objects.equals(r.getTopicId(), topic.getId()))
+                .findFirst()
+                .orElseGet(() -> {
+                    PresetRule newRule = new PresetRule();
+                    newRule.setPresetId(preset.getId());
+                    newRule.setTopicId(topic.getId());
+                    newRule.setPercentage(100);
+                    newRule.setSourceType(null);
+                    newRule.setSpecificUserId(null);
+                    return ruleRepo.save(newRule);
+                });
+
+        // If rule exists but is incorrect, fix it
+        boolean changed = false;
+        if (!Objects.equals(rule.getPercentage(), 100)) {
+            rule.setPercentage(100);
+            changed = true;
+        }
+        if (rule.getSourceType() != null || rule.getSpecificUserId() != null) {
+            rule.setSourceType(null);
+            rule.setSpecificUserId(null);
+            changed = true;
+        }
+        if (changed) {
+            ruleRepo.save(rule);
+        }
+
+        // Generate paginated feed using existing logic
+        Page<Post> pageObj = generateFeedForPreset(preset.getId(), page, size);
+
+        List<PostDTO> content = postViewMapper.toDtoList(pageObj.getContent());
+
+        // Build response
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("preset", preset);
+        body.put("rule", rule);
+        body.put("page", pageObj.getNumber());
+        body.put("size", pageObj.getSize());
+        body.put("totalPages", pageObj.getTotalPages());
+        body.put("totalElements", pageObj.getTotalElements());
+        body.put("last", pageObj.isLast());
+        body.put("feed", content);
+        return body;
     }
 
     public Page<Post> generateFeedForPreset(Integer presetId, int page, int size) {

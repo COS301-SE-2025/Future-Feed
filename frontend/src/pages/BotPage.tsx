@@ -957,7 +957,10 @@ const BotPage = () => {
                         setIsEditModalOpen(true);
                       }}
                     >
-                      Edit Bot
+                      {isEditing ? (
+                        <Loader2 className="w-5 h-5 animate-spin ml-1" />
+                      ) : null}
+                      {isEditing ? "Editing..." : "Edit Bot"}
                     </Button>
                   </div>
                 )}
