@@ -6,6 +6,7 @@ import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Loader2 } from "lucide
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 interface UserProfile {
   id: number;
@@ -59,7 +60,6 @@ interface PostProps {
   currentUser: UserProfile | null;
   authorId: number;
   topics: Topic[];
-  // NEW: Add loading state for image generation
   isImageLoading?: boolean;
 }
 
@@ -91,7 +91,6 @@ const Post: React.FC<PostProps> = ({
   currentUser,
   authorId,
   topics,
-  // NEW: Add loading state for image generation
   isImageLoading = false,
 }) => {
   const [newComment, setNewComment] = React.useState("");
@@ -118,7 +117,8 @@ const Post: React.FC<PostProps> = ({
       target.tagName === "TEXTAREA" ||
       target.closest("button") ||
       target.closest("input") ||
-      target.closest("textarea")
+      target.closest("textarea") ||
+      target.closest("a") // Prevent navigation when clicking a topic link
     ) {
       return;
     }
@@ -135,7 +135,7 @@ const Post: React.FC<PostProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardContent className="sm:px-8 sm:py-1 ">
+      <CardContent className="sm:px-8 sm:py-1">
         <div className="flex gap-3 sm:gap-4">
           <Avatar
             className="h-10 w-10 sm:h-12 sm:w-12"
@@ -200,16 +200,17 @@ const Post: React.FC<PostProps> = ({
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
-                  <span
+                  <Link
                     key={topic.id}
-                    className="inline-block border bg-blue-500 text-white text-xs sm:text-sm px-2 rounded-xl"
+                    to={`/topic/${topic.id}`}
+                    onClick={(e) => e.stopPropagation()} // Prevent post navigation
+                    className="inline-block border bg-blue-500 text-white text-xs sm:text-sm px-2 rounded-xl hover:bg-blue-600 transition-colors"
                   >
                     {topic.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
-
             {isImageLoading ? (
               <div className="mt-4 rounded-lg border max-w-full h-auto flex items-center justify-center bg-gray-100 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
@@ -227,8 +228,7 @@ const Post: React.FC<PostProps> = ({
                 />
               </div>
             )}
-
-            <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
+            <div className="flex flex-wrap justify-between sm:gap-4 mt-4">
               <Button
                 variant="ghost"
                 size="sm"
@@ -244,7 +244,6 @@ const Post: React.FC<PostProps> = ({
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
-
                 <span className="hidden xl:inline">Like</span>
                 <span className="ml-1">{likeCount}</span>
               </Button>
@@ -298,18 +297,17 @@ const Post: React.FC<PostProps> = ({
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
                 <Bookmark className={cn("h-4 w-4 sm:h-5 sm:w-5", isBookmarked && "fill-current")} />
-                <span className="hidden xl:inline ">Bookmark</span>
+                <span className="hidden xl:inline">Bookmark</span>
               </Button>
             </div>
             {showComments && (
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 ">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200">
                   <MessageCircle className="h-4 w-4 text-blue-500" />
                   <h3 className="font-semibold text-sm text-gray-700">
                     Comments
                   </h3>
                 </div>
-
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
@@ -321,7 +319,7 @@ const Post: React.FC<PostProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h2 className="font-bold text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                            <span className="text-xs text-gray-500 ">
+                            <span className="text-xs text-gray-500">
                               {formatRelativeTime(comment.createdAt)}
                             </span>
                           </div>
@@ -335,13 +333,11 @@ const Post: React.FC<PostProps> = ({
                 ) : (
                   <div className="text-center py-4 mb-4 rounded-lg bg-gray-50">
                     <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs sm:text-sm text-gray-500 ">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       No comments yet. Be the first to comment!
                     </p>
                   </div>
                 )}
-
-                {/* Add "Add a comment" label */}
                 <div className="mb-2">
                   <label className="text-sm font-medium text-gray-700">
                     Add a comment
