@@ -74,7 +74,7 @@ const LandingPage = () => {
     }, []);
 
     return (
-        <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto dark:bg-blue-950 dark:text-blue-500    bg-ffgrey text-white-800 overflow-hidden ">
+        <div className="future-feed:bg-black future-feed:text-white overscroll-none min-h-screen w-auto bg-ffgrey text-white-800 overflow-hidden ">
             <div className="  ">
                 <Sheet >
                     <SheetTrigger className="mt-2 ml-2" asChild>
@@ -107,8 +107,7 @@ const LandingPage = () => {
                 </Sheet>
 
             </div>
-            <div className="flex h-screen w-screen overflow-hidden ">
-                {/* Sticky Image Section */}
+            <div className="flex h-screen w-screen overflow-hidden">
                 <div className="hidden w-1/2    md:flex justify-center items-start pt-3 sticky top-0 h-screen">
                     <AnimatePresence mode="wait">
                         <motion.img
@@ -123,10 +122,7 @@ const LandingPage = () => {
                         />
                     </AnimatePresence>
                 </div>
-
-                {/* Scrolling Text Section */}
                 <div ref={scrollContainerRef} className=" w-full md:w-1/2   overflow-y-auto  h-screen px-6 md:px-12 pt-20 space-y-90 scroll-smooth">
-                    {/* Instagram and username */}
                     <motion.div
                         initial={{ opacity: 0, y: 50 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -134,13 +130,11 @@ const LandingPage = () => {
                         className="flex justify-end items-center md:justify-end gap-3"
                     >
                         <span className="text-lg font-semibold">@syntexsquad</span>
-                        <Avatar className="w-auto h-auto border-4 dark:border-slate-200 dark:bg-blue-950">
+                        <Avatar className="w-auto h-auto border-4 ">
                             <AvatarImage src={FF} alt="@syntexsquad" />
                             <AvatarFallback>SYNTEXSQUAD</AvatarFallback>
                         </Avatar>
                     </motion.div>
-
-                    {/* Section 1 */}
                     <motion.div
                     className="text-center md:text-left"
                         id="scroll-indicator"
@@ -154,14 +148,12 @@ const LandingPage = () => {
                         }}
 
                     >
-                        <span className="text-sm dark:text-slate-200 future-feed:text-lime  text-blue-500    ">FutureFeed</span>
+                        <span className="text-sm future-feed:text-lime  text-blue-500    ">FutureFeed</span>
                         <h1 className="text-5xl font-bold leading-tight">
                             Share ideas and <br /> connect through <br /> conversation with <br />
-                            <span className="text-blue-500 future-feed:text-lime  dark:text-slate-200 ">Future Feed</span>
+                            <span className="text-blue-500 future-feed:text-lime  ">Future Feed</span>
                         </h1>
                     </motion.div>
-
-                    {/* Section 2 - Post your feed */}
                     <motion.div
                         ref={section2Ref}
                         id="scroll-indicator"
@@ -176,13 +168,11 @@ const LandingPage = () => {
                         <h1 className="text-4xl font-bold future-feed:text-lime leading-tight text-blue-500 ">
                             What will you say?
                         </h1>
-                        <p className="mt-4 text-lg dark:text-slate-200">
+                        <p className="mt-4 text-lg">
                             Get started on Future Feed by logging in or creating <br /> your Future Feed account. <br />
                             your Future Feed username is reserved just for you
                         </p>
                     </motion.div>
-
-                    {/* Section 3 - Get updates */}
                     <motion.div
                         ref={section3Ref}
                         id="scroll-indicator"
@@ -194,16 +184,14 @@ const LandingPage = () => {
                             y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl font-bold future-feed:text-lime leading-tight text-blue-500 ">
+                        <h1 className="text-4xl font-bold future-feed:text-lime leading-tight text-blue-500">
                             Keep up with your <br /> favourite creators <br />
                             and friends
                         </h1>
-                        <p className="mt-4 text-lg dark:text-slate-200">
+                        <p className="mt-4 text-lg">
                             See feeds from people and creators you follow
                         </p>
                     </motion.div>
-
-                    {/* Section 4 - Get updates */}
                     <motion.div
                         ref={section4Ref}
                         id="scroll-indicator"
@@ -215,19 +203,16 @@ const LandingPage = () => {
                             y: "-100%",
                         }}
                     >
-                        <h1 className="text-4xl future-feed:text-lime font-bold leading-tight text-blue-500  dark:text-blue-500 ">
+                        <h1 className="text-4xl future-feed:text-lime font-bold leading-tight text-blue-500 ">
                             Express yourself in <br /> more ways imaginable
                         </h1>
-                        <p className="mt-4 text-lg dark:text-slate-200">
+                        <p className="mt-4 text-lg ">
                             Create your very own custom presets <br />
                             Have your very own personal AI bot <br/>
                             Be the architect of your own digital consumption
 
                         </p>
                     </motion.div >
-
-
-                    {/* Optional: Call to action */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         whileInView={{ opacity: 1, scale: 1 }}
@@ -240,7 +225,7 @@ const LandingPage = () => {
                         
                     >
                         <Link to="/login">
-                            <Button  className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300  dark:hover:text-blue-500  dark:hover:border-slate-200 border  dark:hover:bg-indigo-950 hover:cursor-pointer">Join the Future Feed Family</Button>
+                            <Button  className="px-6 py-6 font-bold rounded-2xl shadow-lg transition duration-300 border hover:cursor-pointer">Join the Future Feed Family</Button>
                         </Link>
                     </motion.div>
                 </div>

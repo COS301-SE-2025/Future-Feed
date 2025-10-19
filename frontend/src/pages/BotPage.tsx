@@ -872,7 +872,7 @@ const BotPage = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+      <div className="flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -884,17 +884,17 @@ const BotPage = () => {
             </div>
           </div>
           <div
-        className="mt-4 b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
-      >
-        <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
-          <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            className="mt-4 b-4 border border-rose-gold-accent-border rounded-lg p-4 animate-pulse space-y-4"
+          >
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gray-300 rounded-full" />
+              <div className="flex-1">
+                <div className="h-4 bg-gray-300 rounded w-3/4" />
+              </div>
+            </div>
+            <div className="h-4 bg-gray-300 rounded w-full" />
+            <div className="h-4 bg-gray-300 rounded w-5/6" />
           </div>
-        </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
-      </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
@@ -908,10 +908,10 @@ const BotPage = () => {
     );
   }
 
-  if (!bot) return <div className="p-4 text-black dark:text-white">Bot not found.</div>;
+  if (!bot) return <div className="p-4 text-black">Bot not found.</div>;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -922,56 +922,59 @@ const BotPage = () => {
               <div className="mt-10 w-full" />
               <div className="absolute -bottom-10 left-4">
                 <Avatar className="w-20 h-20">
-                  <FaRobot className="w-15 h-15 text-black dark:text-gray-100 rounded-full" />
+                  <FaRobot className="w-15 h-15 text-black rounded-full" />
                 </Avatar>
               </div>
             </div>
             <div className="pt-16 px-4">
               <div className="text-gray-400 flex justify-between items-start">
                 <div className="ml-30 mt-[-110px]">
-                  <h1 className="text-2xl text-black dark:text-white font-bold">{bot.name}</h1>
+                  <h1 className="text-2xl text-black font-bold">{bot.name}</h1>
                   <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
-                  <p className="mt-4 text-xl text-black dark:text-white">{bot.prompt || "This is an area for prompt"}</p>
+                  <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
-                <div className="mt-[-50px] gap-4 flex items-center">
-                  <Button
-                    variant="secondary"
-                    className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
-                    onClick={handleExecuteBot}
-                    disabled={isExecuting}
-                  >
-                    {isExecuting ? (
-                      <Loader2 className="w-5 h-5 animate-spin ml-1" />
-                    ) : null}
-                    {isExecuting ? "Executing..." : "Execute Bot"}
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                    onClick={() => {
-                      setNewBotName(bot.name);
-                      setNewBotDescription(bot.prompt);
-                      setNewBotSchedule(bot.schedule);
-                      setNewBotContextSource(bot.contextSource);
-                      setIsEditModalOpen(true);
-                    }}
-                  >
-                    Edit Bot
-                  </Button>
-                </div>
+                  <div className="mt-[-50px] gap-4 flex items-center">
+                    <Button
+                      variant="secondary"
+                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50"
+                      onClick={handleExecuteBot}
+                      disabled={isExecuting}
+                    >
+                      {isExecuting ? (
+                        <Loader2 className="w-5 h-5 animate-spin ml-1" />
+                      ) : null}
+                      {isExecuting ? "Executing..." : "Execute Bot"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
+                      onClick={() => {
+                        setNewBotName(bot.name);
+                        setNewBotDescription(bot.prompt);
+                        setNewBotSchedule(bot.schedule);
+                        setNewBotContextSource(bot.contextSource);
+                        setIsEditModalOpen(true);
+                      }}
+                    >
+                      {isEditing ? (
+                        <Loader2 className="w-5 h-5 animate-spin ml-1" />
+                      ) : null}
+                      {isEditing ? "Editing..." : "Edit Bot"}
+                    </Button>
+                  </div>
                 )}
               </div>
-              <div className="left-4 text-black dark:text-white mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
-                <span className="font-medium dark:text-slate-200">{posts.length} Posts</span>
+              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
+                <span className="font-medium">{posts.length} Posts</span>
               </div>
             </div>
           </CardContent>
         </Card>
         <Tabs defaultValue="posts" className="w-full p-0">
-          <TabsList className="w-full flex justify-center rounded-lg bg-white dark:bg-gray-900 border border-rose-gold-accent-border dark:border-slate-200 shadow-md mb-5 sticky top-[68px] z-10">
+          <TabsList className="w-full flex justify-center rounded-lg bg-white border border-rose-gold-accent-border shadow-md mb-5 sticky top-[68px] z-10">
             <TabsTrigger
-              className="text-xl font-semibold text-black dark:text-white data-[state=active]:bg-slate-500 data-[state=active]:text-white data-[state=active]:rounded-lg py-3 px-6"
+              className="text-xl font-semibold text-black data-[state=active]:bg-slate-500 data-[state=active]:text-white data-[state=active]:rounded-lg py-3 px-6"
               value="posts"
             >
               Posts
@@ -987,7 +990,7 @@ const BotPage = () => {
           </div>
         )}
         {posts.length === 0 ? (
-          <div className="p-4 text-gray-400 dark:text-gray-400">No posts yet.</div>
+          <div className="p-4 text-gray-400">No posts yet.</div>
         ) : (
           posts.map((post) => (
             <div key={post.id} className="mb-4">
@@ -1035,9 +1038,9 @@ const BotPage = () => {
 
       {isEditModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
-          <Card className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md border-2 border-drop-shadow-x">
+          <Card className="bg-white rounded-xl p-6 w-full max-w-md border-2 border-drop-shadow-x">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl font-semibold text-blue-500 dark:text-blue-300 ml-7">
+              <CardTitle className="text-xl font-semibold text-blue-500 ml-7">
                 Edit Bot
               </CardTitle>
               <Button
@@ -1051,7 +1054,7 @@ const BotPage = () => {
                   setFormErrors({});
                   setError(null);
                 }}
-                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400"
+                className="text-gray-600 hover:text-red-600"
                 disabled={isEditing}
               >
                 <FaTimes className="w-6 h-6" />
@@ -1064,7 +1067,7 @@ const BotPage = () => {
                     placeholder="Bot Name"
                     value={newBotName}
                     onChange={(e) => setNewBotName(e.target.value)}
-                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    className="text-black border-slate-400 focus:ring-2 focus:ring-blue-500"
                     maxLength={50}
                     disabled={isEditing}
                   />
@@ -1077,7 +1080,7 @@ const BotPage = () => {
                     placeholder="Bot Prompt"
                     value={newBotDescription}
                     onChange={(e) => setNewBotDescription(e.target.value)}
-                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    className="text-black border-slate-400 focus:ring-2 focus:ring-blue-500"
                     maxLength={500}
                     disabled={isEditing}
                   />
@@ -1093,7 +1096,7 @@ const BotPage = () => {
                         e.target.value as "hourly" | "daily" | "weekly" | "monthly"
                       )
                     }
-                    className="text-black dark:text-white border border-slate-400 dark:border-gray-600 p-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
+                    className="text-black border border-slate-400 p-2 rounded-md w-full focus:ring-2 focus:ring-blue-500"
                     disabled={isEditing}
                   >
                     <option value="hourly">Hourly</option>
@@ -1107,14 +1110,14 @@ const BotPage = () => {
                     placeholder="Context Source (optional)"
                     value={newBotContextSource}
                     onChange={(e) => setNewBotContextSource(e.target.value)}
-                    className="text-black dark:text-white border-slate-400 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
+                    className="text-black border-slate-400 focus:ring-2 focus:ring-blue-500"
                     disabled={isEditing}
                   />
                 </div>
                 <Button
                   type="submit"
                   variant="secondary"
-                  className="text-white bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 disabled:opacity-50"
+                  className="text-white bg-blue-500 hover:bg-blue-600 disabled:opacity-50"
                   disabled={
                     !newBotName.trim() ||
                     !newBotDescription.trim() ||

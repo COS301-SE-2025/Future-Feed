@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
 import BotPost from "@/components/ui/BotPost";
 import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface FollowRelation {
   id: number;
@@ -157,7 +158,7 @@ const Profile = () => {
   });
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const { followStatus, setFollowStatus} = useFollowStore();
+  const { followStatus, setFollowStatus } = useFollowStore();
   const queryClient = useQueryClient();
   const { refetch: refetchFollowing } = useFollowingQuery(currentUserId);
   const [followingId, setFollowingId] = useState<number | null>(null);
@@ -372,7 +373,6 @@ const Profile = () => {
         isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-        //console.log("No posts found for user:", userId);
         setPosts([]);
         setFetchedTabs((prev) => ({ ...prev, posts: true }));
         profileDataCache.posts = [];
@@ -928,10 +928,10 @@ const Profile = () => {
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -945,10 +945,10 @@ const Profile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
             : p
         );
       setPosts(updatePostState);
@@ -975,10 +975,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isLiked: wasLiked,
-                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
+                ...p,
+                isLiked: wasLiked,
+                likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+              }
               : p
           );
         setPosts(revertPostState);
@@ -1025,10 +1025,10 @@ const Profile = () => {
   const handleBookmark = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1117,10 +1117,10 @@ const Profile = () => {
   const handleReshare = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1134,10 +1134,10 @@ const Profile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
+              ...p,
+              isReshared: !p.isReshared,
+              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+            }
             : p
         );
       setPosts(updateReshareState);
@@ -1168,10 +1168,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isReshared: wasReshared,
-                  reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
-                }
+                ...p,
+                isReshared: wasReshared,
+                reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
+              }
               : p
           );
         setPosts(revertReshareState);
@@ -1229,10 +1229,10 @@ const Profile = () => {
     }
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1291,10 +1291,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  comments: p.comments.filter((c) => c.id !== Date.now()),
-                  commentCount: p.commentCount - 1,
-                }
+                ...p,
+                comments: p.comments.filter((c) => c.id !== Date.now()),
+                commentCount: p.commentCount - 1,
+              }
               : p
           );
         setPosts(revertCommentState);
@@ -1322,12 +1322,12 @@ const Profile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: p.comments.map((c) =>
-                  c.id === Date.now() ? formattedComment : c
-                ),
-                commentCount: p.commentCount,
-              }
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === Date.now() ? formattedComment : c
+              ),
+              commentCount: p.commentCount,
+            }
             : p
         );
       setPosts(updateCommentStatus);
@@ -1386,16 +1386,16 @@ const Profile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border  dark:border-slate-200 rounded-lg animate-pulse "
+        className="mb-4 border rounded-lg animate-pulse "
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 rounded w-full" />
+        <div className="h-4 bg-gray-300 rounded w-5/6" />
       </div>
     ));
   };
@@ -1435,18 +1435,18 @@ const Profile = () => {
       return [];
     }
   };
-  
+
 
   useEffect(() => {
-  const loadData = async () => {
-    if (!profileId) {
-      console.warn("No profileId provided in URL");
-      setError("No profile ID provided");
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
+    const loadData = async () => {
+      if (!profileId) {
+        console.warn("No profileId provided in URL");
+        setError("No profile ID provided");
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
 
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
@@ -1458,33 +1458,33 @@ const Profile = () => {
       navigate('/profile');
     }
 
-    const userData = await fetchUser(profileId);
-    setUser(userData);
+      const userData = await fetchUser(profileId);
+      setUser(userData);
 
-    if (userData) {
-      await updateFollowStatuses([{ id: userData.id, username: userData.username, displayName: userData.displayName, email: userData.email, bio: userData.bio ?? undefined }]);
-      const allUsers = await fetchUsers();
-      await Promise.all([
-        fetchFollowing(userData.id, allUsers),
-        setFollowingUsers(profileDataCache.followingUsers),
-        fetchFollowers(userData.id, allUsers),
-        setFollowers(profileDataCache.followers),
-        fetchUserPosts(userData.id, userId || userData.id),
-      ]);
-    }
+      if (userData) {
+        await updateFollowStatuses([{ id: userData.id, username: userData.username, displayName: userData.displayName, email: userData.email, bio: userData.bio ?? undefined }]);
+        const allUsers = await fetchUsers();
+        await Promise.all([
+          fetchFollowing(userData.id, allUsers),
+          setFollowingUsers(profileDataCache.followingUsers),
+          fetchFollowers(userData.id, allUsers),
+          setFollowers(profileDataCache.followers),
+          fetchUserPosts(userData.id, userId || userData.id),
+        ]);
+      }
 
-    setIsLoading(false);
-  };
-  loadData();
-}, [profileId]);
+      setIsLoading(false);
+    };
+    loadData();
+  }, [profileId]);
 
   if (isLoading) {
-  return (
-      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+    return (
+      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime    overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        
+
         <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] px-5">
           <div className="mb-5 animate-pulse">
             <Card>
@@ -1512,8 +1512,8 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-            <div className="border-t border-gray-200 dark:border-slate-700">
-              <div className="flex justify-around py-3 px-4 border-b border-gray-200 dark:border-slate-700 animate-pulse">
+            <div className="border-t border-gray-200 ">
+              <div className="flex justify-around py-3 px-4 border-b border-gray-200  animate-pulse">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-9 flex-1 mx-1 rounded-full" />
                 ))}
@@ -1525,21 +1525,21 @@ const Profile = () => {
           </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        </aside>
       </div>
     );
-}
+  }
 
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
@@ -1547,57 +1547,60 @@ const Profile = () => {
         <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
-          <div className="mt-10 w-full" />
-          <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-20 h-20">
-              <div className="flex items-center gap-3 dark:hover:text-white">
-                <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              <div className="mt-10 w-full" />
+              <div className="absolute -bottom-10 left-4">
+                <Avatar className="w-20 h-20">
+                  <div className="flex items-center gap-3">
+                    <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
+                    <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </div>
+                </Avatar>
               </div>
-            </Avatar>
-          </div>
-        </div>
-        <div className="pt-16 px-4">
-          <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-110px]">
-              <h1 className="text-xl text-black font-bold">{user.displayName || user.username}</h1>
-              <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
-              <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
-            {currentUserId && currentUserId !== user.id ? (
-              followStatus[user.id] ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => handleUnfollow(user.id)}
-                  disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
-                >
-                  {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => handleFollow(user.id)}
-                  disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                >
-                  {followingId === user.id ? "Following..." : "Follow"}
-                </Button>
-              )
-            ) : (
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="secondary" className=" bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
-                Edit Profile
+            <div className="pt-16 px-4">
+              <div className="text-gray-400 flex justify-between items-start">
+                <div className="ml-30 mt-[-110px]">
+                  <h1 className="text-xl text-black font-bold">{user.displayName || user.username}</h1>
+                  <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
+                  <p className="mt-2 text-xl text-black">{user.bio}</p>
+                </div>
+                {currentUserId && currentUserId !== user.id ? (
+                  followStatus[user.id] ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleUnfollow(user.id)}
+                      disabled={unfollowingId === user.id || followingId === user.id}
+                      className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
+                    >
+                      {unfollowingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
+                      {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleFollow(user.id)}
+                      disabled={unfollowingId === user.id || followingId === user.id}
+                      className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
+                    >
 
-              </Button>
-            </Link>
-            )}
-          </div>
-          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
-              <span className="font-medium">{followingUsers.length}</span> Following  ·
-              <span className="font-medium">{followers.length}</span> Followers  ·
-            <span className="font-medium">{posts.length}</span> Posts
-          </div>
-        </div>
+                      {followingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
+                      {followingId === user.id ? "Following..." : "Follow"}
+                    </Button>
+                  )
+                ) : (
+                  <Link to="/edit-profile" className="flex items-center gap-3">
+                    <Button variant="secondary" className=" bg-white border-rose-gold-accent-border mt-[-220px] hover:cursor-pointer">
+                      Edit Profile
+
+                    </Button>
+                  </Link>
+                )}
+              </div>
+              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
+                <span className="font-medium">{followingUsers.length}</span> Following  ·
+                <span className="font-medium">{followers.length}</span> Followers  ·
+                <span className="font-medium">{posts.length}</span> Posts
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Tabs
@@ -1606,19 +1609,19 @@ const Profile = () => {
           onValueChange={(value) => handleTabChange(value, user.id, currentUserId || user.id)}
         >
           <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="posts">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="posts">
               Posts
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="re-feeds">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="re-feeds">
               Re-Feeds
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="comments">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="comments">
               Comments
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="likes">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="likes">
               Likes
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="bookmarks">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="bookmarks">
               Bookmarks
             </TabsTrigger>
           </TabsList>
@@ -1631,7 +1634,7 @@ const Profile = () => {
             {tabLoading.posts ? (
               <div className="flex flex-col">{renderSkeletonPosts()}</div>
             ) : posts.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No posts yet.</div>
+              <div className="p-4 text-gray-400">No posts yet.</div>
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1707,7 +1710,7 @@ const Profile = () => {
             {tabLoading.refeeds ? (
               <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
             ) : reshares.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No re-feeds yet.</div>
+              <div className="p-4 text-gray-400">No re-feeds yet.</div>
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
@@ -1783,7 +1786,7 @@ const Profile = () => {
   {tabLoading.comments ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : commentedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No commented posts yet.</div>
+    <div className="p-4 text-gray-400">No commented posts yet.</div>
   ) : (
     commentedPosts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -1859,7 +1862,7 @@ const Profile = () => {
   {tabLoading.likes ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : likedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No likes yet.</div>
+    <div className="p-4 text-gray-400">No likes yet.</div>
   ) : (
     likedPosts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -1935,7 +1938,7 @@ const Profile = () => {
   {tabLoading.bookmarks ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : bookmarkedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No bookmarks yet.</div>
+    <div className="p-4 text-gray-400">No bookmarks yet.</div>
   ) : (
     bookmarkedPosts.map((post) => (
       <div key={post.id} className="mb-4">
@@ -2005,15 +2008,15 @@ const Profile = () => {
         </Tabs>
       </main>
       <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
-  <div className="sticky top-4 space-y-5">
-    <div className="w-full lg:w-[320px] lg:ml-7">
-      <WhatsHappening />
-    </div>
-    <div className="w-full lg:w-[320px] lg:ml-7">
-      <WhoToFollow />
-    </div>
-  </div>
-</aside>
+        <div className="sticky top-4 space-y-5">
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhoToFollow />
+          </div>
+        </div>
+      </aside>
     </div>
   );
 };

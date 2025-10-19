@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
@@ -94,6 +96,7 @@ public class TopicService {
 
     @Transactional
     @CacheEvict(value = {"topics", "postTopics"}, allEntries = true)
+    @Async
     public void autoTagIfMissing(Integer postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post not found"));
@@ -184,4 +187,9 @@ public class TopicService {
     public List<Post> getPostsForTopic(Integer topicId) {
         return topicRepository.findPostsByTopicId(topicId);
     }
+
+    public Page<Post> getPaginatedPostsForTopic(Integer topicId, int page, int size) {
+        return topicRepository.findPaginatedPostsByTopicId(topicId, PageRequest.of(page, size));
+    }
+        
 }

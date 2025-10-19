@@ -162,8 +162,8 @@ const FollowerFollowing = () => {
         </Avatar>
         <div className="flex-1">
           <p className="font-semibold">{user.displayName}</p>
-          <p className="text-sm text-gray-500 dark:text-slate-500">@{user.username}</p>
-          <p className="text-sm dark:text-slate-500 mt-1">{user.bio || ""}</p>
+          <p className="text-sm text-gray-500 ">@{user.username}</p>
+          <p className="text-sm mt-1">{user.bio || ""}</p>
         </div>
         {followStatus[user.id] ? (
           <Button
@@ -205,44 +205,44 @@ const FollowerFollowing = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen bg-white dark:bg-blue-950 future-feed:bg-black future-feed:text-lime">
+      <div className="flex flex-col min-h-screen bg-white future-feed:bg-black future-feed:text-lime">
         <main className="flex-1 p-4">
           <Skeleton className="h-24 w-24 rounded-full mx-auto mb-4" />
           <Skeleton className="h-6 w-1/2 mx-auto mb-2" />
           <Skeleton className="h-4 w-1/3 mx-auto mb-4" />
           {renderSkeleton()}
         </main>
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-blue-950 future-feed:bg-black border-t dark:border-slate-700">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white future-feed:bg-black border-t">
           <PersonalSidebar />
         </nav>
       </div>
     );
   }
 
-  if (!user) return <div className="p-4 text-black dark:text-white">Not logged in.</div>;
+  if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white dark:bg-blue-950 future-feed:bg-black future-feed:text-lime text-black dark:text-slate-200">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white future-feed:bg-black future-feed:text-lime text-black">
       <aside className="hidden lg:block w-[245px] ml-6 flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
       <main className="flex-1 p-4 lg:mr-7">
-        <div className="bg-white dark:bg-blue-950 future-feed:bg-black rounded-2xl p-4 mb-4">
+        <div className="bg-white future-feed:bg-black rounded-2xl p-4 mb-4">
           <div className="flex flex-col items-center">
             <Avatar className="w-24 h-24 border-4 border-slate-300">
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
+              <Link to="/edit-profile" className="flex items-center gap-3">
                 <AvatarImage src={user.profilePicture || GRP1} alt={`@${user.username}`} />
                 <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
               </Link>
             </Avatar>
             <h1 className="text-xl font-bold mt-2 future-feed:text-white">{user.displayName || user.username}</h1>
-            <p className="text-sm text-gray-500 dark:text-slate-500">@{user.username}</p>
+            <p className="text-sm text-gray-500">@{user.username}</p>
           </div>
         </div>
 
         <Tabs defaultValue={tabParam} className="w-full">
-          <TabsList className="w-full flex justify-around border rounded-2xl mb-4 bg-white dark:bg-blue-950 future-feed:bg-black">
+          <TabsList className="w-full flex justify-around border rounded-2xl mb-4 bg-white future-feed:bg-black">
             <TabsTrigger
               value="followers"
               className="flex-1 rounded-2xl data-[state=active]:border-b-2 data-[state=active]:border-blue-500"
@@ -262,7 +262,7 @@ const FollowerFollowing = () => {
               followers.length > 0 ? (
                 <div className="space-y-4">{followers.map((user) => renderUserCard(user))}</div>
               ) : (
-                <p className="p-4 text-gray-500 dark:text-slate-500">You currently have no followers.</p>
+                <p className="p-4 text-gray-500">You currently have no followers.</p>
               )
             )}
           </TabsContent>
@@ -272,7 +272,7 @@ const FollowerFollowing = () => {
               followingUsers.length > 0 ? (
                 <div className="space-y-4">{followingUsers.map((user) => renderUserCard(user))}</div>
               ) : (
-                <p className="p-4 text-gray-500 dark:text-slate-500">You are not following anyone.</p>
+                <p className="p-4 text-gray-500">You are not following anyone.</p>
               )
             )}
           </TabsContent>
@@ -291,7 +291,7 @@ const FollowerFollowing = () => {
         </div>
       </aside>
 
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-blue-950 future-feed:bg-black border-t dark:border-slate-700 z-50">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white future-feed:bg-black border-t z-50">
         <PersonalSidebar />
       </nav>
     </div>

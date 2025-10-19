@@ -119,7 +119,7 @@ const StaticPost: React.FC<PostProps> = ({
   };
 
   return (
-    <Card className={cn("dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 lg:mx-0 mx-3 relative", className)}>
+    <Card className={cn("border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 lg:mx-0 mx-3 relative", className)}>
       {isCopied && (
         <div className="absolute top-2 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white text-xs sm:text-sm px-3 py-1 rounded-full z-10">
           Link copied!
@@ -130,36 +130,36 @@ const StaticPost: React.FC<PostProps> = ({
           variant="ghost"
           size="sm"
           onClick={handleBack}
-          className="text-gray-500 dark:text-white hover:text-blue-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2 hover:cursor-pointer"
+          className="text-gray-500 hover:text-blue-500 p-1 sm:p-2 mb-2 hover:cursor-pointer"
           aria-label="Go back"
         >
           <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
           <span className="hidden sm:inline text-sm ml-1">Back</span>
         </Button>
         <div className="flex gap-4">
-          <Avatar 
+          <Avatar
             className="h-10 w-10 sm:h-12 sm:w-12 hover:cursor-pointer"
             onClick={(e) => {
-                e.stopPropagation();
-                onProfileClick();
-              }}
+              e.stopPropagation();
+              onProfileClick();
+            }}
           >
             <AvatarImage src={profilePicture} alt={handle} />
             <AvatarFallback>{getInitials(username)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 
-                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+              <h2
+                className="font-bold text-sm sm:text-base hover:cursor-pointer hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();
                   onProfileClick();
-                }}  
+                }}
               >
                 {username || "Unknown User"}
               </h2>
               <div className="flex items-center gap-2">
-                <span className="future-feed:text-white text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap mr-4">
+                <span className="future-feed:text-white text-xs sm:text-sm whitespace-nowrap mr-4">
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -167,7 +167,7 @@ const StaticPost: React.FC<PostProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={onDelete}
-                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 dark:hover:text-red-400 p-1 sm:p-2"
+                    className="text-red-500 hover:bg-lime-200 hover:text-red-600 p-1 sm:p-2"
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -175,22 +175,22 @@ const StaticPost: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p 
-              className="dark:text-gray-300 text-xs sm:text-sm"
+            <p
+              className="text-xs sm:text-sm"
               onClick={(e) => {
                 e.stopPropagation();
                 onProfileClick();
               }}
             >
-                {handle || "@unknown"}
+              {handle || "@unknown"}
             </p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base">{text}</p>
+            <p className="mt-2 text-sm sm:text-base">{text}</p>
             {image && (
               <div className="mt-4 w-full max-w-full overflow-hidden rounded-xl">
                 <img
                   src={image}
                   alt="Post"
-                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50 dark:bg-gray-900"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50"
                   loading="lazy"
                 />
               </div>
@@ -202,8 +202,8 @@ const StaticPost: React.FC<PostProps> = ({
                 onClick={onLike}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
-                  isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
-                  "hover:text-red-500 dark:hover:text-red-400 hover:cursor-pointer"
+                  isLiked ? "text-red-500" : "text-gray-500",
+                  "hover:text-red-500 hover:cursor-pointer"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
@@ -211,14 +211,14 @@ const StaticPost: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Like</span>
                 <span className="text-xs sm:text-sm ml-1">{likeCount}</span>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
-                  showComments ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-white",
-                  "hover:text-blue-500 dark:hover:text-blue-400 hover:cursor-pointer"
+                  showComments ? "text-blue-500" : "text-gray-500",
+                  "hover:text-blue-500 hover:cursor-pointer"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
@@ -226,15 +226,15 @@ const StaticPost: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Comment</span>
                 <span className="text-xs sm:text-sm ml-1">{commentCount}</span>
               </Button>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onReshare}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
-                  isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
-                  "hover:text-green-500 dark:hover:text-green-400 hover:cursor-pointer"
+                  isReshared ? "text-green-500" : "text-gray-500",
+                  "hover:text-green-500 hover:cursor-pointer"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
@@ -242,14 +242,14 @@ const StaticPost: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Re-Feed</span>
                 <span className="text-xs sm:text-sm ml-1">{reshareCount}</span>
               </Button>
-              
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 dark:text-white hover:text-green-500 dark:hover:text-lime-400 hover:cursor-pointer"
+                      "flex items-center gap-1 px-2 py-1 sm:px-3 text-gray-500 hover:text-green-500 hover:cursor-pointer"
                     )}
                     aria-label="Share post"
                   >
@@ -257,13 +257,13 @@ const StaticPost: React.FC<PostProps> = ({
                     <span className="hidden sm:inline text-sm">Share</span>
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-80 dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime">
+                <PopoverContent className="w-80 border-2 border-rose-gold-accent-border future-feed:border-lime">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
                       value={postUrl}
                       readOnly
-                      className="flex-1 p-2 bg-gray-100 dark:bg-gray-700 text-sm rounded border  future-feed:border-lime"
+                      className="flex-1 p-2 bg-gray-100 text-sm rounded border  future-feed:border-lime"
                     />
                     <Button
                       onClick={handleCopyLink}
@@ -275,15 +275,15 @@ const StaticPost: React.FC<PostProps> = ({
                   </div>
                 </PopoverContent>
               </Popover>
-              
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onBookmark}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3 hover:cursor-pointer",
-                  isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
-                  "hover:text-yellow-500 dark:hover:text-yellow-400"
+                  isBookmarked ? "text-yellow-500" : "text-gray-500",
+                  "hover:text-yellow-500"
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
@@ -291,26 +291,26 @@ const StaticPost: React.FC<PostProps> = ({
                 <span className="hidden sm:inline text-sm">Bookmark</span>
               </Button>
             </div>
-            
+
             {showComments && (
               <div className="mt-4">
-                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200 dark:border-gray-700"></div>
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200"></div>
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">
+                            <h2 className="font-bold text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                            <span className="text-xs text-gray-500">
                               {formatRelativeTime(comment.createdAt)}
                             </span>
                           </div>
-                          <p className="text-xs sm:text-sm dark:text-white mt-1">
+                          <p className="text-xs sm:text-sm mt-1">
                             {comment.content}
                           </p>
                         </div>
@@ -318,16 +318,16 @@ const StaticPost: React.FC<PostProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50 dark:bg-gray-800/30">
+                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-">
                     <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-500">
                       No comments yet. Be the first to comment!
                     </p>
                   </div>
                 )}
 
                 <div className="mb-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="text-sm font-medium text-gray-700">
                     Add a comment
                   </label>
                 </div>
