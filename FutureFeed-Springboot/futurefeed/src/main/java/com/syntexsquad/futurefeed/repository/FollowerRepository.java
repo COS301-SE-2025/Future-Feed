@@ -19,5 +19,8 @@ public interface FollowerRepository extends JpaRepository<Follower, FollowerId> 
             "GROUP BY u ORDER BY COUNT(f.followerId) DESC")
     List<Object[]> findTopFollowedUsers(Pageable pageable);
 
+    @Query("SELECT f.followedId FROM Follower f WHERE f.followerId = :userId")
+    List<Integer> findFollowedIdsByFollowerId(Integer userId);
+
 
 }

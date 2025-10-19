@@ -7,6 +7,7 @@ import com.syntexsquad.futurefeed.dto.PostRequest;
 import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.moderation.ModerationClient;
 import com.syntexsquad.futurefeed.moderation.ModerationResult;
+import com.syntexsquad.futurefeed.model.AppUser;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.MediaService;
 import com.syntexsquad.futurefeed.service.PostService;
@@ -174,6 +175,48 @@ public class PostController {
                     .body(Map.of("error", "BadRequest", "message", "Invalid JSON in 'post'"));
         }
     }
+
+    @GetMapping("/following")
+    public ResponseEntity<Map<String, Object>> getFollowingPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            AppUser currentUser = postService.getCurrentAuthenticatedUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Unauthorized", "message", "No active session"));
+            }
+
+            List<Integer> followedIds = postService.getFollowedUserIds(currentUser.getId());
+            if (followedIds.isEmpty()) {
+                return ResponseEntity.ok(Map.of(
+                        "content", List.of(),
+                        "page", page,
+                        "size", size,
+                        "totalPages", 0,
+                        "totalElements", 0,
+                        "last", true
+                ));
+            }
+
+            Page<Post> pageObj = postService.getFollowingPosts(followedIds, page, size);
+            Map<String, Object> body = new LinkedHashMap<>();
+            body.put("content", postViewMapper.toDtoList(pageObj.getContent()));
+            body.put("page", pageObj.getNumber());
+            body.put("size", pageObj.getSize());
+            body.put("totalPages", pageObj.getTotalPages());
+            body.put("totalElements", pageObj.getTotalElements());
+            body.put("last", pageObj.isLast());
+            return ResponseEntity.ok(body);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "FeedError", "message", e.getMessage()));
+        }
+    }
+
+
 
     private ResponseEntity<?> createPostInternal(PostRequest postRequest, MultipartFile file) {
         List<String> links = extractLinks(postRequest.getContent());
