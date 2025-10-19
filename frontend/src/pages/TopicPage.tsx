@@ -7,6 +7,7 @@ import Post from "@/components/ui/post";
 import BotPost from "@/components/ui/BotPost";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { formatRelativeTime } from "@/lib/timeUtils";
 
 interface UserProfile {
   id: number;
@@ -127,18 +128,6 @@ const TopicPage = () => {
     },
     [loading, loadingMore, hasMore]
   );
-
-  // Utility to format relative time
-  const formatRelativeTime = (date: string): string => {
-    const now = new Date();
-    const postDate = new Date(date);
-    const diffMs = now.getTime() - postDate.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins < 60) return `${diffMins}m ago`;
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours}h ago`;
-    return `${Math.floor(diffHours / 24)}d ago`;
-  };
 
   // Fetch user details
   const fetchUser = async (
@@ -515,7 +504,7 @@ const TopicPage = () => {
             </div>
           </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[10px] lg:top-[16px] lg:h-screen hidden lg:block mr-6.5">
+        <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen hidden lg:block mr-6.5">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
