@@ -57,7 +57,7 @@ public class TopicController {
     @GetMapping("/trending")
     public List<Topic> getTrendingTopics(
             @RequestParam(defaultValue = "5") int limit,
-            @RequestParam(defaultValue = "24") int hoursBack) {
+            @RequestParam(defaultValue = "168") int hoursBack) {
         return topicService.getTrendingTopics(limit, hoursBack);
     }
 
