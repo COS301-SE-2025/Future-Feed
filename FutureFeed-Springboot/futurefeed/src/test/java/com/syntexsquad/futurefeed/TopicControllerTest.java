@@ -5,7 +5,13 @@ import com.syntexsquad.futurefeed.Controller.TopicController;
 import com.syntexsquad.futurefeed.config.SecurityConfig;
 import com.syntexsquad.futurefeed.dto.PostTopicDTO;
 import com.syntexsquad.futurefeed.dto.TopicDTO;
-import com.syntexsquad.futurefeed.model.Topic;
+import com.syntexsquad.futurefeed.dto.PostDTO;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
+import com.syntexsquad.futurefeed.model.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+
 import com.syntexsquad.futurefeed.service.CustomOAuth2UserService;
 import com.syntexsquad.futurefeed.service.TopicService;
 import org.junit.jupiter.api.Test;
@@ -34,6 +40,9 @@ public class TopicControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
+    private PostViewMapper postViewMapper;
+
+    @MockBean
     private TopicService topicService;
 
     @MockBean
@@ -60,6 +69,71 @@ public class TopicControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(1))
             .andExpect(jsonPath("$.name").value("Tech"));
+    }
+
+    @Test
+    @WithMockUser
+    public void getPaginatedPostsByTopic_ShouldReturnPaginatedPosts() throws Exception {
+        int topicId = 5;
+        UserPost post1 = new UserPost();
+        post1.setId(1);
+        Post post2 = new UserPost();
+        post2.setId(2);
+
+        List<Post> posts = List.of(post1, post2);
+        Page<Post> page = new PageImpl<>(posts, PageRequest.of(0, 2), 2);
+
+        PostDTO dto1 = new PostDTO();
+        dto1.setId(1);
+        PostDTO dto2 = new PostDTO();
+        dto2.setId(2);
+
+        when(topicService.getPaginatedPostsForTopic(topicId, 0, 2)).thenReturn(page);
+        when(postViewMapper.toDtoList(posts)).thenReturn(List.of(dto1, dto2));
+
+        mockMvc.perform(get("/api/topics/{topicId}/posts/paginated", topicId)
+                .param("page", "0")
+                .param("size", "2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[1].id").value(2))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(2))
+            .andExpect(jsonPath("$.totalElements").value(2))
+            .andExpect(jsonPath("$.last").value(true));
+    }
+
+    @Test
+    @WithMockUser
+    public void getPaginatedPostsByTopic_ShouldReturnEmptyContent_WhenNoPostsExist() throws Exception {
+        int topicId = 99;
+        Page<Post> emptyPage = new PageImpl<>(List.of(), PageRequest.of(0, 10), 0);
+
+        when(topicService.getPaginatedPostsForTopic(topicId, 0, 10)).thenReturn(emptyPage);
+        when(postViewMapper.toDtoList(List.of())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/topics/{topicId}/posts/paginated", topicId)
+                .param("page", "0")
+                .param("size", "10"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isEmpty())
+            .andExpect(jsonPath("$.totalElements").value(0))
+            .andExpect(jsonPath("$.last").value(true));
+    }
+
+    @Test
+    @WithMockUser
+    public void getPaginatedPostsByTopic_ShouldReturn404_WhenTopicNotFound() throws Exception {
+        int invalidId = 1234;
+        when(topicService.getPaginatedPostsForTopic(invalidId, 0, 10))
+                .thenThrow(new RuntimeException("Topic not found"));
+
+        mockMvc.perform(get("/api/topics/{topicId}/posts/paginated", invalidId)
+                .param("page", "0")
+                .param("size", "10"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("TopicNotFound"))
+            .andExpect(jsonPath("$.message").value("Topic not found"));
     }
 
     @Test
