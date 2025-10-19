@@ -363,7 +363,7 @@ const Bots: React.FC = () => {
         <PersonalSidebar />
       </aside>
 
-      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px] text-black">
         <div className="flex justify-between items-center px-6 py-2 sticky top-0 z-10">
           <h1 className="text-xl font-bold">Bots Management</h1>
           <div className="flex justify-between items-center gap-4">
@@ -583,19 +583,16 @@ const Bots: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
-        <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
-          <WhatsHappening />
-          <WhoToFollow />
-        </div>
       </main>
 
       <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
         <div className="sticky top-4 space-y-5">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] lg:ml-7">
-          <WhoToFollow />
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhoToFollow />
+          </div>
         </div>
       </aside>
       {isCreateModalOpen && (
