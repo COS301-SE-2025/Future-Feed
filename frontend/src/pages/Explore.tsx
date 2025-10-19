@@ -507,7 +507,7 @@ const Explore = () => {
 
     if (unfollowingId === user.id || followingId === user.id) {
       return (
-        <Card key={user.id} className="bg-blue-500 future-feed:bg-card future-feed:border-lime">
+        <Card key={user.id} className=" future-feed:bg-card future-feed:border-lime">
           <CardContent className="flex border border gap-3 items-start p-4">
             <Skeleton className="w-14 h-14 rounded-full" />
             <div className="flex-1 space-y-2">
