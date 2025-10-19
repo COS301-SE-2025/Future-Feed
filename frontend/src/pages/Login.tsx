@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import futurefeedLogo from "../assets/white logo.png";
+import { Loader2 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -240,8 +241,9 @@ const Login: React.FC = () => {
                   disabled={isGoogleLoading}
                   className="w-full lg:h-10 py-4 sm:py-3 text-base sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
-                  <span className="whitespace-nowrap mr-2 gap-3">
-                    {isGoogleLoading ? "Loading..." : "Continue with:"}
+                  <span className="flex flex-row gap-1 ">
+                    {isGoogleLoading ? <Loader2 className="w-5 h-5 animate-spin ml-2" />: "Continue with:"}
+                    {isGoogleLoading ? "Loading..." : ""}
                   </span>
                   {!isGoogleLoading && (
                     <img
