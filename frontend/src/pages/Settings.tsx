@@ -78,7 +78,9 @@ const Settings = () => {
     return () => document.removeEventListener("keydown", down)
   }, [navigate])
   
- 
+  if(!currentUser){
+    console.log("not curr user");
+  }
 
   return (
     <div className="flex items-start future-feed:bg-black future-feed:text-lime min-h-screen bg-ffgrey">
