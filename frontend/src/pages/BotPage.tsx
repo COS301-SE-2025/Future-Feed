@@ -934,6 +934,7 @@ const BotPage = () => {
                   <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
+
                 <div className="lg:mt-[-50px] mt-[-40px] gap-4 flex items-center flex-col flex sm:flex-row justify-center sm:justify-start">
   <Button
     variant="secondary"
@@ -970,11 +971,7 @@ const BotPage = () => {
     {isEditing ? "Editing..." : "Edit Bot"}
   </Button>
 </div>
-
                 )}
-              </div>
-              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
-                <span className="font-medium">{posts.length} Posts</span>
               </div>
             </div>
           </CardContent>
