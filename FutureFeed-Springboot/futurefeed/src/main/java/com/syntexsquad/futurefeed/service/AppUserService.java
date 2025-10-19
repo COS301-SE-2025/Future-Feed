@@ -14,6 +14,7 @@ import java.util.*;
 @Service
 public class AppUserService {
 
+    private static final int MIN_PASSWORD_LENGTH = 8;
     private final AppUserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
 
@@ -30,6 +31,9 @@ public class AppUserService {
         if (request.getPassword() == null || request.getPassword().trim().isEmpty()) {
             throw new IllegalArgumentException("Password is required.");
         }
+
+        validatePasswordStrength(request.getPassword());
+
         if (request.getEmail() == null || !request.getEmail().contains("@")) {
             throw new IllegalArgumentException("Valid email is required.");
         }
@@ -136,5 +140,21 @@ public class AppUserService {
     @Cacheable(value = "userById", key = "#id")
     public AppUser getUserById(Integer id) {
         return userRepo.findById(id).orElse(null);
+    }
+
+    private void validatePasswordStrength(String password) {
+        if (password.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
+        }
+        boolean hasLetter = false;
+        boolean hasDigit = false;
+        for (char c : password.toCharArray()) {
+            if (Character.isLetter(c)) hasLetter = true;
+            if (Character.isDigit(c))  hasDigit = true;
+            if (hasLetter && hasDigit) break;
+        }
+        if (!hasLetter || !hasDigit) {
+            throw new IllegalArgumentException("Password must contain at least one letter and one number.");
+        }
     }
 }

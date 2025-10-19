@@ -98,6 +98,23 @@ public class FeedPresetController {
         }
     }
 
+    @PostMapping("/auto-topic/paginated")
+    public ResponseEntity<?> createPresetByTopicPaginated(
+            @RequestParam String topic,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        try {
+            Map<String, Object> result = presetService.createPresetByTopicPaginated(topic, page, size);
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "ServerError", "message", e.getMessage()));
+        }
+    }
+
+
     @PutMapping("/{presetId}")
     public ResponseEntity<FeedPreset> updatePreset(@PathVariable Integer presetId, @RequestBody FeedPresetDTO dto) {
         return ResponseEntity.ok(presetService.updatePreset(presetId, dto));

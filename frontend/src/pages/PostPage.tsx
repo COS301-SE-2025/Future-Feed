@@ -26,7 +26,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
-  profilePicture?:string;
+  profilePicture?: string;
 }
 
 interface RawComment {
@@ -35,14 +35,14 @@ interface RawComment {
   userId?: number;
   content: string;
   createdAt: string;
-  profilePicture?:string;
+  profilePicture?: string;
 }
 
 interface PostData {
   id: number;
   username: string;
   handle: string;
-  profilePicture?:string;
+  profilePicture?: string;
   time: string;
   text: string;
   image?: string;
@@ -143,110 +143,109 @@ const PostPage = () => {
     } catch (err) {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
+      navigate("/login")
       return null;
     }
   };
 
-const fetchPost = async (id: number, currentUserId: number) => {
-  setLoading(true);
-  try {
-    const postRes = await fetch(`${API_URL}/api/posts/${id}`, { credentials: "include" });
-    if (!postRes.ok) {
-      throw new Error(`Failed to fetch post ${id}: ${postRes.status}`);
-    }
-    
-    const post: RawPost = await postRes.json();
-    console.log("Fetched post:", post.user?.id);
-    let userInfo: UserInfo;
-    if (post.isBot || post.botId) {
-      if (!post.botId) {
-        throw new Error("Bot post missing botId");
+  const fetchPost = async (id: number, currentUserId: number) => {
+    setLoading(true);
+    try {
+      const postRes = await fetch(`${API_URL}/api/posts/${id}`, { credentials: "include" });
+      if (!postRes.ok) {
+        throw new Error(`Failed to fetch post ${id}: ${postRes.status}`);
       }
-      const botRes = await fetch(`${API_URL}/api/bots/${post.botId}`, { credentials: "include" });
-      if (!botRes.ok) {
-        throw new Error(`Failed to fetch bot ${post.botId}: ${botRes.status}`);
+
+      const post: RawPost = await postRes.json();
+      let userInfo: UserInfo;
+      if (post.isBot || post.botId) {
+        if (!post.botId) {
+          throw new Error("Bot post missing botId");
+        }
+        const botRes = await fetch(`${API_URL}/api/bots/${post.botId}`, { credentials: "include" });
+        if (!botRes.ok) {
+          throw new Error(`Failed to fetch bot ${post.botId}: ${botRes.status}`);
+        }
+        const botData = await botRes.json();
+        userInfo = {
+          id: botData.id || post.botId,
+          username: botData.name,
+          displayName: botData.name,
+          profilePicture: undefined,
+        };
+      } else if (post.user?.id == currentUserId) {
+        userInfo = await fetchCurrentUser() as UserInfo;
       }
-      const botData = await botRes.json();
-      userInfo = {
-        id: botData.id || post.botId,
-        username: botData.name, 
-        displayName: botData.name, 
-        profilePicture: undefined,
-      };
-    } else if(post.user?.id == currentUserId){
-      userInfo = await fetchCurrentUser() as UserInfo;
-    }
-    else {
-      userInfo = await fetchUser(post.user?.id || 0);
-    }
-    console.log("Using userInfo:", userInfo);
-    const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
-      fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
-      fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
-      fetch(`${API_URL}/api/likes/has-liked/${id}`, { credentials: "include" }),
-      fetch(`${API_URL}/api/bookmarks/${currentUserId}/${id}/exists`, { credentials: "include" }),
-      fetch(`${API_URL}/api/reshares/${id}/count`, { credentials: "include" }),
-      fetch(`${API_URL}/api/reshares/${id}/has-reshared`, { credentials: "include" }),
-    ]);
-    if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${id}: ${commentsRes.status}`);
-    if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${id}: ${likesCountRes.status}`);
-    if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${id}: ${hasLikedRes.status}`);
-    if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${id}: ${hasBookmarkedRes.status}`);
-    if (!reshareCountRes.ok) console.warn(`Failed to fetch reshare count for post ID ${id}: ${reshareCountRes.status}`);
-    if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${id}: ${hasResharedRes.status}`);
-    const comments = commentsRes.ok ? await commentsRes.json() : [];
-    const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-    const commentsWithUsers: CommentData[] = [];
-    for (const comment of validComments) {
-      try {
-        const commentUserInfo = await fetchUser(comment.userId!);
-        commentsWithUsers.push({
-          id: comment.id,
-          postId: comment.postId,
-          authorId: comment.userId!,
-          content: comment.content,
-          createdAt: comment.createdAt,
-          username: commentUserInfo.displayName,
-          handle: `@${commentUserInfo.username}`,
-          profilePicture: commentUserInfo.profilePicture,
-        });
-      } catch (err) {
-        console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-        // Skip invalid comments instead of adding null
+      else {
+        userInfo = await fetchUser(post.user?.id || 0);
       }
+      console.log("Using userInfo:", userInfo);
+      const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes] = await Promise.all([
+        fetch(`${API_URL}/api/comments/post/${id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/likes/count/${id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/likes/has-liked/${id}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUserId}/${id}/exists`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares/${id}/count`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares/${id}/has-reshared`, { credentials: "include" }),
+      ]);
+      if (!commentsRes.ok) console.warn(`Failed to fetch comments for post ID ${id}: ${commentsRes.status}`);
+      if (!likesCountRes.ok) console.warn(`Failed to fetch like count for post ID ${id}: ${likesCountRes.status}`);
+      if (!hasLikedRes.ok) console.warn(`Failed to fetch has-liked status for post ID ${id}: ${hasLikedRes.status}`);
+      if (!hasBookmarkedRes.ok) console.warn(`Failed to fetch bookmark status for post ID ${id}: ${hasBookmarkedRes.status}`);
+      if (!reshareCountRes.ok) console.warn(`Failed to fetch reshare count for post ID ${id}: ${reshareCountRes.status}`);
+      if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${id}: ${hasResharedRes.status}`);
+      const comments = commentsRes.ok ? await commentsRes.json() : [];
+      const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
+      const commentsWithUsers: CommentData[] = [];
+      for (const comment of validComments) {
+        try {
+          const commentUserInfo = await fetchUser(comment.userId!);
+          commentsWithUsers.push({
+            id: comment.id,
+            postId: comment.postId,
+            authorId: comment.userId!,
+            content: comment.content,
+            createdAt: comment.createdAt,
+            username: commentUserInfo.displayName,
+            handle: `@${commentUserInfo.username}`,
+            profilePicture: comment.profilePicture,
+          });
+        } catch (err) {
+          console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+        }
+      }
+      const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
+      const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
+      const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
+      const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
+      const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
+      setPost({
+        id: post.id,
+        username: userInfo.displayName,
+        handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
+        profilePicture: userInfo.profilePicture,
+        time: formatRelativeTime(post.createdAt),
+        text: post.content,
+        image: post.imageUrl || undefined,
+        isLiked,
+        isBookmarked,
+        isReshared,
+        commentCount: validComments.length,
+        authorId: userInfo.id,
+        likeCount,
+        reshareCount,
+        comments: commentsWithUsers,
+        showComments: true,
+        botId: post.botId,
+        isBot: post.isBot
+      });
+    } catch (err) {
+      console.error(`Error fetching post ${id}:`, err);
+      setError(`Failed to load post: ${err instanceof Error ? err.message : "Unknown error"}`);
+    } finally {
+      setLoading(false);
     }
-    const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
-    const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
-    const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
-    const reshareCount = reshareCountRes.ok ? await reshareCountRes.json() : 0;
-    const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
-    setPost({
-      id: post.id,
-      username: userInfo.displayName,
-      handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
-      profilePicture: userInfo.profilePicture,
-      time: formatRelativeTime(post.createdAt),
-      text: post.content,
-      image: post.imageUrl || undefined,
-      isLiked,
-      isBookmarked,
-      isReshared,
-      commentCount: validComments.length,
-      authorId: userInfo.id,
-      likeCount,
-      reshareCount,
-      comments: commentsWithUsers,
-      showComments: true,
-      botId: post.botId,
-      isBot: post.isBot
-    });
-  } catch (err) {
-    console.error(`Error fetching post ${id}:`, err);
-    setError(`Failed to load post: ${err instanceof Error ? err.message : "Unknown error"}`);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleLike = async (postId: number) => {
     if (!currentUser) {
@@ -549,18 +548,18 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (loading) {
     return (
-      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
         <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
-          <Card className="dark:bg-indigo-950 border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 mt-0">
+          <Card className="border-2 border-rose-gold-accent-border future-feed:border-lime future-feed:bg-card future-feed:text-white rounded-2xl my-7 mb-4 mt-0">
             <CardContent className="p-1 mt-[-15px] ml-[20px]">
               <Button
                 variant="ghost"
                 size="sm"
                 disabled
-                className="text-gray-500 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 p-1 sm:p-2 mb-2"
+                className="text-gray-500 hover:text-lime-500 p-1 sm:p-2 mb-2"
                 aria-label="Go back"
               >
                 <ArrowLeft className="h-4 w-4 future-feed:text-lime sm:h-5 sm:w-5" />
@@ -632,20 +631,20 @@ const fetchPost = async (id: number, currentUserId: number) => {
           </Card>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        </aside>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
+      <div className="bg-gray-200  future-feed:bg-black flex min-h-screen  overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -668,7 +667,7 @@ const fetchPost = async (id: number, currentUserId: number) => {
 
   if (!post) {
     return (
-      <div className="bg-gray-200 dark:bg-blue-950 future-feed:bg-black flex min-h-screen  dark:text-white overflow-y-auto">
+      <div className="bg-gray-200  future-feed:bg-black flex min-h-screen  overflow-y-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
@@ -688,68 +687,68 @@ const fetchPost = async (id: number, currentUserId: number) => {
   }
 
   return (
-  <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
-    <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-    <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[-10px]">
-      {post.botId || post.isBot ? (
-        <StaticBotPost
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          postId={post.id}
-          botId={post.botId}
-        />
-      ) : (
-        <StaticPost
-          profilePicture={post.profilePicture}
-          username={post.username}
-          handle={post.handle}
-          time={post.time}
-          text={post.text}
-          image={post.image}
-          isLiked={post.isLiked}
-          likeCount={post.likeCount}
-          isBookmarked={post.isBookmarked}
-          isReshared={post.isReshared}
-          reshareCount={post.reshareCount}
-          commentCount={post.commentCount}
-          onLike={() => handleLike(post.id)}
-          onBookmark={() => handleBookmark(post.id)}
-          onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
-          onReshare={() => handleReshare(post.id)}
-          onDelete={() => handleDeletePost(post.id)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
-          showComments={post.showComments}
-          comments={post.comments}
-          isUserLoaded={!!currentUser}
-          currentUser={currentUser}
-          authorId={post.authorId}
-          postId={post.id}
-        />
-      )}
-    </main>
-    <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+      <main className="flex-1 lg:pl-2 min-h-screen overflow-y-auto mt-[-5px]">
+        {post.botId || post.isBot ? (
+          <StaticBotPost
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            postId={post.id}
+            botId={post.botId}
+          />
+        ) : (
+          <StaticPost
+            profilePicture={post.profilePicture}
+            username={post.username}
+            handle={post.handle}
+            time={post.time}
+            text={post.text}
+            image={post.image}
+            isLiked={post.isLiked}
+            likeCount={post.likeCount}
+            isBookmarked={post.isBookmarked}
+            isReshared={post.isReshared}
+            reshareCount={post.reshareCount}
+            commentCount={post.commentCount}
+            onLike={() => handleLike(post.id)}
+            onBookmark={() => handleBookmark(post.id)}
+            onAddComment={(commentText: string) => handleAddComment(post.id, commentText)}
+            onReshare={() => handleReshare(post.id)}
+            onDelete={() => handleDeletePost(post.id)}
+            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            showComments={post.showComments}
+            comments={post.comments}
+            isUserLoaded={!!currentUser}
+            currentUser={currentUser}
+            authorId={post.authorId}
+            postId={post.id}
+          />
+        )}
+      </main>
+      <aside className="w-full lg:w-[350px] lg:sticky lg:mt-[4px] lg:top-[4px] lg:h-screen  hidden lg:block mr-6.5 ">
         <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
           <WhatsHappening />
         </div>
@@ -757,8 +756,8 @@ const fetchPost = async (id: number, currentUserId: number) => {
           <WhoToFollow />
         </div>
       </aside>
-  </div>
-);
+    </div>
+  );
 };
 
 export default PostPage;

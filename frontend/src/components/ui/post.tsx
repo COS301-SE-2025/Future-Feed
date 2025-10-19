@@ -6,6 +6,7 @@ import { Heart, MessageCircle, Bookmark, Trash2, Repeat2, Loader2 } from "lucide
 import { cn } from "@/lib/utils";
 import { Textarea } from "@/components/ui/textarea";
 import { formatRelativeTime } from "@/lib/timeUtils";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 interface UserProfile {
   id: number;
@@ -59,7 +60,6 @@ interface PostProps {
   currentUser: UserProfile | null;
   authorId: number;
   topics: Topic[];
-  // NEW: Add loading state for image generation
   isImageLoading?: boolean;
 }
 
@@ -91,7 +91,6 @@ const Post: React.FC<PostProps> = ({
   currentUser,
   authorId,
   topics,
-  // NEW: Add loading state for image generation
   isImageLoading = false,
 }) => {
   const [newComment, setNewComment] = React.useState("");
@@ -118,7 +117,8 @@ const Post: React.FC<PostProps> = ({
       target.tagName === "TEXTAREA" ||
       target.closest("button") ||
       target.closest("input") ||
-      target.closest("textarea")
+      target.closest("textarea") ||
+      target.closest("a") // Prevent navigation when clicking a topic link
     ) {
       return;
     }
@@ -128,14 +128,14 @@ const Post: React.FC<PostProps> = ({
   return (
     <Card
       className={cn(
-        "future-feed:bg-card future-feed:text-white text-black dark:bg-indigo-950 border-2  dark:hover:bg-black  cursor-pointer relative group ",
+        "future-feed:bg-card future-feed:text-white text-black border-2 cursor-pointer relative group",
         className
       )}
       onClick={handleClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardContent className="sm:px-8 sm:py-1 ">
+      <CardContent className="sm:px-8 sm:py-1">
         <div className="flex gap-3 sm:gap-4">
           <Avatar
             className="h-10 w-10 sm:h-12 sm:w-12"
@@ -156,8 +156,8 @@ const Post: React.FC<PostProps> = ({
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 
-                className="font-bold dark:text-white text-sm sm:text-base hover:cursor-pointer hover:underline"
+              <h2
+                className="font-bold text-sm sm:text-base hover:cursor-pointer hover:underline"
                 onClick={(e) => {
                   e.stopPropagation();
                   onProfileClick();
@@ -166,7 +166,7 @@ const Post: React.FC<PostProps> = ({
                 {username || "Unknown User"}
               </h2>
               <div className="flex items-center gap-2">
-                <span className={`text-xs sm:text-sm dark:text-gray-400 whitespace-nowrap transition-all duration-200 ${isHovered && currentUser && currentUser.id === authorId ? 'mr-8' : 'mr-0'}`}>
+                <span className={`text-xs sm:text-sm whitespace-nowrap transition-all duration-200 ${isHovered && currentUser && currentUser.id === authorId ? 'mr-8' : 'mr-0'}`}>
                   {time}
                 </span>
                 {currentUser && currentUser.id === authorId && (
@@ -177,7 +177,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       onDelete();
                     }}
-                    className={`absolute top-3 right-2 h-6 w-6 p-1 text-red-500 hover:bg-slate-300 hover:text-red-600 dark:hover:text-red-400 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
+                    className={`absolute top-3 right-2 h-6 w-6 p-1 text-red-500 hover:bg-slate-300 hover:text-red-600 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                     aria-label="Delete post"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -185,8 +185,8 @@ const Post: React.FC<PostProps> = ({
                 )}
               </div>
             </div>
-            <p 
-              className="dark:text-gray-300 text-xs sm:text-sm mt-[-2px]"
+            <p
+              className="text-xs sm:text-sm mt-[-2px]"
               onClick={(e) => {
                 e.stopPropagation();
                 onProfileClick();
@@ -194,28 +194,28 @@ const Post: React.FC<PostProps> = ({
             >
               {handle || "@unknown"}
             </p>
-            <p className="mt-2 dark:text-white text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
+            <p className="mt-2 text-sm sm:text-base max-w-full mr-10" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere', textAlign: 'justify' }}>
               {text}
             </p>
             {topics.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
                 {topics.map((topic) => (
-                  <span
+                  <Link
                     key={topic.id}
-                    className="inline-block border dark:border-lime-400 bg-blue-500 dark:bg-lime-900 text-white dark:text-lime-200 text-xs sm:text-sm px-2 rounded-xl"
+                    to={`/topic/${topic.id}`}
+                    onClick={(e) => e.stopPropagation()} // Prevent post navigation
+                    className="inline-block border bg-blue-500 text-white text-xs sm:text-sm px-2 rounded-xl hover:bg-blue-600 transition-colors"
                   >
                     {topic.name}
-                  </span>
+                  </Link>
                 ))}
               </div>
             )}
-            
-            {/* NEW: Image section with loading state */}
             {isImageLoading ? (
-              <div className="mt-4 rounded-lg border dark:border-lime-500 max-w-full h-auto flex items-center justify-center bg-gray-100 dark:bg-gray-800 min-h-[200px]">
+              <div className="mt-4 rounded-lg border max-w-full h-auto flex items-center justify-center bg-gray-100 min-h-[200px]">
                 <div className="flex flex-col items-center gap-3">
-                  <Loader2 className="h-8 w-8 animate-spin text-lime-500" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Generating image...</p>
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  <p className="text-sm text-gray-600">Generating image...</p>
                 </div>
               </div>
             ) : image && (
@@ -223,13 +223,12 @@ const Post: React.FC<PostProps> = ({
                 <img
                   src={image}
                   alt="Post"
-                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50 dark:bg-gray-900"
+                  className="w-full h-auto max-h-[500px] object-contain rounded-xl border-2 border-rose-gold-accent-border future-feed:border-lime shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-gray-50"
                   loading="lazy"
                 />
               </div>
             )}
-
-            <div className="flex flex-wrap justify-between sm:gap-4 mt-4" >
+            <div className="flex flex-wrap justify-between sm:gap-4 mt-4">
               <Button
                 variant="ghost"
                 size="sm"
@@ -239,15 +238,14 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 sm:px-3",
-                  isLiked ? "text-red-500 dark:text-red-400" : "text-gray-500 dark:text-white",
-                  "hover:text-red-500 dark:hover:text-red-400"
+                  isLiked ? "text-red-500" : "text-gray-500",
+                  "hover:text-red-500"
                 )}
                 aria-label={isLiked ? "Unlike post" : "Like post"}
               >
                 <Heart className={cn("h-4 w-4 sm:h-5 sm:w-5", isLiked && "fill-current")} />
-
                 <span className="hidden xl:inline">Like</span>
-                <span className="ml-1">({likeCount})</span>
+                <span className="ml-1">{likeCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -257,8 +255,8 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  commentCount > 0 ? "text-blue-500 dark:text-blue-400" : "text-gray-500 dark:text-gray-400",
-                  "hover:text-gray-500 dark:hover:text-gray-400"
+                  commentCount > 0 ? "text-blue-500" : "text-gray-500 ",
+                  "hover:text-gray-500"
                 )}
                 aria-label={showComments ? "Hide comments" : "Show comments"}
               >
@@ -266,7 +264,7 @@ const Post: React.FC<PostProps> = ({
                   <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <span className="hidden xl:inline">Comment</span>
-                <span className="ml-1">({commentCount})</span>
+                <span className="ml-1">{commentCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -276,14 +274,14 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  isReshared ? "text-green-500 dark:text-green-400" : "text-gray-500 dark:text-white",
-                  "hover:text-green-500 dark:hover:text-green-400"
+                  isReshared ? "text-green-500" : "text-gray-500",
+                  "hover:text-green-500"
                 )}
                 aria-label={isReshared ? "Unreshare post" : "Reshare post"}
               >
                 <Repeat2 className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="hidden xl:inline">Re-Feed</span>
-                <span className="ml-1">({reshareCount})</span>
+                <span className="ml-1">{reshareCount}</span>
               </Button>
               <Button
                 variant="ghost"
@@ -293,8 +291,8 @@ const Post: React.FC<PostProps> = ({
                 }}
                 className={cn(
                   "flex items-center gap-1 px-2 py-1 text-xs sm:text-sm",
-                  isBookmarked ? "text-yellow-500 dark:text-yellow-400" : "text-gray-500 dark:text-white",
-                  "hover:text-yellow-500 dark:hover:text-yellow-400"
+                  isBookmarked ? "text-yellow-500 " : "text-gray-500",
+                  "hover:text-yellow-500"
                 )}
                 aria-label={isBookmarked ? "Remove bookmark" : "Bookmark post"}
               >
@@ -304,37 +302,53 @@ const Post: React.FC<PostProps> = ({
             </div>
             {showComments && (
               <div className="mt-4">
+                <div className="flex items-center gap-2 mb-4 pb-2 ml-2 mr-2 border-b border-gray-200">
+                  <MessageCircle className="h-4 w-4 text-blue-500" />
+                  <h3 className="font-semibold text-sm text-gray-700">
+                    Comments
+                  </h3>
+                </div>
                 {comments.length > 0 ? (
                   <div className="mb-4">
                     {comments.map((comment) => (
-                      <div key={comment.id} className="flex gap-2 mb-2">
+                      <div key={comment.id} className="flex gap-2 mb-3 p-2 rounded-lg bg-gray-50">
                         <Avatar className="h-8 w-8 sm:h-10 sm:w-10">
                           <AvatarImage src={comment.profilePicture} alt={comment.handle} />
                           <AvatarFallback>{getInitials(comment.username)}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <h2 className="font-bold dark:text-white text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
-                          <p className="text-xs sm:text-sm dark:text-white line-clamp-3 max-w-full">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <h2 className="font-bold text-sm sm:text-base">{comment.username || "Unknown User"}</h2>
+                            <span className="text-xs text-gray-500">
+                              {formatRelativeTime(comment.createdAt)}
+                            </span>
+                          </div>
+                          <p className="text-xs sm:text-sm mt-1">
                             {comment.content}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {formatRelativeTime(comment.createdAt)}
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    No comments yet.
-                  </p>
+                  <div className="text-center py-4 mb-4 rounded-lg bg-gray-50">
+                    <MessageCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      No comments yet. Be the first to comment!
+                    </p>
+                  </div>
                 )}
+                <div className="mb-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Add a comment
+                  </label>
+                </div>
                 <div className="flex gap-2">
                   <Textarea
-                    placeholder={isUserLoaded ? "Write a comment..." : "Please log in to comment"}
+                    placeholder={isUserLoaded ? "Write your comment here..." : "Please log in to comment"}
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
-                    className="w-full hover:border-white  resize-none border-2  text-xs sm:text-sm border-blue-500"
+                    className="w-full hover:border-white resize-none border-2 text-xs sm:text-sm border-blue-500"
                     rows={2}
                     disabled={!isUserLoaded}
                   />
@@ -343,7 +357,7 @@ const Post: React.FC<PostProps> = ({
                       e.stopPropagation();
                       handleSubmitComment();
                     }}
-                    className=" text-xs sm:text-sm bg-blue-500"
+                    className="text-xs sm:text-sm rounded-full mt-3 bg-blue-500 hover:cursor-pointer hover:bg-blue-600"
                     disabled={!newComment.trim() || !isUserLoaded}
                   >
                     Comment

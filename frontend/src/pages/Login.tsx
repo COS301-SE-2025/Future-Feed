@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import futurefeedLogo from "../assets/white logo.png";
+import { Loader2 } from "lucide-react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -18,6 +20,10 @@ const Login: React.FC = () => {
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [regSuccessful, setRegSuccessful] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -32,12 +38,49 @@ const Login: React.FC = () => {
     }
   };
 
+  const calculateAge = (birthDate: string) => {
+    const today = new Date(2025, 9, 10);
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    setRegSuccessful(null);
+    setIsLoading(true);
 
     if (isRegister) {
+      if (!username || !password || !email || !displayName || !dateOfBirth) {
+        setErrorMsg("All required fields must be filled out.");
+        setIsLoading(false);
+        return;
+      }
       if (password !== confirmPassword) {
-        alert("Passwords do not match!");
+        setErrorMsg("Passwords do not match. Please try again.");
+        setIsLoading(false);
+        return;
+      }
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\da-zA-Z]).{8,}$/;
+      if (!passwordRegex.test(password)) {
+        setErrorMsg(
+          "Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character."
+        );
+        setIsLoading(false);
+        return;
+      }
+      if (!email.match(/^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/)) {
+        setErrorMsg("Please enter a valid email address.");
+        setIsLoading(false);
+        return;
+      }
+      const age = calculateAge(dateOfBirth);
+      if (age < 13) {
+        setErrorMsg("You must be at least 13 years old to create an account.");
+        setIsLoading(false);
         return;
       }
 
@@ -59,18 +102,27 @@ const Login: React.FC = () => {
         });
 
         if (res.ok) {
-          console.log("Registration successful");
           setIsRegister(false);
+          setRegSuccessful("Registration successful! You can now log in with your new account.");
         } else {
-          console.error("Registration failed");
+          const data = await res.json();
+          setErrorMsg(data.message || "Registration failed. Please check your details and try again.");
         }
-      } catch (err) {
-        console.error("Error during registration:", err);
+      } catch {
+        setErrorMsg("An unexpected error occurred during registration. Please try again later.");
+      } finally {
+        setIsLoading(false);
       }
     } else {
+      if (!username.trim() || !password.trim()) {
+        setErrorMsg("Please enter both username and password.");
+        setIsLoading(false);
+        return;
+      }
+
       const params = new URLSearchParams();
-      params.append("username", username);
-      params.append("password", password);
+      params.append("username", username.trim());
+      params.append("password", password.trim());
 
       try {
         const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -81,23 +133,38 @@ const Login: React.FC = () => {
         });
 
         if (res.ok) {
-          console.log("Login successful");
           navigate("/home");
         } else {
-          console.error("Login failed");
+          let errorMessage = "Login failed. Please check your username and password and try again.";
+          try {
+            const data = await res.json();
+            if (data?.message) errorMessage = data.message;
+          } catch {
+            setErrorMsg(errorMessage);
+          }
+          setErrorMsg(errorMessage);
         }
-      } catch (err) {
-        console.error("Error during login:", err);
+      } catch {
+        setErrorMsg("Unable to connect to the server. Please check your internet connection and try again.");
+      } finally {
+        setIsLoading(false);
       }
     }
   };
 
-  const handleToggle = () => setIsRegister(!isRegister);
+  const handleGoogleSignIn = () => {
+    setIsGoogleLoading(true);
+    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
+  };
+
+  const handleToggle = () => {
+    setIsRegister(!isRegister);
+    setErrorMsg(null);
+    setRegSuccessful(null);
+  };
 
   return (
     <div className="relative min-h-screen font-['Cambay',Arial,sans-serif] bg-gray-100 flex flex-col lg:flex-row overflow-hidden transition-all duration-500">
-
-      {/* LEFT SIDE IMAGE SECTION (hidden on mobile) */}
       <div
         className={`absolute inset-0 transition-transform duration-500 ${
           !isRegister ? "translate-x-full" : ""
@@ -116,11 +183,13 @@ const Login: React.FC = () => {
           }}
         ></div>
         <div className="absolute top-1/2 right-1/4 -translate-y-1/2 translate-x-1/2 flex justify-center">
-          <img src={futurefeedLogo} alt="Future Feed Logo" className="h-[400px] w-auto" />
+          <img
+            src={futurefeedLogo}
+            alt="Future Feed Logo"
+            className="h-[200px] sm:h-[300px] md:h-[400px] w-auto"
+          />
         </div>
       </div>
-
-      {/* RIGHT SIDE IMAGE SECTION (hidden on mobile) */}
       <div
         className={`absolute inset-0 transition-transform duration-500 ${
           isRegister ? "translate-x-full" : ""
@@ -142,8 +211,6 @@ const Login: React.FC = () => {
           <img src={futurefeedLogo} alt="Future Feed Logo" className="h-[400px] w-auto" />
         </div>
       </div>
-
-      {/* FORM SECTION */}
       <div
         className={`relative z-10 flex w-full lg:w-1/2 items-center justify-center p-6 sm:p-8 md:p-10 transition-transform duration-500 ${
           isRegister ? "lg:translate-x-0" : "lg:translate-x-full"
@@ -151,35 +218,42 @@ const Login: React.FC = () => {
       >
         <Card className="w-full max-w-sm sm:max-w-md rounded-xl shadow-lg border-0 bg-white">
           <CardHeader>
-            <CardTitle className="text-center text-2xl sm:text-3xl font-bold">
-              {isRegister ? "Register" : "Login"}
-            </CardTitle>
+            <CardTitle className="text-center text-3xl font-bold">{isRegister ? "Register" : "Login"}</CardTitle>
+            {errorMsg && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{errorMsg}</AlertDescription>
+              </Alert>
+            )}
+            {regSuccessful && (
+              <Alert variant="success" className="mt-4">
+                <AlertTitle>Success</AlertTitle>
+                <AlertDescription>{regSuccessful}</AlertDescription>
+              </Alert>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
-
-              {/* GOOGLE SIGN-IN */}
               {!isRegister && (
                 <Button
                   type="button"
-                  onClick={() => {
-                    window.location.href = `${import.meta.env.VITE_API_URL}/oauth2/authorization/google`;
-                  }}
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading}
                   className="w-full lg:h-10 py-4 sm:py-3 text-base sm:text-base rounded-full bg-gray-700 text-white hover:bg-gray-800 flex items-center justify-center hover:cursor-pointer"
                 >
-                  <span className="whitespace-nowrap mr-2 gap-3">Continue with:         
-                  
+                  <span className="flex flex-row gap-1 ">
+                    {isGoogleLoading ? <Loader2 className="w-5 h-5 animate-spin ml-2" />: "Continue with:"}
+                    {isGoogleLoading ? "Loading..." : ""}
                   </span>
-                   <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google Logo"
-                    className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
-                  />
-                  
+                  {!isGoogleLoading && (
+                    <img
+                      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                      alt="Google Logo"
+                      className="h-5 w-5 -translate-y-[2px] lg:h-4 lg:w-4 -translate-y-[2px]"
+                    />
+                  )}
                 </Button>
               )}
-
-              {/* USERNAME */}
               <div>
                 <Label htmlFor="username" className="font-bold text-sm sm:text-base">
                   Username
@@ -194,8 +268,6 @@ const Login: React.FC = () => {
                   className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
-
-              {/* REGISTER FIELDS */}
               {isRegister && (
                 <>
                   <div>
@@ -243,9 +315,7 @@ const Login: React.FC = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="profilePic" className="font-bold text-sm sm:text-base">
-                      Profile Picture
-                    </Label>
+                    <Label htmlFor="profilePic" className="font-bold">Profile Picture (Optional)</Label>
                     <Input
                       type="file"
                       id="profilePic"
@@ -256,8 +326,6 @@ const Login: React.FC = () => {
                   </div>
                 </>
               )}
-
-              {/* PASSWORD */}
               <div>
                 <Label htmlFor="password" className="font-bold text-sm sm:text-base">
                   Password
@@ -272,8 +340,6 @@ const Login: React.FC = () => {
                   className="mt-2 lg:h-10 sm:h-12 rounded-full text-base px-4"
                 />
               </div>
-
-              {/* CONFIRM PASSWORD (REGISTER ONLY) */}
               {isRegister && (
                 <div>
                   <Label htmlFor="confirm-password" className="font-bold text-sm sm:text-base">
@@ -290,8 +356,6 @@ const Login: React.FC = () => {
                   />
                 </div>
               )}
-
-              {/* FORGOT PASSWORD */}
               {!isRegister && (
                 <div className="text-right mt-1 sm:mt-2">
                   <Link to="/forgot-password" className="text-xs sm:text-sm text-blue-600 hover:underline">
@@ -299,16 +363,12 @@ const Login: React.FC = () => {
                   </Link>
                 </div>
               )}
-
-              {/* SUBMIT */}
               <Button
                 type="submit"
-                className="lg:h-10 w-full py-2.5 sm:py-3 text-base sm:text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer"
-              >
-                {isRegister ? "Register" : "Login"}
+                disabled={isLoading}
+                className="w-full py-3 text-lg rounded-full bg-blue-600 text-white font-semibold hover:bg-blue-700 hover:cursor-pointer">
+                {isLoading ? "Loading..." : isRegister ? "Register" : "Login"}
               </Button>
-
-              {/* TOGGLE LOGIN/REGISTER */}
               <p className="text-center text-xs sm:text-sm mt-3 sm:mt-4">
                 {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
                 <Link

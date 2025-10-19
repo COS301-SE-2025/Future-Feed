@@ -24,7 +24,7 @@ function TabsList({
     <TabsPrimitive.List
       data-slot="tabs-list"
       className={cn(
-        "drop-shadow-xl font-semi-bold bg-white rounded lg:rounded-lg border-radius-19 border future-feed:text-lime border-b-2 border-rose-gold-accent-border  future-feed:border-black future-feed:bg-black dark:border-slate-200   dark:bg-blue-950  text-black inline-flex h-9 w-fit items-center justify-center  p-[px]",
+        "drop-shadow-xl font-semi-bold bg-white rounded lg:rounded-lg border-radius-19 border future-feed:text-lime border-b-2 border-rose-gold-accent-border  future-feed:border-black future-feed:bg-black text-black inline-flex h-9 w-fit items-center justify-center  p-[px]",
         className
       )}
       {...props}
@@ -40,9 +40,7 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-
-        "rounded lg:rounded-lg future-feed:text-lime future-feed:data-[state=active]:bg-black dark:data-[state=active]:bg-slate-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white data-[state=active]:border-none future-feed:data-[state=active]:text-black dark:data-[state=active]:text-black dark:data-[state=active]:border-b-2 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring dark:data-[state=active]:border-slate-200 inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-4 text-sm font-medium  transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 text-black dark:text-slate-200 hover:cursor-pointer",
-
+        "rounded lg:rounded-lg future-feed:text-lime future-feed:data-[state=active]:bg-black data-[state=active]:bg-blue-400 data-[state=active]:text-white data-[state=active]:border-none future-feed:data-[state=active]:text-black focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-3 py-4 text-sm font-medium  transition-[color,box-shadow] focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 text-black hover:cursor-pointer",
         className
       )}
       {...props}

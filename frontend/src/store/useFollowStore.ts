@@ -28,7 +28,7 @@ interface FollowStore {
   followingUserIds: number[]
   followingUsers: User[]
   _hasHydrated: boolean
-  setHasHydrated: (hydrated: boolean) => void 
+  setHasHydrated: (hydrated: boolean) => void
   setFollowStatus: (userId: number, isFollowing: boolean) => void
   bulkSetFollowStatus: (statuses: Record<number, boolean>) => void
   updateFollowStatus: (userId: number, isFollowing: boolean) => void
@@ -56,9 +56,9 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
       followingUsers: [],
       followers: [],
       _hasHydrated: false,
-      
+
       setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
-      
+
       cleanFollowStatus: () => {
         const state = get();
         const cleanFollowStatus = Object.fromEntries(
@@ -66,7 +66,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
         );
         set({ followStatus: cleanFollowStatus });
       },
-      
+
       setFollowers: (users) => set(() => ({ followers: users })),
 
       fetchFollowing: async (userId, allUsers) => {
@@ -103,7 +103,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
 
           const data: FollowRelation[] = await res.json();
           const followerUserIds = data.map((relation) => relation.followerId);
-         // console.log("Follower User IDs followers:", followerUserIds);
+          // console.log("Follower User IDs followers:", followerUserIds);
           const normalized = allUsers.map(u => ({
             ...u,
             bio: u.bio ?? null,
@@ -146,7 +146,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
           const cleanStatuses = Object.fromEntries(
             Object.entries(statuses).filter(([, value]) => value !== undefined)
           );
-          
+
           return {
             followStatus: {
               ...state.followStatus,
@@ -169,7 +169,7 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
             ...state.followStatus,
             [userId]: isFollowing,
           };
-          
+
           const newFollowingIds = isFollowing
             ? [...new Set([...state.followingUserIds, userId])]
             : state.followingUserIds.filter((id) => id !== userId);
@@ -221,10 +221,10 @@ export const useFollowStore = createWithEqualityFn<FollowStore>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
-        
+
           state.setHasHydrated(true);
         }
       },
     }
-  ) 
+  )
 ); 

@@ -9,16 +9,67 @@ import {
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
-
-import LoginHelp from "../assets/loginhelp.mp4";
+import { useEffect, useState } from "react";
+import HowtoLoginDesktop from "../assets/howtologindesktop.mp4";
 import HowToLoginMobile from "../assets/howtologinmobile.mp4";
-import PostCreationHelp from "../assets/postcreationhelp.mp4";
-import FollowHelpDesktop from "../assets/followhelpdesktop.mp4";
-import FollowHelpMobile from "../assets/followhelpmobile.mp4";
-import HowToChangeThemeDesktop from "../assets/howtochangethemedesktop.mp4";
-import HowToChangeThemeMobile from "../assets/howtochangethememobile.mp4";
+
+import HowToFollowDesktop from "../assets/howtofollowdesktop.mp4";
+import HowToFollowMobile from "../assets/howtofollowmobile.mp4";
+import HowToCreateBotsDesktop from "../assets/howtomakebotdesktop.mp4";
+import HowToCreateBotsMobile from "../assets/howtomakebotmobile.mp4";
+import HowToCreatePostsMobile from "../assets/howtocreatepostmobile.mp4";
+
+import HowToCreatePostDesktop from "../assets/howtoCreatePostdesktop.mp4";
+
+import { useNavigate } from "react-router-dom";
+
+interface UserProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePicture?: string;
+  bio?: string | null;
+  dateOfBirth?: string | null;
+  email: string;
+}
+
 
 const Help = () => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const navigate = useNavigate();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      navigate("/login");
+      return null;
+    }
+  };
+
+  useEffect(() => {
+  const initializeData = async () => {
+    await fetchCurrentUser();
+  };
+
+  initializeData();
+}, []);
+
+if(!currentUser){
+  console.error("You are not logged in. Please log in.");
+  navigate("/login");
+}
  
 
  return (
@@ -52,7 +103,7 @@ const Help = () => {
       <AccordionTrigger>How to Create a Post</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={PostCreationHelp} type="video/mp4" />
+          <source src={HowToCreatePostsMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -61,16 +112,16 @@ const Help = () => {
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={FollowHelpMobile} type="video/mp4" />
+          <source src={HowToFollowMobile} type="video/mp4" />
         </video>
       </AccordionContent>
 
     </AccordionItem>
      <AccordionItem value="mobile-theme">
-      <AccordionTrigger>How to Change Theme </AccordionTrigger>
+      <AccordionTrigger>How to Create a Bot </AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={HowToChangeThemeMobile} type="video/mp4" />
+          <source src={HowToCreateBotsMobile} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -84,7 +135,7 @@ const Help = () => {
       <AccordionTrigger>How to Log In</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={LoginHelp} type="video/mp4" />
+          <source src={HowtoLoginDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -93,7 +144,7 @@ const Help = () => {
       <AccordionTrigger>How to Create a Post</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={PostCreationHelp} type="video/mp4" />
+          <source src={HowToCreatePostDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
@@ -102,15 +153,15 @@ const Help = () => {
       <AccordionTrigger>How to Follow Users</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={FollowHelpDesktop} type="video/mp4" />
+          <source src={HowToFollowDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>
      <AccordionItem value="-theme">
-      <AccordionTrigger>How to Change Theme</AccordionTrigger>
+      <AccordionTrigger>How to Create a Bot</AccordionTrigger>
       <AccordionContent>
         <video controls className="w-full future-feed:border-lime rounded-xl border ">
-          <source src={HowToChangeThemeDesktop} type="video/mp4" />
+          <source src={HowToCreateBotsDesktop} type="video/mp4" />
         </video>
       </AccordionContent>
     </AccordionItem>

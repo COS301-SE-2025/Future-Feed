@@ -37,11 +37,6 @@ import {
 interface PaginatedResponse<T> {
   content: T[];
   totalPages: number;
-  // Optional: Add if present in full response, e.g.,
-  // totalElements?: number;
-  // numberOfElements?: number;
-  // first?: boolean;
-  // last?: boolean;
 }
 
 interface Preset {
@@ -147,6 +142,8 @@ const HomePage = () => {
   const [isViewTopicsModalOpen, setIsViewTopicsModalOpen] = useState(false);
   const [postText, setPostText] = useState("");
   const [botId, setBotId] = useState(0);
+  const [currentFollowingPage, setCurrentFollowingPage] = useState(0);
+  const [hasMoreFollowing, setHasMoreFollowing] = useState(true);
   const [isBot, setisBot] = useState(false);
   const [newTopicName, setNewTopicName] = useState("");
   const [selectedTopicIds, setSelectedTopicIds] = useState<number[]>([]);
@@ -157,7 +154,7 @@ const HomePage = () => {
   const [loadingForYou, setLoadingForYou] = useState(true);
   const [loadingFollowing, setLoadingFollowing] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("Following");
+  const [activeTab, setActiveTab] = useState("for You");
   const [topics, setTopics] = useState<Topic[]>([]);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [tempIdCounter, setTempIdCounter] = useState(-1);
@@ -195,6 +192,8 @@ const HomePage = () => {
   const [errorData, setErrorData] = useState<ErrorResponse | null>(null);
   const [presetCurrentPage, setPresetCurrentPage] = useState(0);
   const [presetHasMore, setPresetHasMore] = useState(true);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [previewPostData, setPreviewPostData] = useState<PostData | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
@@ -219,6 +218,11 @@ const HomePage = () => {
   const createPresetModalProps = useSpring({
     opacity: isCreatePresetModalOpen ? 1 : 0,
     transform: isCreatePresetModalOpen ? "translateY(0px)" : "translateY(50px)",
+    config: { tension: 250, friction: 35 },
+  });
+  const previewModalProps = useSpring({
+    opacity: isPreviewModalOpen ? 1 : 0,
+    transform: isPreviewModalOpen ? "translateY(0px)" : "translateY(50px)",
     config: { tension: 250, friction: 35 },
   });
 
@@ -333,6 +337,7 @@ const HomePage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setCurrentUser(null);
+      navigate("/login")
       return null;
     }
   };
@@ -514,7 +519,7 @@ const HomePage = () => {
           return {
             id: post.id,
             username: postUser.displayName,
-            handle: `@${postUser.username}`,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
             profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             createdAt: post.createdAt,
@@ -633,188 +638,133 @@ const HomePage = () => {
     headers: { Accept: "application/json" },
   };
 
-  const fetchFollowingPosts = async () => {
+  const fetchFollowingPosts = async (page: number): Promise<number> => {
     if (!currentUser?.id) {
       console.warn("Cannot fetch following posts: currentUser is not loaded");
-      return;
+      return 0;
     }
-
-    console.debug("Fetching following posts");
+    console.debug(`Fetching following posts page ${page}`);
     setLoadingFollowing(true);
-
     try {
-      const [followRes, myResharesRes, bookmarksRes] = await Promise.all([
-        fetch(`${API_URL}/api/follow/following/${currentUser.id}`, commonInit),
-        fetch(`${API_URL}/api/reshares`, commonInit),
-        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, commonInit),
+      const [postsRes, myResharesRes, bookmarksRes] = await Promise.all([
+        fetch(`${API_URL}/api/posts/following?page=${page}&size=${PAGE_SIZE}`, { credentials: "include" }),
+        fetch(`${API_URL}/api/reshares`, { credentials: "include" }),
+        fetch(`${API_URL}/api/bookmarks/${currentUser.id}`, { credentials: "include" }),
       ]);
 
+      if (!postsRes.ok) throw new Error(`Failed to fetch following posts: ${postsRes.status}`);
       if (!bookmarksRes.ok) throw new Error(`Failed to fetch bookmarks: ${bookmarksRes.status}`);
 
-      const followedUsers: ApiFollow[] = await robustParse<ApiFollow[]>(followRes, "follow");
-      const myReshares: ApiReshare[] = myResharesRes.ok
-        ? await robustParse<ApiReshare[]>(myResharesRes, "reshares")
-        : [];
-      const bookmarks: ApiBookmark[] = await robustParse<ApiBookmark[]>(bookmarksRes, "bookmarks");
+      const pageData = await postsRes.json();
+      const apiPosts: ApiPost[] = pageData.content || [];
 
+      const myReshares: ApiReshare[] = myResharesRes.ok ? await myResharesRes.json() : [];
+      const bookmarks: ApiBookmark[] = await bookmarksRes.json();
       const bookmarkedPostIds = new Set(bookmarks.map((b) => b.postId));
-      const followedIds = followedUsers.map((f: ApiFollow) => f.followedId);
 
-      if (!followedIds.length) {
-        setFollowingPosts([]);
-        return;
-      }
+      // Filter out any malformed posts (same as For You)
+      const validPosts = apiPosts.filter(post => {
+        if (!post?.user?.id) return false;
+        return true;
+      });
 
-      const allFollowingPosts = await Promise.all(
-        followedIds.map(async (userId: number) => {
-          try {
-            const res = await fetch(`${API_URL}/api/posts?userId=${userId}`, commonInit);
-            if (!res.ok) return [];
-            return await robustParse<ApiPost[]>(res, `posts?userId=${userId}`);
-          } catch (error) {
-            console.warn(`Failed to fetch posts for user ${userId}:`, error);
-            return [];
-          }
-        })
-      );
-
-      const flattenedPosts: ApiPost[] = allFollowingPosts.flat();
-      const uniquePosts: ApiPost[] = Array.from(
-        new Map(flattenedPosts.map((post) => [post.id, post])).values()
-      ).filter((post: ApiPost) => post.user?.id !== currentUser.id);
-
-      const validPosts = uniquePosts.filter((post: ApiPost) => post.user?.id);
-
-      const formattedPosts = await Promise.all(
+      const formattedPosts: PostData[] = await Promise.all(
         validPosts.map(async (post: ApiPost) => {
-          try {
-            const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
-              fetch(`${API_URL}/api/comments/post/${post.id}`, commonInit),
-              fetch(`${API_URL}/api/likes/count/${post.id}`, commonInit),
-              fetch(`${API_URL}/api/likes/has-liked/${post.id}`, commonInit),
-              fetchTopicsForPost(post.id),
-            ]);
+          const [commentsRes, likesCountRes, hasLikedRes, topicsRes] = await Promise.all([
+            fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
+            fetch(`${API_URL}/api/likes/has-liked/${post.id}`, { credentials: "include" }),
+            fetchTopicsForPost(post.id),
+          ]);
 
-            let comments: ApiComment[] = [];
-            let likeCount = 0;
-            let isLiked = false;
-            let topics: Topic[] = [];
+          const comments: ApiComment[] = commentsRes.ok ? await commentsRes.json() : [];
+          const validComments = comments.filter((c) => c.userId);
 
+          const commentsWithUsers = await Promise.all(
+            validComments.map(async (comment: ApiComment) => {
+              const user = await fetchUser(comment.userId, comment.user);
+              return {
+                id: comment.id,
+                postId: comment.postId,
+                authorId: comment.userId,
+                content: comment.content,
+                createdAt: comment.createdAt,
+                username: user.displayName,
+                handle: `@${user.username}`,
+                profilePicture: user.profilePicture,
+              };
+            })
+          );
+
+          const postUser = post.isBot && post.botId
+            ? await fetchBot(post.botId, post.user)
+            : await fetchUser(post.user.id, post.user);
+
+          const isReshared = myReshares.some((r) => r.postId === post.id);
+          const reshareCount = myReshares.filter((r) => r.postId === post.id).length;
+
+          let isLiked = false;
+          if (hasLikedRes.ok) {
             try {
-              comments = commentsRes.ok
-                ? await robustParse<ApiComment[]>(commentsRes, `comments/post/${post.id}`)
-                : [];
-            } catch (error) {
-              console.warn(`Failed to parse comments for post ${post.id}:`, error);
-              comments = [];
+              isLiked = await hasLikedRes.json();
+            } catch (err) {
+              console.warn(`Failed to parse like status for post ${post.id}:`, err);
             }
-
-            try {
-              const raw = likesCountRes.ok
-                ? await robustParse<number | string | { count: number }>(
-                  likesCountRes,
-                  `likes/count/${post.id}`
-                )
-                : 0;
-              if (typeof raw === "number") likeCount = raw;
-              else if (typeof raw === "string") likeCount = Number(raw) || 0;
-              else if (raw && "count" in raw) likeCount = Number(raw.count) || 0;
-            } catch (error) {
-              console.warn(`Failed to parse like count for post ${post.id}:`, error);
-            }
-
-            try {
-              const raw = hasLikedRes.ok
-                ? await robustParse<boolean | string | { liked: boolean }>(
-                  hasLikedRes,
-                  `likes/has-liked/${post.id}`
-                )
-                : false;
-              if (typeof raw === "boolean") isLiked = raw;
-              else if (typeof raw === "string") isLiked = raw.toLowerCase() === "true";
-              else if (raw && "liked" in raw) isLiked = Boolean(raw.liked);
-            } catch (error) {
-              console.warn(`Failed to parse like status for post ${post.id}:`, error);
-            }
-
-            try {
-              topics = await topicsRes;
-            } catch (error) {
-              console.warn(`Failed to fetch topics for post ${post.id}:`, error);
-              topics = [];
-            }
-
-            const validComments = (comments || []).filter((c: ApiComment) => c.userId);
-
-            const commentsWithUsers = await Promise.all(
-              validComments.map(async (comment: ApiComment) => {
-                try {
-                  const user = await fetchUser(comment.userId, comment.user);
-                  return {
-                    id: comment.id,
-                    postId: comment.postId,
-                    authorId: comment.userId,
-                    content: comment.content,
-                    createdAt: comment.createdAt,
-                    username: user.displayName,
-                    handle: `@${user.username}`,
-                    profilePicture: user.profilePicture,
-                  } as CommentData;
-                } catch (error) {
-                  console.warn(`Failed to process comment ${comment.id}:`, error);
-                  return null;
-                }
-              })
-            ).then((cs) => cs.filter((c): c is CommentData => c !== null));
-
-            const postUser = await fetchUser(post.user.id, post.user);
-            const isReshared = myReshares.some((r: ApiReshare) => r.postId === post.id);
-            const reshareCount = myReshares.filter((r: ApiReshare) => r.postId === post.id).length;
-
-            return {
-              id: post.id,
-              username: postUser.displayName,
-              handle: `@${postUser.username}`,
-              profilePicture: postUser.profilePicture,
-              time: formatRelativeTime(post.createdAt),
-              createdAt: post.createdAt,
-              text: post.content,
-              image: post.imageUrl,
-              isLiked,
-              isBookmarked: bookmarkedPostIds.has(post.id),
-              isReshared,
-              commentCount: validComments.length,
-              authorId: post.user.id,
-              likeCount,
-              reshareCount,
-              comments: commentsWithUsers,
-              showComments: followingPosts.find((p) => p.id === post.id)?.showComments || false,
-              topics,
-              isBot: post.isBot,
-              botId: post.botId
-            };
-          } catch (postError) {
-            console.error(`Error processing post ${post.id}:`, postError);
-            return null;
           }
+
+          // Preserve showComments toggle if the post already exists in followingPosts
+          const existing = followingPosts.find(p => p.id === post.id);
+          const showComments = existing ? existing.showComments : false;
+
+          return {
+            id: post.id,
+            username: postUser.displayName,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
+            profilePicture: postUser.profilePicture,
+            time: formatRelativeTime(post.createdAt),
+            createdAt: post.createdAt,
+            text: post.content,
+            image: post.imageUrl,
+            isLiked,
+            isBookmarked: bookmarkedPostIds.has(post.id),
+            isReshared,
+            commentCount: validComments.length,
+            authorId: post.user.id,
+            likeCount: likesCountRes.ok ? await likesCountRes.json() : 0,
+            reshareCount,
+            comments: commentsWithUsers,
+            showComments,
+            topics: topicsRes,
+            isBot: post.isBot,
+            botId: post.botId,
+          };
         })
       );
 
-      const successfulPosts = formattedPosts.filter((p): p is NonNullable<typeof p> => p !== null);
-
-      setFollowingPosts(
-        successfulPosts.sort(
+      // Merge like For You does
+      setFollowingPosts(prev => {
+        const map = new Map(prev.map(p => [p.id, p]));
+        formattedPosts.forEach(p => {
+          if (map.has(p.id)) {
+            map.set(p.id, { ...p, showComments: map.get(p.id)!.showComments });
+          } else {
+            map.set(p.id, p);
+          }
+        });
+        return Array.from(map.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      );
+        );
+      });
+
+      return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching following posts:", err);
-      setError("Failed to load posts from followed users.");
-      setTimeout(() => setError(null), 3000);
+      return 0;
     } finally {
       setLoadingFollowing(false);
     }
   };
+
   const fetchDefaultPreset = async () => {
     try {
       const response = await fetch(`${API_URL}/api/presets/default`, {
@@ -828,7 +778,6 @@ const HomePage = () => {
 
       if (!response.ok) {
         if (response.status === 404) {
-          //console.log("No default preset found - this is normal for new users");
           setDefaultPresetId(null);
           return null;
         } else if (response.status === 500) {
@@ -924,8 +873,6 @@ const HomePage = () => {
     console.debug(`Fetching posts for preset ${presetId}`);
     setLoadingPresetPosts(true);
     setIsViewingPresetFeed(true);
-
-    // Reset pagination state
     setPresetCurrentPage(0);
     setPresetHasMore(true);
 
@@ -941,12 +888,11 @@ const HomePage = () => {
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged (e.g., totalPages usage)
-
-      // Check if there are more pages
       const totalPages = pageData.totalPages || 0;
-      if (0 >= totalPages - 1) {
+      if (totalPages <= 1 || apiPosts.length < PAGE_SIZE) {
         setPresetHasMore(false);
+      } else {
+        setPresetHasMore(true);
       }
 
       const myReshares: ApiReshare[] = myResharesRes.ok
@@ -1042,7 +988,7 @@ const HomePage = () => {
           return {
             id: post.id,
             username: postUser.displayName,
-            handle: `@${postUser.username}`,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
             profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             createdAt: post.createdAt,
@@ -1107,20 +1053,19 @@ const HomePage = () => {
     try {
       const postsRes = await fetch(`${API_URL}/api/presets/feed/${presetId}/paginated?page=${page}&size=${PAGE_SIZE}`, commonInit);
 
-      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${postsRes.status}`);
+      if (!postsRes.ok) throw new Error(`Failed to fetch preset posts: ${posts}`);
 
       const pageData = await postsRes.json() as PaginatedResponse<ApiPost>;
       const apiPosts: ApiPost[] = pageData.content || [];
-      // Rest unchanged
+
+      const totalPages = pageData.totalPages || 0;
+
+      if (page >= totalPages - 1 || apiPosts.length === 0) {
+        setPresetHasMore(false);
+      }
 
       if (apiPosts.length === 0) {
         return 0;
-      }
-
-      // Check if there are more pages
-      const totalPages = pageData.totalPages || 0;
-      if (page >= totalPages - 1) {
-        setPresetHasMore(false);
       }
 
       const [myResharesRes, bookmarksRes] = await Promise.all([
@@ -1215,7 +1160,7 @@ const HomePage = () => {
           return {
             id: post.id,
             username: postUser.displayName,
-            handle: `@${postUser.username}`,
+            handle: post.isBot || post.botId ? `${postUser.username}` : `@${postUser.username}`,
             profilePicture: postUser.profilePicture,
             time: formatRelativeTime(post.createdAt),
             createdAt: post.createdAt,
@@ -1250,6 +1195,7 @@ const HomePage = () => {
       return formattedPosts.length;
     } catch (err) {
       console.error("Error fetching more preset posts:", err);
+      setPresetHasMore(false);
       return 0;
     } finally {
       setLoadingPresetPosts(false);
@@ -1447,7 +1393,7 @@ const HomePage = () => {
       parts.push(`${rule.percentage}%`);
     }
 
-    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 '); // Using non-breaking spaces
+    return parts.join(' \u00A0\u00A0|\u00A0\u00A0 ');
   };
   const createTopic = async () => {
     if (!newTopicName.trim()) {
@@ -1574,7 +1520,6 @@ const HomePage = () => {
             setErrorData(errorData);
             setIsErrorDialogOpen(true);
 
-            // Revert temp post immediately
             if (isGeneratingImage) {
               setLoadingImages(prev => {
                 const newSet = new Set(prev);
@@ -1592,7 +1537,7 @@ const HomePage = () => {
             setImagePrompt(tempImagePrompt);
             setUseAIGeneration(!!tempImagePrompt);
 
-            return; // Exit early, don't proceed with success flow
+            return;
           }
         } catch (parseErr) {
           console.warn("Failed to parse error response as JSON:", parseErr);
@@ -1601,7 +1546,6 @@ const HomePage = () => {
       }
 
       const newPost: ApiPost = await res.json();
-
       if (selectedTopics.length > 0) {
         const assignRes = await fetch(`${API_URL}/api/topics/assign`, {
           method: "POST",
@@ -1647,20 +1591,27 @@ const HomePage = () => {
         isBot: newPost.isBot
       };
 
-      if (isGeneratingImage) {
-        setLoadingImages(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(tempPostId);
-          return newSet;
-        });
-      }
+      if (useAIGeneration) {
+        setPreviewPostData(formattedPost);
+        setIsPreviewModalOpen(true);
 
-      setPosts((prev) =>
-        [
-          formattedPost,
-          ...prev.filter((p) => p.id !== tempPostId),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      );
+        setPosts((prev) => prev.filter((p) => p.id !== tempPostId));
+      } else {
+        if (isGeneratingImage) {
+          setLoadingImages(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempPostId);
+            return newSet;
+          });
+        }
+
+        setPosts((prev) =>
+          [
+            formattedPost,
+            ...prev.filter((p) => p.id !== tempPostId),
+          ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        );
+      }
     } catch (err) {
       console.error("Error creating post:", err);
       setError("Failed to create post. Reverting...");
@@ -1685,17 +1636,49 @@ const HomePage = () => {
       setUseAIGeneration(!!tempImagePrompt);
     }
   };
+  const handleConfirmPreview = () => {
+    if (previewPostData) {
+      setPosts((prev) =>
+        [previewPostData, ...prev].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
 
-  const handleDeletePost = async (postId: number) => {
+  const handleCancelPreview = async () => {
+    if (previewPostData) {
+      try {
+        const res = await fetch(`${API_URL}/api/posts/del/${previewPostData.id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to delete preview post");
+      } catch (err) {
+        console.error("Error deleting preview post:", err);
+        setError("Failed to cancel post.");
+        setTimeout(() => setError(null), 3000);
+      }
+    }
+    setIsPreviewModalOpen(false);
+    setPreviewPostData(null);
+  };
+
+  const handleDeletePost = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to delete posts.");
       return;
     }
 
-    const deletedPost = posts.find((p) => p.id === postId);
-    const deletedFollowingPost = followingPosts.find((p) => p.id === postId);
-    setPosts((prev) => prev.filter((p) => p.id !== postId));
-    setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    let deletedPost;
+    if (isPresetFeed) {
+      deletedPost = presetPosts.find((p) => p.id === postId);
+      setPresetPosts((prev) => prev.filter((p) => p.id !== postId));
+    } else {
+      deletedPost = posts.find((p) => p.id === postId);
+      setPosts((prev) => prev.filter((p) => p.id !== postId));
+      setFollowingPosts((prev) => prev.filter((p) => p.id !== postId));
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/posts/del/${postId}`, {
@@ -1708,23 +1691,27 @@ const HomePage = () => {
       console.error("Error deleting post:", err);
       setError("Failed to delete post. Reverting...");
       setTimeout(() => setError(null), 3000);
-      if (deletedPost) {
+
+      if (isPresetFeed && deletedPost) {
+        setPresetPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } else if (deletedPost) {
         setPosts((prev) => [...prev, deletedPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      }
-      if (deletedFollowingPost) {
-        setFollowingPosts((prev) =>
-          [...prev, deletedFollowingPost].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        );
       }
     }
   };
-  const handleLike = async (postId: number) => {
+  const handleLike = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to like/unlike posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1745,8 +1732,12 @@ const HomePage = () => {
           : p
       );
 
-    setPosts((prevPosts) => updatePostInArray(prevPosts));
-    setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsLiked ? "DELETE" : "POST";
@@ -1774,8 +1765,12 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked, likeCount } : p
         );
 
-      setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
-      setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling like:", err);
       setError(`Failed to ${originalIsLiked ? "unlike" : "like"} post. Reverting...`);
@@ -1786,18 +1781,28 @@ const HomePage = () => {
           p.id === postId ? { ...p, isLiked: originalIsLiked, likeCount: originalLikeCount } : p
         );
 
-      setPosts((prevPosts) => revertPostInArray(prevPosts));
-      setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleReshare = async (postId: number) => {
+  const handleReshare = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to reshare posts.");
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1807,8 +1812,8 @@ const HomePage = () => {
     const originalIsReshared = post.isReshared;
     const originalReshareCount = post.reshareCount;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId
           ? {
             ...p,
@@ -1816,19 +1821,14 @@ const HomePage = () => {
             reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
           }
           : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId
-          ? {
-            ...p,
-            isReshared: !p.isReshared,
-            reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-          }
-          : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsReshared ? "DELETE" : "POST";
@@ -1846,24 +1846,24 @@ const HomePage = () => {
       console.error("Error toggling reshare:", err);
       setError(`Failed to ${originalIsReshared ? "unreshare" : "reshare"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId
             ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
             : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId
-            ? { ...p, isReshared: originalIsReshared, reshareCount: originalReshareCount }
-            : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
-  const handleAddComment = async (postId: number, commentText: string) => {
+  const handleAddComment = async (postId: number, commentText: string, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to comment.");
       return;
@@ -1885,28 +1885,42 @@ const HomePage = () => {
       profilePicture: currentUser.profilePicture
     };
 
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId
-          ? {
-            ...post,
-            comments: [...post.comments, tempComment],
-            commentCount: post.commentCount + 1,
-          }
-          : post
-      )
-    );
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId
+            ? {
+              ...post,
+              comments: [...post.comments, tempComment],
+              commentCount: post.commentCount + 1,
+            }
+            : post
+        )
+      );
+    }
 
     try {
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
@@ -1930,65 +1944,100 @@ const HomePage = () => {
         profilePicture: currentUser.profilePicture,
       };
 
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
-              commentCount: post.commentCount,
-            }
-            : post
-        )
-      );
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: [...post.comments.filter((c) => c.id !== tempCommentId), formattedComment],
+                commentCount: post.commentCount,
+              }
+              : post
+          )
+        );
+      }
     } catch (err) {
       console.error("Error adding comment:", err);
       setError("Failed to add comment. Reverting...");
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((post) =>
-          post.id === postId
-            ? {
-              ...post,
-              comments: post.comments.filter((c) => c.id !== tempCommentId),
-              commentCount: post.commentCount - 1,
-            }
-            : post
-        )
-      );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      } else {
+        setPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+        setFollowingPosts((prevPosts) =>
+          prevPosts.map((post) =>
+            post.id === postId
+              ? {
+                ...post,
+                comments: post.comments.filter((c) => c.id !== tempCommentId),
+                commentCount: post.commentCount - 1,
+              }
+              : post
+          )
+        );
+      }
     }
   };
 
-  const handleBookmark = async (postId: number) => {
+  const handleBookmark = async (postId: number, isPresetFeed: boolean = false) => {
     if (!currentUser) {
       setError("Please log in to bookmark/unbookmark posts.");
       setTimeout(() => setError(null), 3000);
       return;
     }
 
-    const post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    let post;
+    if (isPresetFeed) {
+      post = presetPosts.find((p) => p.id === postId);
+    } else {
+      post = posts.find((p) => p.id === postId) || followingPosts.find((p) => p.id === postId);
+    }
+
     if (!post) {
       setError("Post not found.");
       setTimeout(() => setError(null), 3000);
@@ -1997,16 +2046,17 @@ const HomePage = () => {
 
     const originalIsBookmarked = post.isBookmarked;
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    const updatePostInArray = (postsArray: PostData[]) =>
+      postsArray.map((p) =>
         p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((p) =>
-        p.id === postId ? { ...p, isBookmarked: !p.isBookmarked } : p
-      )
-    );
+      );
+
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) => updatePostInArray(prevPosts));
+    } else {
+      setPosts((prevPosts) => updatePostInArray(prevPosts));
+      setFollowingPosts((prevPosts) => updatePostInArray(prevPosts));
+    }
 
     try {
       const method = originalIsBookmarked ? "DELETE" : "POST";
@@ -2033,30 +2083,33 @@ const HomePage = () => {
       const bookmarkedPostIds = new Set(bookmarks.map((bookmark) => bookmark.postId));
       const confirmedIsBookmarked = bookmarkedPostIds.has(postId);
 
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+      const updatePostWithConfirmedValues = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: confirmedIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      } else {
+        setPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+        setFollowingPosts((prevPosts) => updatePostWithConfirmedValues(prevPosts));
+      }
     } catch (err) {
       console.error("Error toggling bookmark:", err);
       setError(`Failed to ${originalIsBookmarked ? "unbookmark" : "bookmark"} post. Reverting...`);
       setTimeout(() => setError(null), 3000);
-      setPosts((prevPosts) =>
-        prevPosts.map((p) =>
+
+      const revertPostInArray = (postsArray: PostData[]) =>
+        postsArray.map((p) =>
           p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
-      setFollowingPosts((prevPosts) =>
-        prevPosts.map((p) =>
-          p.id === postId ? { ...p, isBookmarked: originalIsBookmarked } : p
-        )
-      );
+        );
+
+      if (isPresetFeed) {
+        setPresetPosts((prevPosts) => revertPostInArray(prevPosts));
+      } else {
+        setPosts((prevPosts) => revertPostInArray(prevPosts));
+        setFollowingPosts((prevPosts) => revertPostInArray(prevPosts));
+      }
     }
   };
 
@@ -2080,38 +2133,46 @@ const HomePage = () => {
     }
   };
 
-  const toggleComments = (postId: number) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
-    setFollowingPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === postId ? { ...post, showComments: !post.showComments } : post
-      )
-    );
+  const toggleComments = (postId: number, isPresetFeed: boolean = false) => {
+    if (isPresetFeed) {
+      setPresetPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    } else {
+      setPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+      setFollowingPosts((prevPosts) =>
+        prevPosts.map((post) =>
+          post.id === postId ? { ...post, showComments: !post.showComments } : post
+        )
+      );
+    }
   };
 
   const renderSkeletonPosts = () => {
     return Array.from({ length: 10 }).map((_, index) => (
       <div
         key={index}
-        className="b-4 border border-rose-gold-accent-border dark:border-slate-200 rounded-lg p-4 animate-pulse space-y-4"
+        className="b-4 border border-rose-gold-accent-border  rounded-lg p-14 mt-5 animate-pulse space-y-4"
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 rounded w-full" />
+        <div className="h-4 bg-gray-300 rounded w-5/6" />
       </div>
     ));
   };
 
-  const renderPosts = (posts: PostData[]) => {
+  const renderPosts = (posts: PostData[], isPresetFeed: boolean = false) => {
     return posts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
@@ -2128,14 +2189,14 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
-            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!currentUser}
@@ -2157,12 +2218,12 @@ const HomePage = () => {
             isReshared={post.isReshared}
             reshareCount={post.reshareCount}
             commentCount={post.commentCount}
-            onLike={() => handleLike(post.id)}
-            onBookmark={() => handleBookmark(post.id)}
-            onAddComment={(commentText) => handleAddComment(post.id, commentText)}
-            onReshare={() => handleReshare(post.id)}
-            onDelete={() => handleDeletePost(post.id)}
-            onToggleComments={() => toggleComments(post.id)}
+            onLike={() => handleLike(post.id, isPresetFeed)}
+            onBookmark={() => handleBookmark(post.id, isPresetFeed)}
+            onAddComment={(commentText) => handleAddComment(post.id, commentText, isPresetFeed)}
+            onReshare={() => handleReshare(post.id, isPresetFeed)}
+            onDelete={() => handleDeletePost(post.id, isPresetFeed)}
+            onToggleComments={() => toggleComments(post.id, isPresetFeed)}
             onNavigate={() => navigate(`/post/${post.id}`)}
             onProfileClick={() => navigate(`/profile/${post.authorId}`)}
             showComments={post.showComments || false}
@@ -2211,20 +2272,24 @@ const HomePage = () => {
     if (activeTab === "for You") {
       fetchPaginatedPosts(0);
     } else if (activeTab === "Following") {
-      fetchFollowingPosts();
+      setFollowingPosts([]);
+      setCurrentFollowingPage(0);
+      setHasMoreFollowing(true);
+      fetchFollowingPosts(0);
     }
   }, [activeTab, currentUser]);
 
-
+  useEffect(() => {
+    if (currentUser && activeTab === "for You" && posts.length === 0) {
+      fetchPaginatedPosts(0);
+    }
+  }, [currentUser, activeTab, posts.length]);
 
   useEffect(() => {
-    if (currentUser?.id && activeTab === "Following" && followingPosts.length === 0) {
-      fetchFollowingPosts();
-    }
     if (selectedPreset) {
       fetchRules(selectedPreset);
     }
-  }, [currentUser, activeTab, selectedPreset]);
+  }, [selectedPreset]);
 
   useEffect(() => {
     if (isErrorDialogOpen) {
@@ -2261,8 +2326,32 @@ const HomePage = () => {
     window.addEventListener("scroll", handlePresetScroll);
     return () => window.removeEventListener("scroll", handlePresetScroll);
   }, [presetCurrentPage, loadingPresetPosts, presetHasMore, isViewingPresetFeed, selectedPreset]);
+
+  useEffect(() => {
+    const handleFollowingScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        !loadingFollowing &&
+        hasMoreFollowing &&
+        activeTab === "Following"
+      ) {
+        const nextPage = currentFollowingPage + 1;
+        fetchFollowingPosts(nextPage).then((fetchedCount) => {
+          if (fetchedCount === 0) {
+            setHasMoreFollowing(false);
+          } else {
+            setCurrentFollowingPage(nextPage);
+          }
+        });
+      }
+    };
+
+    window.addEventListener("scroll", handleFollowingScroll);
+    return () => window.removeEventListener("scroll", handleFollowingScroll);
+  }, [currentFollowingPage, loadingFollowing, hasMoreFollowing, activeTab]);
+
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
       <aside className="lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
         <div className="drop-shadow-xl border border-2 mt-8 w-45 h-1 ml-6.5 bg-white hidden lg:block">
@@ -2288,7 +2377,7 @@ const HomePage = () => {
 
       <button
 
-        className="lg:hidden -translate-y-[15px] fixed top-5 right-5 bg-blue-500 dark:bg-white dark:text-indigo-950 future-feed:border-2 future-feed:bg-black dark:hover:text-gray-400 future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
+        className="lg:hidden -translate-y-[15px] fixed top-10.5 right-5 bg-blue-500  future-feed:border-2 future-feed:bg-black  future-feed:bg-lime  text-white p-3 rounded-full z-20 shadow-lg future-feed:border-lime future-feed:text-white"
 
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
@@ -2299,17 +2388,17 @@ const HomePage = () => {
           <div className="w-full max-w-xs p-4">
             <button
               onClick={handleLogout}
-              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500 dark:hover:text-gray-400 transition-colors future-feed:bg-lime dark:bg-indigo-800"
+              className="mb-2 w-[255px] ml-4 mb-4 py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors future-feed:bg-lime"
             >
               Logout
             </button>
-            <div className="p-4 border-t dark:border-slate-200 flex flex-col gap-2">
+            <div className="p-4 border-t  flex flex-col gap-2 ">
               <button
                 onClick={() => {
                   setIsTopicModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors dark:hover:text-gray-400  future-feed:bg-lime dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors   future-feed:bg-lime"
               >
                 Create Topic
               </button>
@@ -2318,7 +2407,7 @@ const HomePage = () => {
                   setIsViewTopicsModalOpen(true);
                   setIsMobileMenuOpen(false);
                 }}
-                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime dark:hover:text-gray-400 dark:bg-indigo-800"
+                className="w-full py-2 px-4 bg-blue-500 text-white rounded-xl hover:bg-white hover:text-blue-500  transition-colors mt-3 future-feed:bg-lime "
               >
                 View Topics
               </button>
@@ -2327,26 +2416,37 @@ const HomePage = () => {
         </div>
       )}
       <div
-        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen ? "backdrop-blur-sm" : ""}`}
+        className={`flex flex-1 flex-col lg:flex-row max-w-full lg:max-w-[calc(100%-295px)] ${isPostModalOpen || isTopicModalOpen || isViewTopicsModalOpen || isPreviewModalOpen ? "backdrop-blur-sm" : ""}`}
       >
         <main className="mt-1 flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto">
           {loading ? (
             renderSkeletonPosts()
           ) : !currentUser ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-lg dark:text-white">Please log in to view posts.</p>
+              <p className="text-lg ">Please log in to view posts.</p>
             </div>
           ) : (
             <>
               <div
-                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0 dark:bg-indigo-950 border bg-white dark:border-slate-200 rounded-2xl z-10 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"}`}
+                className={`future-feed:bg-card future-feed:text-lime future-feed:border-lime flex justify-center items-center px-4 py-3 sticky top-0  border bg-gray-50  rounded-2xl z-10 cursor-pointer hover:bg-white transition-colors drop-shadow-xl ${isMobileMenuOpen ? "lg:flex hidden" : "flex"} group relative overflow-hidden`}
                 onClick={activeTab === "Presets" ? () => setIsCreatePresetModalOpen(true) : () => setIsPostModalOpen(true)}
               >
-                <h1 className="future-feed:text-lime text-xl dark:text-slate-200 font-bold text-black">
-                  {activeTab === "Presets" ? "Create a new preset" : "What's on your mind?"}
-                </h1>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 opacity-5 group-hover:opacity-3 transition-opacity duration-300"></div>
+
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-100 transition-transform duration-200">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </div>
+
+                  <h1 className="future-feed:text-lime text-xl text-black font-bold group-hover:text-blue-600 transition-colors">
+                    {activeTab === "Presets" ? "Create a new preset" : "Create a new post"}
+                  </h1>
+                </div>
+                <div className="absolute inset-0 border-2 border-blue-200 group-hover:border-blue-100 rounded-2xl transition-all duration-300"></div>
               </div>
-              <Tabs defaultValue="Following" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
+              <Tabs defaultValue="for You" className={`w-full p-0 ${isMobileMenuOpen ? "hidden" : ""}`} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
                   {["for You", "Following", "Presets"].map((tab) => (
                     <TabsTrigger
@@ -2363,7 +2463,7 @@ const HomePage = () => {
                     renderSkeletonPosts()
                   ) : posts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-10">
-                      <p className="text-lg future-feed:text-lime  dark:text-white">No posts available.</p>
+                      <p className="text-lg future-feed:text-lime  ">No posts available.</p>
                       <Button
                         className="mt-4 bg-black-500 hover:bg-white hover:text-blue-500  text-white"
                         onClick={() => fetchPaginatedPosts(0)}
@@ -2373,7 +2473,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(posts)}
+                      {renderPosts(posts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2385,7 +2485,7 @@ const HomePage = () => {
 
                       <div className="flex flex-col justify-center items-center mt-10 gap-12">
                         <SmilePlus size={50} color="#3B82F6" />
-                        <p className="dark:text-white text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
+                        <p className=" text-xl future-feed:text-lime text-blue-500">No posts from followed users.</p>
 
                       </div>
                       <div className="flex gap-20 mt-13">
@@ -2398,7 +2498,7 @@ const HomePage = () => {
                         </Button>
                         <Button
                           className="bg-gray-200 text-blue-500 hover:bg-white hover:text-blue-500"
-                          onClick={() => fetchFollowingPosts()}
+                          onClick={() => fetchFollowingPosts(0)}
                           size={'lg'}
                         >
                           Refresh
@@ -2408,7 +2508,7 @@ const HomePage = () => {
                     </div>
                   ) : (
                     <div className="mt-5">
-                      {renderPosts(followingPosts)}
+                      {renderPosts(followingPosts, false)}
                     </div>
                   )}
                 </TabsContent>
@@ -2431,47 +2531,40 @@ const HomePage = () => {
                             setPresetCurrentPage(0);
                             setPresetHasMore(true);
                           }}
-                          className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                          className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                         >
                           <ArrowLeft className="h-4 w-4 mr-1" />
                           Back to Presets
                         </Button>
                         {selectedPreset && (
                           <div className="ml-auto">
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                            <p className="text-sm text-gray-500 ">
                               Viewing feed for: {presets.find(p => p.id === selectedPreset)?.name}
                             </p>
                           </div>
                         )}
                       </div>
-
-                      {/* Initial loading skeleton */}
                       {loadingPresetPosts && presetPosts.length === 0 ? (
                         renderSkeletonPosts()
                       ) : presetPosts.length === 0 ? (
-                        <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                          <EyeOff className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                          <p className="text-sm text-gray-500 dark:text-gray-400">No Posts available.</p>
-                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        <div className="text-center py-6 border-2 border-dashed border-gray-300  rounded-lg">
+                          <EyeOff className="h-8 w-8 text-gray-400  mx-auto mb-2" />
+                          <p className="text-sm text-gray-500 ">No Posts available.</p>
+                          <p className="text-xs text-gray-400  mt-1">
                             No posts available yet for this preset. Please add rules if rules are empty.
                           </p>
                         </div>
                       ) : (
                         <>
-                          {/* Render the posts */}
-                          {renderPosts(presetPosts)}
-
-                          {/* Show loading skeleton at the bottom when loading more posts */}
+                          {renderPosts(presetPosts, true)}
                           {loadingPresetPosts && presetPosts.length > 0 && (
                             <div className="mt-4">
                               {renderSkeletonPosts().slice(0, 3)}
                             </div>
                           )}
-
-                          {/* Show "no more posts" message */}
                           {!presetHasMore && presetPosts.length > 0 && (
                             <div className="text-center py-6">
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-gray-500 ">
                                 No more posts to load
                               </p>
                             </div>
@@ -2481,19 +2574,17 @@ const HomePage = () => {
                     </>
                   ) : (
                     <div className="space-y-4">
-
-                      {/* Presets List */}
                       {presets.length > 0 && (
                         <div className="mt-6 space-y-4">
                           {presets.map((preset) => (
-                            <Card key={preset.id} className="w-full dark:bg-indigo-950 dark:border-slate-200 dark:text-white">
+                            <Card key={preset.id} className="w-full   ">
                               <CardHeader>
                                 <div className="flex justify-between items-center">
-                                  <CardTitle className="text-2xl font-bold dark:text-white">
+                                  <CardTitle className="text-2xl font-bold ">
                                     <div className="flex items-center space-x-2">
                                       <span>{preset.name}</span>
                                       {preset.defaultPreset && (
-                                        <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                                        <span className="border border-blue-500 text-blue-500 text-xs font-medium px-3.5 py-0.5 rounded-full ">
                                           Default
                                         </span>
                                       )}
@@ -2514,7 +2605,7 @@ const HomePage = () => {
                                           <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                       </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end" className="dark:bg-gray-800 dark:border-gray-600">
+                                      <DropdownMenuContent align="end" className=" ">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -2543,10 +2634,10 @@ const HomePage = () => {
                                               Delete Preset
                                             </DropdownMenuItem>
                                           </DialogTrigger>
-                                          <DialogContent className="dark:bg-gray-800 dark:border-gray-600">
+                                          <DialogContent className=" ">
                                             <DialogHeader>
-                                              <DialogTitle className="dark:text-white">Delete Preset</DialogTitle>
-                                              <DialogDescription className="dark:text-gray-400">
+                                              <DialogTitle className="">Delete Preset</DialogTitle>
+                                              <DialogDescription className="">
                                                 Are you sure you want to delete "{preset.name}" Preset? This action cannot be undone.
                                               </DialogDescription>
                                             </DialogHeader>
@@ -2573,11 +2664,16 @@ const HomePage = () => {
                                   <div className="space-y-4">
                                     <div className="space-y-3">
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Topic Filter</label>
+                                        <label className="text-sm font-medium ">Topic Filter</label>
                                         <select
                                           value={newRule.topicId || ""}
-                                          onChange={(e) => setNewRule({ ...newRule, topicId: e.target.value ? Number(e.target.value) : undefined })}
-                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
+                                          onChange={(e) =>
+                                            setNewRule({
+                                              ...newRule,
+                                              topicId: e.target.value ? Number(e.target.value) : undefined,
+                                            })
+                                          }
+                                          className="flex h-8 w-full rounded-xl border px-3 text-sm bg-gray-300"
                                         >
                                           <option value="">Select Topic</option>
                                           {topics.map((topic) => (
@@ -2588,81 +2684,105 @@ const HomePage = () => {
                                         </select>
                                       </div>
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Source Type</label>
+                                        <label className="text-sm font-medium ">Source Type</label>
                                         <select
                                           value={newRule.sourceType || ""}
-                                          onChange={(e) => setNewRule({ ...newRule, sourceType: e.target.value as 'user' | 'bot' | undefined })}
-                                          className="dark:bg-gray-800 dark:border-gray-600 dark:text-white flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
+                                          onChange={(e) => {
+                                            const sourceType = e.target.value as 'user' | 'bot' | undefined;
+                                            setNewRule({
+                                              ...newRule,
+                                              sourceType,
+                                              // Clear specificUserId if sourceType is 'bot'
+                                              specificUserId: sourceType === 'bot' ? undefined : newRule.specificUserId,
+                                            });
+                                            // Clear user search query if sourceType is 'bot'
+                                            if (sourceType === 'bot') {
+                                              setUserSearchQuery('');
+                                              setIsUserSearchOpen(false);
+                                            }
+                                          }}
+                                          className="flex w-full rounded-xl border px-3 text-sm bg-gray-300 h-8"
                                         >
                                           <option value="">Select Source</option>
                                           <option value="user">User Posts</option>
                                           <option value="bot">Bot Posts</option>
                                         </select>
                                       </div>
-                                      <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Specific User</label>
-                                        <div className="relative user-search-container">
-                                          <Input
-                                            placeholder="Search users..."
-                                            value={userSearchQuery}
-                                            onChange={(e) => {
-                                              setUserSearchQuery(e.target.value);
-                                              setIsUserSearchOpen(true);
-                                            }}
-                                            onFocus={() => setIsUserSearchOpen(true)}
-                                            className="dark:bg-gray-800 dark:border-gray-600 dark:text-white pr-10 bg-gray-300 text-black rounded-xl h-8"
-                                          />
-                                          {newRule.specificUserId && (
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => {
-                                                setNewRule({ ...newRule, specificUserId: undefined });
-                                                setUserSearchQuery("");
+                                      {newRule.sourceType === 'user' && (
+                                        <div className="flex flex-col space-y-2">
+                                          <label className="text-sm font-medium ">Specific User</label>
+                                          <div className="relative user-search-container">
+                                            <Input
+                                              placeholder="Search users..."
+                                              value={userSearchQuery}
+                                              onChange={(e) => {
+                                                setUserSearchQuery(e.target.value);
+                                                setIsUserSearchOpen(true);
                                               }}
-                                              className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
-                                            >
-                                              <FaTimes size={12} className="text-red-500" />
-                                            </Button>
-                                          )}
-                                          {isUserSearchOpen && filteredUsers.length > 0 && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                                              {filteredUsers.map((user) => (
-                                                <div
-                                                  key={user.id}
-                                                  className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-3"
-                                                  onClick={() => {
-                                                    setNewRule({ ...newRule, specificUserId: user.id });
-                                                    setUserSearchQuery(`${user.displayName} (@${user.username})`);
-                                                    setIsUserSearchOpen(false);
-                                                  }}
-                                                >
-                                                  {user.profilePicture && (
-                                                    <img src={user.profilePicture} alt={user.displayName} className="w-6 h-6 rounded-full" />
-                                                  )}
-                                                  <div>
-                                                    <div className="text-sm font-medium dark:text-white">{user.displayName}</div>
-                                                    <div className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</div>
+                                              onFocus={() => setIsUserSearchOpen(true)}
+                                              className="pr-10 bg-gray-300 text-black rounded-xl h-8"
+                                            />
+                                            {newRule.specificUserId && (
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                  setNewRule({ ...newRule, specificUserId: undefined });
+                                                  setUserSearchQuery('');
+                                                }}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+                                              >
+                                                <FaTimes size={12} className="text-red-500" />
+                                              </Button>
+                                            )}
+                                            {isUserSearchOpen && filteredUsers.length > 0 && (
+                                              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                                {filteredUsers.map((user) => (
+                                                  <div
+                                                    key={user.id}
+                                                    className="px-3 py-2 cursor-pointer hover:bg-gray-100 flex items-center space-x-3"
+                                                    onClick={() => {
+                                                      setNewRule({ ...newRule, specificUserId: user.id });
+                                                      setUserSearchQuery(`${user.displayName} (@${user.username})`);
+                                                      setIsUserSearchOpen(false);
+                                                    }}
+                                                  >
+                                                    {user.profilePicture && (
+                                                      <img
+                                                        src={user.profilePicture}
+                                                        alt={user.displayName}
+                                                        className="w-6 h-6 rounded-full"
+                                                      />
+                                                    )}
+                                                    <div>
+                                                      <div className="text-sm font-medium ">{user.displayName}</div>
+                                                      <div className="text-xs text-gray-500 ">@{user.username}</div>
+                                                    </div>
                                                   </div>
-                                                </div>
-                                              ))}
-                                            </div>
-                                          )}
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
+                                      )}
                                       <div className="flex flex-col space-y-2">
-                                        <label className="text-sm font-medium dark:text-white">Percentage</label>
+                                        <label className="text-sm font-medium ">Percentage</label>
                                         <div className="flex items-center space-x-2">
                                           <Input
                                             type="number"
                                             min="1"
                                             max="100"
                                             placeholder="Percentage (1-100)%"
-                                            value={newRule.percentage || ""}
-                                            onChange={(e) => setNewRule({ ...newRule, percentage: e.target.value ? Number(e.target.value) : undefined })}
-                                            className="flex-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white bg-gray-300 rounded-xl"
+                                            value={newRule.percentage || ''}
+                                            onChange={(e) =>
+                                              setNewRule({
+                                                ...newRule,
+                                                percentage: e.target.value ? Number(e.target.value) : undefined,
+                                              })
+                                            }
+                                            className="flex-1 bg-gray-300 rounded-xl"
                                           />
-                                          <span className="text-sm text-gray-500 dark:text-gray-400">%</span>
+                                          <span className="text-sm text-gray-500 ">%</span>
                                         </div>
                                       </div>
                                       <Button
@@ -2675,12 +2795,15 @@ const HomePage = () => {
                                     </div>
                                     {rules[preset.id]?.length > 0 ? (
                                       <div className="space-y-2">
-                                        <h4 className="text-sm font-medium dark:text-white">Current Rules</h4>
+                                        <h4 className="text-sm font-medium ">Current Rules</h4>
                                         {rules[preset.id].map((rule) => (
-                                          <div key={rule.id} className="flex items-center justify-between border rounded-xl bg-blue-500 dark:bg-gray-700 dark:border-gray-600">
+                                          <div
+                                            key={rule.id}
+                                            className="flex items-center justify-between border rounded-xl bg-blue-500 "
+                                          >
                                             <div className="flex items-center space-x-2 px-3">
                                               <Filter className="h-4 w-4 text-white" />
-                                              <span className="text-sm dark:text-white text-white">{formatRule(rule)}</span>
+                                              <span className="text-sm text-white">{formatRule(rule)}</span>
                                             </div>
                                             <Button
                                               variant="ghost"
@@ -2694,10 +2817,10 @@ const HomePage = () => {
                                         ))}
                                       </div>
                                     ) : (
-                                      <div className="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-                                        <Filter className="h-8 w-8 text-gray-400 dark:text-gray-500 mx-auto mb-2" />
-                                        <p className="text-sm text-gray-500 dark:text-gray-400">No rules added yet.</p>
-                                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                                      <div className="text-center py-6 border-2 border-dashed border-gray-300 rounded-lg">
+                                        <Filter className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500 ">No rules added yet.</p>
+                                        <p className="text-xs text-gray-400 mt-1">
                                           Add rules to customize your feed content
                                         </p>
                                       </div>
@@ -2710,26 +2833,23 @@ const HomePage = () => {
                         </div>
                       )}
 
-                      {/* Empty State */}
                       {presets.length === 0 && !isLoading && (
                         <div className="text-center py-12">
-                          <div className="bg-gray-100 dark:bg-gray-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                            <ChartNoAxesGantt className="h-8 w-8 text-gray-400 dark:text-gray-500" />
+                          <div className="bg-gray-100  rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <ChartNoAxesGantt className="h-8 w-8 text-gray-400 " />
                           </div>
-                          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No presets yet</h3>
-                          <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-md mx-auto">
+                          <h3 className="text-lg font-medium text-gray-900  mb-2">No presets yet</h3>
+                          <p className="text-gray-500  mb-6 max-w-md mx-auto">
                             Create your first preset to customize your feed with specific topics, sources, and users.
                           </p>
                           <Button
                             onClick={() => setIsCreatePresetModalOpen(true)}
-                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2"
+                            className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 px-6 py-2 hover:cursor-pointer"
                           >
                             Create Your First Preset
                           </Button>
                         </div>
                       )}
-
-                      {/* Loading State */}
                       {isLoading && (
                         <div className="flex justify-center py-8">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -2737,51 +2857,39 @@ const HomePage = () => {
                       )}
                     </div>
                   )}
-
-                  {/* Create Preset Modal */}
                   {isCreatePresetModalOpen && (
                     <animated.div
                       style={createPresetModalProps}
                       className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
                     >
-                      <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+                      <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-md border-2  flex flex-col relative">
                         <button
                           onClick={() => {
                             setIsCreatePresetModalOpen(false);
                             setNewPresetName("");
                           }}
-                          className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+                          className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
                           title="Close modal"
                         >
                           <FaTimes className="w-6 h-6" />
                         </button>
                         <div className="text-center mb-5">
-                          <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 dark:text-white">Create New Preset</h2>
+                          <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 ">Create New Preset</h2>
                         </div>
-                        <div className="flex flex-col space-y-4">
+                        <div className="flex flex-row space-between space-x-4 space-y-4">
                           <Input
-                            placeholder="Preset name (e.g., Tech & Bots)"
+                            placeholder="Preset name"
                             value={newPresetName}
                             onChange={(e) => setNewPresetName(e.target.value)}
-                            className="dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                            className="  "
                           />
                           <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setIsCreatePresetModalOpen(false);
-                                setNewPresetName("");
-                              }}
-                              className="hover:bg-gray-100 dark:hover:bg-gray-800"
-                            >
-                              Cancel
-                            </Button>
                             <Button
                               onClick={() => {
                                 createPreset(false);
                                 setIsCreatePresetModalOpen(false);
                               }}
-                              className="bg-blue-500 text-white hover:bg-white hover:text-blue-500"
+                              className="bg-blue-500 text-white hover:bg-blue-600 hover:cursor-pointer"
                               disabled={!newPresetName.trim() || isLoading}
                             >
                               {isLoading ? "Creating..." : "Create Preset"}
@@ -2803,7 +2911,6 @@ const HomePage = () => {
 
           </div>
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-            {/*  */}
             <WhoToFollow />
           </div>
 
@@ -2814,7 +2921,7 @@ const HomePage = () => {
           style={postModalProps}
           className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-indigo-950 rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-2xl min-h-[500px] border-2  flex flex-col relative">
             <button
               onClick={() => {
                 setIsPostModalOpen(false);
@@ -2828,20 +2935,20 @@ const HomePage = () => {
                 setImageWidth(384);
                 setImageHeight(384);
               }}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
             <div className="text-center">
-              <h2 className="text-xl font-bold mb-5 future-feed:text-lime text-blue-500 dark:text-white">Share your thoughts</h2>
+              <h2 className="text-xl font-bold mb-5 future-feed:text-lime text-blue-500 ">Share your thoughts</h2>
             </div>
             <div className="flex flex-col flex-1">
               <Textarea
                 placeholder="What's on your mind?"
                 value={postText}
                 onChange={(e) => setPostText(e.target.value)}
-                className="w-full mb-4 text-gray-900 dark:bg-blue-950 dark:text-white dark:border-slate-200 flex-1 future-feed:text-white resize-none"
+                className="w-full mb-4 text-gray-900    flex-1 future-feed:text-white resize-none rounded-xl"
                 rows={8}
               />
               <div className="mb-4">
@@ -2851,7 +2958,7 @@ const HomePage = () => {
                   onChange={(e) =>
                     setSelectedTopicIds(Array.from(e.target.selectedOptions, (option) => Number(option.value)))
                   }
-                  className="future-feed:border-lime dark:bg-blue-950 dark:text-white dark:border-slate-200 border-2 rounded-md p-2 w-full future-feed:text-lime text-blue-500 h-20"
+                  className="rounded-xl border-blue-200 future-feed:border-lime    border-2 rounded-md p-0.5 w-full future-feed:text-lime text-blue-500 h-20"
                 >
                   {topics.map((topic) => (
                     <option key={topic.id} value={topic.id} className="text-center py-1 text-sm">
@@ -2860,7 +2967,7 @@ const HomePage = () => {
                   ))}
                 </select>
                 <div className="text-center">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Hold Ctrl/Cmd to select multiple topics</p>
+                  <p className="text-sm text-gray-500  mt-2">Hold Ctrl/Cmd to select multiple topics</p>
                 </div>
               </div>
               <div className="mb-4">
@@ -2872,7 +2979,7 @@ const HomePage = () => {
                       setImagePrompt("");
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded-full"
+                    className="w-40 text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
                   >
                     Upload Image
                   </Button>
@@ -2882,7 +2989,7 @@ const HomePage = () => {
                       setUseAIGeneration(true);
                       setImageFile(null);
                     }}
-                    className="w-40 dark:text-black text-black rounded rounded-full"
+                    className="bg-blue-500 hover:cursor-pointer w-40 text-white rounded rounded-full hover:bg-blue-600 hover:text-white "
                   >
                     Generate AI Image
                   </Button>
@@ -2893,14 +3000,14 @@ const HomePage = () => {
                       placeholder="Please enter your prompt here "
                       value={imagePrompt}
                       onChange={(e) => setImagePrompt(e.target.value)}
-                      className="w-full dark:bg-blue-950 dark:text-white dark:border-slate-200 rounded rounded-full mt-5 future-feed:text-white"
+                      className="w-full border border-blue-400    rounded rounded-xl mt-5 future-feed:text-white"
                     />
                   </div>
                 ) : (
                   <div className="flex justify-between items-center">
                     <Button
                       variant="outline"
-                      className="dark:text-white text-black dark:border-slate-200 flex items-center space-x-1 border-2 dark:border-slate-200 dark:hover:border-white rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18"
+                      className="hover:cursor-pointer  text-black  flex items-center space-x-1 border-2 rounded rounded-full w-41 h-9 border-2 border-blue-500 mt-2 ml-18 hover:bg-gray-400 hover:border-blue-300"
                       onClick={() => document.getElementById("image-upload")?.click()}
                     >
                       <FaImage className="w-4 h-4" />
@@ -2924,7 +3031,7 @@ const HomePage = () => {
               <div className="flex justify-end">
                 <Button
                   onClick={handlePost}
-                  className="bg-blue-500 text-white hover:bg-white hover:text-blue-500 rounded rounded-full"
+                  className="bg-blue-500 text-white hover:bg-blue-600 rounded rounded-full"
                   disabled={!postText.trim() || !currentUser || (useAIGeneration && !imagePrompt.trim())}
                 >
                   Post
@@ -2937,26 +3044,26 @@ const HomePage = () => {
       {isTopicModalOpen && (
         <animated.div
           style={topicModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white future-feed:bg-black future-feed:border-lime dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 w-full max-w-md border drop-shadow-xl  flex flex-col relative">
             <button
               onClick={() => {
                 setIsTopicModalOpen(false);
                 setNewTopicName("");
               }}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500 dark:text-white">Create a Topic</h2>
+            <h2 className="text-xl font-bold mb-4 future-feed:text-lime  text-blue-500  text-center">Create a Topic</h2>
             <div className="flex flex-col">
               <Input
                 placeholder="Topic name"
                 value={newTopicName}
                 onChange={(e) => setNewTopicName(e.target.value)}
-                className="mb-4 dark:bg-blue-950 dark:text-white dark:border-slate-200"
+                className="mb-4   "
               />
               <Button
                 onClick={createTopic}
@@ -2972,26 +3079,26 @@ const HomePage = () => {
       {isViewTopicsModalOpen && (
         <animated.div
           style={viewTopicsModalProps}
-          className="fixed inset-0 flex items-center justify-center z-50 bg-black/30"
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/60"
         >
-          <div className="bg-white dark:bg-blue-950 rounded-2xl p-6 w-full max-w-md border-2 dark:border-slate-200 flex flex-col relative">
+          <div className="bg-white  rounded-2xl p-4 w-full max-w-md drop-shadow-xl border  flex flex-col relative">
             <button
               onClick={() => setIsViewTopicsModalOpen(false)}
-              className="absolute top-3 right-3 text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors duration-200"
+              className="absolute top-3 right-3 text-gray-600  hover:text-red-600  focus:outline-none transition-colors duration-200"
               title="Close modal"
             >
               <FaTimes className="w-6 h-6" />
             </button>
-            <h2 className="text-xl font-bold mb-4 text-blue-500 dark:text-white future-feed:text-black">All Topics</h2>
+            <h2 className="text-center text-xl font-bold mb-5 text-blue-500  future-feed:text-black">All Topics</h2>
             <div className="flex flex-col">
               {topics.length === 0 ? (
-                <p className="text-sm text-lime dark:text-gray-400 future-feed:text-gray">No topics available.</p>
+                <p className="text-sm text-lime  future-feed:text-gray">No topics available.</p>
               ) : (
                 <ul className="list-disc pl-5 max-h-[300px] overflow-y-auto">
                   {topics.map((topic) => (
-                    <li key={topic.id} className="text-sm text-blue-500 dark:text-white mb-2 future-feed:text-black">
+                    <div key={topic.id} className="inline-block border bg-blue-500 text-white  text-xs sm:text-sm px-3 py-0.5 rounded-xl">
                       {topic.name}
-                    </li>
+                    </div>
                   ))}
                 </ul>
               )}
@@ -3005,10 +3112,52 @@ const HomePage = () => {
           </div>
         </animated.div>
       )}
+      {isPreviewModalOpen && previewPostData && (
+        <animated.div
+          style={previewModalProps}
+          className="fixed inset-0 flex items-center justify-center z-50 bg-black/85 p-4"
+        >
+          <div className="bg-white future-feed:bg-black future-feed:border-lime  rounded-2xl p-6 max-w-2xl border-2  flex flex-col relative">
+            <button
+              onClick={handleCancelPreview}
+              className="absolute top-3 right-3 text-gray-600 hover:text-red-600 focus:outline-none transition-colors duration-200"
+              title="Close modal"
+            >
+              <FaTimes className="w-6 h-6" />
+            </button>
+            <div className="text-center mb-5">
+              <h2 className="text-xl font-bold future-feed:text-lime text-blue-500 ">Preview</h2>
+            </div>
+            <div className="flex flex-col flex-1">
+              <p className="mb-4 text-gray-900  future-feed:text-white">{previewPostData.text}</p>
+              {previewPostData.image && (
+                <img src={previewPostData.image} alt="Generated AI Image" className="w-full h-auto mb-4 rounded" />
+              )}
+              <p className="mb-4 text-gray-900  future-feed:text-white text-center font-semibold">
+                Do you want to use this image?
+              </p>
+              <div className="flex justify-end space-x-4">
+                <Button
+                  onClick={handleCancelPreview}
+                  className="bg-red-500 text-white hover:bg-red-600 rounded-full"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleConfirmPreview}
+                  className="bg-blue-500 text-white hover:bg-blue-600 hover:text-blue-500 rounded-full"
+                >
+                  Use
+                </Button>
+              </div>
+            </div>
+          </div>
+        </animated.div>
+      )}
       <Dialog open={isErrorDialogOpen} onOpenChange={setIsErrorDialogOpen}>
-        <DialogContent className="dark:bg-gray-800  bg-red-400 border-0 max-w-md">
+        <DialogContent className="  bg-red-400 border-0 max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-center dark:text-white text-white">Post Blocked</DialogTitle>
+            <DialogTitle className="text-center  text-white">Post Blocked</DialogTitle>
             <DialogDescription className="text-white">
               {errorMessage}
               {errorData && errorData.labels && errorData.labels.length > 0 && (

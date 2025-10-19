@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useFollowingQuery } from "@/hooks/useUsersQuery";
 import BotPost from "@/components/ui/BotPost";
 import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 
 interface FollowRelation {
   id: number;
@@ -40,6 +41,7 @@ interface CommentData {
   createdAt: string;
   username: string;
   handle: string;
+  profilePicture?: string;
 }
 
 interface RawComment {
@@ -121,6 +123,13 @@ const profileDataCache = {
   bookmarkedPosts: [] as PostData[],
 };
 
+interface cUserInfo {
+  id: number;
+  username: string;
+  displayName: string;
+  profilePictureUrl?: string;
+}
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
 const Profile = () => {
@@ -147,8 +156,9 @@ const Profile = () => {
     likes: false,
     bookmarks: false,
   });
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
-  const { followStatus, setFollowStatus} = useFollowStore();
+  const { followStatus, setFollowStatus } = useFollowStore();
   const queryClient = useQueryClient();
   const { refetch: refetchFollowing } = useFollowingQuery(currentUserId);
   const [followingId, setFollowingId] = useState<number | null>(null);
@@ -156,6 +166,29 @@ const Profile = () => {
   const [followingUsers, setFollowingUsers] = useState<User[]>([]);
   const [followers, setFollowers] = useState<User[]>([])
   const navigate = useNavigate();
+
+  const fetchCurrentUser = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/user/myInfo`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error(`Failed to fetch user info: ${res.status}`);
+      const data: UserProfile = await res.json();
+      if (!data.username || !data.displayName) {
+        throw new Error("User info missing username or displayName");
+      }
+      setCurrentUser(data);
+      setCurrentUserId(data.id);
+      userCache.set(data.id, { id: data.id, username: data.username, displayName: data.displayName });
+      return data;
+    } catch (err) {
+      console.error("Error fetching user info:", err);
+      setError("Failed to load user info. Please log in again.");
+      navigate("/login");
+      setUser(null);
+      return null;
+    }
+  };
 
   const fetchCurrentUserId = async () => {
     try {
@@ -168,6 +201,7 @@ const Profile = () => {
       return data.id;
     } catch (err) {
       console.error("Failed to fetch current user ID:", err);
+      navigate("/login");
       return null;
     }
   };
@@ -339,7 +373,6 @@ const Profile = () => {
         isBot: boolean;
       }[] = await res.json();
       if (!Array.isArray(apiPosts) || apiPosts.length === 0) {
-        //console.log("No posts found for user:", userId);
         setPosts([]);
         setFetchedTabs((prev) => ({ ...prev, posts: true }));
         profileDataCache.posts = [];
@@ -366,27 +399,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -396,7 +426,7 @@ const Profile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -484,27 +514,24 @@ const Profile = () => {
               if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${reshare.id}: ${hasResharedRes.status}`);
               const comments = commentsRes.ok ? await commentsRes.json() : [];
               const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-              const commentsWithUsers: CommentData[] = (
-                await Promise.all(
-                  validComments.map(async (comment: RawComment) => {
-                    try {
-                      const commentUserInfo = await fetchUser(comment.userId!);
-                      return {
-                        id: comment.id,
-                        postId: comment.postId,
-                        authorId: comment.userId!,
-                        content: comment.content,
-                        createdAt: comment.createdAt,
-                        username: commentUserInfo.displayName,
-                        handle: `@${commentUserInfo.username}`,
-                      };
-                    } catch (err) {
-                      console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                      return null;
-                    }
-                  })
-                )
-              ).filter((comment): comment is CommentData => comment !== null);
+              const commentsWithUsers: CommentData[] = [];
+              for (const comment of validComments) {
+                try {
+                  const commentUserInfo = await fetchUser(comment.userId!);
+                  commentsWithUsers.push({
+                    id: comment.id,
+                    postId: comment.postId,
+                    authorId: comment.userId!,
+                    content: comment.content,
+                    createdAt: comment.createdAt,
+                    username: commentUserInfo.displayName,
+                    handle: `@${commentUserInfo.username}`,
+                    profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                  });
+                  } catch (err) {
+                  console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+                }
+              }
               const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
               const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
               const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -515,7 +542,7 @@ const Profile = () => {
                 id: reshare.id,
                 profilePicture: userInfo.profilePicture,
                 username: userInfo.displayName,
-                handle: `@${userInfo.username}`,
+                handle: reshare.isBot || reshare.botId ? `${userInfo.username}` : `@${userInfo.username}`,
                 time: formatRelativeTime(reshare.createdAt),
                 text: reshare.content,
                 ...(reshare.imageUrl ? { image: reshare.imageUrl } : {}),
@@ -600,27 +627,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -630,7 +654,7 @@ const Profile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -713,27 +737,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -743,7 +764,7 @@ const Profile = () => {
               id: post.id,
               profilePicture: userInfo.profilePicture,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -807,7 +828,7 @@ const Profile = () => {
       const bookmarkedPosts = await Promise.all(
         bookmarkedList.map(async (post) => {
           try {
-            const userInfo: UserInfo = post.user ?? (await fetchUser(userId));
+            const userInfo: cUserInfo = post.user ?? (await fetchUser(userId));
             const [commentsRes, likesCountRes, hasLikedRes, hasBookmarkedRes, reshareCountRes, hasResharedRes, topicsRes] = await Promise.all([
               fetch(`${API_URL}/api/comments/post/${post.id}`, { credentials: "include" }),
               fetch(`${API_URL}/api/likes/count/${post.id}`, { credentials: "include" }),
@@ -825,27 +846,24 @@ const Profile = () => {
             if (!hasResharedRes.ok) console.warn(`Failed to fetch has-reshared status for post ID ${post.id}: ${hasResharedRes.status}`);
             const comments = commentsRes.ok ? await commentsRes.json() : [];
             const validComments = (comments as RawComment[]).filter((c) => c.userId && c.content);
-            const commentsWithUsers: CommentData[] = (
-              await Promise.all(
-                validComments.map(async (comment: RawComment) => {
-                  try {
-                    const commentUserInfo = await fetchUser(comment.userId!);
-                    return {
-                      id: comment.id,
-                      postId: comment.postId,
-                      authorId: comment.userId!,
-                      content: comment.content,
-                      createdAt: comment.createdAt,
-                      username: commentUserInfo.displayName,
-                      handle: `@${commentUserInfo.username}`,
-                    };
-                  } catch (err) {
-                    console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
-                    return null;
-                  }
-                })
-              )
-            ).filter((comment): comment is CommentData => comment !== null);
+            const commentsWithUsers: CommentData[] = [];
+            for (const comment of validComments) {
+              try {
+                const commentUserInfo = await fetchUser(comment.userId!);
+                commentsWithUsers.push({
+                  id: comment.id,
+                  postId: comment.postId,
+                  authorId: comment.userId!,
+                  content: comment.content,
+                  createdAt: comment.createdAt,
+                  username: commentUserInfo.displayName,
+                  handle: `@${commentUserInfo.username}`,
+                  profilePicture: commentUserInfo.id == currentUserId ? user?.profilePicture:commentUserInfo.profilePicture ,
+                });
+                } catch (err) {
+                console.warn(`Failed to fetch user for comment ID ${comment.id}:`, err);
+              }
+            }
             const isLiked = hasLikedRes.ok ? await hasLikedRes.json() : false;
             const likeCount = likesCountRes.ok ? await likesCountRes.json() : 0;
             const isBookmarked = hasBookmarkedRes.ok ? await hasBookmarkedRes.json() : false;
@@ -853,9 +871,9 @@ const Profile = () => {
             const isReshared = hasResharedRes.ok ? await hasResharedRes.json() : false;
             const postData: PostData = {
               id: post.id,
-              profilePicture: userInfo.profilePicture,
+              profilePicture: userInfo.profilePictureUrl,
               username: userInfo.displayName,
-              handle: `@${userInfo.username}`,
+              handle: post.isBot || post.botId ? `${userInfo.username}` : `@${userInfo.username}`,
               time: formatRelativeTime(post.createdAt),
               text: post.content,
               ...(post.imageUrl ? { image: post.imageUrl } : {}),
@@ -910,10 +928,10 @@ const Profile = () => {
   const handleLike = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -927,10 +945,10 @@ const Profile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isLiked: !p.isLiked,
-                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-              }
+              ...p,
+              isLiked: !p.isLiked,
+              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+            }
             : p
         );
       setPosts(updatePostState);
@@ -957,10 +975,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isLiked: wasLiked,
-                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
-                }
+                ...p,
+                isLiked: wasLiked,
+                likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+              }
               : p
           );
         setPosts(revertPostState);
@@ -1007,10 +1025,10 @@ const Profile = () => {
   const handleBookmark = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1099,10 +1117,10 @@ const Profile = () => {
   const handleReshare = async (postId: number) => {
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1116,10 +1134,10 @@ const Profile = () => {
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                isReshared: !p.isReshared,
-                reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
-              }
+              ...p,
+              isReshared: !p.isReshared,
+              reshareCount: p.isReshared ? p.reshareCount - 1 : p.reshareCount + 1,
+            }
             : p
         );
       setPosts(updateReshareState);
@@ -1150,10 +1168,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  isReshared: wasReshared,
-                  reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
-                }
+                ...p,
+                isReshared: wasReshared,
+                reshareCount: wasReshared ? p.reshareCount + 1 : p.reshareCount - 1,
+              }
               : p
           );
         setPosts(revertReshareState);
@@ -1200,8 +1218,9 @@ const Profile = () => {
   };
 
   const handleAddComment = async (postId: number, commentText: string) => {
-    if (!user) {
+    if (!currentUser) {
       setError("Please log in to comment.");
+      navigate("/login")
       return;
     }
     if (!commentText.trim()) {
@@ -1210,10 +1229,10 @@ const Profile = () => {
     }
     try {
       const post = posts.find((p) => p.id === postId) ||
-                  reshares.find((p) => p.id === postId) ||
-                  bookmarkedPosts.find((p) => p.id === postId) ||
-                  likedPosts.find((p) => p.id === postId) ||
-                  commentedPosts.find((p) => p.id === postId);
+        reshares.find((p) => p.id === postId) ||
+        bookmarkedPosts.find((p) => p.id === postId) ||
+        likedPosts.find((p) => p.id === postId) ||
+        commentedPosts.find((p) => p.id === postId);
       if (!post) {
         setError("Post not found.");
         return;
@@ -1228,11 +1247,12 @@ const Profile = () => {
                   {
                     id: Date.now(),
                     postId,
-                    authorId: user.id,
+                    authorId: currentUser.id,
                     content: commentText,
                     createdAt: new Date().toISOString(),
-                    username: user.displayName,
-                    handle: `@${user.username}`,
+                    username: currentUser.displayName,
+                    handle: `@${currentUser.username}`,
+                    profilePicture: currentUser.profilePicture,
                   },
                 ],
                 commentCount: p.commentCount + 1,
@@ -1248,16 +1268,19 @@ const Profile = () => {
         return [...prev, { ...post, comments: [...post.comments, {
           id: Date.now(),
           postId,
-          authorId: user.id,
+          authorId: currentUser.id,
           content: commentText,
           createdAt: new Date().toISOString(),
-          username: user.displayName,
-          handle: `@${user.username}`,
+          username: currentUser.displayName,
+          handle: `@${currentUser.username}`,
+          profilePicture: currentUser.profilePicture
         }], commentCount: post.commentCount + 1 }];
       });
       const res = await fetch(`${API_URL}/api/comments/${postId}`, {
         method: "POST",
-        headers: { "Content-Type": "text/plain" },
+        headers: {
+          "Content-Type": "text/plain",
+        },
         credentials: "include",
         body: commentText,
       });
@@ -1268,10 +1291,10 @@ const Profile = () => {
           prevPosts.map((p) =>
             p.id === postId
               ? {
-                  ...p,
-                  comments: p.comments.filter((c) => c.id !== Date.now()),
-                  commentCount: p.commentCount - 1,
-                }
+                ...p,
+                comments: p.comments.filter((c) => c.id !== Date.now()),
+                commentCount: p.commentCount - 1,
+              }
               : p
           );
         setPosts(revertCommentState);
@@ -1281,7 +1304,6 @@ const Profile = () => {
         setCommented((prev) => prev.filter((p) => p.id !== postId || p.commentCount > 1));
         if (res.status === 401) {
           setError("Session expired. Please log in again.");
-          navigate("/login");
         } else {
           throw new Error(`Failed to add comment: ${errorText}`);
         }
@@ -1290,22 +1312,22 @@ const Profile = () => {
       const formattedComment: CommentData = {
         id: newComment.id,
         postId: newComment.postId,
-        authorId: newComment.userId || user.id,
+        authorId: newComment.userId || currentUser.id,
         content: newComment.content,
         createdAt: newComment.createdAt,
-        username: user.displayName,
-        handle: `@${user.username}`,
+        username: currentUser.displayName,
+        handle: `@${currentUser.username}`,
       };
       const updateCommentStatus = (prevPosts: PostData[]) =>
         prevPosts.map((p) =>
           p.id === postId
             ? {
-                ...p,
-                comments: p.comments.map((c) =>
-                  c.id === Date.now() ? formattedComment : c
-                ),
-                commentCount: p.commentCount,
-              }
+              ...p,
+              comments: p.comments.map((c) =>
+                c.id === Date.now() ? formattedComment : c
+              ),
+              commentCount: p.commentCount,
+            }
             : p
         );
       setPosts(updateCommentStatus);
@@ -1364,16 +1386,16 @@ const Profile = () => {
     return Array.from({ length: 5 }).map((_, index) => (
       <div
         key={index}
-        className="mb-4 border  dark:border-slate-200 rounded-lg animate-pulse "
+        className="mb-4 border rounded-lg animate-pulse "
       >
         <div className="flex items-center space-x-4">
-          <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full" />
+          <div className="w-10 h-10 bg-gray-300 rounded-full" />
           <div className="flex-1">
-            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4" />
+            <div className="h-4 bg-gray-300 rounded w-3/4" />
           </div>
         </div>
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full" />
-        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6" />
+        <div className="h-4 bg-gray-300 rounded w-full" />
+        <div className="h-4 bg-gray-300 rounded w-5/6" />
       </div>
     ));
   };
@@ -1413,54 +1435,57 @@ const Profile = () => {
       return [];
     }
   };
-  
+
 
   useEffect(() => {
-  const loadData = async () => {
-    if (!profileId) {
-      console.warn("No profileId provided in URL");
-      setError("No profile ID provided");
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
+    const loadData = async () => {
+      if (!profileId) {
+        console.warn("No profileId provided in URL");
+        setError("No profile ID provided");
+        setIsLoading(false);
+        return;
+      }
+      setIsLoading(true);
+      setError(null);
 
     const userId = await fetchCurrentUserId();
     setCurrentUserId(userId);
 
+    const user = await fetchCurrentUser();
+    setCurrentUser(user);
+    
     if (userId == parseInt(profileId || "0")) {
       navigate('/profile');
     }
 
-    const userData = await fetchUser(profileId);
-    setUser(userData);
+      const userData = await fetchUser(profileId);
+      setUser(userData);
 
-    if (userData) {
-      await updateFollowStatuses([{ id: userData.id, username: userData.username, displayName: userData.displayName, email: userData.email, bio: userData.bio ?? undefined }]);
-      const allUsers = await fetchUsers();
-      await Promise.all([
-        fetchFollowing(userData.id, allUsers),
-        setFollowingUsers(profileDataCache.followingUsers),
-        fetchFollowers(userData.id, allUsers),
-        setFollowers(profileDataCache.followers),
-        fetchUserPosts(userData.id, userId || userData.id),
-      ]);
-    }
+      if (userData) {
+        await updateFollowStatuses([{ id: userData.id, username: userData.username, displayName: userData.displayName, email: userData.email, bio: userData.bio ?? undefined }]);
+        const allUsers = await fetchUsers();
+        await Promise.all([
+          fetchFollowing(userData.id, allUsers),
+          setFollowingUsers(profileDataCache.followingUsers),
+          fetchFollowers(userData.id, allUsers),
+          setFollowers(profileDataCache.followers),
+          fetchUserPosts(userData.id, userId || userData.id),
+        ]);
+      }
 
-    setIsLoading(false);
-  };
-  loadData();
-}, [profileId]);
+      setIsLoading(false);
+    };
+    loadData();
+  }, [profileId]);
 
   if (isLoading) {
-  return (
-      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime  dark:bg-blue-950 dark:text-slate-200 overflow-y-auto mx-auto">
+    return (
+      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime    overflow-y-auto mx-auto">
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        
-        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+
+        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] px-5">
           <div className="mb-5 animate-pulse">
             <Card>
               <CardContent className="ml-[-10px]">
@@ -1487,8 +1512,8 @@ const Profile = () => {
                 </div>
               </CardContent>
             </Card>
-            <div className="border-t border-gray-200 dark:border-slate-700">
-              <div className="flex justify-around py-3 px-4 border-b border-gray-200 dark:border-slate-700 animate-pulse">
+            <div className="border-t border-gray-200 ">
+              <div className="flex justify-around py-3 px-4 border-b border-gray-200  animate-pulse">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Skeleton key={i} className="h-9 flex-1 mx-1 rounded-full" />
                 ))}
@@ -1500,79 +1525,82 @@ const Profile = () => {
           </div>
         </main>
         <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
-          <WhatsHappening />
-        </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
-          <WhoToFollow />
-        </div>
-      </aside>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+            <WhoToFollow />
+          </div>
+        </aside>
       </div>
     );
-}
+  }
 
   if (!user) return <div className="p-4 text-black">Not logged in.</div>;
 
   return (
-    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 text-white mx-auto bg-white">
+    <div className="future-feed:bg-black flex flex-col lg:flex-row min-h-screen  text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
-      <main className="flex-1  min-h-screen overflow-y-auto mt-[21px]">
+      <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] sm:px-5">
         <Card className="mb-5">
           <CardContent className="ml-[-10px]">
             <div className="relative">
-          <div className="mt-10 w-full" />
-          <div className="absolute -bottom-10 left-4">
-            <Avatar className="w-20 h-20">
-              <div className="flex items-center gap-3 dark:hover:text-white">
-                <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
-                <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+              <div className="mt-10 w-full" />
+              <div className="absolute -bottom-10 left-4">
+                <Avatar className="w-20 h-20">
+                  <div className="flex items-center gap-3">
+                    <AvatarImage src={user.profilePicture} alt={`@${user.username}`} />
+                    <AvatarFallback>{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </div>
+                </Avatar>
               </div>
-            </Avatar>
-          </div>
-        </div>
-        <div className="pt-16 px-4">
-          <div className="text-gray-400 flex justify-between items-start">
-            <div className="ml-30 mt-[-110px]">
-              <h1 className="text-xl text-black font-bold">{user.displayName || user.username}</h1>
-              <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
-              <p className="mt-2 text-xl text-black">{user.bio}</p>
             </div>
-            {currentUserId && currentUserId !== user.id ? (
-              followStatus[user.id] ? (
-                <Button
-                  variant="secondary"
-                  onClick={() => handleUnfollow(user.id)}
-                  disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
-                >
-                  {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => handleFollow(user.id)}
-                  disabled={unfollowingId === user.id || followingId === user.id}
-                  className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
-                >
-                  {followingId === user.id ? "Following..." : "Follow"}
-                </Button>
-              )
-            ) : (
-              <Link to="/edit-profile" className="flex items-center gap-3 dark:hover:text-white">
-              <Button variant="secondary" className=" bg-white border-rose-gold-accent-border mt-[-220px] dark:hover:bg-slate-200 dark:hover:text-black hover:cursor-pointer">
-                Edit Profile
+            <div className="pt-16 px-4">
+              <div className="text-gray-400 flex justify-between items-start">
+                <div className="ml-30 mt-[-110px]">
+                  <h1 className="text-xl text-black font-bold">{user.displayName || user.username}</h1>
+                  <p className="text-slate-500 text-lg font-bold">@{user.username}</p>
+                  <p className="mt-2 text-xl text-black">{user.bio}</p>
+                </div>
+                {currentUserId && currentUserId !== user.id ? (
+                  followStatus[user.id] ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => handleUnfollow(user.id)}
+                      disabled={unfollowingId === user.id || followingId === user.id}
+                      className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer text-black hover:bg-slate-200"
+                    >
+                      {unfollowingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
+                      {unfollowingId === user.id ? "Unfollowing..." : "Unfollow"}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => handleFollow(user.id)}
+                      disabled={unfollowingId === user.id || followingId === user.id}
+                      className="mt-[-110px] w-[110px] rounded-full font-semibold hover:cursor-pointer bg-blue-500 text-white hover:bg-blue-700"
+                    >
 
-              </Button>
-            </Link>
-            )}
-          </div>
-          <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm dark:text-slate-500">
-              <span className="font-medium">{followingUsers.length}</span> Following  ·
-              <span className="font-medium">{followers.length}</span> Followers  ·
-            <span className="font-medium">{posts.length}</span> Posts
-          </div>
-        </div>
+                      {followingId === user.id ? <Loader2 className="w-5 h-5 animate-spin ml-2" /> : ""}
+                      {followingId === user.id ? "Following..." : "Follow"}
+                    </Button>
+                  )
+                ) : (
+                  <Link to="/edit-profile" className="flex items-center gap-3">
+                    <Button variant="secondary" className=" bg-white border-rose-gold-accent-border mt-[-220px] hover:cursor-pointer">
+                      Edit Profile
+
+                    </Button>
+                  </Link>
+                )}
+              </div>
+              <div className="left-4 text-black mt-4 flex content-between gap-2 text-sm">
+                <span className="font-medium">{followingUsers.length}</span> Following  ·
+                <span className="font-medium">{followers.length}</span> Followers  ·
+                <span className="font-medium">{posts.length}</span> Posts
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Tabs
@@ -1580,20 +1608,20 @@ const Profile = () => {
           className="w-full p-0"
           onValueChange={(value) => handleTabChange(value, user.id, currentUserId || user.id)}
         >
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto">
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="posts">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="posts">
               Posts
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="re-feeds">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="re-feeds">
               Re-Feeds
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="comments">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="comments">
               Comments
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="likes">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="likes">
               Likes
             </TabsTrigger>
-            <TabsTrigger className="text-black dark:text-slate-200 future-feed:text-lime" value="bookmarks">
+            <TabsTrigger className="text-black  future-feed:text-lime" value="bookmarks">
               Bookmarks
             </TabsTrigger>
           </TabsList>
@@ -1606,13 +1634,13 @@ const Profile = () => {
             {tabLoading.posts ? (
               <div className="flex flex-col">{renderSkeletonPosts()}</div>
             ) : posts.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No posts yet.</div>
+              <div className="p-4 text-gray-400">No posts yet.</div>
             ) : (
               posts.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1631,11 +1659,11 @@ const Profile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1664,7 +1692,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1682,13 +1710,13 @@ const Profile = () => {
             {tabLoading.refeeds ? (
               <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
             ) : reshares.length === 0 ? (
-              <div className="p-4 dark:text-slate-500 text-gray-400">No re-feeds yet.</div>
+              <div className="p-4 text-gray-400">No re-feeds yet.</div>
             ) : (
               reshares.map((post) => (
                 <div key={post.id} className="mb-4">
                   {post.botId || post.isBot ? (
                   <BotPost
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1707,17 +1735,17 @@ const Profile = () => {
                     onDelete={() => handleDeletePost(post.id)}
                     onToggleComments={() => toggleComments(post.id)}
                     onNavigate={() => navigate(`/post/${post.id}`)}
-                    onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+                    onProfileClick={() => navigate(`/bot/${post.authorId}`)}
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
                   ) : (
                     <Post
-                    profilePicture={user.profilePicture}
+                    profilePicture={post.profilePicture}
                     username={post.username}
                     handle={post.handle}
                     time={post.time}
@@ -1740,7 +1768,7 @@ const Profile = () => {
                     showComments={post.showComments}
                     comments={post.comments}
                     isUserLoaded={!!user}
-                    currentUser={user}
+                    currentUser={currentUser}
                     authorId={post.authorId}
                     topics={post.topics || []}
                   />
@@ -1758,13 +1786,13 @@ const Profile = () => {
   {tabLoading.comments ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : commentedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No commented posts yet.</div>
+    <div className="p-4 text-gray-400">No commented posts yet.</div>
   ) : (
     commentedPosts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
           <BotPost
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1783,17 +1811,17 @@ const Profile = () => {
             onDelete={() => handleDeletePost(post.id)}
             onToggleComments={() => toggleComments(post.id)}
             onNavigate={() => navigate(`/post/${post.id}`)}
-            onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+            onProfileClick={() => navigate(`/bot/${post.authorId}`)}
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
           ) : (
             <Post
-            profilePicture={user.profilePicture}
+            profilePicture={post.profilePicture}
             username={post.username}
             handle={post.handle}
             time={post.time}
@@ -1816,7 +1844,7 @@ const Profile = () => {
             showComments={post.showComments}
             comments={post.comments}
             isUserLoaded={!!user}
-            currentUser={user}
+            currentUser={currentUser}
             authorId={post.authorId}
             topics={post.topics || []}
           />
@@ -1834,13 +1862,13 @@ const Profile = () => {
   {tabLoading.likes ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : likedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No likes yet.</div>
+    <div className="p-4 text-gray-400">No likes yet.</div>
   ) : (
     likedPosts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1859,17 +1887,17 @@ const Profile = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          onProfileClick={() => navigate(`/bot/${post.authorId}`)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1892,7 +1920,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1910,13 +1938,13 @@ const Profile = () => {
   {tabLoading.bookmarks ? (
     <div className="flex flex-col gap-6 py-4">{renderSkeletonPosts()}</div>
   ) : bookmarkedPosts.length === 0 ? (
-    <div className="p-4 dark:text-slate-500 text-gray-400">No bookmarks yet.</div>
+    <div className="p-4 text-gray-400">No bookmarks yet.</div>
   ) : (
     bookmarkedPosts.map((post) => (
       <div key={post.id} className="mb-4">
         {post.botId || post.isBot ? (
         <BotPost
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1935,17 +1963,17 @@ const Profile = () => {
           onDelete={() => handleDeletePost(post.id)}
           onToggleComments={() => toggleComments(post.id)}
           onNavigate={() => navigate(`/post/${post.id}`)}
-          onProfileClick={() => navigate(`/profile/${post.authorId}`)}
+          onProfileClick={() => navigate(`/bot/${post.authorId}`)}
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
         ) : (
           <Post
-          profilePicture={user.profilePicture}
+          profilePicture={post.profilePicture}
           username={post.username}
           handle={post.handle}
           time={post.time}
@@ -1968,7 +1996,7 @@ const Profile = () => {
           showComments={post.showComments}
           comments={post.comments}
           isUserLoaded={!!user}
-          currentUser={user}
+          currentUser={currentUser}
           authorId={post.authorId}
           topics={post.topics || []}
         />
@@ -1980,15 +2008,15 @@ const Profile = () => {
         </Tabs>
       </main>
       <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
-  <div className="sticky top-4 space-y-5">
-    <div className="w-full lg:w-[320px] lg:ml-7">
-      <WhatsHappening />
-    </div>
-    <div className="w-full lg:w-[320px] lg:ml-7">
-      <WhoToFollow />
-    </div>
-  </div>
-</aside>
+        <div className="sticky top-4 space-y-5">
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhatsHappening />
+          </div>
+          <div className="w-full lg:w-[320px] lg:ml-7">
+            <WhoToFollow />
+          </div>
+        </div>
+      </aside>
     </div>
   );
 };

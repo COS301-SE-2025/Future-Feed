@@ -30,7 +30,7 @@ interface UserInfo {
 const userCache = new Map<number, UserInfo>();
 
 const Notifications = () => {
-  const { notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, currentUserId } = useNotifications();
+  const { notifications, unreadCount, setNotifications, fetchNotifications, markAllAsRead, deleteAllNotifications, currentUserId } = useNotifications();
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +83,7 @@ const Notifications = () => {
         setLoading(false);
       } else {
         setError("User not authenticated. Please log in.");
+        navigate("/login");
         setLoading(false);
       }
     };
@@ -122,7 +123,6 @@ const Notifications = () => {
           notification.id === notificationId ? { ...notification, isRead: true } : notification
         )
       );
-      //console.log(`Notification ${notificationId} marked as read`);
     } catch (err) {
       console.error("Error marking notification as read:", err);
       setError("Failed to mark notification as read.");
@@ -243,7 +243,7 @@ const Notifications = () => {
     return (
       <Card
         key={notification.id}
-        className="dark:bg-indigo-950 dark:text-white future-feed:text-white border dark:border-slate-200 rounded-2xl cursor-pointer group relative future-feed:border-2 future-feed:text-white dark:border-2"
+        className="future-feed:text-white border rounded-2xl cursor-pointer group relative future-feed:border-2 future-feed:text-white"
       >
         <CardContent
           className="flex gap-3 items-start p-5"
@@ -295,20 +295,20 @@ const Notifications = () => {
   }, [notifications]);
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
-      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto bg-white dark:border-slate-200 future-feed:border-2 future-feed:border-lime">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white future-feed:bg-black mx-auto">
+      <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto bg-white future-feed:border-2 future-feed:border-lime">
         <PersonalSidebar />
       </aside>
       <main className="w-full lg:flex-1 p-2 overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-white font-bold ">Notifications</h1>
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 z-10">
+          <h1 className="text-xl font-bold ">Notifications</h1>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="dark:bg-blue-950 dark:border-slate-200">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem
                 onClick={() => setShowSearch(!showSearch)}
                 className="flex items-center cursor-pointer"
@@ -323,6 +323,14 @@ const Notifications = () => {
               >
                 <CheckCircle className="mr-2 h-4 w-4 text-lime-400" />
                 Mark all as read
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => currentUserId && deleteAllNotifications(currentUserId)}
+                disabled={notifications.length === 0}
+                className="flex items-center cursor-pointer"
+              >
+                <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                Delete all notifications
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -339,7 +347,7 @@ const Notifications = () => {
         )}
 
         <Tabs defaultValue="all" className="w-full p-2" onValueChange={handleTabChange}>
-          <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
+          <TabsList className="w-full flex justify-around border rounded-2xl">
             <TabsTrigger value="all" className="rounded-2xl">All</TabsTrigger>
             <TabsTrigger value="interactions" className="rounded-2xl">Interactions</TabsTrigger>
             <TabsTrigger value="mentions" className="rounded-2xl">Mentions</TabsTrigger>
@@ -348,7 +356,7 @@ const Notifications = () => {
           {loading && (
             <div className="space-y-4 mt-4">
               {[...Array(5)].map((_, i) => (
-                <Card key={i} className="dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl future-feed:border-2">
+                <Card key={i} className="rounded-2xl future-feed:border-2">
                   <CardContent className="flex gap-3 items-start p-4">
                     <Skeleton className="w-14 h-14 rounded-full" />
                     <div className="space-y-2 flex-1">
@@ -362,7 +370,7 @@ const Notifications = () => {
           )}
 
           {error && (
-            <Card className="dark:bg-blue-950 dark:text-white border dark:border-slate-200 rounded-2xl mt-4">
+            <Card className="border rounded-2xl mt-4">
               <CardContent className="p-4 text-center">
                 <p className="text-red-500">Error: {error}</p>
                 <Button
@@ -383,21 +391,21 @@ const Notifications = () => {
                 {applyTabFilter(filteredNotifications).length > 0 ? (
                   applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
-                  <p className="p-4 dark:text-gray-400">No notifications yet.</p>
+                  <p className="p-4 ">No notifications yet.</p>
                 )}
               </TabsContent>
               <TabsContent value="interactions" className="space-y-4">
                 {applyTabFilter(filteredNotifications).length > 0 ? (
                   applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
-                  <p className="p-4 dark:text-gray-400">No interactions yet.</p>
+                  <p className="p-4 ">No interactions yet.</p>
                 )}
               </TabsContent>
               <TabsContent value="mentions" className="space-y-4">
                 {applyTabFilter(filteredNotifications).length > 0 ? (
                   applyTabFilter(filteredNotifications).map(renderNotification)
                 ) : (
-                  <p className="p-4 dark:text-gray-400">No mentions found.</p>
+                  <p className="p-4 ">No mentions found.</p>
                 )}
               </TabsContent>
             </>

@@ -3,7 +3,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
+import org.springframework.data.domain.Page;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.model.Topic;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +36,14 @@ public interface TopicRepository extends JpaRepository<Topic, Integer> {
         ORDER BY p.createdAt DESC
     """)
     List<Post> findPostsByTopicId(@Param("topicId") Integer topicId);
+
+    @Query("""
+        SELECT p
+        FROM Post p
+        JOIN PostTopic pt ON pt.post.id = p.id
+        WHERE pt.topicId = :topicId
+        ORDER BY p.createdAt DESC
+    """)
+    Page<Post> findPaginatedPostsByTopicId(@Param("topicId") Integer topicId, Pageable pageable);
+
 }

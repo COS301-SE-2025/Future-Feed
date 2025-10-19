@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,9 @@ import { FaTimes, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 interface Bot {
   id: number;
@@ -36,6 +38,9 @@ interface ApiBot {
 interface LoadingState {
   allBots: boolean;
   toggling: Set<number>;
+  creating: boolean;
+  editing: boolean;
+  deleting: boolean;
 }
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
@@ -51,9 +56,15 @@ const Bots: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState<LoadingState>({
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingBotId, setDeletingBotId] = useState<number | null>(null);
+  const navigate = useNavigate();
+    const [loading, setLoading] = useState<LoadingState>({
     allBots: false,
     toggling: new Set<number>(),
+    creating: false,
+    editing: false,
+    deleting: false,
   });
 
   useEffect(() => {
@@ -71,7 +82,9 @@ const Bots: React.FC = () => {
       if (!res.ok) {
         const errorText = await res.text();
         if (res.status === 401) {
+          navigate("/login")
           throw new Error("Unauthorized: Please log in to view bots.");
+
         } else if (res.status === 404) {
           throw new Error("Bots endpoint not found. Please check the server configuration.");
         } else {
@@ -80,6 +93,7 @@ const Bots: React.FC = () => {
       }
 
       const botList: ApiBot[] = await res.json();
+      console.log("Raw bots data from API:", botList); // Add this line
 
       const botsWithActiveStatus: Bot[] = await Promise.all(
         botList.map(async (bot) => {
@@ -168,11 +182,12 @@ const Bots: React.FC = () => {
 
   const createBot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
-      setError("All fields are required.");
+    if (!newBotName.trim() || !newBotDescription.trim()) {
+      setError("Bot Name and Bot Prompt are required.");
       return;
     }
 
+    setLoading((prev) => ({ ...prev, creating: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots`, {
         method: "POST",
@@ -182,7 +197,7 @@ const Bots: React.FC = () => {
           name: newBotName,
           prompt: newBotDescription,
           schedule: newBotSchedule,
-          contextSource: newBotContextSource,
+          contextSource: newBotContextSource.trim() || "N/A",
           isActive: true,
         }),
       });
@@ -224,16 +239,19 @@ const Bots: React.FC = () => {
     } catch (err) {
       console.error("Error creating bot:", err);
       setError(err instanceof Error ? err.message : "Failed to create bot. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, creating: false }));
     }
   };
 
   const updateBot = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingBot || !newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()) {
-      setError("All fields are required.");
+    if (!editingBot || !newBotName.trim() || !newBotDescription.trim()) {
+      setError("Bot Name and Bot Prompt are required.");
       return;
     }
 
+    setLoading((prev) => ({ ...prev, editing: true }));
     try {
       const res = await fetch(`${API_URL}/api/bots/${editingBot.id}`, {
         method: "PUT",
@@ -243,7 +261,7 @@ const Bots: React.FC = () => {
           name: newBotName,
           prompt: newBotDescription,
           schedule: newBotSchedule,
-          contextSource: newBotContextSource,
+          contextSource: newBotContextSource.trim() || "N/A",
           isActive: editingBot.isActive,
         }),
       });
@@ -286,14 +304,17 @@ const Bots: React.FC = () => {
     } catch (err) {
       console.error("Error updating bot:", err);
       setError(err instanceof Error ? err.message : "Failed to update bot. Please try again.");
+    } finally {
+      setLoading((prev) => ({ ...prev, editing: false }));
     }
   };
 
-  const deleteBot = async (botId: number) => {
-    if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+  const deleteBot = useCallback(async () => {
+    if (!deletingBotId) return;
 
+    setLoading((prev) => ({ ...prev, deleting: true }));
     try {
-      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+      const res = await fetch(`${API_URL}/api/bots/${deletingBotId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -303,18 +324,17 @@ const Bots: React.FC = () => {
         throw new Error(errorText || "Failed to delete bot.");
       }
 
-      setBots((prev) => {
-        const next = prev.filter((b) => b.id !== botId);
-        setActiveBots(next.filter((b) => b.isActive));
-        return next;
-      });
-
+      setBots((prev) => prev.filter((b) => b.id !== deletingBotId));
+      setShowDeleteDialog(false);
+      setDeletingBotId(null);
       setError(null);
     } catch (err) {
-      console.error(`Error deleting bot ${botId}:`, err);
-      setError(err instanceof Error ? err.message : "Failed to delete bot. Please try again.");
+      console.error(`Error deleting bot ${deletingBotId}:`, err);
+      setError(err instanceof Error ? err.message : "Failed to delete bot.");
+    } finally {
+      setLoading((prev) => ({ ...prev, deleting: false }));
     }
-  };
+  }, [deletingBotId]);
 
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4 sm:gap-6">
@@ -322,14 +342,14 @@ const Bots: React.FC = () => {
         <Card key={index} className=" ">
           <CardContent className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center animate-pulse">
             <div className="w-full">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-2 sm:w-1/4" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mb-2" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 sm:w-1/5" />
+              <div className="h-6 bg-gray-200 rounded w-1/3 mb-2 sm:w-1/4" />
+              <div className="h-4 bg-gray-200 rounded w-2/3 mb-2" />
+              <div className="h-4 bg-gray-200 rounded w-1/4 sm:w-1/5" />
             </div>
             <div className="flex gap-2 sm:gap-3 items-center mt-4 sm:mt-0">
-              <div className="h-8 w-16 bg-gray-200 dark:bg-gray-700 rounded-full" />
-              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
-              <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-8 w-16 bg-gray-200 rounded-full" />
+              <div className="h-10 w-10 bg-gray-200 rounded" />
+              <div className="h-10 w-10 bg-gray-200 rounded" />
             </div>
           </CardContent>
         </Card>
@@ -338,20 +358,20 @@ const Bots: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen dark:bg-blue-950 bg-white future-feed:bg-black dark:text-white mx-auto">
+    <div className="flex flex-col lg:flex-row min-h-screen text-white mx-auto bg-white">
       <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
         <PersonalSidebar />
       </aside>
 
-      <main className="w-full lg:flex-1 p-2 overflow-y-auto">
-        <div className="flex justify-between items-center px-6 py-2 sticky top-0 dark:bg-indigo-950 dark:border-slate-200 z-10">
-          <h1 className="text-xl dark:text-white font-bold">Bots Management</h1>
+      <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
+        <div className="flex justify-between items-center px-6 py-2 sticky top-0 z-10">
+          <h1 className="text-xl font-bold">Bots Management</h1>
           <div className="flex justify-between items-center gap-4">
             <Button onClick={() => setIsCreateModalOpen(true)} className="text-white cursor-pointer">
               <FaPlus className="mr-2" /> Create Bot
             </Button>
             <Link to="/settings">
-              <Settings size={20} className="text-black dark:text-white" />
+              <Settings size={20} className="text-black" />
             </Link>
           </div>
         </div>
@@ -362,29 +382,28 @@ const Bots: React.FC = () => {
           </div>
         )}
 
-        {/* Tabs Section */}
         <Tabs defaultValue="all" className="w-full p-2">
-          <TabsList className="w-full flex justify-around dark:bg-blue-950 border dark:border-slate-200 rounded-2xl">
+          <TabsList className="w-full flex justify-around border rounded-2xl">
             <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
             <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
           </TabsList>
-          
+
           {loading.allBots ? (
             <SkeletonLoader />
           ) : (
             <>
               <TabsContent value="all" className="space-y-4">
                 {bots.length === 0 ? (
-                  <div className="text-center text-gray-400 dark:text-gray-500 mt-4">No bots created yet.</div>
+                  <div className="text-center text-gray-400 mt-4">No bots created yet.</div>
                 ) : (
                   <div className="grid gap-4 mt-4">
                     {bots.map((bot) => (
                       <Link to={`/bot/${bot.id}`} key={bot.id}>
-                        <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl future-feed:border-2">
+                        <Card className="hover:bg-gray-100 transition-colors border rounded-2xl future-feed:border-2">
                           <CardContent className="p-4 flex justify-between items-center">
                             <div>
                               <h3 className="text-lg font-bold future-feed:text-white">{bot.name}</h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                              <p className="text-sm text-gray-500 ">{bot.prompt}</p>
                               <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                             </div>
                             <div className="flex gap-3 items-center">
@@ -396,7 +415,7 @@ const Bots: React.FC = () => {
                                   checked={bot.isActive}
                                   onCheckedChange={() => toggleBotActivation(bot.id)}
                                   disabled={loading.toggling.has(bot.id)}
-                                  className="hover:cursor-pointer w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                  className="hover:cursor-pointer w-14 h-7 bg-gray-300 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 transition-colors duration-300 ease-in-out"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -404,15 +423,14 @@ const Bots: React.FC = () => {
                                   }}
                                 >
                                   <span
-                                    className={`absolute h-6 w-6 rounded-full bg-black shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                      bot.isActive ? "translate-x-8" : "translate-x-1"
-                                    } ${bot.isActive ? "bg-blue-500" : "bg-gray-200"}`}
+                                    className={`absolute h-6 w-6 rounded-full bg-black shadow-lg transform transition-transform duration-300 ease-in-out ${bot.isActive ? "translate-x-8" : "translate-x-1"
+                                      } ${bot.isActive ? "bg-blue-500" : "bg-gray-200"}`}
                                   />
                                 </Switch>
                               </div>
                               <Button
                                 variant="outline"
-                                className="hover:cursor-pointer hover:bg-blue-500 transition-colors hover:text-white dark:border-slate-200"
+                                className="hover:cursor-pointer hover:bg-blue-500 transition-colors hover:text-white"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -428,11 +446,11 @@ const Bots: React.FC = () => {
                               </Button>
                               <Button
                                 variant="outline"
-                                className="dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors dark:border-slate-200"
+                                className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
@@ -447,16 +465,16 @@ const Bots: React.FC = () => {
               </TabsContent>
               <TabsContent value="active" className="space-y-4">
                 {activeBots.length === 0 ? (
-                  <div className="text-center text-gray-400 dark:text-gray-500 mt-4">No active bots.</div>
+                  <div className="text-center text-gray-400 mt-4">No active bots.</div>
                 ) : (
                   <div className="grid gap-4 mt-4">
                     {activeBots.map((bot) => (
                       <Link to={`/bot/${bot.id}`} key={bot.id}>
-                        <Card className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors dark:bg-indigo-950 dark:text-white border dark:border-slate-200 rounded-2xl future-feed:border-2">
+                        <Card className="hover:bg-gray-100 transition-colors border rounded-2xl future-feed:border-2">
                           <CardContent className="p-4 flex justify-between items-center">
                             <div>
                               <h3 className="text-lg font-bold">{bot.name}</h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">{bot.prompt}</p>
+                              <p className="text-sm text-gray-500 ">{bot.prompt}</p>
                               <p className="text-sm text-gray-400">Created: {new Date(bot.createdAt).toLocaleDateString()}</p>
                             </div>
                             <div className="flex gap-3 items-center">
@@ -468,7 +486,7 @@ const Bots: React.FC = () => {
                                   checked={bot.isActive}
                                   onCheckedChange={() => toggleBotActivation(bot.id)}
                                   disabled={loading.toggling.has(bot.id)}
-                                  className="w-14 h-7 bg-gray-300 dark:bg-gray-600 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 dark:hover:data-[state=unchecked]:bg-gray-500 transition-colors duration-300 ease-in-out"
+                                  className="w-14 h-7 bg-gray-300 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 transition-colors duration-300 ease-in-out"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -476,15 +494,14 @@ const Bots: React.FC = () => {
                                   }}
                                 >
                                   <span
-                                    className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-                                      bot.isActive ? "translate-x-8" : "translate-x-1"
-                                    } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
+                                    className={`absolute h-6 w-6 rounded-full bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${bot.isActive ? "translate-x-8" : "translate-x-1"
+                                      } ${bot.isActive ? "bg-lime-100" : "bg-gray-200"}`}
                                   />
                                 </Switch>
                               </div>
                               <Button
                                 variant="outline"
-                                className="dark:text-lime-500 cursor-pointer hover:bg-lime-500 hover:text-white dark:hover:bg-lime-500 transition-colors dark:border-slate-200"
+                                className="cursor-pointer hover:bg-lime-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
@@ -498,17 +515,21 @@ const Bots: React.FC = () => {
                               >
                                 <FaEdit />
                               </Button>
+                              <DialogTrigger asChild>
                               <Button
                                 variant="outline"
-                                className="dark:text-lime-500 cursor-pointer hover:bg-red-500 hover:text-white dark:hover:bg-red-500 transition-colors dark:border-slate-200"
+                                aria-label={`Delete bot ${bot.name}`}
+                                className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
                               </Button>
+                            </DialogTrigger>
                             </div>
                           </CardContent>
                         </Card>
@@ -521,27 +542,67 @@ const Bots: React.FC = () => {
           )}
         </Tabs>
 
+        <Dialog open={showDeleteDialog} onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeletingBotId(null);
+        }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Bot</DialogTitle>
+              <DialogDescription
+                className="mt-4"
+              >
+                Are you sure you want to delete this bot? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowDeleteDialog(false)}
+                className="hover:cursor-pointer hover:bg-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={deleteBot}
+                className="hover:cursor-pointer hover:bg-red-500"
+                disabled={loading.deleting}
+              >
+                {loading.deleting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Yes, Delete"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
           <WhoToFollow />
         </div>
       </main>
 
-      <aside className="w-full lg:w-[350px] lg:sticky lg:top-0 lg:h-screen hidden lg:block mr-[41px]">
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+      <aside className="w-full lg:w-[350px] flex-shrink-0 hidden lg:block mr-6.5">
+        <div className="sticky top-4 space-y-5">
           <WhatsHappening />
         </div>
-        <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
+        <div className="w-full lg:w-[320px] lg:ml-7">
           <WhoToFollow />
         </div>
       </aside>
-
-      {/* Modals */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-4">
-              <CardTitle className="text-xl text-blue-500 future-feed:text-lime dark:text-slate-200">Create New Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime">Create New Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -552,7 +613,7 @@ const Bots: React.FC = () => {
                   setNewBotContextSource("");
                   setError(null);
                 }}
-                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
+                className="text-gray-600 hover:text-red-600 cursor-pointer"
               >
                 <FaTimes className="w-6 h-6" />
               </Button>
@@ -563,36 +624,43 @@ const Bots: React.FC = () => {
                   placeholder="Bot Name"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
-                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="future-feed:border-lime border-rose-gold-accent-border"
                 />
                 <Input
                   placeholder="Bot Prompt"
                   value={newBotDescription}
                   onChange={(e) => setNewBotDescription(e.target.value)}
-                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="future-feed:border-lime border-rose-gold-accent-border"
                 />
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white border p-2 rounded-md future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="future-feed:text-lime future-feed:bg-black border p-2 rounded-md future-feed:border-lime border-rose-gold-accent-border"
                 >
-                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="hourly">Hourly</option>
-                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="daily">Daily</option>
-                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="weekly">Weekly</option>
-                  <option className="future-feed:text-lime future-feed:bg-black dark:bg-indigo-950 dark:text-white" value="monthly">Monthly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black" value="hourly">Hourly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black" value="daily">Daily</option>
+                  <option className="future-feed:text-lime future-feed:bg-black" value="weekly">Weekly</option>
+                  <option className="future-feed:text-lime future-feed:bg-black" value="monthly">Monthly</option>
                 </select>
                 <Input
                   placeholder="Context Source (URL)"
                   value={newBotContextSource}
                   onChange={(e) => setNewBotContextSource(e.target.value)}
-                  className="dark:text-white future-feed:border-lime dark:border-slate-200 border-rose-gold-accent-border"
+                  className="future-feed:border-lime border-rose-gold-accent-border"
                 />
                 <Button
                   type="submit"
                   className="text-white hover:bg-blue-600 cursor-pointer"
-                  disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
+                  disabled={loading.creating || !newBotName.trim() || !newBotDescription.trim()}
                 >
-                  Create Bot
+                  {loading.creating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Creating...
+                    </>
+                  ) : (
+                    "Create Bot"
+                  )}
                 </Button>
               </CardContent>
             </form>
@@ -604,7 +672,7 @@ const Bots: React.FC = () => {
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/30 p-4">
           <Card className="bg-white rounded-2xl p-6 w-full max-w-md border-2 ">
             <div className="flex justify-between items-center mb-1">
-              <CardTitle className="text-xl text-blue-500 future-feed:text-lime dark:text-white">Update Bot</CardTitle>
+              <CardTitle className="text-xl text-blue-500 future-feed:text-lime">Update Bot</CardTitle>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -616,7 +684,7 @@ const Bots: React.FC = () => {
                   setEditingBot(null);
                   setError(null);
                 }}
-                className="text-gray-600 dark:text-gray-200 hover:text-red-600 dark:hover:text-red-400 cursor-pointer"
+                className="text-gray-600 hover:text-red-600 cursor-pointer"
               >
                 <FaTimes className="w-6 h-6" />
               </Button>
@@ -627,18 +695,18 @@ const Bots: React.FC = () => {
                   placeholder="Bot Name"
                   value={newBotName}
                   onChange={(e) => setNewBotName(e.target.value)}
-                  className="dark:text-white"
+                  className=""
                 />
                 <Input
                   placeholder="Bot Prompt"
                   value={newBotDescription}
                   onChange={(e) => setNewBotDescription(e.target.value)}
-                  className="dark:text-white"
+                  className=""
                 />
                 <select
                   value={newBotSchedule}
                   onChange={(e) => setNewBotSchedule(e.target.value as Bot["schedule"])}
-                  className="dark:text-white border p-2 rounded-md"
+                  className="border p-2 rounded-md"
                 >
                   <option value="hourly">Hourly</option>
                   <option value="daily">Daily</option>
@@ -649,15 +717,22 @@ const Bots: React.FC = () => {
                   placeholder="Context Source (URL)"
                   value={newBotContextSource}
                   onChange={(e) => setNewBotContextSource(e.target.value)}
-                  className="dark:text-white"
+                  className=""
                 />
                 <Button
                   type="submit"
                   variant={"secondary"}
-                  className="text-white hover:bg-lime-600 cursor-pointer"
-                  disabled={!newBotName.trim() || !newBotDescription.trim() || !newBotContextSource.trim()}
+                  className="text-white bg-blue-500 cursor-pointer hover:bg-blue-600"
+                  disabled={loading.editing || !newBotName.trim() || !newBotDescription.trim()}
                 >
-                  Update Bot
+                  {loading.editing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update Bot"
+                  )}
                 </Button>
               </CardContent>
             </form>
