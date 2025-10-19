@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
 import { Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 interface Bot {
   id: number;
@@ -52,6 +53,8 @@ const Bots: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingBot, setEditingBot] = useState<Bot | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deletingBotId, setDeletingBotId] = useState<number | null>(null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState<LoadingState>({
     allBots: false,
@@ -293,11 +296,11 @@ const Bots: React.FC = () => {
     }
   };
 
-  const deleteBot = async (botId: number) => {
-    if (!window.confirm("Are you sure you want to delete this bot? This action cannot be undone.")) return;
+  const deleteBot = useCallback(async () => {
+    if (!deletingBotId) return;
 
     try {
-      const res = await fetch(`${API_URL}/api/bots/${botId}`, {
+      const res = await fetch(`${API_URL}/api/bots/${deletingBotId}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -307,18 +310,15 @@ const Bots: React.FC = () => {
         throw new Error(errorText || "Failed to delete bot.");
       }
 
-      setBots((prev) => {
-        const next = prev.filter((b) => b.id !== botId);
-        setActiveBots(next.filter((b) => b.isActive));
-        return next;
-      });
-
+      setBots((prev) => prev.filter((b) => b.id !== deletingBotId));
+      setShowDeleteDialog(false);
+      setDeletingBotId(null);
       setError(null);
     } catch (err) {
-      console.error(`Error deleting bot ${botId}:`, err);
-      setError(err instanceof Error ? err.message : "Failed to delete bot. Please try again.");
+      console.error(`Error deleting bot ${deletingBotId}:`, err);
+      setError(err instanceof Error ? err.message : "Failed to delete bot.");
     }
-  };
+  }, [deletingBotId]);
 
   const SkeletonLoader: React.FC = () => (
     <div className="grid gap-4 sm:gap-6">
@@ -367,8 +367,8 @@ const Bots: React.FC = () => {
         )}
 
         <Tabs defaultValue="all" className="w-full p-2">
-          <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
           <TabsList className="w-full flex justify-around border rounded-2xl">
+            <TabsTrigger className="rounded-2xl" value="all">My Bots</TabsTrigger>
             <TabsTrigger className="rounded-2xl" value="active">Active Bots</TabsTrigger>
           </TabsList>
 
@@ -433,8 +433,8 @@ const Bots: React.FC = () => {
                                 className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
@@ -499,17 +499,21 @@ const Bots: React.FC = () => {
                               >
                                 <FaEdit />
                               </Button>
+                              <DialogTrigger asChild>
                               <Button
                                 variant="outline"
+                                aria-label={`Delete bot ${bot.name}`}
                                 className="cursor-pointer hover:bg-red-500 hover:text-white transition-colors"
                                 onClick={(e) => {
                                   e.preventDefault();
                                   e.stopPropagation();
-                                  deleteBot(bot.id);
+                                  setDeletingBotId(bot.id);
+                                  setShowDeleteDialog(true);
                                 }}
                               >
                                 <FaTrash />
                               </Button>
+                            </DialogTrigger>
                             </div>
                           </CardContent>
                         </Card>
@@ -521,6 +525,40 @@ const Bots: React.FC = () => {
             </>
           )}
         </Tabs>
+
+        <Dialog open={showDeleteDialog} onOpenChange={(open) => {
+          setShowDeleteDialog(open);
+          if (!open) setDeletingBotId(null);
+        }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Delete Bot</DialogTitle>
+              <DialogDescription
+                className="mt-4"
+              >
+                Are you sure you want to delete this bot? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex justify-end gap-4">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowDeleteDialog(false)}
+                className="hover:cursor-pointer hover:bg-slate-200"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={deleteBot}
+                className="hover:cursor-pointer hover:bg-red-500"
+              >
+                Yes, Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="w-full px-4 mt-7 py-2 space-y-6 block lg:hidden">
           <WhatsHappening />
