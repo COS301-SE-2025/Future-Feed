@@ -79,7 +79,7 @@ const Settings = () => {
   }, [navigate])
   
   if(!currentUser){
-    return <div className="p-4 text-black">Not logged in.</div>;
+    console.log("not curr user");
   }
 
   return (

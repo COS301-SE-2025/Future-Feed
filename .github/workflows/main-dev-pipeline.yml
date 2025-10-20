@@ -16,12 +16,18 @@ jobs:
     steps:
       - name: Branch protection checks
         run: |
-          # Only block direct pushes, not pull request merges
+          # Only block direct pushes that are NOT merge commits
           if [ "${{ github.event_name }}" == "push" ] && \
-             [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]] && \
-             [ "${{ github.event.after }}" != "${{ github.event.before }}" ]; then
-            echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
-            exit 1
+             [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/dev" ]]; then
+            
+            # Check if this is a merge commit by looking for common merge patterns
+            COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+            if [[ "$COMMIT_MESSAGE" =~ "Merge pull request" || "$COMMIT_MESSAGE" =~ "Merge branch" ]]; then
+              echo "This is a merge commit - allowing push to ${{ github.ref_name }}"
+            else
+              echo "Error: Direct pushes to ${{ github.ref_name }} are not allowed. Please use a pull request."
+              exit 1
+            fi
           fi
       - uses: actions/checkout@v4
       - name: Setup Node.js

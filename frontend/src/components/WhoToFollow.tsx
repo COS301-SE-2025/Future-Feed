@@ -207,7 +207,7 @@ const WhoToFollow = () => {
             })}
             <Link to="/explore" className="flex items-center gap-3">
               <div className={!isExplorePage ? "" : "invisible"}>
-                <p className="text-white  hover:underline cursor-pointer">Show more</p>
+                <p className="  hover:underline cursor-pointer">Show more</p>
               </div>
             </Link>
           </div>
