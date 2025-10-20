@@ -115,6 +115,14 @@
         </a>
       </td>
     </tr>
+	<tr>
+      <td><strong>Project Day Demo</strong></td>
+      <td>
+        <a href="https://drive.google.com/file/d/1oNsQRkDLIxf-LAwXYswaFANXlPsk-UgM/view?usp=sharing" target="_blank">
+          Watch Video
+        </a>
+      </td>
+    </tr>
   </tbody>
 </table>
 
@@ -376,6 +384,7 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 COS 301, University of Pretoria, 2025
 
 </div>
+
 
 
 
