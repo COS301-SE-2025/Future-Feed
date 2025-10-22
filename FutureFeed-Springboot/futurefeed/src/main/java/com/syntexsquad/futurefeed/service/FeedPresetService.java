@@ -191,7 +191,10 @@ public class FeedPresetService {
         if (!preset.getUserId().equals(getAuthenticatedUser().getId())) {
             throw new RuntimeException("Not authorized to delete this preset");
         }
-
+        List<PresetRule> rules = ruleRepo.findByPresetId(presetId);
+        if (!rules.isEmpty()) {
+            ruleRepo.deleteAll(rules);
+        }
         ruleRepo.deleteByPresetId(presetId);
         presetRepo.delete(preset);
     }
