@@ -60,6 +60,9 @@ public class ReshareControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
+    private com.syntexsquad.futurefeed.mapper.PostViewMapper postViewMapper;
+
+    @MockBean
     private ReshareService reshareService;
 
     @MockBean
