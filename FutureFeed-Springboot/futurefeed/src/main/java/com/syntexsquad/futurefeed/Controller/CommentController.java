@@ -1,5 +1,7 @@
 package com.syntexsquad.futurefeed.Controller;
 
+import com.syntexsquad.futurefeed.dto.PostDTO;
+import com.syntexsquad.futurefeed.mapper.PostViewMapper;
 import com.syntexsquad.futurefeed.model.Comment;
 import com.syntexsquad.futurefeed.model.Post;
 import com.syntexsquad.futurefeed.service.CommentService;
@@ -14,11 +16,17 @@ import java.util.List;
 public class CommentController {
 
     private final CommentService commentService;
-    public CommentController(CommentService commentService) { this.commentService = commentService; }
+    private final PostViewMapper postViewMapper;
+
+    public CommentController(CommentService commentService, PostViewMapper postViewMapper) {
+        this.commentService = commentService;
+        this.postViewMapper = postViewMapper;
+    }
 
     @PostMapping("/{postId}")
     public ResponseEntity<?> addComment(@PathVariable Integer postId, @RequestBody String content) {
-        if (content == null || content.trim().isEmpty()) return ResponseEntity.badRequest().body("Content cannot be empty");
+        if (content == null || content.trim().isEmpty())
+            return ResponseEntity.badRequest().body("Content cannot be empty");
         try {
             Comment saved = commentService.addComment(postId, content.trim());
             return ResponseEntity.ok(saved);
@@ -27,7 +35,6 @@ public class CommentController {
         }
     }
 
-    // Canonical GET (returns List<Comment> so your existing tests and clients keep working)
     @GetMapping("/post/{postId}")
     public ResponseEntity<List<Comment>> getCommentsByPost(@PathVariable Integer postId) {
         return ResponseEntity.ok()
@@ -35,7 +42,6 @@ public class CommentController {
                 .body(commentService.getCommentsForPost(postId));
     }
 
-    // Alias so GET /api/comments/{postId} works too
     @GetMapping("/{postId}")
     public ResponseEntity<List<Comment>> getCommentsByPostAlias(@PathVariable Integer postId) {
         return getCommentsByPost(postId);
@@ -51,8 +57,18 @@ public class CommentController {
         }
     }
 
+    @GetMapping("/my-comments")
+    public ResponseEntity<List<PostDTO>> getMyCommentedPosts() {
+        try {
+            List<Post> posts = commentService.getCommentedPosts();
+            return ResponseEntity.ok(postViewMapper.toDtoList(posts));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(401).build();
+        }
+    }
+
     @GetMapping("/my-comments/{userId}")
-    public ResponseEntity<List<Post>> getCommentedPosts(@PathVariable Integer userId) {
-        return ResponseEntity.ok(commentService.getPostsCommentedByUser(userId));
+    public ResponseEntity<List<PostDTO>> getCommentedPosts(@PathVariable Integer userId) {
+        return ResponseEntity.ok(postViewMapper.toDtoList(commentService.getPostsCommentedByUser(userId)));
     }
 }
