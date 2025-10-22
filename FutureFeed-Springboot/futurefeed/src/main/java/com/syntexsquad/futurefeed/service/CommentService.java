@@ -204,18 +204,11 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<Post> getCommentedPosts() {
         AppUser user = getAuthenticatedUser();
-        var comments = commentRepository.findByUserId(user.getId());
-        return comments.stream()
-                .map(c -> postRepository.findById(c.getPost().getId()).orElse(null))
-                .filter(p -> p != null)
-                .distinct()
-                .toList();
+        return commentRepository.findDistinctPostsCommentedByUser(user.getId());
     }
 
     @Transactional(readOnly = true)
     public List<Post> getPostsCommentedByUser(Integer userId) {
-        var comments = commentRepository.findByUserId(userId);
-        var postIds = comments.stream().map(c -> c.getPost().getId()).distinct().toList();
-        return postRepository.findAllById(postIds);
+        return commentRepository.findDistinctPostsCommentedByUser(userId);
     }
 }

@@ -33,6 +33,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oauth2Login;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -135,6 +136,7 @@ public class CommentIT {
         String commentContent = "This is a test comment";
 
         mockMvc.perform(post("/api/comments/{postId}", postId)
+                        .with(oauth2Login().attributes(a -> a.put("email", "testuser@example.com")))
                         .contentType(MediaType.TEXT_PLAIN)
                         .content(commentContent))
                 .andExpect(status().isOk())

@@ -42,6 +42,9 @@ public class CommentControllerTest {
     private AppUserRepository appUserRepository;
 
     @MockBean
+    private com.syntexsquad.futurefeed.mapper.PostViewMapper postViewMapper;
+
+    @MockBean
     private PostRepository postRepository;
 
     private final Integer postId = 1;

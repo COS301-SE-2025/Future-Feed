@@ -19,6 +19,9 @@ public interface PostRepository extends JpaRepository<Post, Integer> {
      @Query("SELECT p FROM Post p WHERE p.id IN :ids")
     List<Post> findAllById(@Param("ids") List<Integer> ids);
 
+    @Query("SELECT p FROM Post p WHERE p.id IN :ids")
+    List<Post> findAllPolymorphicById(@Param("ids") List<Integer> ids);
+
     @Query("SELECT p FROM UserPost p WHERE p.user.id IN :userIds ORDER BY p.createdAt DESC")
     Page<Post> findPostsByFollowedUsers(@Param("userIds") List<Integer> userIds, Pageable pageable);
 
