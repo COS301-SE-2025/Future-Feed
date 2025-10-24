@@ -34,4 +34,12 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
     List<Comment> findByUserId(@Param("userId") Integer userId);
 
     boolean existsByUser_IdAndPost_Id(Integer userId, Integer postId);
+
+    @Query("""
+        SELECT DISTINCT p
+        FROM Comment c
+        JOIN c.post p
+        WHERE c.user.id = :userId
+    """)
+    List<Post> findDistinctPostsCommentedByUser(@Param("userId") Integer userId);
 }

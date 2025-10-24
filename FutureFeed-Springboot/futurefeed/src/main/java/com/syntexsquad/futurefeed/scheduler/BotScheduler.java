@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Component
 public class BotScheduler {
@@ -35,6 +36,8 @@ public class BotScheduler {
                 if (shouldRun(bot)) {
                     String result = botExecutionService.executeBot(bot.getId());
                     System.out.println("✅ Bot post created for bot: " + bot.getName() + " | Output: " + result);
+
+                    Thread.sleep(7000 + new Random().nextInt(2000)); 
                 }
             } catch (Exception e) {
                 System.err.println("❌ Bot failed: " + bot.getName() + " - " + e.getMessage());
@@ -44,15 +47,14 @@ public class BotScheduler {
 
     private boolean shouldRun(Bot bot) {
         if (bot.getSchedule() == null) {
-            return false; // skip bots without a schedule
+            return false; 
         }
 
-        // Get last bot post
         Optional<BotPosts> lastPostOpt = botPostRepository.findTopByBotIdOrderByCreatedAtDesc(bot.getId());
         LocalDateTime now = LocalDateTime.now();
 
         if (lastPostOpt.isEmpty()) {
-            return true; // no posts yet, run immediately
+            return true; 
         }
 
         LocalDateTime lastPostTime = lastPostOpt.get().getCreatedAt();
