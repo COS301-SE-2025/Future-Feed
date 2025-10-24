@@ -1608,7 +1608,7 @@ const Profile = () => {
           className="w-full p-0"
           onValueChange={(value) => handleTabChange(value, user.id, currentUserId || user.id)}
         >
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3 overflow-y-hidden">
             <TabsTrigger className="text-black  future-feed:text-lime" value="posts">
               Posts
             </TabsTrigger>
