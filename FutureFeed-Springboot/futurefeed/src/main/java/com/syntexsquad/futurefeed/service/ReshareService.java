@@ -155,12 +155,14 @@ public class ReshareService {
         return reshareRepository.existsByUserIdAndPostId(user.getId(), postId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getResharedPostsByUserId(Integer userId) {
-        List<Reshare> reshares = reshareRepository.findByUserId(userId);
-        List<Integer> postIds = reshares.stream()
-                .map(Reshare::getPostId)
-                .distinct()
-                .toList();
-        return postRepository.findAllById(postIds);
+        return reshareRepository.findDistinctPostsResharedByUser(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Post> getResharedPostsByAuthenticatedUser() {
+        AppUser user = getAuthenticatedUser();
+        return reshareRepository.findDistinctPostsResharedByUser(user.getId());
     }
 }

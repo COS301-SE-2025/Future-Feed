@@ -129,7 +129,6 @@ const TopicPage = () => {
     [loading, loadingMore, hasMore]
   );
 
-  // Fetch user details
   const fetchUser = async (
     userId: number,
     isBot: boolean = false,
@@ -161,7 +160,6 @@ const TopicPage = () => {
     }
   };
 
-  // Fetch all topics
   const fetchTopics = async (): Promise<Topic[]> => {
     try {
       const res = await fetch(`${API_URL}/api/topics`, {
@@ -208,7 +206,6 @@ const TopicPage = () => {
     }
   };
 
-  // Fetch current user
   const fetchCurrentUser = async () => {
     try {
       const res = await fetch(`${API_URL}/api/user/myInfo`, { credentials: "include" });
