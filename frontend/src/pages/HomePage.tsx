@@ -2981,7 +2981,7 @@ const HomePage = () => {
                     }}
                     className="w-40 text-white hover:bg-blue-600 rounded-full bg-blue-500 hover:text-white hover:bg-blue-600 hover:cursor-pointer"
                   >
-                    Upload Image
+                    Upload/Remove Image
                   </Button>
                   <Button
                     variant={useAIGeneration ? "default" : "outline"}

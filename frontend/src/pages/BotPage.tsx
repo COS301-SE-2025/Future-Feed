@@ -939,7 +939,7 @@ const BotPage = () => {
   <Button
     variant="secondary"
     className="
-      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
+      mt-[-90px] lg:w-[110px] w-[100px] rounded-full font-semibold hover:cursor-pointer 
       bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50
       px-3 py-2               /* mobile padding */
       sm:px-4 sm:py-2.5       /* desktop padding */
@@ -954,7 +954,7 @@ const BotPage = () => {
   <Button
     variant="secondary"
     className="
-      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
+      mt-[-90px] lg:w-[110px] w-[100px] rounded-full font-semibold hover:cursor-pointer 
       bg-blue-500 text-white hover:bg-blue-700
       px-3 py-2
       sm:px-4 sm:py-2.5
