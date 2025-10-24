@@ -920,7 +920,7 @@ const BotPage = () => {
                 <div className="mt-2">
                   <h1 className="text-2xl text-black font-bold">{bot.name}</h1>
                   <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
-                  <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
+                  <p className="mt-4 lg:text-xl text-sm text-black line-clamp-4 md:line-clamp-none">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
                   <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
