@@ -1577,32 +1577,51 @@ const UserProfile = () => {
 
   if (loading) {
     return (
-      <div className=" flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime overflow-y-auto mx-auto">
-        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto mt-5">
+      <div className=" bg-white flex flex-col lg:flex-row min-h-screen min-h-screen future-feed:bg-black future-feed:text-lime    overflow-y-auto mx-auto">
+        <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
 
-        <main className="flex-1 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px] ">
-          <div className="relative">
-            <Skeleton className="mt-1 h-40 w-full" />
-            <div className="absolute -bottom-10 left-4">
-              <Skeleton className="w-27 h-27 rounded-full" />
-            </div>
-          </div>
-          <div
-            className="mt-4 b-4 border border-rose-gold-accent-border rounded-lg p-4 animate-pulse space-y-4"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gray-300 rounded-full" />
-              <div className="flex-1">
-                <div className="h-4 bg-gray-300 rounded w-3/4" />
+        <main className="flex-1  min-h-screen overflow-y-auto mt-[21px] px-5">
+          <div className="mb-5 animate-pulse">
+            <Card>
+              <CardContent className="ml-[-10px]">
+                <div className="relative">
+                  <Skeleton className="mt-1 h-40 w-full" />
+                  <div className="absolute -bottom-10 left-4">
+                    <Skeleton className="w-20 h-20 rounded-full" />
+                  </div>
+                </div>
+                <div className="pt-16 px-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <div className="ml-[120px] mt-[-110px] space-y-2">
+                      <Skeleton className="h-7 w-40" />
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-5 w-72" />
+                    </div>
+                    <Skeleton className="mt-[-110px] w-28 h-10 rounded-full" />
+                  </div>
+                  <div className="pl-4 mt-4 flex gap-4">
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-12" />
+                    <Skeleton className="h-4 w-12" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <div className="border-t border-gray-200 ">
+              <div className="flex justify-around py-3 px-4 border-b border-gray-200  animate-pulse">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-9 flex-1 mx-1 rounded-full" />
+                ))}
+              </div>
+              <div className="p-0">
+                {renderSkeletonPosts()}
               </div>
             </div>
-            <div className="h-4 bg-gray-300 rounded w-full" />
-            <div className="h-4 bg-gray-300 rounded w-5/6" />
           </div>
         </main>
-        <aside className="w-full lg:w-[350px] lg:sticky    lg:mt-[10px] lg:top-[16px] lg:h-screen  hidden lg:block mr-6.5 ">
+        <aside className="w-full lg:w-[350px] lg:sticky lg:h-screen  hidden lg:block mr-6.5 ">
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
@@ -1781,7 +1800,7 @@ const UserProfile = () => {
 
         </Card>
         <Tabs defaultValue="posts" className="w-full p-0" onValueChange={(value) => handleTabChange(value, user.id)}>
-          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3">
+          <TabsList className="w-full flex justify-around rounded-2xl border k sticky top-[68px] z-10 overflow-x-auto mb-3 overflow-y-hidden">
             <TabsTrigger className="text-black" value="posts">Posts</TabsTrigger>
             <TabsTrigger className="text-black" value="re-feeds">Re-Feeds</TabsTrigger>
             <TabsTrigger className="text-black" value="comments">Comments</TabsTrigger>

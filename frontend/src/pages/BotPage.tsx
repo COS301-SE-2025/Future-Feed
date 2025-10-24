@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import PersonalSidebar from "@/components/PersonalSidebar";
 import WhoToFollow from "@/components/WhoToFollow";
 import WhatsHappening from "@/components/WhatsHappening";
@@ -13,7 +13,6 @@ import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
 
 interface UserProfile {
   id: number;
@@ -94,22 +93,12 @@ interface RawComment {
   createdAt: string;
 }
 
-interface Bot {
-  id: number;
-  name: string;
-  prompt: string;
-  createdAt: string;
-  schedule: "hourly" | "daily" | "weekly" | "monthly";
-  contextSource: string;
-  isActive: boolean;
-}
-
 interface ApiBot {
   id: number;
   ownerId: number;
   name: string;
   prompt: string;
-  schedule: Bot["schedule"];
+  schedule: BotProfile["schedule"];
   contextSource: string | null;
   createdAt: string;
   isActive: boolean;
@@ -338,7 +327,7 @@ const BotPage = () => {
       console.error("Error fetching user info:", err);
       setError("Failed to load user info. Please log in again.");
       setUser(null);
-      navigate("/login")
+      navigate("/login");
       return null;
     }
   };
@@ -361,10 +350,10 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-              ...p,
-              isLiked: !p.isLiked,
-              likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
-            }
+                ...p,
+                isLiked: !p.isLiked,
+                likeCount: p.isLiked ? p.likeCount - 1 : p.likeCount + 1,
+              }
             : p
         )
       );
@@ -381,10 +370,10 @@ const BotPage = () => {
           prev.map((p) =>
             p.id === postId
               ? {
-                ...p,
-                isLiked: wasLiked,
-                likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
-              }
+                  ...p,
+                  isLiked: wasLiked,
+                  likeCount: wasLiked ? p.likeCount + 1 : p.likeCount - 1,
+                }
               : p
           )
         );
@@ -501,21 +490,21 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-              ...p,
-              comments: [
-                ...p.comments,
-                {
-                  id: tempId,
-                  postId,
-                  authorId: bot.id,
-                  content: commentText,
-                  createdAt: new Date().toISOString(),
-                  username: bot.name,
-                  handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
-                },
-              ],
-              commentCount: p.commentCount + 1,
-            }
+                ...p,
+                comments: [
+                  ...p.comments,
+                  {
+                    id: tempId,
+                    postId,
+                    authorId: bot.id,
+                    content: commentText,
+                    createdAt: new Date().toISOString(),
+                    username: bot.name,
+                    handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
+                  },
+                ],
+                commentCount: p.commentCount + 1,
+              }
             : p
         )
       );
@@ -533,10 +522,10 @@ const BotPage = () => {
           prev.map((p) =>
             p.id === postId
               ? {
-                ...p,
-                comments: p.comments.filter((c) => c.id !== tempId),
-                commentCount: Math.max(0, p.commentCount - 1),
-              }
+                  ...p,
+                  comments: p.comments.filter((c) => c.id !== tempId),
+                  commentCount: Math.max(0, p.commentCount - 1),
+                }
               : p
           )
         );
@@ -553,21 +542,21 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-              ...p,
-              comments: p.comments.map((c) =>
-                c.id === tempId
-                  ? {
-                    id: newComment.id,
-                    postId: newComment.postId,
-                    authorId: newComment.userId || bot.id,
-                    content: newComment.content,
-                    createdAt: newComment.createdAt,
-                    username: bot.name,
-                    handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
-                  }
-                  : c
-              ),
-            }
+                ...p,
+                comments: p.comments.map((c) =>
+                  c.id === tempId
+                    ? {
+                        id: newComment.id,
+                        postId: newComment.postId,
+                        authorId: newComment.userId || bot.id,
+                        content: newComment.content,
+                        createdAt: newComment.createdAt,
+                        username: bot.name,
+                        handle: `@${bot.name.toLowerCase().replace(/\s+/g, "")}`,
+                      }
+                    : c
+                ),
+              }
             : p
         )
       );
@@ -577,10 +566,10 @@ const BotPage = () => {
         prev.map((p) =>
           p.id === postId
             ? {
-              ...p,
-              comments: p.comments.filter((c) => c.id !== tempId),
-              commentCount: Math.max(0, p.commentCount - 1),
-            }
+                ...p,
+                comments: p.comments.filter((c) => c.id !== tempId),
+                commentCount: Math.max(0, p.commentCount - 1),
+              }
             : p
         )
       );
@@ -876,7 +865,7 @@ const BotPage = () => {
         <aside className="w-full lg:w-[245px] lg:ml-6 flex-shrink-0 lg:sticky lg:top-0 lg:h-screen overflow-y-auto">
           <PersonalSidebar />
         </aside>
-        <main className="flex-1 p-4 lg:pt-4 p-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
+        <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[21px]">
           <div className="relative">
             <Skeleton className="mt-1 h-40 w-full" />
             <div className="absolute -bottom-10 left-4">
@@ -900,7 +889,7 @@ const BotPage = () => {
           <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhatsHappening />
           </div>
-          <div className="w-full lg:w-[320px] mt-5 lg:ml-7 lg:sticky">
+          <div className="w-full lg:w-[320px] mt-5 lg:ml-7">
             <WhoToFollow />
           </div>
         </aside>
@@ -917,60 +906,56 @@ const BotPage = () => {
       </aside>
       <main className="flex-1 p-4 lg:pt-4 lg:p-2 lg:pl-2 min-h-screen overflow-y-auto mt-[5px]">
         <Card className="mb-5">
-          <CardContent className="ml-[-10px]">
+          <CardContent className="p-4">
             <div className="relative">
-              <div className="mt-10 w-full" />
+              <div className="w-full" />
               <div className="absolute -bottom-10 left-4">
-                <Avatar className="w-20 h-20">
+                <Avatar className="w-20 h-15">
                   <FaRobot className="w-15 h-15 text-black rounded-full" />
                 </Avatar>
               </div>
             </div>
             <div className="pt-16 px-4">
-              <div className="text-gray-400 flex justify-between items-start">
-                <div className="ml-30 mt-[-110px]">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div className="mt-2">
                   <h1 className="text-2xl text-black font-bold">{bot.name}</h1>
                   <p className="text-slate-500 text-lg font-bold">Schedule: {bot.schedule}</p>
-                  <p className="mt-4 text-xl text-black">{bot.prompt || "This is an area for prompt"}</p>
+                  <p className="mt-4 lg:text-xl text-sm text-black line-clamp-4 md:line-clamp-none">{bot.prompt || "This is an area for prompt"}</p>
                 </div>
                 {user && bot && user.id === bot.ownerId && (
-
-                <div className="lg:mt-[-50px] mt-[-40px] gap-4 flex items-center flex-col flex sm:flex-row justify-center sm:justify-start">
-  <Button
-    variant="secondary"
-    className="
-      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
-      bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50
-      px-3 py-2               /* mobile padding */
-      sm:px-4 sm:py-2.5       /* desktop padding */
-    "
-    onClick={handleExecuteBot}
-    disabled={isExecuting}
-  >
-    {isExecuting ? <Loader2 className="w-5 h-5 animate-spin ml-1" /> : null}
-    {isExecuting ? "Executing..." : "Execute Bot"}
-  </Button>
-
-  <Button
-    variant="secondary"
-    className="
-      mt-[-90px] w-[110px] rounded-full font-semibold hover:cursor-pointer 
-      bg-blue-500 text-white hover:bg-blue-700
-      px-3 py-2
-      sm:px-4 sm:py-2.5
-    "
-    onClick={() => {
-      setNewBotName(bot.name);
-      setNewBotDescription(bot.prompt);
-      setNewBotSchedule(bot.schedule);
-      setNewBotContextSource(bot.contextSource);
-      setIsEditModalOpen(true);
-    }}
-  >
-    {isEditing ? <Loader2 className="w-5 h-5 animate-spin ml-1" /> : null}
-    {isEditing ? "Editing..." : "Edit Bot"}
-  </Button>
-</div>
+                  <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                    <Button
+                      variant="secondary"
+                      className="
+                        w-full sm:w-32 rounded-full font-semibold hover:cursor-pointer 
+                        bg-blue-500 text-white hover:bg-blue-700 disabled:opacity-50
+                        px-4 py-2
+                      "
+                      onClick={handleExecuteBot}
+                      disabled={isExecuting}
+                    >
+                      {isExecuting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                      {isExecuting ? "Executing..." : "Execute Bot"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="
+                        w-full sm:w-32 rounded-full font-semibold hover:cursor-pointer 
+                        bg-blue-500 text-white hover:bg-blue-700
+                        px-4 py-2
+                      "
+                      onClick={() => {
+                        setNewBotName(bot.name);
+                        setNewBotDescription(bot.prompt);
+                        setNewBotSchedule(bot.schedule);
+                        setNewBotContextSource(bot.contextSource);
+                        setIsEditModalOpen(true);
+                      }}
+                    >
+                      {isEditing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+                      {isEditing ? "Editing..." : "Edit Bot"}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
@@ -1040,9 +1025,8 @@ const BotPage = () => {
           </div>
         </div>
       </aside>
-
       {isEditModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4 ">
           <Card className="bg-white rounded-xl p-6 w-full max-w-md border-2 border-drop-shadow-x">
             <div className="flex justify-between items-center mb-4">
               <CardTitle className="text-xl font-semibold text-blue-500 ml-7">

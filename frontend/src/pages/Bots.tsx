@@ -12,7 +12,7 @@ import WhatsHappening from "@/components/WhatsHappening";
 import { Link } from "react-router-dom";
 import { Settings, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface Bot {
   id: number;
@@ -479,14 +479,14 @@ const Bots: React.FC = () => {
                             </div>
                             <div className="flex gap-3 items-center">
                               <div className="flex items-center gap-2">
-                                <span className={`text-sm font-medium ${bot.isActive ? "text-lime-500" : "text-gray-400"}`}>
+                                <span className={`text-sm font-medium ${bot.isActive ? "text-blue-500" : "text-gray-400"}`}>
                                   {bot.isActive ? "On" : "Off"}
                                 </span>
                                 <Switch
                                   checked={bot.isActive}
                                   onCheckedChange={() => toggleBotActivation(bot.id)}
                                   disabled={loading.toggling.has(bot.id)}
-                                  className="w-14 h-7 bg-gray-300 rounded-full relative data-[state=checked]:bg-lime-500 hover:data-[state=unchecked]:bg-gray-400 transition-colors duration-300 ease-in-out"
+                                  className="hover:cursor-pointer w-14 h-7 bg-gray-300 rounded-full relative data-[state=checked]:bg-gray-500 hover:data-[state=checked]:bg-gray-400 transition-colors duration-300 ease-in-out"
                                   onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
@@ -515,7 +515,6 @@ const Bots: React.FC = () => {
                               >
                                 <FaEdit />
                               </Button>
-                              <DialogTrigger asChild>
                               <Button
                                 variant="outline"
                                 aria-label={`Delete bot ${bot.name}`}
@@ -529,7 +528,6 @@ const Bots: React.FC = () => {
                               >
                                 <FaTrash />
                               </Button>
-                            </DialogTrigger>
                             </div>
                           </CardContent>
                         </Card>
