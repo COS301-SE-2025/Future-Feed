@@ -303,6 +303,10 @@ Requirements and design specifications
 			Backend Developer 
 			<br>
 			Testing Engineer
+			<br>
+			Cloud Engineer
+			<br>
+			AI Systems Engineer
 	  	</td>
 	    	<td align="center">
 			Java, C++, C#, ASP.NET, HTML/Javascript/CSS/PHP/Node.js
@@ -384,6 +388,7 @@ Simran Rathilal, Tobias Bester, Victor Igbojinna (EPI-USE Labs)
 COS 301, University of Pretoria, 2025
 
 </div>
+
 
 
 
